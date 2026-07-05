@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repair Request Application</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+  :root{
+    --bg:#f0f2f5;--white:#fff;--border:#d0d5dd;--border2:#e4e7ec;
+    --accent:#0d9488;--accent2:#0f766e;--accent-bg:#f0fdfa;--accent-dark:#134e4a;
+    --text:#111827;--text2:#374151;--dim:#6b7280;
+    --red:#dc2626;--green:#16a34a;--orange:#ea580c;--col:#f1f5f9;
+    --header:#1e293b;--header-text:#f8fafc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+  .topbar{background:var(--header);color:var(--header-text);padding:11px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .topbar-icon{font-size:20px}
+  .topbar-title{font-size:14px;font-weight:700;flex:1}
+  .topbar-sub{font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+  .lang-toggle{display:flex;gap:4px;flex-shrink:0}
+  .lang-btn{background:transparent;border:1px solid #475569;border-radius:4px;color:#94a3b8;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;transition:all .15s}
+  .lang-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .tabs{display:flex;background:var(--white);border-bottom:2px solid var(--border2);padding:0 14px}
+  .tab{padding:10px 16px;font-size:13px;font-weight:600;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+  .tab-content{display:none}
+  .tab-content.active{display:block}
+
+  .main{padding:12px;max-width:1100px;margin:0 auto}
+  .strip{background:var(--white);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+  .ts-live{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
+  .ts-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .sec{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+  .sec-head{background:var(--col);border-bottom:1px solid var(--border2);padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent-dark);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .sec-head .note{font-size:10px;color:#9ca3af;font-weight:400;letter-spacing:0;text-transform:none;margin-left:4px}
+
+  .info-row{display:grid;grid-template-columns:190px 190px 1fr 140px}
+  .info-cell{border-right:1px solid var(--border2);display:flex;flex-direction:column}
+  .info-cell:last-child{border-right:none}
+  .cell-label{font-size:10px;font-weight:600;color:var(--dim);background:var(--col);padding:3px 10px;border-bottom:1px solid var(--border2);display:flex;justify-content:space-between;align-items:center}
+  .cell-label .req{color:var(--red)}
+  .cell-input{border:none;outline:none;font-family:'Inter','Noto Sans TC',sans-serif;font-size:13px;color:var(--text);background:transparent;padding:7px 10px;width:100%;transition:background .15s}
+  .cell-input:focus{background:var(--accent-bg)}
+  .cell-input::placeholder{color:#c5cdd8;font-size:12px}
+  select.cell-input{cursor:pointer}
+
+  .items-wrap{overflow-x:auto}
+  table.items{width:100%;border-collapse:collapse;min-width:900px}
+  table.items th{background:var(--col);font-size:10px;font-weight:700;color:var(--dim);padding:5px 8px;border-bottom:2px solid var(--border);border-right:1px solid var(--border2);text-align:left;white-space:nowrap}
+  table.items th:last-child{border-right:none}
+  table.items th .req{color:var(--red)}
+  table.items td{border-bottom:1px solid var(--border2);border-right:1px solid var(--border2);padding:0;vertical-align:middle}
+  table.items td:last-child{border-right:none}
+  table.items tr:last-child td{border-bottom:none}
+  table.items tr:nth-child(even) td{background:#f9fafb}
+  table.items tr:hover td{background:var(--accent-bg)}
+  .row-num{width:26px;text-align:center;font-size:11px;font-weight:700;color:var(--dim);background:var(--col);padding:0 4px;border-right:1px solid var(--border2);min-height:34px;display:flex;align-items:center;justify-content:center}
+  .t-input{border:none;outline:none;font-family:'Inter','Noto Sans TC',sans-serif;font-size:13px;color:var(--text);background:transparent;padding:6px 8px;width:100%;transition:background .15s;min-height:34px}
+  .t-input:focus{background:var(--accent-bg)}
+  .t-input::placeholder{color:#c5cdd8;font-size:12px}
+  select.t-input{cursor:pointer}
+
+  /* Photo */
+  .photo-sec{padding:12px 14px;border-top:1px solid var(--border2)}
+  .photo-label{font-size:11px;font-weight:600;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .photo-drop{border:2px dashed var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:border-color .2s;position:relative;background:#fafafa}
+  .photo-drop:hover{border-color:var(--accent);background:var(--accent-bg)}
+  .photo-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .photo-drop-text{font-size:12px;color:var(--dim)}
+  .photo-previews{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .preview-wrap{position:relative;width:76px;height:76px}
+  .preview-wrap img{width:76px;height:76px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+  .preview-remove{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:var(--red);border:none;border-radius:50%;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+  .remark-row{display:flex;border-top:1px solid var(--border2)}
+  .remark-label{font-size:10px;font-weight:600;color:var(--dim);background:var(--col);padding:7px 10px;white-space:nowrap;border-right:1px solid var(--border2);display:flex;align-items:center}
+  .remark-input{flex:1;border:none;outline:none;font-family:'Inter','Noto Sans TC',sans-serif;font-size:13px;color:var(--text);background:transparent;padding:7px 10px;transition:background .15s}
+  .remark-input:focus{background:var(--accent-bg)}
+  .remark-input::placeholder{color:#c5cdd8;font-size:12px}
+
+  /* History */
+  .history-panel{background:#f0fdfa;border:1.5px solid #99f6e4;border-radius:8px;overflow:hidden;margin-bottom:10px;display:none}
+  .history-panel.show{display:block}
+  .history-head{background:#ccfbf1;border-bottom:1px solid #99f6e4;padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#134e4a;display:flex;align-items:center;gap:6px}
+  .h-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 7px}
+  .h-for{font-size:11px;color:#134e4a;padding:4px 12px;font-style:italic;background:#e0fdf4;border-bottom:1px solid #99f6e4}
+  .htable{width:100%;border-collapse:collapse;font-size:12px}
+  .htable th{background:#ccfbf1;padding:4px 10px;text-align:left;font-weight:600;color:#134e4a;border-bottom:1px solid #99f6e4;font-size:10px;white-space:nowrap}
+  .htable td{padding:5px 10px;color:var(--text2);border-bottom:1px solid #e0fdf4}
+  .htable tr:last-child td{border-bottom:none}
+  .htable tr:nth-child(even) td{background:#f0fdfa}
+
+  /* Submit */
+  .btn-submit{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'Inter','Noto Sans TC',sans-serif;font-size:14px;font-weight:700;border:none;border-radius:8px;padding:13px;cursor:pointer;transition:opacity .2s;margin-bottom:14px}
+  .btn-submit:hover{opacity:.9}.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Records tab */
+  .filter-bar{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+  .fg{display:flex;flex-direction:column;gap:4px}
+  .fl{font-size:10px;font-weight:600;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
+  .fi{border:1px solid var(--border);border-radius:6px;padding:6px 9px;font-size:13px;font-family:'Inter','Noto Sans TC',sans-serif;color:var(--text);background:var(--white);outline:none;transition:border-color .15s}
+  .fi:focus{border-color:var(--accent)}
+  select.fi{cursor:pointer;min-width:110px}
+  .btn-q{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter','Noto Sans TC',sans-serif}
+  .btn-q:disabled{opacity:.5;cursor:not-allowed}
+  .btn-xl{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter','Noto Sans TC',sans-serif;display:none}
+  .btn-xl.show{display:block}
+
+  .stats-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .stat-card{background:var(--white);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;flex:1;min-width:100px}
+  .stat-label{font-size:10px;color:var(--dim);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+  .stat-value{font-size:20px;font-weight:700}
+
+  .rec-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .rec-head{background:var(--col);border-bottom:1px solid var(--border2);padding:8px 12px;font-size:10px;font-weight:700;letter-spacing:1px;color:#64748b;text-transform:uppercase}
+  .rec-scroll{overflow-x:auto}
+  .rtable{width:100%;border-collapse:collapse;font-size:12px;min-width:800px}
+  .rtable th{background:var(--col);padding:5px 9px;text-align:left;font-weight:600;color:var(--dim);border-bottom:2px solid var(--border);white-space:nowrap;font-size:11px}
+  .rtable td{padding:5px 9px;border-bottom:1px solid var(--border2);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+  .rtable tr:last-child td{border-bottom:none}
+  .rtable tr:nth-child(even) td{background:#fafafa}
+  .rtable tr:hover td{background:var(--accent-bg)}
+  .badge{display:inline-block;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:700}
+  .bp{background:#fef3c7;color:#92400e}.ba{background:#dcfce7;color:#166534}.br{background:#fee2e2;color:#991b1b}
+
+  .empty-state{text-align:center;padding:40px;color:var(--dim)}
+  .empty-state .ei{font-size:36px;margin-bottom:8px}
+  .loading-state{text-align:center;padding:36px;color:var(--dim);font-size:13px}
+
+  .status-card{display:none;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:40px 20px;text-align:center;margin-bottom:14px}
+  .s-icon{font-size:52px;margin-bottom:12px}.s-title{font-size:18px;font-weight:700;margin-bottom:6px}
+  .s-sub{font-size:13px;color:var(--dim);line-height:1.7}
+  .s-ts{margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);background:var(--accent-bg);border:1px solid #99f6e4;border-radius:6px;padding:5px 12px;display:inline-block}
+
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#f1f5f9;border-radius:7px;padding:9px 18px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;max-width:90vw;text-align:center}
+  #toast.show{opacity:1}
+  .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+  .spinner-dark{display:inline-block;width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .prog-wrap{height:3px;background:#e4e7ec;border-radius:2px;margin-top:6px;display:none;overflow:hidden}
+  .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#14b8a6);border-radius:2px;transition:width .3s}
+
+  @media(max-width:640px){
+    .info-row{grid-template-columns:1fr 1fr}
+    .filter-bar{flex-direction:column;align-items:stretch}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-icon">🔧</div>
+  <div style="flex:1">
+    <div class="topbar-title" id="tt">維修保養申請 · Repair Request</div>
+    <div class="topbar-sub">GA_PO_Bot</div>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('zh')">中文</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tab-form" onclick="switchTab('form')">🔧 <span id="tab-form-label">申請表單</span></div>
+  <div class="tab" id="tab-records" onclick="switchTab('records')">📊 <span id="tab-records-label">記錄查詢 & 匯出</span></div>
+</div>
+
+<div class="main">
+
+<!-- ══ FORM TAB ══ -->
+<div id="content-form" class="tab-content active">
+  <div class="strip">
+    <div class="ts-live"><div class="ts-dot"></div><span id="ts-now">--</span></div>
+    <span style="font-size:11px;color:var(--dim)" id="strip-hint">帶 * 為必填　最多4項　提交後即發到審批群組（含照片）</span>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head">👤 <span id="h1">申請人資訊 Applicant Info</span></div>
+    <div class="info-row">
+      <div class="info-cell">
+        <div class="cell-label"><span id="l-name">申請人 Applicant</span><span class="req">*</span></div>
+        <select class="cell-input" id="f-name">
+          <option value="">-- 請選擇 Select --</option>
+          <option>Phea</option><option>Srey Oun</option><option>Paul</option>
+        </select>
+      </div>
+      <div class="info-cell">
+        <div class="cell-label"><span id="l-dept">需求部門 Dept</span><span class="req">*</span></div>
+        <select class="cell-input" id="f-dept">
+          <option value="">-- 請選擇 Select --</option>
+          <option value="管理部 Admin">管理部 Admin</option>
+          <option value="生產部 Production">生產部 Production</option>
+          <option value="其它 Others">其它 Others</option>
+        </select>
+      </div>
+      <div class="info-cell">
+        <div class="cell-label"><span id="l-repno">維修號 Repair No.</span><span style="font-size:9px;color:#9ca3af" id="l-repno-opt">如有 if any</span></div>
+        <input class="cell-input" id="f-repno" type="text" placeholder="e.g. VRT-F-GA-06-0454" maxlength="50">
+      </div>
+      <div class="info-cell">
+        <div class="cell-label"><span id="l-date">申請日期 Date</span></div>
+        <input class="cell-input" id="f-date" type="text" readonly style="color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head">🔧 <span id="h2">維修項目 Repair Items</span><span class="note" id="h2-note">最多4項，不足留空 · Max 4 items per form</span></div>
+    <div class="items-wrap">
+      <table class="items">
+        <thead>
+          <tr>
+            <th style="width:26px">#</th>
+            <th style="width:16%" id="th-item">設備名稱 Item <span class="req">*</span></th>
+            <th style="width:10%" id="th-spec">規格/編號 Spec/ID</th>
+            <th style="width:10%" id="th-loc">地點/房間 Location <span class="req">*</span></th>
+            <th style="width:16%" id="th-issue">故障描述 Issue <span class="req">*</span></th>
+            <th style="width:10%" id="th-action">處理方式 Action</th>
+            <th style="width:9%" id="th-urgency">緊急程度</th>
+            <th style="width:10%" id="th-sup">供應商 Supplier</th>
+            <th style="width:8%" id="th-price">預估$ Est.</th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+
+    <div class="photo-sec">
+      <div class="photo-label">📷 <span id="l-photo">現場照片</span> <span style="font-size:10px;color:#9ca3af;font-weight:400" id="l-photo-opt">（選填，最多3張）</span></div>
+      <div class="photo-drop" id="photo-drop">
+        <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)">
+        <div style="font-size:22px;margin-bottom:4px">📷</div>
+        <div class="photo-drop-text" id="photo-drop-text">點此上傳照片 · Click to upload</div>
+      </div>
+      <div class="prog-wrap" id="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="photo-previews" id="photo-previews"></div>
+    </div>
+
+    <div class="remark-row">
+      <div class="remark-label" id="l-remark">📝 備註 Remark</div>
+      <input class="remark-input" id="f-remark" type="text" placeholder="Additional notes" maxlength="200">
+    </div>
+  </div>
+
+  <div class="history-panel" id="history-panel">
+    <div class="history-head">🔧 <span id="h-title">上次維修記錄 (已核可)</span><span class="h-badge" id="h-count">0</span></div>
+    <div class="h-for" id="h-for"></div>
+    <table class="htable">
+      <thead><tr><th id="ht-date">日期</th><th id="ht-dept">部門</th><th id="ht-item">設備</th><th id="ht-loc">地點</th><th id="ht-issue">故障</th><th id="ht-action">處理</th><th id="ht-supplier">供應商</th><th id="ht-price">金額</th></tr></thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+
+  <button class="btn-submit" id="submit-btn" onclick="submitForm()">
+    📨 <span id="btn-label">提交申請 Submit Application</span>
+  </button>
+
+  <div class="status-card" id="status-card">
+    <div class="s-icon" id="s-icon">✅</div>
+    <div class="s-title" id="s-title">申請已送出！</div>
+    <div class="s-sub" id="s-sub">核可人已收到通知，請等待審批結果。<br>Approver notified. Please wait for approval.</div>
+    <div class="s-ts" id="s-ts"></div>
+  </div>
+</div>
+
+<!-- ══ RECORDS TAB ══ -->
+<div id="content-records" class="tab-content">
+  <div class="filter-bar">
+    <div class="fg"><div class="fl" id="fl-year">年份</div><select class="fi" id="r-year"><option value="">全部</option></select></div>
+    <div class="fg"><div class="fl" id="fl-month">月份</div>
+      <select class="fi" id="r-month">
+        <option value="">全部 All</option>
+        <option value="01">1月</option><option value="02">2月</option><option value="03">3月</option>
+        <option value="04">4月</option><option value="05">5月</option><option value="06">6月</option>
+        <option value="07">7月</option><option value="08">8月</option><option value="09">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+    </div>
+    <div class="fg"><div class="fl" id="fl-status">狀態</div>
+      <select class="fi" id="r-status">
+        <option value="">全部</option>
+        <option value="待審核">⏳ 待審核</option>
+        <option value="已核可">✅ 已核可</option>
+        <option value="已退件">❌ 已退件</option>
+      </select>
+    </div>
+    <div class="fg"><div class="fl" id="fl-search">搜尋</div><input class="fi" type="text" id="r-search" placeholder="設備/申請人/地點..." style="min-width:150px"></div>
+    <button class="btn-q" id="r-query-btn" onclick="queryRecords()">🔍 <span id="r-query-label">查詢</span></button>
+    <button class="btn-xl" id="r-export-btn" onclick="exportExcel()">📥 <span id="r-export-label">下載 Excel</span></button>
+  </div>
+
+  <div class="stats-row" id="r-stats" style="display:none">
+    <div class="stat-card"><div class="stat-label" id="sl-total">總計</div><div class="stat-value" id="sv-total">0</div></div>
+    <div class="stat-card"><div class="stat-label" id="sl-approved">已核可</div><div class="stat-value" id="sv-approved" style="color:var(--green)">0</div></div>
+    <div class="stat-card"><div class="stat-label" id="sl-pending">待審核</div><div class="stat-value" id="sv-pending" style="color:var(--accent)">0</div></div>
+    <div class="stat-card"><div class="stat-label" id="sl-rejected">已退件</div><div class="stat-value" id="sv-rejected" style="color:var(--red)">0</div></div>
+  </div>
+
+  <div class="rec-wrap" id="rec-wrap">
+    <div class="empty-state"><div class="ei">🔧</div><div id="r-empty-text">選擇條件後點「查詢」 · Select filters and query</div></div>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script>
+const GAS_URL='https://script.google.com/macros/s/AKfycbwVxpnEQGhEHkKt6RTTp-EEEf8Unr7qg0yITiyu8zIXS1tHJrKZL73To7FOikBsatKU/exec';
+let lang='zh',currentTs='',currentDate='',photos=[],currentData=[];
+
+const TXT={
+  zh:{
+    tt:'維修保養申請 · Repair Request',
+    'tab-form-label':'申請表單','tab-records-label':'記錄查詢 & 匯出',
+    'strip-hint':'帶 * 為必填　最多4項　提交後即發到審批群組（含照片）',
+    h1:'申請人資訊 Applicant Info',h2:'維修項目 Repair Items','h2-note':'最多4項，不足留空 · Max 4 items per form',
+    'l-name':'申請人 Applicant','l-dept':'需求部門 Dept','l-repno':'維修號 Repair No.','l-repno-opt':'如有 if any','l-date':'申請日期 Date',
+    'th-item':'設備名稱 Item','th-spec':'規格/編號','th-loc':'地點/房間','th-issue':'故障描述',
+    'th-action':'處理方式','th-urgency':'緊急程度','th-sup':'供應商','th-price':'預估$',
+    'l-photo':'現場照片','l-photo-opt':'（選填，最多3張）','photo-drop-text':'點此上傳照片 · Click to upload',
+    'l-remark':'📝 備註 Remark',
+    'h-title':'上次維修記錄 (已核可)',
+    'ht-date':'日期','ht-dept':'部門','ht-item':'設備','ht-loc':'地點','ht-issue':'故障','ht-action':'處理','ht-supplier':'供應商','ht-price':'金額',
+    'btn-label':'提交申請 Submit Application',
+    'e-name':'請選擇申請人','e-dept':'請選擇需求部門','e-items':'請至少填寫1項（設備名稱、地點、故障描述）',
+    's-title':'申請已送出！','s-title-urgent':'🚨 緊急申請已送出！',
+    's-sub':'核可人已收到通知，請等待審批結果。<br>Approver notified. Please wait for approval.',
+    'fl-year':'年份','fl-month':'月份','fl-status':'狀態','fl-search':'搜尋',
+    'r-query-label':'查詢','r-export-label':'下載 Excel',
+    'sl-total':'總計','sl-approved':'已核可','sl-pending':'待審核','sl-rejected':'已退件',
+    'r-empty-text':'選擇條件後點「查詢」 · Select filters and query',
+  },
+  en:{
+    tt:'Repair Request Application',
+    'tab-form-label':'Application Form','tab-records-label':'Records & Export',
+    'strip-hint':'* = Required · Max 4 items · Submit to send for approval (with photos)',
+    h1:'Applicant Info',h2:'Repair Items','h2-note':'Max 4 items, leave unused rows blank',
+    'l-name':'Applicant','l-dept':'Requesting Dept','l-repno':'Repair No.','l-repno-opt':'if any','l-date':'Apply Date',
+    'th-item':'Item Name','th-spec':'Spec/ID','th-loc':'Location','th-issue':'Issue',
+    'th-action':'Action','th-urgency':'Urgency','th-sup':'Supplier','th-price':'Est.$',
+    'l-photo':'Site Photo','l-photo-opt':'(Optional, max 3)','photo-drop-text':'Click to upload photos',
+    'l-remark':'📝 Remark',
+    'h-title':'Last Repair Records (Approved)',
+    'ht-date':'Date','ht-dept':'Dept','ht-item':'Item','ht-loc':'Location','ht-issue':'Issue','ht-action':'Action','ht-supplier':'Supplier','ht-price':'Amount',
+    'btn-label':'Submit Application',
+    'e-name':'Please select applicant','e-dept':'Please select department','e-items':'Please fill at least 1 item (name, location, issue)',
+    's-title':'Submitted Successfully!','s-title-urgent':'🚨 Urgent Request Submitted!',
+    's-sub':'Approver has been notified.<br>Please wait for approval.',
+    'fl-year':'Year','fl-month':'Month','fl-status':'Status','fl-search':'Search',
+    'r-query-label':'Query','r-export-label':'Download Excel',
+    'sl-total':'Total','sl-approved':'Approved','sl-pending':'Pending','sl-rejected':'Rejected',
+    'r-empty-text':'Select filters and click Query to start',
+  }
+};
+
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.lang-btn').forEach((b,i)=>b.classList.toggle('active',i===(l==='zh'?0:1)));
+  Object.keys(TXT[l]).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=TXT[l][id]});
+  updateDropdowns(l);
+}
+
+const ACTIONS={zh:['','Repair 維修','Buy new part 買新品','Change from stock 換庫存'],en:['','Repair','Buy new part','Change from stock']};
+const URGENCY={zh:[{v:'normal',t:'🟢 普通 Normal'},{v:'urgent',t:'🟡 緊急 Urgent'},{v:'critical',t:'🔴 非常緊急 Critical'}],en:[{v:'normal',t:'🟢 Normal'},{v:'urgent',t:'🟡 Urgent'},{v:'critical',t:'🔴 Critical'}]};
+
+function updateDropdowns(l){
+  for(let i=0;i<4;i++){
+    const a=document.getElementById('act'+i);if(a){const cv=a.value;a.innerHTML=ACTIONS[l].map((x,j)=>`<option value="${x}">${j===0?(l==='zh'?'-- 選擇 --':'-- Select --'):x}</option>`).join('');a.value=cv;}
+    const u=document.getElementById('urg'+i);if(u){const cv=u.value||'normal';u.innerHTML=URGENCY[l].map(x=>`<option value="${x.v}">${x.t}</option>`).join('');u.value=cv;}
+  }
+}
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('content-'+t).classList.add('active');
+}
+
+function pad(n){return String(n).padStart(2,'0')}
+function updateTs(){
+  const d=new Date();
+  currentTs=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  currentDate=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const el=document.getElementById('ts-now');if(el)el.textContent=currentTs;
+  const fd=document.getElementById('f-date');if(fd)fd.value=currentDate;
+}
+updateTs();setInterval(updateTs,1000);
+
+// Year options
+(function(){
+  const sel=document.getElementById('r-year');const cur=new Date().getFullYear();
+  for(let y=cur;y>=2024;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'年';sel.appendChild(o);}
+  sel.value=cur;
+})();
+
+const params=new URLSearchParams(location.search);
+
+function buildRows(){
+  document.getElementById('items-body').innerHTML=[0,1,2,3].map(i=>`
+    <tr>
+      <td><div class="row-num">${i+1}</div></td>
+      <td><input class="t-input" id="item${i}" type="text" placeholder="${i===0?'e.g. Aircon':''}" maxlength="80" oninput="triggerHistory(this.value)"></td>
+      <td><input class="t-input" id="spec${i}" type="text" placeholder="N/A" maxlength="50"></td>
+      <td><input class="t-input" id="loc${i}" type="text" placeholder="${i===0?'e.g. Room 302':''}" maxlength="50"></td>
+      <td><input class="t-input" id="iss${i}" type="text" placeholder="${i===0?'e.g. Licking':''}" maxlength="120"></td>
+      <td><select class="t-input" id="act${i}"></select></td>
+      <td><select class="t-input" id="urg${i}"></select></td>
+      <td><input class="t-input" id="sup${i}" type="text" placeholder="" maxlength="60"></td>
+      <td><input class="t-input" id="prc${i}" type="text" placeholder="" maxlength="20"></td>
+    </tr>`).join('');
+  updateDropdowns(lang);
+}
+buildRows();
+
+function handlePhotos(e){
+  const files=Array.from(e.target.files);
+  if(photos.length+files.length>3){showToast(lang==='zh'?'最多3張照片':'Max 3 photos');return}
+  files.slice(0,3-photos.length).forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const MAX=800;
+        let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX}else{w=Math.round(w*MAX/h);h=MAX}}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        photos.push(canvas.toDataURL('image/jpeg',.6).split(',')[1]);
+        renderPreviews();
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function removePhoto(i){photos.splice(i,1);renderPreviews()}
+function renderPreviews(){
+  document.getElementById('photo-previews').innerHTML=photos.map((b,i)=>`
+    <div class="preview-wrap"><img src="data:image/jpeg;base64,${b}"><button class="preview-remove" onclick="removePhoto(${i})">✕</button></div>`).join('');
+  document.getElementById('photo-drop').style.display=photos.length>=3?'none':'block';
+}
+
+const MOCK_REPAIR=[
+  {date:'2026-02-19',dept:'Staff house',item:'Aircon',location:'Room 302',issue:'Licking',action:'Repair',supplier:'Chege Neany',price:'$15'},
+  {date:'2026-03-05',dept:'Staff house',item:'Light 9w',location:'Room 403',issue:'Broken',action:'Buy new part',supplier:'Ly Kheag',price:'$3.5'},
+];
+let hTimer=null,lastQ='';
+function triggerHistory(val){
+  clearTimeout(hTimer);
+  if(val.trim().length<2){document.getElementById('history-panel').classList.remove('show');lastQ='';return}
+  hTimer=setTimeout(()=>fetchHistory(val.trim()),400);
+}
+async function fetchHistory(q){
+  if(q===lastQ)return;lastQ=q;
+  let records=null;
+  try{const r=await fetch(`${GAS_URL}?action=repairHistory&item=${encodeURIComponent(q)}&approvedOnly=1`);const d=await r.json();if(d.records&&d.records.length>0)records=d.records;}catch(e){}
+  if(!records){const kw=q.toLowerCase();records=MOCK_REPAIR.filter(r=>r.item.toLowerCase().includes(kw));}
+  const panel=document.getElementById('history-panel');
+  if(records&&records.length>0){
+    document.getElementById('h-count').textContent=records.length;
+    document.getElementById('h-for').textContent=(lang==='zh'?'搜尋：':'Searching: ')+'"'+q+'"';
+    document.getElementById('history-body').innerHTML=records.map(r=>`<tr><td>${r.date}</td><td>${r.dept}</td><td>${r.item}</td><td>${r.location}</td><td>${r.issue}</td><td>${r.action||'-'}</td><td>${r.supplier||'-'}</td><td>${r.price||'-'}</td></tr>`).join('');
+    panel.classList.add('show');
+  }else{panel.classList.remove('show')}
+}
+
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function getV(id){return document.getElementById(id)?document.getElementById(id).value.trim():''}
+
+async function submitForm(){
+  const t=TXT[lang];
+  const name=getV('f-name'),dept=getV('f-dept');
+  if(!name){showToast(t['e-name']);return}
+  if(!dept){showToast(t['e-dept']);return}
+  const items=[];let hasUrgent=false;
+  for(let i=0;i<4;i++){
+    const n=getV(`item${i}`);
+    if(n){
+      const urg=getV(`urg${i}`);
+      if(urg==='urgent'||urg==='critical')hasUrgent=true;
+      items.push({no:i+1,itemName:n,spec:getV(`spec${i}`)||'N/A',location:getV(`loc${i}`)||'-',issue:getV(`iss${i}`)||'-',action:getV(`act${i}`)||'',urgency:urg||'normal',supplier:getV(`sup${i}`)||'',estPrice:getV(`prc${i}`)||''});
+    }
+  }
+  if(!items.length){showToast(t['e-items']);return}
+
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${lang==='zh'?'提交中...':'Submitting...'}`;
+  if(photos.length>0){document.getElementById('prog-wrap').style.display='block';document.getElementById('prog-fill').style.width='30%';}
+
+  const payload={action:'repairSubmit',timestamp:currentTs,applicantName:name,department:dept,repairNo:getV('f-repno'),remarks:getV('f-remark'),items,photos:[],tgUid:params.get('uid')||''};
+
+  try{
+    if(photos.length>0)document.getElementById('prog-fill').style.width='50%';
+    const res=await fetch(GAS_URL+'?action=repairSubmit&data='+encodeURIComponent(JSON.stringify(payload)));
+    const d=await res.json();
+
+    if(d.ok){
+      // Send photos directly to Telegram from browser
+      if(photos.length>0){
+        const BOT='8685420985:AAGW3zqNbFroVd28psTgDFmW_Bckt1zdVlY';
+        const CHAT='-5170895112';
+        let sent=0;
+        for(const b64 of photos){
+          try{
+            const byteStr=atob(b64);const arr=new Uint8Array(byteStr.length);
+            for(let j=0;j<byteStr.length;j++)arr[j]=byteStr.charCodeAt(j);
+            const blob=new Blob([arr],{type:'image/jpeg'});
+            const fd=new FormData();
+            fd.append('chat_id',CHAT);fd.append('photo',blob,'photo.jpg');
+            if(sent===0)fd.append('caption','📷 '+name+' | '+dept+' | '+currentTs.substring(0,16));
+            await fetch(`https://api.telegram.org/bot${BOT}/sendPhoto`,{method:'POST',body:fd});
+            sent++;
+            document.getElementById('prog-fill').style.width=(50+sent*16)+'%';
+          }catch(pe){console.log('photo err',pe)}
+        }
+      }
+      document.getElementById('prog-fill').style.width='100%';
+      setTimeout(()=>{document.getElementById('prog-wrap').style.display='none';},500);
+
+      document.getElementById('submit-btn').style.display='none';
+      const sc=document.getElementById('status-card');sc.style.display='block';
+      document.getElementById('s-icon').textContent=hasUrgent?'🚨':'✅';
+      document.getElementById('s-title').textContent=hasUrgent?t['s-title-urgent']:t['s-title'];
+      document.getElementById('s-sub').innerHTML=t['s-sub'];
+      document.getElementById('s-ts').textContent='📅 '+currentTs;
+    }else{
+      showToast('❌ '+(d.error||'Error'));
+      btn.disabled=false;btn.innerHTML=`📨 <span id="btn-label">${t['btn-label']}</span>`;
+      document.getElementById('prog-wrap').style.display='none';
+    }
+  }catch(e){
+    showToast('❌ Network error. Please retry.');
+    btn.disabled=false;btn.innerHTML=`📨 <span id="btn-label">${t['btn-label']}</span>`;
+    document.getElementById('prog-wrap').style.display='none';
+  }
+}
+
+/* Records */
+async function queryRecords(){
+  const year=getV('r-year'),month=document.getElementById('r-month').value,status=document.getElementById('r-status').value,search=getV('r-search');
+  const btn=document.getElementById('r-query-btn');
+  btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${lang==='zh'?'查詢中...':'Querying...'}`;
+  document.getElementById('rec-wrap').innerHTML=`<div class="loading-state"><span class="spinner-dark"></span>${lang==='zh'?'載入中...':'Loading...'}</div>`;
+  document.getElementById('r-stats').style.display='none';
+  document.getElementById('r-export-btn').classList.remove('show');
+  try{
+    const url=`${GAS_URL}?action=exportRecords&sys=rep&year=${year}&month=${month}&status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}`;
+    const res=await fetch(url);const d=await res.json();
+    if(d.ok&&d.records){currentData=d.records;renderRecords(d.records);renderStats(d.records);}
+    else{showToast('❌ '+(d.error||'Error'));document.getElementById('rec-wrap').innerHTML=`<div class="empty-state"><div class="ei">❌</div><div>${d.error||'Error'}</div></div>`;}
+  }catch(e){showToast('❌ Network error');document.getElementById('rec-wrap').innerHTML=`<div class="empty-state"><div class="ei">⚠️</div><div>Network error</div></div>`;}
+  btn.disabled=false;btn.innerHTML=`🔍 <span id="r-query-label">${TXT[lang]['r-query-label']}</span>`;
+}
+
+function renderRecords(records){
+  if(!records.length){document.getElementById('rec-wrap').innerHTML=`<div class="empty-state"><div class="ei">🔍</div><div>${lang==='zh'?'沒有找到符合的記錄':'No records found'}</div></div>`;return}
+  const hdrs=['時間','申請人','部門','維修號','設備名稱','規格/編號','地點','故障描述','處理方式','緊急程度','供應商','預估金額','備註','狀態','核可人','核可時間'];
+  const bc=s=>s==='已核可'?'ba':s==='已退件'?'br':'bp';
+  const bt=s=>s==='已核可'?'✅ '+s:s==='已退件'?'❌ '+s:'⏳ '+s;
+  document.getElementById('rec-wrap').innerHTML=`
+    <div class="rec-head">${lang==='zh'?'查詢結果':'Results'} — ${records.length} ${lang==='zh'?'筆':'records'}</div>
+    <div class="rec-scroll"><table class="rtable">
+      <thead><tr>${hdrs.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${records.map(row=>`<tr>${row.map((c,i)=>i===13?`<td><span class="badge ${bc(c)}">${bt(c)}</span></td>`:`<td title="${c}">${c||'—'}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div>`;
+  if(records.length>0)document.getElementById('r-export-btn').classList.add('show');
+}
+
+function renderStats(records){
+  document.getElementById('sv-total').textContent=records.length;
+  document.getElementById('sv-approved').textContent=records.filter(r=>r[13]==='已核可').length;
+  document.getElementById('sv-pending').textContent=records.filter(r=>r[13]==='待審核').length;
+  document.getElementById('sv-rejected').textContent=records.filter(r=>r[13]==='已退件').length;
+  document.getElementById('r-stats').style.display='flex';
+}
+
+function exportExcel(){
+  if(!currentData.length){showToast(lang==='zh'?'沒有資料':'No data');return}
+  const hdrs=['時間戳記','申請人','部門','維修號','設備名稱','規格/編號','地點/房間','故障描述','處理方式','緊急程度','供應商','預估金額','備註','狀態','核可人','核可時間'];
+  const ws=XLSX.utils.aoa_to_sheet([hdrs,...currentData]);
+  ws['!cols']=hdrs.map((_,i)=>({wch:i===0?18:i===4||i===7?24:14}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Repair_Records');
+  const y=document.getElementById('r-year').value||'ALL';
+  const m=document.getElementById('r-month').value||'ALL';
+  XLSX.writeFile(wb,`VRT_GA_Repair_${y}_${m}.xlsx`);
+  showToast(`✅ 已下載 VRT_GA_Repair_${y}_${m}.xlsx`);
+}
+</script>
+</body>
+</html>
