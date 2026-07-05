@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AC-GA-EXP · Fuel Center 燃油中心</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Noto+Sans+Khmer:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans','Noto Sans Khmer',system-ui,sans-serif;background:#f0f2f7;color:#1a2332;font-size:13px}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#c4cdd5;border-radius:3px}
+
+.header{background:linear-gradient(135deg,#0f2b46 0%,#1a4a2e 60%,#2d6b3f 100%);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:42px;height:42px;background:rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.h-title{font-size:15px;font-weight:800;color:#fff}.h-sub{font-size:10px;color:#8bc4a3;margin-top:2px}
+.h-stats{margin-left:auto;display:flex;gap:20px}
+.hstat{text-align:right}.hstat-v{font-size:18px;font-weight:800;color:#7ee8a8;font-family:monospace;line-height:1}
+.hstat-l{font-size:9px;color:#8bc4a3;text-transform:uppercase;letter-spacing:.04em}
+.lang-group{display:flex;gap:3px;margin-left:12px}
+.lang-btn{padding:4px 10px;border-radius:6px;border:1.5px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;font-weight:700;font-size:10px;font-family:inherit;transition:all .15s}
+.lang-btn:hover{background:rgba(255,255,255,.1)}.lang-btn.on{background:rgba(255,255,255,.18);border-color:#fff}
+
+.tabs{background:#fff;border-bottom:2px solid #e2e6f0;display:flex;padding:0 20px;overflow-x:auto;gap:0}
+.tab{padding:11px 14px;font-size:12px;cursor:pointer;color:#6b7a9e;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;font-weight:600;transition:all .15s;user-select:none}
+.tab:hover{color:#1a2332;background:#f7f8fc}.tab.on{color:#1a6b3f;border-bottom-color:#1a6b3f;background:#eef8f2}
+
+.sec{display:none;padding:18px 22px}.sec.on{display:block}
+.card{background:#fff;border:1px solid #e2e6f0;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.03)}
+.ct{font-size:11px;font-weight:800;color:#5a6a7e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.ct::before{content:'';width:3px;height:11px;background:#1a6b3f;border-radius:2px}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid #e2e6f0;border-radius:10px;padding:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+.kpi-n{font-size:24px;font-weight:800;font-family:monospace;line-height:1}.kpi-u{font-size:10px;color:#6b7a9e;margin-left:2px;font-weight:400}
+.kpi-l{font-size:10px;color:#6b7a9e;margin-top:5px}.kpi-icon{font-size:18px;margin-bottom:3px}
+
+.frow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+select,.inp{background:#fff;border:1px solid #d0d5e8;color:#1a2332;padding:7px 10px;border-radius:7px;font-size:12px;font-family:inherit;cursor:pointer;outline:none;transition:border .15s}
+select:focus,.inp:focus{border-color:#1a6b3f;box-shadow:0 0 0 2px rgba(26,107,63,.08)}.inp{cursor:text}
+
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 15px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
+.btn:hover{filter:brightness(.92)}
+.btn-b{background:#1a6b3f;color:#fff}.btn-g{background:#fff;color:#5a6a7e;border:1px solid #d0d5e8}.btn-g:hover{background:#f7f8fc}
+.btn-s{background:#0d6b50;color:#fff}.btn-r{background:#fff5f5;color:#c62828;border:1px solid #fecaca}
+.btn-a{background:#e6a700;color:#1c1200}.btn-ex{background:#e8f2fc;color:#1a73c7;border:1px solid #93c5fd;font-size:11px;padding:5px 12px}
+
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 10px;color:#5a6a7e;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid #e2e6f0;background:#f7f8fb;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#1a6b3f}
+td{padding:8px 10px;border-bottom:1px solid #eef0f6;white-space:nowrap}
+tr:hover td{background:#f5f8f6}
+.mono{font-family:monospace}
+.badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.03em}
+.b-hi{background:#fdeaea;color:#c62828}.b-lo{background:#e3f5ed;color:#0d8050}.b-norm{background:#e8f2fc;color:#1a73c7}
+
+.drop{border:2.5px dashed #c5c9d8;border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafbfc}
+.drop:hover,.drop.drag{border-color:#1a6b3f;background:#eef8f2}
+.drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+.toast{position:fixed;top:18px;right:18px;z-index:9999;padding:12px 20px;border-radius:9px;font-weight:700;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.1);animation:toastIn .3s ease;font-family:inherit}
+.toast-ok{background:#e3f5ed;color:#0d8050}.toast-err{background:#fdeaea;color:#c62828}.toast-info{background:#e8f2fc;color:#1a73c7}
+@keyframes toastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+
+.al{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:10px;line-height:1.7}
+.al-ok{background:#e3f5ed;border:1px solid #6ee7b7;color:#065f46}
+.al-w{background:#fdf6e3;border:1px solid #fcd34d;color:#92400e}
+.al-i{background:#e8f2fc;border:1px solid #93c5fd;color:#1e40af}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-box{position:relative;height:260px}
+.empty{text-align:center;padding:44px 20px;color:#8b95b8;font-size:13px}
+
+.modal-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(15,25,40,.4);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:14px;padding:24px 26px;width:620px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.15);transform:translateY(10px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:10px;font-weight:700;color:#5a6a7e;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.form-group .inp{width:100%}
+
+@media(max-width:700px){
+.header{padding:10px 14px}.h-stats{display:none}.sec{padding:12px 14px}
+.g2{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}
+.kpi-strip{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+<div class="logo">🛢️</div>
+<div><div class="h-title" id="hTitle">AC-GA-EXP 燃油中心</div><div class="h-sub">Fuel Center · Diesel Management · <a href="index.html" style="color:inherit;text-decoration:underline">🏠 平台首頁</a></div></div>
+<div class="h-stats">
+<div class="hstat"><div class="hstat-v" id="hDrv">0</div><div class="hstat-l tl" data-k="hlDrv">司機記錄</div></div>
+<div class="hstat"><div class="hstat-v" id="hFork">0</div><div class="hstat-l tl" data-k="hlFork">叉車記錄</div></div>
+<div class="hstat"><div class="hstat-v" id="hGen">0</div><div class="hstat-l tl" data-k="hlGen">發電機</div></div>
+<div class="hstat"><div class="hstat-v" id="hTot">0</div><div class="hstat-l tl" data-k="hlTot">總升數</div></div>
+</div>
+<div class="lang-group">
+<button class="lang-btn on" data-l="zh" onclick="setLang('zh')">中文</button>
+<button class="lang-btn" data-l="en" onclick="setLang('en')">EN</button>
+<button class="lang-btn" data-l="km" onclick="setLang('km')">ខ្មែរ</button>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs" id="tabBar">
+<div class="tab on" data-t="upload" onclick="goTab('upload',this)">📥 <span class="tl" data-k="tUpload">匯入資料</span></div>
+<div class="tab" data-t="daily" onclick="goTab('daily',this)">📊 <span class="tl" data-k="tDaily">每日報告</span></div>
+<div class="tab" data-t="weekly" onclick="goTab('weekly',this)">📅 <span class="tl" data-k="tWeekly">週統計</span></div>
+<div class="tab" data-t="monthly" onclick="goTab('monthly',this)">📆 <span class="tl" data-k="tMonthly">月/年趨勢</span></div>
+<div class="tab" data-t="compare" onclick="goTab('compare',this)">🔍 <span class="tl" data-k="tCompare">分類比對</span></div>
+<div class="tab" data-t="records" onclick="goTab('records',this)">📋 <span class="tl" data-k="tRecords">所有記錄</span></div>
+<div class="tab" data-t="settings" onclick="goTab('settings',this)">⚙️ <span class="tl" data-k="tSettings">設定</span></div>
+</div>
+
+<!-- SEC: UPLOAD -->
+<div class="sec on" id="sec-upload">
+<div class="card">
+<div class="ct">📂 <span class="tl" data-k="impTitle">匯入 Excel 資料</span></div>
+<div class="al al-i" style="margin-bottom:12px">
+<b class="tl" data-k="parseInfo">自動解析邏輯：</b><span class="tl" data-k="parseDesc">支援司機柴油(橫向表)、叉車柴油(標準表)、發電機柴油(多行合併)、行車紀錄(分頁司機)四種格式，自動識別並轉換。</span>
+</div>
+<div class="drop" id="dropzone">
+<input type="file" multiple accept=".xlsx,.xls" onchange="handleFiles(event)">
+<div style="font-size:36px;margin-bottom:8px">📁</div>
+<div style="font-size:15px;font-weight:700;color:#1a2332" class="tl" data-k="dropLabel">拖放 Excel 檔案到這裡</div>
+<div style="font-size:11px;color:#8b95b8;margin-top:6px">.xlsx · 多檔同時拖入 · 自動合併</div>
+</div>
+<div id="importPreview" class="hidden" style="margin-top:16px"></div>
+</div>
+<div class="card" id="dbCard">
+<div class="ct">💾 <span class="tl" data-k="dbStatus">已儲存資料狀況</span></div>
+<div id="dbInfo"></div>
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-g" onclick="backupJSON()">⬇ <span class="tl" data-k="backup">備份 JSON</span></button>
+<label class="btn btn-g" style="cursor:pointer">⬆ <span class="tl" data-k="restore">還原 JSON</span><input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)"></label>
+<button class="btn btn-s" onclick="exportAllExcel()">📥 <span class="tl" data-k="exportAll">匯出全部 Excel</span></button>
+<button class="btn btn-r" onclick="clearAll()">🗑 <span class="tl" data-k="clearAll">清除所有資料</span></button>
+</div>
+</div>
+<div class="card">
+<div class="ct">✍️ <span class="tl" data-k="manualAdd">手動新增紀錄</span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-b" onclick="openForm('driver')">+ <span class="tl" data-k="addDrv">新增司機柴油</span></button>
+<button class="btn btn-b" onclick="openForm('forklift')">+ <span class="tl" data-k="addFork">新增叉車柴油</span></button>
+<button class="btn btn-b" onclick="openForm('generator')">+ <span class="tl" data-k="addGen">新增發電機</span></button>
+</div>
+</div>
+</div>
+
+<!-- SEC: DAILY -->
+<div class="sec" id="sec-daily">
+<div class="frow">
+<button class="btn btn-g" onclick="navDay(-1)" style="padding:6px 10px;font-size:15px">◀</button>
+<select id="dSel" onchange="renderDaily()"></select>
+<button class="btn btn-g" onclick="navDay(1)" style="padding:6px 10px;font-size:15px">▶</button>
+<select id="dCat" onchange="renderDaily()"><option value="">🛢️ 全部</option><option value="driver">🚗 司機</option><option value="forklift">🏗️ 叉車</option><option value="generator">⚡ 發電機</option></select>
+<span id="dMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
+<button class="btn btn-ex" onclick="exportTab('daily')">⬇ Excel</button>
+</div>
+<div id="dKpi" class="kpi-strip"></div>
+<div class="card"><div class="ct"><span class="tl" data-k="detailTable">當日明細表</span></div>
+<div class="tw"><table><thead id="dHead"></thead><tbody id="dBody"></tbody></table></div></div>
+<div class="g2">
+<div class="card"><div class="ct">👤 <span class="tl" data-k="catBreak">分類消耗</span></div><div class="chart-box"><canvas id="cDayCat"></canvas></div></div>
+<div class="card"><div class="ct">🚗 <span class="tl" data-k="drvBreak">司機分佈</span></div><div class="chart-box"><canvas id="cDayDrv"></canvas></div></div>
+</div>
+</div>
+
+<!-- SEC: WEEKLY -->
+<div class="sec" id="sec-weekly">
+<div class="frow">
+<button class="btn btn-g" onclick="navWeek(-1)" style="padding:6px 10px;font-size:15px">◀</button>
+<select id="wSel" onchange="renderWeekly()"></select>
+<button class="btn btn-g" onclick="navWeek(1)" style="padding:6px 10px;font-size:15px">▶</button>
+<span id="wMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
+<button class="btn btn-ex" onclick="exportTab('weekly')">⬇ Excel</button>
+</div>
+<div id="wKpi" class="kpi-strip"></div>
+<div class="card"><div class="ct"><span class="tl" data-k="weekTable">本週每日明細</span></div>
+<div class="tw"><table><thead id="wHead"></thead><tbody id="wBody"></tbody></table></div></div>
+<div class="g2">
+<div class="card"><div class="ct">📊 <span class="tl" data-k="weekChart">本週趨勢</span></div><div class="chart-box"><canvas id="cWeek"></canvas></div></div>
+<div class="card"><div class="ct">🥧 <span class="tl" data-k="weekCat">分類佔比</span></div><div class="chart-box"><canvas id="cWeekCat"></canvas></div></div>
+</div>
+</div>
+
+<!-- SEC: MONTHLY -->
+<div class="sec" id="sec-monthly">
+<div class="frow">
+<button class="btn btn-b" id="btnMon" onclick="setPeriod('month')"><span class="tl" data-k="monReport">月報</span></button>
+<button class="btn btn-g" id="btnYr" onclick="setPeriod('year')"><span class="tl" data-k="yrReport">年報</span></button>
+<span id="pMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
+<button class="btn btn-ex" onclick="exportTab('period')">⬇ Excel</button>
+</div>
+<div class="card"><div class="ct" id="pTitle">📆 <span class="tl" data-k="periodTable">月別報表</span></div>
+<div class="tw"><table><thead id="pHead"></thead><tbody id="pBody"></tbody></table></div></div>
+<div class="card"><div class="ct">📈 <span class="tl" data-k="trendChart">趨勢圖</span></div><div class="chart-box"><canvas id="cPeriod"></canvas></div></div>
+</div>
+
+<!-- SEC: COMPARE -->
+<div class="sec" id="sec-compare">
+<div class="frow">
+<select id="cmpMonth" onchange="renderCompare()"><option value="">所有月份</option></select>
+<select id="cmpCat" onchange="renderCompare()"><option value="">🛢️ 全部</option><option value="driver">🚗 司機</option><option value="forklift">🏗️ 叉車</option><option value="generator">⚡ 發電機</option></select>
+<span id="cmpMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
+<button class="btn btn-ex" onclick="exportTab('compare')">⬇ Excel</button>
+</div>
+<div id="cmpKpi" class="kpi-strip"></div>
+<div class="g2">
+<div class="card"><div class="ct">📊 <span class="tl" data-k="catCompare">分類月度比對</span></div><div class="chart-box"><canvas id="cCmpBar"></canvas></div></div>
+<div class="card"><div class="ct">🥧 <span class="tl" data-k="catRatio">分類佔比</span></div><div class="chart-box"><canvas id="cCmpPie"></canvas></div></div>
+</div>
+<div class="card"><div class="ct">📋 <span class="tl" data-k="cmpDetail">比對明細</span></div>
+<div class="tw"><table><thead id="cmpHead"></thead><tbody id="cmpBody"></tbody></table></div></div>
+</div>
+
+<!-- SEC: RECORDS -->
+<div class="sec" id="sec-records">
+<div class="frow">
+<select id="rCat" onchange="renderRecs()"><option value="">🛢️ 全部</option><option value="driver">🚗 司機</option><option value="forklift">🏗️ 叉車</option><option value="generator">⚡ 發電機</option></select>
+<select id="rMonth" onchange="renderRecs()"><option value="">所有月份</option></select>
+<input class="inp" id="rSearch" placeholder="搜尋..." style="min-width:130px" oninput="renderRecs()">
+<span id="rMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
+<button class="btn btn-ex" onclick="exportTab('records')">⬇ Excel</button>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+<button class="btn btn-r" onclick="deleteFiltered()">🗑 <span class="tl" data-k="delFiltered">刪除篩選結果</span></button>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="tw"><table><thead id="rHead"></thead><tbody id="rBody"></tbody></table></div>
+</div>
+</div>
+
+<!-- SEC: SETTINGS -->
+<div class="sec" id="sec-settings">
+<div class="g2">
+<div class="card">
+<div class="ct">🔗 GAS Backend URL</div>
+<div class="form-group"><label>Google Apps Script URL</label>
+<input class="inp" type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveCfg()"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-b" onclick="cloudUpload()">☁️ 上傳雲端 Upload</button>
+<button class="btn btn-b" onclick="cloudDownload()">📥 下載雲端 Download</button>
+<button class="btn" onclick="syncGAS()">🔄 <span class="tl" data-k="syncGAS">舊系統匯入 (action=all)</span></button>
+</div>
+<div class="al al-i" style="margin-top:10px" id="gasStatus">Enter your GAS deployment URL above.</div>
+</div>
+<div class="card">
+<div class="ct">📱 Telegram</div>
+<div class="form-group"><label>Bot Token</label><input class="inp" type="text" id="tgToken" oninput="saveCfg()"></div>
+<div class="form-group"><label>Chat ID</label><input class="inp" type="text" id="tgChat" oninput="saveCfg()"></div>
+<button class="btn btn-b" onclick="sendTgSummary()">📤 <span class="tl" data-k="sendTG">發送 Telegram 報告</span></button>
+</div>
+</div>
+<div class="card">
+<div class="ct">📊 <span class="tl" data-k="sumReport">彙總報告</span></div>
+<div class="form-group"><label><span class="tl" data-k="sumDate">報告日期</span></label><input class="inp" type="date" id="sumDate"></div>
+<div id="sumBox" style="background:#f8f9fc;border:1px solid #e2e6f0;border-radius:8px;padding:14px;font-size:12px;white-space:pre-wrap;min-height:100px;line-height:1.8;margin-top:8px"></div>
+<div style="margin-top:10px;display:flex;gap:8px">
+<button class="btn btn-g" onclick="copySummary()">📋 <span class="tl" data-k="copy">複製</span></button>
+</div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="formModal">
+<div class="modal">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h3 id="formTitle" style="font-size:15px;font-weight:800;color:#1a6b3f">新增記錄</h3>
+<button onclick="closeForm()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#8b95b8">✕</button>
+</div>
+<div id="formBody"></div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+<button class="btn btn-g" onclick="closeForm()"><span class="tl" data-k="cancel">取消</span></button>
+<button class="btn btn-b" onclick="saveRec()">💾 <span class="tl" data-k="save">儲存</span></button>
+</div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  I18N
+// ═══════════════════════════════════════════════════════════
+const I18N={
+zh:{hTitle:'VRT 柴油管理系統',hlDrv:'司機記錄',hlFork:'叉車記錄',hlGen:'發電機',hlTot:'總升數',
+tUpload:'匯入資料',tDaily:'每日報告',tWeekly:'週統計',tMonthly:'月/年趨勢',tCompare:'分類比對',tRecords:'所有記錄',tSettings:'設定',
+impTitle:'匯入 Excel 資料',parseInfo:'自動解析邏輯：',parseDesc:'支援司機柴油(橫向表)、叉車柴油(標準表)、發電機柴油(多行合併)、行車紀錄(分頁司機)四種格式。',
+dropLabel:'拖放 Excel 檔案到這裡',dbStatus:'已儲存資料狀況',backup:'備份 JSON',restore:'還原 JSON',
+exportAll:'匯出全部 Excel',clearAll:'清除所有資料',manualAdd:'手動新增紀錄',
+addDrv:'新增司機柴油',addFork:'新增叉車柴油',addGen:'新增發電機',
+detailTable:'當日明細表',catBreak:'分類消耗',drvBreak:'司機/設備分佈',
+weekTable:'本週每日明細',weekChart:'本週趨勢',weekCat:'分類佔比',
+monReport:'月報',yrReport:'年報',periodTable:'月別報表',trendChart:'趨勢圖',
+catCompare:'分類月度比對',catRatio:'分類佔比',cmpDetail:'比對明細',
+delFiltered:'刪除篩選結果',syncGAS:'同步雲端資料',sendTG:'發送 Telegram 報告',
+sumReport:'彙總報告',sumDate:'報告日期',copy:'複製',cancel:'取消',save:'儲存',
+noData:'尚無資料',imported:'已匯入',saved:'已儲存',deleted:'已刪除',exported:'已匯出',
+confirmDel:'確定刪除？',confirmClear:'清除所有資料？無法復原。',records:'筆記錄',
+date:'日期',driver:'司機',plate:'車牌',km:'公里',liters:'升數',from:'出發地',to:'目的地',
+dept:'部門',forklift:'叉車號',startKM:'起始KM',arriveKM:'到達KM',totalKM:'總KM',
+kw:'千瓦',hours:'時數',machine:'機組',remarks:'備註',total:'合計',avg:'平均'},
+en:{hTitle:'VRT Diesel Management System',hlDrv:'Driver Rec',hlFork:'Forklift Rec',hlGen:'Generator',hlTot:'Total L',
+tUpload:'Import Data',tDaily:'Daily Report',tWeekly:'Weekly Stats',tMonthly:'Monthly/Yearly',tCompare:'Category Compare',tRecords:'All Records',tSettings:'Settings',
+impTitle:'Import Excel Data',parseInfo:'Auto-parse Logic:',parseDesc:'Supports Driver Diesel (pivot table), Forklift Diesel (standard), Generator (multi-row), Transportation Record (per-driver sheets).',
+dropLabel:'Drop Excel files here',dbStatus:'Saved Data Status',backup:'Backup JSON',restore:'Restore JSON',
+exportAll:'Export All Excel',clearAll:'Clear All Data',manualAdd:'Add Records Manually',
+addDrv:'Add Driver Diesel',addFork:'Add Forklift Diesel',addGen:'Add Generator',
+detailTable:'Daily Detail Table',catBreak:'Category Consumption',drvBreak:'Driver/Equipment',
+weekTable:'Weekly Daily Detail',weekChart:'Weekly Trend',weekCat:'Category Ratio',
+monReport:'Monthly',yrReport:'Yearly',periodTable:'Period Report',trendChart:'Trend Chart',
+catCompare:'Category Monthly Compare',catRatio:'Category Ratio',cmpDetail:'Comparison Detail',
+delFiltered:'Delete Filtered',syncGAS:'Sync Cloud Data',sendTG:'Send Telegram Report',
+sumReport:'Summary Report',sumDate:'Report Date',copy:'Copy',cancel:'Cancel',save:'Save',
+noData:'No data',imported:'Imported',saved:'Saved',deleted:'Deleted',exported:'Exported',
+confirmDel:'Delete?',confirmClear:'Clear all data? Cannot be undone.',records:'records',
+date:'Date',driver:'Driver',plate:'Plate',km:'KM',liters:'Liters',from:'From',to:'To',
+dept:'Dept',forklift:'Forklift#',startKM:'Start KM',arriveKM:'Arrive KM',totalKM:'Total KM',
+kw:'KW',hours:'Hours',machine:'Machine',remarks:'Remarks',total:'Total',avg:'Avg'},
+km:{hTitle:'\u179A\u1794\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD\u1794\u17D2\u179A\u17C1\u1784 VRT',hlDrv:'\u1780\u17C6\u178E\u178F\u17CB\u178F\u17D2\u179A\u17B6\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780',hlFork:'\u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A',hlGen:'\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',hlTot:'\u179F\u179A\u17BB\u1794\u179B\u17B8\u178F\u17D2\u179A',
+tUpload:'\u1793\u17B6\u17C6\u1785\u17BC\u179B\u1791\u17B7\u1793\u17D2\u1793\u1793\u17D0\u1799',tDaily:'\u179A\u1794\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD\u1794\u17D2\u179A\u1785\u17B6\u17C6\u1790\u17D2\u1784\u17C3',tWeekly:'\u179F\u1794\u17D2\u178F\u17B6\u17A0\u17CD',tMonthly:'\u1781\u17C2/\u1786\u17D2\u1793\u17B6\u17C6',tCompare:'\u1794\u17D2\u179A\u17C0\u1794\u1792\u17C0\u1794',tRecords:'\u1780\u17C6\u178E\u178F\u17CB\u178F\u17D2\u179A\u17B6\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB',tSettings:'\u1780\u17B6\u179A\u1780\u17C6\u178E\u178F\u17CB',
+impTitle:'\u1793\u17B6\u17C6\u1785\u17BC\u179B Excel',parseInfo:'\u178F\u179A\u17D2\u1780\u17C2\u179C\u17B7\u1797\u17B6\u1782\u17D6',parseDesc:'\u179F\u17D2\u179C\u17D0\u1799\u179A\u1780\u179F\u17D2\u179C\u17D0\u1799\u1794\u17D2\u179A\u17C1\u1784\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780 \u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A \u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793\u1795\u17D2\u179F\u17C1\u1784\u17D7',
+dropLabel:'\u17A2\u17BC\u179F\u17A0\u17BE\u179A\u17AF\u1780\u179F\u17B6 Excel',dbStatus:'\u179F\u17D2\u1790\u17B6\u1793\u1797\u17B6\u1796\u1791\u17B7\u1793\u17D2\u1793\u1793\u17D0\u1799',backup:'\u1794\u1798\u17D2\u179A\u17BB\u1784 JSON',restore:'\u179F\u17D2\u178F\u17B6\u179A JSON',
+exportAll:'\u1793\u17B6\u17C6\u1785\u17C1\u1789 Excel',clearAll:'\u179B\u17BB\u1794\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB',manualAdd:'\u1794\u1793\u17D2\u1790\u17C2\u1798\u178A\u17C4\u1799\u178A\u17C3',
+addDrv:'\u1794\u1793\u17D2\u1790\u17C2\u1798\u1794\u17D2\u179A\u17C1\u1784\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780',addFork:'\u1794\u1793\u17D2\u1790\u17C2\u1798\u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A',addGen:'\u1794\u1793\u17D2\u1790\u17C2\u1798\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',
+detailTable:'\u178F\u17B6\u179A\u17B6\u1784\u179B\u1798\u17D2\u17A2\u17B7\u178F',catBreak:'\u1794\u17D2\u179A\u17C1\u1784\u178F\u17B6\u1798\u1794\u17D2\u179A\u1797\u17C1\u1791',drvBreak:'\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780/\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',
+weekTable:'\u179B\u1798\u17D2\u17A2\u17B7\u178F\u179F\u1794\u17D2\u178F\u17B6\u17A0\u17CD',weekChart:'\u1793\u17B7\u1793\u17D2\u1793\u17B6\u1780\u17B6\u179A',weekCat:'\u179F\u17C1\u178A\u17D2\u178B\u1797\u17B6\u1782',
+monReport:'\u1781\u17C2',yrReport:'\u1786\u17D2\u1793\u17B6\u17C6',periodTable:'\u179A\u1794\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD',trendChart:'\u1793\u17B7\u1793\u17D2\u1793\u17B6\u1780\u17B6\u179A',
+catCompare:'\u1794\u17D2\u179A\u17C0\u1794\u1792\u17C0\u1794\u1794\u17D2\u179A\u1785\u17B6\u17C6\u1781\u17C2',catRatio:'\u179F\u17C1\u178A\u17D2\u178B\u1797\u17B6\u1782',cmpDetail:'\u179B\u1798\u17D2\u17A2\u17B7\u178F',
+delFiltered:'\u179B\u17BB\u1794',syncGAS:'\u179F\u17CA\u17B8\u1793\u1780\u17D2\u179A\u17C4\u1793\u17B7\u1780',sendTG:'Telegram',
+sumReport:'\u179A\u1794\u17B6\u1799\u1780\u17B6\u179A\u178E\u17CD\u179F\u179A\u17BB\u1794',sumDate:'\u1780\u17B6\u179B\u1794\u179A\u17B7\u1785\u17D2\u1786\u17C1\u1791',copy:'\u1785\u1798\u17D2\u179B\u1784',cancel:'\u1794\u17C4\u17C7\u1794\u1784\u17CB',save:'\u179A\u1780\u17D2\u179F\u17B6\u1791\u17BB\u1780',
+noData:'\u1782\u17D2\u1798\u17B6\u1793\u1791\u17B7\u1793\u17D2\u1793\u1793\u17D0\u1799',imported:'\u1794\u17B6\u1793\u1793\u17B6\u17C6\u1785\u17BC\u179B',saved:'\u1794\u17B6\u1793\u179A\u1780\u17D2\u179F\u17B6\u1791\u17BB\u1780',deleted:'\u1794\u17B6\u1793\u179B\u17BB\u1794',exported:'\u1794\u17B6\u1793\u1793\u17B6\u17C6\u1785\u17C1\u1789',
+confirmDel:'\u179B\u17BB\u1794?',confirmClear:'\u179B\u17BB\u1794\u1791\u17B6\u17C6\u1784\u17A2\u179F\u17CB?',records:'\u1780\u17C6\u178E\u178F\u17CB\u178F\u17D2\u179A\u17B6',
+date:'\u1780\u17B6\u179B\u1794\u179A\u17B7\u1785\u17D2\u1786\u17C1\u1791',driver:'\u17A2\u17D2\u1793\u1780\u1794\u17BE\u1780',plate:'\u179B\u17C1\u1781\u179F\u17C6\u1782\u17B6\u179B\u17CB',km:'\u1782\u17B8\u17A1\u17BC\u1798\u17C9\u17C2\u178F\u17D2\u179A',liters:'\u179B\u17B8\u178F\u17D2\u179A',from:'\u1785\u17B6\u1780\u17CB\u1795\u17D2\u178F\u17BE\u1798',to:'\u1791\u17B7\u179F\u178A\u17C5',
+dept:'\u1795\u17D2\u1793\u17C2\u1780',forklift:'\u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A',startKM:'\u1785\u17B6\u1794\u17CB\u1795\u17D2\u178F\u17BE\u1798',arriveKM:'\u1798\u1780\u178A\u179B\u17CB',totalKM:'\u179F\u179A\u17BB\u1794',
+kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\u17C4\u1784',machine:'\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',remarks:'\u179F\u1798\u17D2\u1782\u17B6\u179B\u17CB',total:'\u179F\u179A\u17BB\u1794',avg:'\u1798\u17B6\u178F\u17CB\u1798\u17B6'}
+};
+let lang=localStorage.getItem('vrt_dsl_lang')||'zh';
+function T(k){return I18N[lang]?.[k]||I18N.en[k]||k}
+function setLang(l){lang=l;localStorage.setItem('vrt_dsl_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===l));applyLang()}
+function applyLang(){document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k&&T(k))el.textContent=T(k)});document.getElementById('hTitle').textContent=T('hTitle');['hlDrv','hlFork','hlGen','hlTot'].forEach(k=>{const e=document.getElementById(k.replace('hl',''));/*skip*/});updateHeader()}
+
+// ═══════════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════════
+const LS='vrt_diesel_db';
+let DB=[]; // unified: {id, cat:'driver'|'forklift'|'generator', date, ...fields}
+let pendingImport=null;
+let charts={};let editId=null;let periodMode='month';
+const COLORS=['#1a6b3f','#e6a700','#1a73c7','#c62828','#7c3aed','#0d8050','#d97706','#2563eb','#dc2626','#6d28d9','#059669','#b45309'];
+const WEEKDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MON_MAP={jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:4,jun:5,june:5,jul:6,july:6,aug:7,august:7,sep:8,september:8,oct:9,october:9,nov:10,november:10,dec:11,december:11};
+
+function save(){localStorage.setItem(LS,JSON.stringify(DB))}
+function load(){try{DB=JSON.parse(localStorage.getItem(LS))||[]}catch{DB=[]}}
+function saveCfg(){localStorage.setItem('vrt_dsl_gas',document.getElementById('gasUrl').value);localStorage.setItem('vrt_dsl_tg_token',document.getElementById('tgToken').value);localStorage.setItem('vrt_dsl_tg_chat',document.getElementById('tgChat').value)}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+const ACCFG=(()=>{try{return JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}')}catch(e){return{}}})();
+function localYMD(d){d=d||new Date();const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function init(){
+load();
+document.getElementById('gasUrl').value=localStorage.getItem('vrt_dsl_gas')||ACCFG.gasUrl||'';
+document.getElementById('tgToken').value=localStorage.getItem('vrt_dsl_tg_token')||ACCFG.tgToken||'';
+document.getElementById('tgChat').value=localStorage.getItem('vrt_dsl_tg_chat')||ACCFG.tgChat||'';
+document.getElementById('sumDate').value=localYMD();
+setupDrop();updateHeader();updateDBCard();setLang(lang);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AC-GA-EXP 雲端上傳 / 下載（AC_GA_EXP GAS：dieselSave / dieselLoad）
+// ═══════════════════════════════════════════════════════════
+async function cloudUpload(){
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
+const st=document.getElementById('gasStatus');st.textContent='⏳ 上傳中 Uploading...';st.className='al al-i';
+try{
+const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'dieselSave',data:DB,ts:Date.now()}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+const d=await res.json();
+if(!d.ok)throw new Error(d.error||'save failed');
+st.textContent=`✅ 已上傳 ${DB.length} 筆 (${d.chunks} chunks)`;st.className='al al-ok';toast('☁️ 雲端上傳成功');
+}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
+}
+async function cloudDownload(){
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
+const st=document.getElementById('gasStatus');st.textContent='⏳ 下載中 Downloading...';st.className='al al-i';
+try{
+const res=await fetch(url+'?action=dieselLoad');const d=await res.json();
+if(!d.ok)throw new Error(d.error||'load failed');
+if(d.data&&Array.isArray(d.data)){
+if(DB.length&&!confirm(`雲端有 ${d.data.length} 筆資料，將覆蓋本機 ${DB.length} 筆。確定？\nCloud has ${d.data.length} records. Overwrite local?`)){st.textContent='已取消 Cancelled';return}
+DB=d.data;save();updateHeader();updateDBCard();
+st.textContent=`✅ 已下載 ${DB.length} 筆 (${d.ts||''})`;st.className='al al-ok';toast('📥 雲端下載成功');
+}else{st.textContent='☁️ 雲端尚無資料 No cloud data yet';st.className='al al-i'}
+}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function toast(m,t='ok'){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3000)}
+function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy()}catch{}});charts={}}
+function getWeekKey(d){const dt=new Date(d);const day=dt.getDay();const mon=new Date(dt);mon.setDate(dt.getDate()-((day+6)%7));return localYMD(mon)}
+function fmtDate(d){if(!d)return'—';try{const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}catch{return d}}
+function cleanNum(v){if(v===null||v===undefined||v==='')return 0;const s=String(v).replace(/[^\d.\-]/g,'');return parseFloat(s)||0}
+function parseExcelDate(v){
+  if(!v)return'';const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);
+  const n=Number(s);if(!isNaN(n)&&n>40000&&n<60000){const d=new Date((n-25569)*86400000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0')}
+  if(v instanceof Date&&!isNaN(v))return localYMD(v);
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════════════════════
+function updateHeader(){
+const drv=DB.filter(r=>r.cat==='driver');const fork=DB.filter(r=>r.cat==='forklift');const gen=DB.filter(r=>r.cat==='generator');
+const totL=DB.reduce((s,r)=>s+(r.liters||0),0);
+document.getElementById('hDrv').textContent=drv.length;
+document.getElementById('hFork').textContent=fork.length;
+document.getElementById('hGen').textContent=gen.length;
+document.getElementById('hTot').textContent=totL.toLocaleString()+'L';
+}
+function updateDBCard(){
+if(DB.length===0){document.getElementById('dbInfo').innerHTML=`<div class="empty">${T('noData')}</div>`;return}
+const dates=[...new Set(DB.map(r=>r.date).filter(Boolean))].sort();
+const drv=DB.filter(r=>r.cat==='driver'),fork=DB.filter(r=>r.cat==='forklift'),gen=DB.filter(r=>r.cat==='generator');
+const drvL=drv.reduce((s,r)=>s+(r.liters||0),0),forkL=fork.reduce((s,r)=>s+(r.liters||0),0),genL=gen.reduce((s,r)=>s+(r.liters||0),0);
+document.getElementById('dbInfo').innerHTML=`
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+${[['🚗',drv.length,T('driver')+'('+drvL.toLocaleString()+'L)','#1a6b3f'],['🏗️',fork.length,T('forklift')+'('+forkL.toLocaleString()+'L)','#e6a700'],['⚡',gen.length,T('machine')+'('+genL.toLocaleString()+'L)','#1a73c7'],['📅',dates.length,T('date'),'#6b21a8']].map(([ic,v,l,c])=>`<div style="background:#f7f8fb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:800;font-family:monospace;color:${c}">${v}</div><div style="font-size:10px;color:#5a6a7e">${l}</div></div>`).join('')}
+</div>
+<div style="font-size:11px;color:#8b95b8;margin-top:8px">📅 ${dates[0]||'-'} ~ ${dates[dates.length-1]||'-'} · localStorage: ${(JSON.stringify(DB).length/1024).toFixed(0)} KB</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════════
+function goTab(t,el){
+document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+if(el)el.classList.add('on');else document.querySelector(`.tab[data-t="${t}"]`)?.classList.add('on');
+document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+document.getElementById('sec-'+t)?.classList.add('on');
+destroyCharts();
+if(t==='daily')initDaily();if(t==='weekly')initWeekly();if(t==='monthly')renderPeriod();
+if(t==='compare')initCompare();if(t==='records')initRecs();
+if(t==='upload'){updateDBCard();updateHeader()}
+if(t==='settings')genSummary();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EXCEL PARSERS
+// ═══════════════════════════════════════════════════════════
+function detectFileType(wb, fileName){
+const fn=(fileName||'').toLowerCase();
+// Priority 1: filename match
+if(fn.includes('driver')&&fn.includes('diesel'))return 'driver';
+if(fn.includes('forklift'))return 'forklift';
+if(fn.includes('generator'))return 'generator';
+if(fn.includes('transport'))return 'transport';
+
+const flat=wb.SheetNames.map(s=>s.toLowerCase()).join(' ');
+// Priority 2: check first cell of first sheet
+const firstSheet=wb.Sheets[wb.SheetNames[0]];
+const r1=firstSheet?.['A1']?.v||'';
+const r1s=String(r1).toLowerCase();
+if(r1s.includes('disel report')||r1s.includes('diesel report'))return 'driver';
+if(r1s.includes('forklift'))return 'forklift';
+if(r1s.includes('generator'))return 'generator';
+if(r1s.includes('transportation'))return 'transport';
+// Priority 3: sheet names (transport has driver-name sheets)
+if(flat.includes('tola')||flat.includes('sarun')||flat.includes('heang')||flat.includes('sok')||flat.includes('hong'))return 'transport';
+if(flat.includes('form')&&(flat.includes('chart')||flat.includes('jan')))return 'forklift';
+// Priority 4: scan first few rows of all sheets
+for(const sn of wb.SheetNames.slice(0,2)){
+  const ws=wb.Sheets[sn];if(!ws)continue;
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).slice(0,5).flat().map(v=>String(v).toLowerCase()).join(' ');
+  if(rows.includes('forklift')||rows.includes('fork'))return 'forklift';
+  if(rows.includes('generator')||rows.includes('holdon'))return 'generator';
+  if(rows.includes('driver')||rows.includes('disel'))return 'driver';
+}
+return 'unknown';
+}
+
+function parseDriverDiesel(wb){
+const rows=[];
+// Structure: Row 3 = "Date, Driver, Heang, Driver, Sok, ..."  
+// Row 4 = "_, number, 2R-4306, number, 2X-5804, ..."
+// Row 5 = "_, KM, disel Liter, KM, disel Liter, ..."
+// Data rows 10-40: Col A = day number, B/C = Heang KM/L, D/E = Sok KM/L, etc.
+const monthSheets=wb.SheetNames.filter(n=>{const l=n.toLowerCase().trim();return MON_MAP[l]!==undefined||l.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)});
+if(monthSheets.length===0){
+  // fallback: try all sheets that aren't 'chart'
+  wb.SheetNames.filter(n=>!n.toLowerCase().includes('chart')).forEach(n=>monthSheets.push(n));
+}
+for(const sn of monthSheets){
+  const ws=wb.Sheets[sn];if(!ws||!ws['!ref'])continue;
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+  if(raw.length<10)continue;
+  
+  // Detect month from title row or sheet name
+  const titleStr=String(raw[0]?.[0]||'').toLowerCase()+' '+sn.toLowerCase();
+  let year=2026,month=-1;
+  const yrMatch=titleStr.match(/(\d{4})/);if(yrMatch)year=parseInt(yrMatch[1]);
+  for(const[mk,mv]of Object.entries(MON_MAP)){if(titleStr.includes(mk)){month=mv;break}}
+  if(month<0)continue;
+  
+  // Parse driver info from rows 3-5 (0-indexed: 2-4)
+  const r3=raw[2]||[];const r4=raw[3]||[];
+  const drivers=[];
+  // Drivers are in pairs starting from col B(1): B/C=driver1, D/E=driver2, etc.
+  for(let c=1;c<r3.length-1;c+=2){
+    const name=String(r3[c+1]||r3[c]||'').trim();
+    const plate=String(r4[c+1]||'').trim();
+    if(name&&name.toLowerCase()!=='driver'&&name.toLowerCase()!=='total'&&name.toLowerCase()!=='none'&&name.toLowerCase()!=='number'&&name.toLowerCase()!=='date'&&name.length>1)
+      drivers.push({name,plate,kmCol:c,litCol:c+1});
+  }
+  
+  // Parse data rows (row index 9+ in 0-based)
+  for(let i=9;i<raw.length;i++){
+    const r=raw[i];if(!r)continue;
+    const day=r[0];if(day===null||day===undefined)continue;
+    const dayNum=parseInt(day);if(isNaN(dayNum)||dayNum<1||dayNum>31)continue;
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    
+    for(const d of drivers){
+      const kmVal=r[d.kmCol];const litVal=r[d.litCol];
+      const km=cleanNum(kmVal);const lit=cleanNum(litVal);
+      if(km===0&&lit===0)continue;
+      rows.push({id:crypto.randomUUID(),cat:'driver',date:dateStr,
+        driver:d.name,plate:d.plate,km,liters:lit,from:'',to:'',remarks:'Excel:'+sn});
+    }
+  }
+}
+return rows;
+}
+
+function parseForkliftDiesel(wb){
+const rows=[];
+const monthSheets=wb.SheetNames.filter(n=>{const l=n.toLowerCase().trim();return MON_MAP[l]!==undefined||l.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)});
+if(monthSheets.length===0)wb.SheetNames.filter(n=>!n.toLowerCase().includes('chart')&&!n.toLowerCase().includes('form')).forEach(n=>monthSheets.push(n));
+
+for(const sn of monthSheets){
+  const ws=wb.Sheets[sn];if(!ws||!ws['!ref'])continue;
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true,cellDates:true});
+  // Find header row (contains "Date" and "Dept" or "Forklift")
+  let hIdx=-1;
+  for(let i=0;i<Math.min(5,raw.length);i++){
+    const joined=(raw[i]||[]).map(v=>String(v||'').toLowerCase()).join(' ');
+    if(joined.includes('date')&&(joined.includes('dept')||joined.includes('forklift')||joined.includes('apply'))){hIdx=i;break}
+  }
+  if(hIdx<0)continue;
+  
+  for(let i=hIdx+1;i<raw.length;i++){
+    const r=raw[i];if(!r)continue;
+    const dateVal=r[0];if(!dateVal)continue;
+    const dateStr=parseExcelDate(dateVal);if(!dateStr||dateStr.length<8)continue;
+    // Check it's not a summary row
+    if(String(dateVal).toLowerCase().includes('dept')||String(dateVal).toLowerCase().includes('total'))continue;
+    const dept=String(r[1]||'').trim();const forkNum=String(r[2]||'').trim();
+    const liters=cleanNum(r[3]);const startKM=cleanNum(r[4]);const arriveKM=cleanNum(r[5]);
+    const totalKM=arriveKM>startKM?(arriveKM-startKM):cleanNum(r[6]);
+    const remarks=String(r[7]||'').trim();
+    if(liters===0&&totalKM===0)continue;
+    rows.push({id:crypto.randomUUID(),cat:'forklift',date:dateStr,
+      dept,forklift:forkNum,liters,startKM,arriveKM,totalKM,remarks:remarks||'Excel:'+sn});
+  }
+}
+return rows;
+}
+
+function parseGeneratorDiesel(wb){
+const rows=[];
+const monthSheets=wb.SheetNames.filter(n=>{const l=n.toLowerCase().trim();return MON_MAP[l]!==undefined||l.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i)});
+if(monthSheets.length===0)wb.SheetNames.filter(n=>!n.toLowerCase().includes('chart')).forEach(n=>monthSheets.push(n));
+
+for(const sn of monthSheets){
+  const ws=wb.Sheets[sn];if(!ws||!ws['!ref'])continue;
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true,cellDates:true});
+  // Row 2 (idx 1) = headers: Date, Day, Start, Holdon Times, Total Hours, KW, Using Diesel, Code Machine
+  // Multi-row per date: date only in first row, continuation rows have date=null
+  let currentDate=null;
+  for(let i=2;i<raw.length;i++){
+    const r=raw[i];if(!r)continue;
+    // Skip total/summary rows
+    const firstCell=String(r[0]||'').toLowerCase();
+    if(firstCell.includes('total'))continue;
+    
+    const dateVal=r[0];
+    if(dateVal){const ds=parseExcelDate(dateVal);if(ds&&ds.length>=8)currentDate=ds}
+    if(!currentDate)continue;
+    
+    const kw=cleanNum(r[5]);const liters=cleanNum(r[6]);const machine=String(r[7]||'').trim();
+    if(liters===0)continue;
+    
+    // Parse time values
+    let hours='';
+    const totalH=r[4];
+    if(totalH instanceof Date){hours=totalH.toTimeString().slice(0,5)}
+    else if(totalH){hours=String(totalH).replace(/1899.*T/,'').slice(0,8)}
+    
+    rows.push({id:crypto.randomUUID(),cat:'generator',date:currentDate,
+      kw,liters,machine:machine||'?',hours,remarks:'Excel:'+sn});
+  }
+}
+return rows;
+}
+
+function parseTransportation(wb){
+const rows=[];
+const driverSheets=wb.SheetNames.filter(n=>!n.toLowerCase().includes('chart'));
+for(const sn of driverSheets){
+  const ws=wb.Sheets[sn];if(!ws||!ws['!ref'])continue;
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true,cellDates:true});
+  if(raw.length<6)continue;
+  const driverName=String(raw[0]?.[0]||sn).replace(/^driver:\s*/i,'').trim();
+  // Data starts row 6 (idx 5); cols: A=Date, B=Day, C/D=Personal Long, E/F=Personal Short, 
+  // G/H=Bank Company, I/J=Bank Personal, K/L=Others, M/N=Come, O/P=Go
+  for(let i=5;i<raw.length;i++){
+    const r=raw[i];if(!r)continue;
+    const dateVal=r[0];if(!dateVal)continue;
+    const dateStr=parseExcelDate(dateVal);if(!dateStr||dateStr.length<8)continue;
+    // Sum all KM columns (D, F, H, J, L, N, P)
+    let totalKM=0;
+    [3,5,7,9,11,13,15].forEach(c=>{totalKM+=cleanNum(r[c])});
+    if(totalKM===0)continue;
+    // We don't have diesel data from transport records, but track KM
+    rows.push({id:crypto.randomUUID(),cat:'driver',date:dateStr,
+      driver:driverName,plate:'',km:totalKM,liters:0,from:'',to:'',remarks:'Transport:'+sn});
+  }
+}
+return rows;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  IMPORT
+// ═══════════════════════════════════════════════════════════
+function setupDrop(){
+const dz=document.getElementById('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');processFiles(e.dataTransfer.files)});
+}
+function handleFiles(e){processFiles(e.target.files);e.target.value=''}
+async function processFiles(files){
+let all=[];const inf=[];
+for(const f of files){
+  try{
+    const buf=await f.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array',cellDates:true,raw:true});
+    const ftype=detectFileType(wb, f.name);
+    let parsed=[];
+    if(ftype==='driver')parsed=parseDriverDiesel(wb);
+    else if(ftype==='forklift')parsed=parseForkliftDiesel(wb);
+    else if(ftype==='generator')parsed=parseGeneratorDiesel(wb);
+    else if(ftype==='transport')parsed=parseTransportation(wb);
+    else{
+      // try all parsers
+      parsed=[...parseDriverDiesel(wb),...parseForkliftDiesel(wb),...parseGeneratorDiesel(wb)];
+    }
+    all=all.concat(parsed);
+    inf.push({name:f.name,type:ftype,count:parsed.length});
+  }catch(e){toast(T('error')+': '+e.message,'err');console.error(e)}
+}
+if(all.length===0){toast('No valid data found','err');return}
+pendingImport=all;
+const pre=document.getElementById('importPreview');pre.classList.remove('hidden');
+const byType={driver:0,forklift:0,generator:0};all.forEach(r=>byType[r.cat]=(byType[r.cat]||0)+1);
+pre.innerHTML=`
+<div class="al al-ok">✅ ${T('imported')} <b>${all.length}</b> ${T('records')} · ${inf.map(s=>s.name+' ['+s.type+':'+s.count+']').join(', ')}</div>
+<div style="margin-bottom:8px;font-size:12px">🚗 ${T('driver')}: ${byType.driver||0} · 🏗️ ${T('forklift')}: ${byType.forklift||0} · ⚡ ${T('machine')}: ${byType.generator||0}</div>
+<div class="tw" style="max-height:260px;overflow-y:auto;margin-bottom:12px;border:1px solid #e2e6f0;border-radius:8px">
+<table><thead><tr><th>#</th><th>Cat</th><th>Date</th><th>Detail</th><th>Liters</th></tr></thead>
+<tbody>${all.slice(0,50).map((r,i)=>`<tr><td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat}</span></td><td>${esc(r.date)}</td><td>${esc(r.driver||r.forklift||r.machine||'')}</td><td class="mono">${r.liters||0}L</td></tr>`).join('')}
+${all.length>50?`<tr><td colspan="5" class="empty">... +${all.length-50} more</td></tr>`:''}</tbody></table>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-b" onclick="confirmImport()">✅ ${T('imported')} (${all.length})</button>
+<button class="btn btn-g" onclick="cancelImport()">${T('cancel')}</button>
+</div>`;
+}
+function confirmImport(){
+if(!pendingImport)return;
+// Dedup: skip records that already exist (same cat+date+detail+liters)
+const existing=new Set(DB.map(r=>`${r.cat}|${r.date}|${r.driver||r.forklift||r.machine||''}|${r.liters}`));
+const fresh=pendingImport.filter(r=>{
+  const key=`${r.cat}|${r.date}|${r.driver||r.forklift||r.machine||''}|${r.liters}`;
+  if(existing.has(key))return false;
+  existing.add(key);return true;
+});
+const skipped=pendingImport.length-fresh.length;
+DB=DB.concat(fresh);save();updateHeader();updateDBCard();
+toast(`${T('imported')} ${fresh.length} ${T('records')}`+(skipped?` (${skipped} duplicates skipped)`:''));
+pendingImport=null;document.getElementById('importPreview').classList.add('hidden');
+}
+function cancelImport(){pendingImport=null;document.getElementById('importPreview').classList.add('hidden')}
+
+// ═══════════════════════════════════════════════════════════
+//  CRUD
+// ═══════════════════════════════════════════════════════════
+function openForm(cat){
+editId=null;
+const today=localYMD();
+let html='';
+if(cat==='driver'){
+html=`<div class="form-grid">
+<div class="form-group"><label>${T('date')}</label><input class="inp" type="date" id="f_date" value="${today}"></div>
+<div class="form-group"><label>${T('driver')}</label><input class="inp" id="f_driver" placeholder="e.g. Heang"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('plate')}</label><input class="inp" id="f_plate" placeholder="2R-4306"></div>
+<div class="form-group"><label>${T('km')}</label><input class="inp" type="number" id="f_km" min="0"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('liters')}</label><input class="inp" type="number" id="f_liters" min="0"></div>
+<div class="form-group"><label>${T('remarks')}</label><input class="inp" id="f_remarks"></div>
+</div>`;
+}else if(cat==='forklift'){
+html=`<div class="form-grid">
+<div class="form-group"><label>${T('date')}</label><input class="inp" type="date" id="f_date" value="${today}"></div>
+<div class="form-group"><label>${T('dept')}</label><input class="inp" id="f_dept" placeholder="WH / Cutting"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('forklift')}</label><input class="inp" id="f_forklift" placeholder="#1"></div>
+<div class="form-group"><label>${T('liters')}</label><input class="inp" type="number" id="f_liters" min="0"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('startKM')}</label><input class="inp" type="number" id="f_startKM" min="0" step="0.1"></div>
+<div class="form-group"><label>${T('arriveKM')}</label><input class="inp" type="number" id="f_arriveKM" min="0" step="0.1"></div>
+</div>
+<div class="form-group"><label>${T('remarks')}</label><input class="inp" id="f_remarks"></div>`;
+}else{
+html=`<div class="form-grid">
+<div class="form-group"><label>${T('date')}</label><input class="inp" type="date" id="f_date" value="${today}"></div>
+<div class="form-group"><label>${T('machine')}</label><input class="inp" id="f_machine" placeholder="01 / 05"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('kw')}</label><input class="inp" type="number" id="f_kw" min="0"></div>
+<div class="form-group"><label>${T('liters')}</label><input class="inp" type="number" id="f_liters" min="0"></div>
+</div><div class="form-grid">
+<div class="form-group"><label>${T('hours')}</label><input class="inp" id="f_hours" placeholder="05:00"></div>
+<div class="form-group"><label>${T('remarks')}</label><input class="inp" id="f_remarks"></div>
+</div>`;
+}
+document.getElementById('formTitle').textContent={'driver':'🚗 '+T('addDrv'),'forklift':'🏗️ '+T('addFork'),'generator':'⚡ '+T('addGen')}[cat];
+document.getElementById('formBody').innerHTML=html;
+document.getElementById('formBody').dataset.cat=cat;
+document.getElementById('formModal').classList.add('open');
+}
+function closeForm(){document.getElementById('formModal').classList.remove('open');editId=null}
+function saveRec(){
+const cat=document.getElementById('formBody').dataset.cat;
+const d={id:editId||crypto.randomUUID(),cat,date:document.getElementById('f_date').value,liters:cleanNum(document.getElementById('f_liters').value),remarks:document.getElementById('f_remarks')?.value||''};
+if(cat==='driver'){d.driver=document.getElementById('f_driver').value.trim();d.plate=document.getElementById('f_plate').value.trim();d.km=cleanNum(document.getElementById('f_km').value);d.from='';d.to=''}
+else if(cat==='forklift'){d.dept=document.getElementById('f_dept').value.trim();d.forklift=document.getElementById('f_forklift').value.trim();d.startKM=cleanNum(document.getElementById('f_startKM').value);d.arriveKM=cleanNum(document.getElementById('f_arriveKM').value);d.totalKM=d.arriveKM-d.startKM}
+else{d.machine=document.getElementById('f_machine').value.trim();d.kw=cleanNum(document.getElementById('f_kw').value);d.hours=document.getElementById('f_hours').value.trim()}
+if(editId){const i=DB.findIndex(r=>r.id===editId);if(i>=0)DB[i]=d}else DB.push(d);
+save();closeForm();updateHeader();updateDBCard();toast(T('saved'));
+}
+function deleteRec(id){if(!confirm(T('confirmDel')))return;DB=DB.filter(r=>r.id!==id);save();updateHeader();renderRecs();toast(T('deleted'))}
+function deleteFiltered(){const f=getFilteredRecs();if(f.length===0)return;if(!confirm(T('confirmDel')+` (${f.length})`))return;const ids=new Set(f.map(r=>r.id));DB=DB.filter(r=>!ids.has(r.id));save();updateHeader();initRecs();toast(T('deleted'))}
+function clearAll(){if(!confirm(T('confirmClear')))return;DB=[];save();updateHeader();updateDBCard();toast(T('deleted'))}
+
+// ═══════════════════════════════════════════════════════════
+//  BACKUP / EXPORT
+// ═══════════════════════════════════════════════════════════
+function backupJSON(){const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`vrt_diesel_backup_${localYMD()}.json`;a.click();toast(T('exported'))}
+function restoreJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d)){toast('Invalid','err');return}DB=d;save();updateHeader();updateDBCard();toast(`${T('imported')} ${d.length}`)}catch{toast('Error','err')}};r.readAsText(f);e.target.value=''}
+function exportAllExcel(){
+const wb=XLSX.utils.book_new();
+const drv=DB.filter(r=>r.cat==='driver');const fork=DB.filter(r=>r.cat==='forklift');const gen=DB.filter(r=>r.cat==='generator');
+if(drv.length){const ws=XLSX.utils.aoa_to_sheet([['Date','Driver','Plate','KM','Liters','Remarks'],...drv.map(r=>[r.date,r.driver,r.plate,r.km,r.liters,r.remarks])]);XLSX.utils.book_append_sheet(wb,ws,'Driver Diesel')}
+if(fork.length){const ws=XLSX.utils.aoa_to_sheet([['Date','Dept','Forklift#','Liters','Start KM','Arrive KM','Total KM','Remarks'],...fork.map(r=>[r.date,r.dept,r.forklift,r.liters,r.startKM,r.arriveKM,r.totalKM,r.remarks])]);XLSX.utils.book_append_sheet(wb,ws,'Forklift Diesel')}
+if(gen.length){const ws=XLSX.utils.aoa_to_sheet([['Date','KW','Liters','Machine','Hours','Remarks'],...gen.map(r=>[r.date,r.kw,r.liters,r.machine,r.hours,r.remarks])]);XLSX.utils.book_append_sheet(wb,ws,'Generator')}
+XLSX.writeFile(wb,`VRT_Diesel_All_${localYMD()}.xlsx`);toast(T('exported'));
+}
+function exportTab(tab){
+const wb=XLSX.utils.book_new();let name='Export';
+const el=document.querySelector(`#sec-${tab==='period'?'monthly':tab} tbody`);
+if(el){const table=el.closest('table');const ws=XLSX.utils.table_to_sheet(table);XLSX.utils.book_append_sheet(wb,ws,tab)}
+XLSX.writeFile(wb,`VRT_Diesel_${tab}_${localYMD()}.xlsx`);toast(T('exported'));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DAILY
+// ═══════════════════════════════════════════════════════════
+function initDaily(){
+const dates=[...new Set(DB.map(r=>r.date).filter(Boolean))].sort();
+const sel=document.getElementById('dSel');const cur=sel.value;
+sel.innerHTML=dates.map(d=>`<option value="${d}"${d===cur?' selected':''}>${d}</option>`).join('');
+if(!cur&&dates.length)sel.value=dates[dates.length-1];
+renderDaily();
+}
+function navDay(dir){const sel=document.getElementById('dSel');const i=sel.selectedIndex+dir;if(i>=0&&i<sel.options.length){sel.selectedIndex=i;renderDaily()}}
+function renderDaily(){
+destroyCharts();
+const d=document.getElementById('dSel').value;const cat=document.getElementById('dCat').value;
+let recs=DB.filter(r=>r.date===d);if(cat)recs=recs.filter(r=>r.cat===cat);
+const drvL=recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0);
+const forkL=recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0);
+const genL=recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0);
+const totL=drvL+forkL+genL;
+const dow=d?WEEKDAYS[new Date(d).getDay()]:'';
+document.getElementById('dMeta').textContent=d?`${d} (${dow}) · ${recs.length} ${T('records')}`:'';
+document.getElementById('dKpi').innerHTML=[
+['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',drvL+'L',T('driver'),'#2563eb'],['🏗️',forkL+'L',T('forklift'),'#e6a700'],['⚡',genL+'L',T('machine'),'#c62828']
+].map(([ic,v,l,c])=>`<div class="kpi"><div class="kpi-icon">${ic}</div><div class="kpi-n" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+document.getElementById('dHead').innerHTML=`<tr><th>#</th><th>Cat</th><th>${T('date')}</th><th>Detail</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th></tr>`;
+document.getElementById('dBody').innerHTML=recs.length?recs.map((r,i)=>`<tr>
+<td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat==='driver'?'🚗':r.cat==='forklift'?'🏗️':'⚡'}</span></td>
+<td>${esc(r.date)}</td><td style="font-weight:600">${esc(r.driver||r.forklift||r.machine||'')}</td>
+<td class="mono">${r.liters||0}L</td><td class="mono">${r.km||r.totalKM||'-'}</td><td style="color:#5a6a7e;font-size:11px">${esc(r.remarks)}</td></tr>`).join(''):`<tr><td colspan="7" class="empty">${T('noData')}</td></tr>`;
+
+// Category chart
+charts.dCat=new Chart(document.getElementById('cDayCat'),{type:'doughnut',data:{labels:[T('driver'),T('forklift'),T('machine')],datasets:[{data:[drvL,forkL,genL],backgroundColor:['#2563eb','#e6a700','#c62828']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11}}}}}});
+// Driver breakdown
+const byName={};recs.forEach(r=>{const n=r.driver||r.forklift||r.machine||'?';byName[n]=(byName[n]||0)+(r.liters||0)});
+const ne=Object.entries(byName).sort((a,b)=>b[1]-a[1]);
+charts.dDrv=new Chart(document.getElementById('cDayDrv'),{type:'bar',data:{labels:ne.map(x=>x[0]),datasets:[{data:ne.map(x=>x[1]),backgroundColor:COLORS.slice(0,ne.length),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WEEKLY
+// ═══════════════════════════════════════════════════════════
+function initWeekly(){
+const weeks=[...new Set(DB.map(r=>r.date?getWeekKey(r.date):null).filter(Boolean))].sort();
+const sel=document.getElementById('wSel');const cur=sel.value;
+sel.innerHTML=weeks.map(w=>`<option value="${w}"${w===cur?' selected':''}>${w} week</option>`).join('');
+if(!cur&&weeks.length)sel.value=weeks[weeks.length-1];
+renderWeekly();
+}
+function navWeek(dir){const sel=document.getElementById('wSel');const i=sel.selectedIndex+dir;if(i>=0&&i<sel.options.length){sel.selectedIndex=i;renderWeekly()}}
+function renderWeekly(){
+destroyCharts();
+const wk=document.getElementById('wSel').value;if(!wk)return;
+const wkEnd=new Date(wk);wkEnd.setDate(wkEnd.getDate()+6);const endStr=localYMD(wkEnd);
+const recs=DB.filter(r=>r.date>=wk&&r.date<=endStr);
+const days=[];
+for(let i=0;i<7;i++){const dt=new Date(wk);dt.setDate(dt.getDate()+i);const ds=localYMD(dt);
+const dr=recs.filter(r=>r.date===ds);
+days.push({date:ds,day:WEEKDAYS[dt.getDay()],drvL:dr.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:dr.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:dr.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),count:dr.length})}
+
+const totL=days.reduce((s,d)=>s+d.drvL+d.forkL+d.genL,0);const activeDays=days.filter(d=>d.count>0).length;
+document.getElementById('wMeta').textContent=`${activeDays} active days · ${totL.toLocaleString()}L ${T('total')}`;
+document.getElementById('wKpi').innerHTML=[
+['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',days.reduce((s,d)=>s+d.drvL,0)+'L',T('driver'),'#2563eb'],['🏗️',days.reduce((s,d)=>s+d.forkL,0)+'L',T('forklift'),'#e6a700'],['⚡',days.reduce((s,d)=>s+d.genL,0)+'L',T('machine'),'#c62828'],['📅',activeDays,'Days','#6b21a8']
+].map(([ic,v,l,c])=>`<div class="kpi"><div class="kpi-icon">${ic}</div><div class="kpi-n" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+document.getElementById('wHead').innerHTML=`<tr><th>${T('date')}</th><th>Day</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
+document.getElementById('wBody').innerHTML=days.map(d=>{const tot=d.drvL+d.forkL+d.genL;return`<tr ${d.count===0?'style="opacity:.4"':''}><td>${d.date}</td><td>${d.day}</td><td class="mono" style="color:#2563eb">${d.drvL}</td><td class="mono" style="color:#e6a700">${d.forkL}</td><td class="mono" style="color:#c62828">${d.genL}</td><td class="mono" style="font-weight:800">${tot}L</td><td>${d.count}</td></tr>`}).join('');
+
+charts.week=new Chart(document.getElementById('cWeek'),{type:'bar',data:{labels:days.map(d=>d.date.slice(5)+' '+d.day),datasets:[
+{label:T('driver'),data:days.map(d=>d.drvL),backgroundColor:'#2563eb88',borderColor:'#2563eb',borderWidth:1,borderRadius:3},
+{label:T('forklift'),data:days.map(d=>d.forkL),backgroundColor:'#e6a70088',borderColor:'#e6a700',borderWidth:1,borderRadius:3},
+{label:T('machine'),data:days.map(d=>d.genL),backgroundColor:'#c6282888',borderColor:'#c62828',borderWidth:1,borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}}});
+
+const catTotals=[days.reduce((s,d)=>s+d.drvL,0),days.reduce((s,d)=>s+d.forkL,0),days.reduce((s,d)=>s+d.genL,0)];
+charts.wCat=new Chart(document.getElementById('cWeekCat'),{type:'doughnut',data:{labels:[T('driver'),T('forklift'),T('machine')],datasets:[{data:catTotals,backgroundColor:['#2563eb','#e6a700','#c62828']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MONTHLY / YEARLY
+// ═══════════════════════════════════════════════════════════
+function setPeriod(m){periodMode=m;document.getElementById('btnMon').className='btn '+(m==='month'?'btn-b':'btn-g');document.getElementById('btnYr').className='btn '+(m==='year'?'btn-b':'btn-g');renderPeriod()}
+function renderPeriod(){
+destroyCharts();
+const periods=[];
+if(periodMode==='month'){
+const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
+months.forEach(m=>{const recs=DB.filter(r=>r.date?.startsWith(m));
+periods.push({label:m,drvL:recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),days:new Set(recs.map(r=>r.date)).size,count:recs.length})})
+}else{
+const years=[...new Set(DB.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort();
+years.forEach(y=>{const recs=DB.filter(r=>r.date?.startsWith(y));
+periods.push({label:y,drvL:recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),days:new Set(recs.map(r=>r.date)).size,count:recs.length})})
+}
+document.getElementById('pMeta').textContent=`${periods.length} periods · ${DB.length} ${T('records')}`;
+document.getElementById('pHead').innerHTML=`<tr><th>Period</th><th>Days</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
+document.getElementById('pBody').innerHTML=periods.map(p=>{const tot=p.drvL+p.forkL+p.genL;return`<tr><td style="font-weight:700">${p.label}</td><td>${p.days}</td><td class="mono" style="color:#2563eb">${p.drvL.toLocaleString()}</td><td class="mono" style="color:#e6a700">${p.forkL.toLocaleString()}</td><td class="mono" style="color:#c62828">${p.genL.toLocaleString()}</td><td class="mono" style="font-weight:800">${tot.toLocaleString()}L</td><td>${p.count}</td></tr>`}).join('');
+
+charts.period=new Chart(document.getElementById('cPeriod'),{type:'bar',data:{labels:periods.map(p=>p.label),datasets:[
+{label:T('driver'),data:periods.map(p=>p.drvL),backgroundColor:'#2563eb',borderRadius:3},
+{label:T('forklift'),data:periods.map(p=>p.forkL),backgroundColor:'#e6a700',borderRadius:3},
+{label:T('machine'),data:periods.map(p=>p.genL),backgroundColor:'#c62828',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}}});
+}
+
+// ═══════════════════════════════════════════════════════════
+//  COMPARE
+// ═══════════════════════════════════════════════════════════
+function initCompare(){
+const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
+const sel=document.getElementById('cmpMonth');const cur=sel.value;
+sel.innerHTML='<option value="">'+T('total')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+renderCompare();
+}
+function renderCompare(){
+destroyCharts();
+const month=document.getElementById('cmpMonth').value;const cat=document.getElementById('cmpCat').value;
+let recs=month?DB.filter(r=>r.date?.startsWith(month)):DB;
+if(cat)recs=recs.filter(r=>r.cat===cat);
+const drvL=recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0);
+const forkL=recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0);
+const genL=recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0);
+const totL=drvL+forkL+genL;
+document.getElementById('cmpMeta').textContent=`${recs.length} ${T('records')} · ${totL.toLocaleString()}L`;
+document.getElementById('cmpKpi').innerHTML=[
+['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',drvL.toLocaleString()+'L',T('driver')+' '+(totL?((drvL/totL*100).toFixed(0)+'%'):''),'#2563eb'],['🏗️',forkL.toLocaleString()+'L',T('forklift')+' '+(totL?((forkL/totL*100).toFixed(0)+'%'):''),'#e6a700'],['⚡',genL.toLocaleString()+'L',T('machine')+' '+(totL?((genL/totL*100).toFixed(0)+'%'):''),'#c62828']
+].map(([ic,v,l,c])=>`<div class="kpi"><div class="kpi-icon">${ic}</div><div class="kpi-n" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+// Monthly grouped bar
+const months2=[...new Set(recs.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
+const mData=months2.map(m=>{const mr=recs.filter(r=>r.date?.startsWith(m));return{label:m,drv:mr.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),fork:mr.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),gen:mr.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0)}});
+charts.cmpBar=new Chart(document.getElementById('cCmpBar'),{type:'bar',data:{labels:mData.map(m=>m.label),datasets:[
+{label:T('driver'),data:mData.map(m=>m.drv),backgroundColor:'#2563eb',borderRadius:3},
+{label:T('forklift'),data:mData.map(m=>m.fork),backgroundColor:'#e6a700',borderRadius:3},
+{label:T('machine'),data:mData.map(m=>m.gen),backgroundColor:'#c62828',borderRadius:3}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true}}}});
+charts.cmpPie=new Chart(document.getElementById('cCmpPie'),{type:'doughnut',data:{labels:[T('driver'),T('forklift'),T('machine')],datasets:[{data:[drvL,forkL,genL],backgroundColor:['#2563eb','#e6a700','#c62828']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right'}}}});
+
+// Detail table by entity
+const byName={};recs.forEach(r=>{const n=r.driver||r.forklift||r.machine||'?';if(!byName[n])byName[n]={name:n,cat:r.cat,liters:0,count:0,km:0};byName[n].liters+=(r.liters||0);byName[n].km+=(r.km||r.totalKM||0);byName[n].count++});
+const sorted=Object.values(byName).sort((a,b)=>b.liters-a.liters);
+document.getElementById('cmpHead').innerHTML=`<tr><th>Name</th><th>Cat</th><th>${T('liters')}</th><th>${T('km')}</th><th>#</th><th>%</th></tr>`;
+document.getElementById('cmpBody').innerHTML=sorted.map(r=>`<tr><td style="font-weight:600">${esc(r.name)}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat}</span></td><td class="mono">${r.liters.toLocaleString()}L</td><td class="mono">${r.km||'-'}</td><td>${r.count}</td><td class="mono">${totL?(r.liters/totL*100).toFixed(1)+'%':'-'}</td></tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RECORDS
+// ═══════════════════════════════════════════════════════════
+function getFilteredRecs(){
+const cat=document.getElementById('rCat').value;const month=document.getElementById('rMonth').value;
+const q=(document.getElementById('rSearch').value||'').toLowerCase();
+return DB.filter(r=>{
+if(cat&&r.cat!==cat)return false;if(month&&!r.date?.startsWith(month))return false;
+if(q){const str=JSON.stringify(r).toLowerCase();if(!str.includes(q))return false}
+return true});
+}
+function initRecs(){
+const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
+const sel=document.getElementById('rMonth');const cur=sel.value;
+sel.innerHTML='<option value="">'+T('total')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+renderRecs();
+}
+function renderRecs(){
+const recs=getFilteredRecs();
+document.getElementById('rMeta').textContent=`${recs.length} ${T('records')} · ${recs.reduce((s,r)=>s+(r.liters||0),0).toLocaleString()}L`;
+document.getElementById('rHead').innerHTML=`<tr><th>#</th><th>Cat</th><th>${T('date')}</th><th>Detail</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th><th></th></tr>`;
+document.getElementById('rBody').innerHTML=recs.length?recs.slice(0,500).map((r,i)=>`<tr>
+<td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat==='driver'?'🚗':r.cat==='forklift'?'🏗️':'⚡'}</span></td>
+<td>${esc(r.date)}</td><td style="font-weight:600">${esc(r.driver||'')}${esc(r.forklift||'')}${esc(r.machine||'')}${r.plate?' ('+esc(r.plate)+')':''}</td>
+<td class="mono">${r.liters||0}L</td><td class="mono">${r.km||r.totalKM||r.kw||'-'}</td>
+<td style="color:#5a6a7e;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${esc(r.remarks)}</td>
+<td><button class="btn btn-r" style="padding:2px 8px;font-size:11px" onclick="deleteRec('${r.id}')">✕</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty">${T('noData')}</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GAS SYNC
+// ═══════════════════════════════════════════════════════════
+async function syncGAS(){
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast('Enter GAS URL','err');return}
+document.getElementById('gasStatus').textContent='⏳ Syncing...';document.getElementById('gasStatus').className='al al-i';
+try{
+const res=await fetch(url+'?action=all');const data=await res.json();if(!data.ok)throw new Error(data.error);
+let count=0;
+(data.driver?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'driver',date:parseExcelDate(r[0]),driver:r[1],plate:r[2],km:cleanNum(r[3]),liters:cleanNum(r[4]),from:r[5]||'',to:r[6]||'',remarks:r[7]||''});count++});
+(data.forklift?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'forklift',date:parseExcelDate(r[0]),dept:r[1],forklift:r[2],liters:cleanNum(r[3]),startKM:cleanNum(r[4]),arriveKM:cleanNum(r[5]),totalKM:cleanNum(r[6]),remarks:r[7]||''});count++});
+(data.generator?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'generator',date:parseExcelDate(r[5]||''),kw:0,liters:cleanNum(r[2]),machine:'',hours:'',remarks:r[8]||''});count++});
+save();updateHeader();updateDBCard();
+document.getElementById('gasStatus').textContent=`✅ Synced ${count} records`;document.getElementById('gasStatus').className='al al-ok';
+toast(`${T('imported')} ${count}`);
+}catch(e){document.getElementById('gasStatus').textContent='❌ '+e.message;document.getElementById('gasStatus').className='al al-w';toast(e.message,'err')}
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SUMMARY & TELEGRAM
+// ═══════════════════════════════════════════════════════════
+function genSummary(){
+const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
+const latest=months[months.length-1]||'';
+const recs=latest?DB.filter(r=>r.date?.startsWith(latest)):DB;
+const drvL=recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0);
+const forkL=recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0);
+const genL=recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0);
+const topDrv={};recs.filter(r=>r.cat==='driver').forEach(r=>{topDrv[r.driver]=(topDrv[r.driver]||0)+(r.liters||0)});
+const topName=Object.entries(topDrv).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+const txt=`\u{1F4CA} VRT DIESEL REPORT \u2014 ${latest||'ALL'}
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+
+\u{1F697} DRIVER DIESEL: ${drvL.toLocaleString()}L (${recs.filter(r=>r.cat==='driver').length} recs)
+   Top: ${topName}
+\u{1F3D7}\uFE0F FORKLIFT: ${forkL.toLocaleString()}L (${recs.filter(r=>r.cat==='forklift').length} recs)
+\u26A1 GENERATOR: ${genL.toLocaleString()}L (${recs.filter(r=>r.cat==='generator').length} recs)
+
+\u{1F4E6} TOTAL: ${(drvL+forkL+genL).toLocaleString()}L
+\u2705 Please verify.`;
+document.getElementById('sumBox').textContent=txt;
+}
+function copySummary(){navigator.clipboard.writeText(document.getElementById('sumBox').textContent).then(()=>toast(T('copy')+'!'));} 
+async function sendTgSummary(){
+const token=document.getElementById('tgToken').value.trim();const chatId=document.getElementById('tgChat').value.trim();
+if(!token||!chatId){toast('Set Telegram token & chat ID','err');return}
+genSummary();const text=document.getElementById('sumBox').textContent;
+try{await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chatId,text})});toast('Sent!')}catch(e){toast(e.message,'err')}
+}
+
+// ═══════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

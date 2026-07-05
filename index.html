@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AC-GA-EXP Platform · 總務費用管理平台</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+TC:wght@300;400;700&family=Noto+Sans+Khmer:wght@400;600&display=swap');
+:root{
+  --bg:#0d0f14;--surface:#161a23;--surface2:#1e2432;--border:#2a3147;
+  --accent:#4f9cf9;--text:#d8dde8;--muted:#5a6478;
+  --green:#4fd1a0;--red:#f96f6f;--amber:#f9c74f;--teal:#4fd1c5;--purple:#b794f4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Noto Sans Khmer',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,156,249,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,156,249,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:36px 22px 80px}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px;padding-bottom:18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px}
+.logo-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:4px}
+h1{font-size:24px;font-weight:700;color:#fff}h1 span{color:var(--accent)}
+.h-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.h-actions{display:flex;gap:8px;align-items:center}
+.btn{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 14px;color:var(--text);font-size:12px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .2s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.btn.primary:hover{opacity:.85}
+.cloud-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:6px;vertical-align:middle}
+.cloud-dot.ok{background:var(--green);animation:pulse 2s infinite}
+.cloud-dot.err{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:26px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--kc,var(--accent))}
+.kpi-l{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:6px}
+.kpi-v{font-size:22px;font-weight:700;color:#fff;font-family:'IBM Plex Mono',monospace;line-height:1}
+.kpi-s{font-size:10px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace}
+
+/* Section title */
+.sect{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.sect::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Module cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;position:relative;display:block;text-decoration:none;color:var(--text)}
+.card:hover{border-color:var(--cc,var(--accent));transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.card-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.card-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--surface2);border:1px solid var(--border)}
+.card-name{font-size:15px;font-weight:700;color:#fff}
+.card-en{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cc,var(--accent));letter-spacing:1px;text-transform:uppercase}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.7}
+.card-flow{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--cc,var(--accent));opacity:.8;letter-spacing:.5px}
+.card-badges{position:absolute;top:14px;right:14px;display:flex;gap:5px}
+.cbadge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);color:var(--muted)}
+
+/* Modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(5,7,12,.75);z-index:1000;align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto}
+.overlay.on{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:640px;width:100%;padding:22px}
+.m-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.m-sub{font-size:11px;color:var(--muted);margin-bottom:18px}
+.fg{margin-bottom:14px}
+.fl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:6px}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'IBM Plex Mono',monospace;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--accent)}
+select.fi{cursor:pointer}
+.m-note{font-size:11px;color:var(--muted);line-height:1.7;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.m-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:18px}
+
+/* Groups table */
+.gtable{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
+.gtable th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.gtable td{padding:6px 8px;border-bottom:1px solid var(--surface2)}
+.gtable input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 8px;color:var(--text);font-size:12px;font-family:'IBM Plex Mono',monospace;outline:none}
+.gtable input[type=checkbox]{width:auto}
+.g-del{background:transparent;border:none;color:var(--red);cursor:pointer;font-size:14px}
+
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);color:#f1f5f9;border-radius:8px;padding:10px 20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:2000;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+@media(max-width:640px){
+  .wrap{padding:24px 14px 60px}
+  h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <span class="logo-tag">AC · Admin Center</span>
+    <h1>AC-GA-EXP <span>Platform</span></h1>
+    <div class="h-sub">General Affairs & Expense Management · 總務費用管理平台 · Vantage River Textiles</div>
+  </div>
+  <div class="h-actions">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)"><span class="cloud-dot" id="cloud-dot"></span><span id="cloud-status">未連線</span></span>
+    <button class="btn" onclick="refreshDashboard()">🔄 更新</button>
+    <button class="btn" onclick="openTgModal()">✈️ 群組</button>
+    <button class="btn primary" onclick="openSettings()">⚙️ 設定</button>
+  </div>
+</header>
+
+<!-- ═══ DASHBOARD KPI（唯讀彙總，不保存資料）═══ -->
+<div class="sect">📊 Dashboard · 即時概況</div>
+<div class="kpi-row">
+  <div class="kpi" style="--kc:var(--accent)"><div class="kpi-l">Monthly PO</div><div class="kpi-v" id="k-po">—</div><div class="kpi-s" id="k-po-s">待審 — · 最新 —</div></div>
+  <div class="kpi" style="--kc:var(--amber)"><div class="kpi-l">Temp PO 臨採</div><div class="kpi-v" id="k-tpo">—</div><div class="kpi-s" id="k-tpo-s">待審 —</div></div>
+  <div class="kpi" style="--kc:var(--teal)"><div class="kpi-l">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">待審 — · 緊急 —</div></div>
+  <div class="kpi" style="--kc:var(--green)"><div class="kpi-l">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">低庫存 —</div></div>
+  <div class="kpi" style="--kc:var(--purple)"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">— 筆記錄</div></div>
+  <div class="kpi" style="--kc:var(--red)"><div class="kpi-l">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">— 個活躍月</div></div>
+</div>
+
+<!-- ═══ MODULES ═══ -->
+<div class="sect">🗂 Modules · 平台模組</div>
+<div class="grid">
+
+  <a class="card" style="--cc:var(--accent)" href="procurement.html">
+    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-top">
+      <div class="card-ico">📋</div>
+      <div><div class="card-en">Procurement Center</div><div class="card-name">採購中心</div></div>
+    </div>
+    <div class="card-desc">月度採購申請、三段審批（Nin→Phea→Paul）、庫存管理、收貨/領用紀錄、安全庫存警示。</div>
+    <div class="card-flow">Request → Verify → Approve → Receiving → Completed</div>
+  </a>
+
+  <a class="card" style="--cc:var(--green)" href="receiving.html">
+    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-top">
+      <div class="card-ico">📦</div>
+      <div><div class="card-en">Receiving Report</div><div class="card-name">收貨報告</div></div>
+    </div>
+    <div class="card-desc">品項收貨/發料明細、期間統計、庫存水位分析圖表、Telegram 摘要通知。隸屬採購中心流程下游。</div>
+    <div class="card-flow">Receive → Issue → Stock Analysis</div>
+  </a>
+
+  <a class="card" style="--cc:var(--teal)" href="maintenance.html">
+    <div class="card-badges"><span class="cbadge">✈️ Bot</span><span class="cbadge">📷 Photo</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-top">
+      <div class="card-ico">🔧</div>
+      <div><div class="card-en">Maintenance Center</div><div class="card-name">維修中心</div></div>
+    </div>
+    <div class="card-desc">維修申請（含現場照片）與臨時採購合併為單一模組，Telegram 一鍵審批、歷史記錄查詢與匯出。</div>
+    <div class="card-flow">Repair Request → Approval → Temp PO → Repair Record</div>
+  </a>
+
+  <a class="card" style="--cc:var(--purple)" href="fuel.html">
+    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-top">
+      <div class="card-ico">🛢️</div>
+      <div><div class="card-en">Fuel Center</div><div class="card-name">燃油中心</div></div>
+    </div>
+    <div class="card-desc">司機／叉車／發電機柴油記錄，每日、週、月/年趨勢分析與分類比對，雲端同步與 Telegram 報告。</div>
+    <div class="card-flow">Driver · Forklift · Generator → Analysis</div>
+  </a>
+
+  <a class="card" style="--cc:var(--red)" href="expense.html">
+    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-top">
+      <div class="card-ico">💰</div>
+      <div><div class="card-en">Expense Center</div><div class="card-name">費用中心</div></div>
+    </div>
+    <div class="card-desc">GA 費用分類彙總、月度趨勢、預算管控與超支警示、明細下鑽，月度資料可編輯並雲端同步。</div>
+    <div class="card-flow">PO · Repair · Diesel · Manual → Budget Control</div>
+  </a>
+
+  <div class="card" style="--cc:var(--muted)" onclick="openSettings()">
+    <div class="card-top">
+      <div class="card-ico">⚙️</div>
+      <div><div class="card-en">Settings</div><div class="card-name">設定中心</div></div>
+    </div>
+    <div class="card-desc">GAS 後端網址、預設語言、Telegram 通知群組管理（新增／修改／刪除／模組指定），設定同步至所有模組。</div>
+    <div class="card-flow">GAS URL · Language · Telegram Groups</div>
+  </div>
+
+</div>
+
+<footer>
+  <span>AC-GA-EXP Platform v1.0 · saintdou-weng.github.io/ac-ga-exp</span>
+  <span>Bot: @acgaexp_bot · GAS: AC_GA_EXP · Sheet: AC_GA_EXP_DB</span>
+</footer>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="overlay" id="set-ov" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <div class="m-title">⚙️ 平台設定中心</div>
+    <div class="m-sub">設定儲存於瀏覽器 localStorage（key: ac_ga_exp_config），所有模組共用。</div>
+    <div class="fg">
+      <label class="fl">Google Apps Script URL（AC_GA_EXP 部署網址 /exec）</label>
+      <input class="fi" id="set-gas" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="fg">
+      <label class="fl">預設語言 Default Language</label>
+      <select class="fi" id="set-lang">
+        <option value="zh">繁體中文 Traditional Chinese</option>
+        <option value="en">English</option>
+        <option value="km">ភាសាខ្មែរ Khmer</option>
+      </select>
+    </div>
+    <div class="m-note">
+      💡 Bot Token 僅存放於 GAS 後端（AC_GA_EXP.gs 的 CONFIG），瀏覽器端不儲存 Token。<br>
+      💡 各模組亦可在自己的設定頁覆寫 GAS URL；未設定時自動使用此處的平台設定。<br>
+      ⚠️ 每次 GAS 重新部署後，記得在 GAS 編輯器重跑 <b>setupPolling()</b>，否則 Telegram 指令會停止回應。
+    </div>
+    <div class="m-actions">
+      <button class="btn" onclick="testGAS()">🔌 測試連線</button>
+      <button class="btn" onclick="closeSettings()">取消</button>
+      <button class="btn primary" onclick="saveSettings()">💾 儲存設定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELEGRAM GROUPS MODAL ═══ -->
+<div class="overlay" id="tg-ov" onclick="if(event.target===this)closeTgModal()">
+  <div class="modal">
+    <div class="m-title">✈️ Telegram 通知群組管理</div>
+    <div class="m-sub">群組清單存放於 Google Sheet（TG_Groups），可指定各群組接收的模組通知。</div>
+    <table class="gtable">
+      <thead><tr><th style="width:34%">名稱 Name</th><th style="width:30%">Chat ID</th><th style="width:22%">模組 Modules</th><th style="width:8%">啟用</th><th></th></tr></thead>
+      <tbody id="tg-tbody"></tbody>
+    </table>
+    <button class="btn" onclick="addGroupRow()" style="margin-bottom:6px">➕ 新增群組</button>
+    <div class="m-note">
+      模組欄填 <b>all</b>（全部）或以逗號列出：po, repair, recv, diesel, expense。<br>
+      預設群組：AC-GA-EXP Notification（-5271842001）。
+    </div>
+    <div class="fg">
+      <label class="fl">📢 測試通知訊息</label>
+      <input class="fi" id="tg-test-msg" placeholder="輸入測試訊息，送至所有啟用群組" value="AC-GA-EXP Platform 通知測試 Test">
+    </div>
+    <div class="m-actions">
+      <button class="btn" onclick="sendTestNotify()">📤 發送測試</button>
+      <button class="btn" onclick="loadGroups()">🔄 從雲端載入</button>
+      <button class="btn" onclick="closeTgModal()">關閉</button>
+      <button class="btn primary" onclick="saveGroups()">💾 儲存至雲端</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   AC-GA-EXP Platform · index.html
+   Dashboard 僅顯示彙總資料，不維護自己的資料庫。
+   共用設定 localStorage key：ac_ga_exp_config
+   ════════════════════════════════════════════════════════════ */
+const CFG_KEY='ac_ga_exp_config';
+let CFG={};
+try{CFG=JSON.parse(localStorage.getItem(CFG_KEY)||'{}')}catch(e){CFG={}}
+let groups=Array.isArray(CFG.tgGroups)?CFG.tgGroups:[];
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function gasUrl(){return (CFG.gasUrl||'').trim()}
+function saveCfg(){try{localStorage.setItem(CFG_KEY,JSON.stringify(CFG))}catch(e){toast('儲存失敗：'+e.message)}}
+
+/* ── Settings ── */
+function openSettings(){
+  document.getElementById('set-gas').value=CFG.gasUrl||'';
+  document.getElementById('set-lang').value=CFG.lang||'zh';
+  document.getElementById('set-ov').classList.add('on');
+}
+function closeSettings(){document.getElementById('set-ov').classList.remove('on')}
+function saveSettings(){
+  CFG.gasUrl=document.getElementById('set-gas').value.trim();
+  CFG.lang=document.getElementById('set-lang').value;
+  saveCfg();
+  closeSettings();
+  toast('✅ 設定已儲存，所有模組將自動套用');
+  refreshDashboard();
+}
+async function testGAS(){
+  const url=document.getElementById('set-gas').value.trim();
+  if(!url){toast('請先輸入 GAS URL');return}
+  toast('⏳ 測試中...');
+  try{
+    const res=await fetch(url+'?action=ping');
+    const d=await res.json();
+    toast(d.ok?('✅ 連線成功 '+(d.ts||'')):('❌ '+(d.msg||d.error||'失敗')));
+  }catch(e){toast('❌ 連線失敗：'+e.message)}
+}
+
+/* ── Dashboard ── */
+function setCloud(state,msg){
+  const dot=document.getElementById('cloud-dot');
+  dot.className='cloud-dot '+(state||'');
+  document.getElementById('cloud-status').textContent=msg;
+}
+function fmtMoney(v){return '$'+Number(v||0).toLocaleString(undefined,{maximumFractionDigits:0})}
+async function refreshDashboard(){
+  const url=gasUrl();
+  if(!url){setCloud('','未設定 GAS');return}
+  setCloud('','讀取中...');
+  try{
+    const res=await fetch(url+'?action=dashboard');
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'dashboard failed');
+    document.getElementById('k-po').textContent=d.po.total;
+    document.getElementById('k-po-s').textContent=`待審 ${d.po.pending} · 最新 ${d.po.latest||'—'}`;
+    document.getElementById('k-tpo').textContent=d.tempPo.total;
+    document.getElementById('k-tpo-s').textContent=`待審 ${d.tempPo.pending} · 核可 ${d.tempPo.approved}`;
+    document.getElementById('k-rep').textContent=d.repair.total;
+    document.getElementById('k-rep-s').textContent=`待審 ${d.repair.pending} · 緊急 ${d.repair.urgent}`;
+    document.getElementById('k-recv').textContent=d.recv.items;
+    document.getElementById('k-recv-s').textContent=`低庫存 ${d.recv.lowStock} · 紀錄 ${d.recv.records}`;
+    document.getElementById('k-dsl').textContent=d.diesel.liters.toLocaleString()+'L';
+    document.getElementById('k-dsl-s').textContent=`${d.diesel.records} 筆記錄`;
+    document.getElementById('k-exp').textContent=fmtMoney(d.expense.ytd);
+    document.getElementById('k-exp-s').textContent=`${d.expense.months} 個活躍月`;
+    setCloud('ok','已連線 '+(d.ts||''));
+  }catch(e){setCloud('err','連線失敗');toast('❌ Dashboard：'+e.message)}
+}
+
+/* ── Telegram groups ── */
+function openTgModal(){
+  renderGroups();
+  document.getElementById('tg-ov').classList.add('on');
+  if(gasUrl()&&!groups.length)loadGroups();
+}
+function closeTgModal(){document.getElementById('tg-ov').classList.remove('on')}
+function renderGroups(){
+  const tb=document.getElementById('tg-tbody');
+  if(!groups.length)groups=[{name:'AC-GA-EXP Notification',chatId:'-5271842001',modules:'all',enabled:true}];
+  tb.innerHTML=groups.map((g,i)=>`
+    <tr>
+      <td><input value="${(g.name||'').replace(/"/g,'&quot;')}" onchange="groups[${i}].name=this.value"></td>
+      <td><input value="${(g.chatId||'').toString().replace(/"/g,'&quot;')}" onchange="groups[${i}].chatId=this.value"></td>
+      <td><input value="${(g.modules||'all').replace(/"/g,'&quot;')}" onchange="groups[${i}].modules=this.value"></td>
+      <td style="text-align:center"><input type="checkbox" ${g.enabled!==false?'checked':''} onchange="groups[${i}].enabled=this.checked"></td>
+      <td><button class="g-del" onclick="delGroupRow(${i})">🗑</button></td>
+    </tr>`).join('');
+}
+function addGroupRow(){groups.push({name:'',chatId:'',modules:'all',enabled:true});renderGroups()}
+function delGroupRow(i){
+  if(!confirm('刪除群組「'+(groups[i].name||groups[i].chatId)+'」？'))return;
+  groups.splice(i,1);renderGroups();
+}
+async function loadGroups(){
+  const url=gasUrl();if(!url){toast('請先在設定中心填 GAS URL');return}
+  toast('⏳ 載入群組...');
+  try{
+    const res=await fetch(url+'?action=getGroups');
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'getGroups failed');
+    if(d.groups&&d.groups.length){groups=d.groups;CFG.tgGroups=groups;saveCfg();renderGroups();toast('✅ 已載入 '+groups.length+' 個群組')}
+    else toast('☁️ 雲端尚無群組設定');
+  }catch(e){toast('❌ '+e.message)}
+}
+async function saveGroups(){
+  const url=gasUrl();if(!url){toast('請先在設定中心填 GAS URL');return}
+  const valid=groups.filter(g=>String(g.chatId||'').trim());
+  toast('⏳ 儲存群組...');
+  try{
+    const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'saveGroups',data:valid}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'saveGroups failed');
+    groups=valid;CFG.tgGroups=groups;saveCfg();renderGroups();
+    toast('✅ 已儲存 '+d.count+' 個群組至雲端');
+  }catch(e){toast('❌ '+e.message)}
+}
+async function sendTestNotify(){
+  const url=gasUrl();if(!url){toast('請先在設定中心填 GAS URL');return}
+  const text=document.getElementById('tg-test-msg').value.trim();
+  if(!text){toast('請輸入測試訊息');return}
+  toast('⏳ 發送中...');
+  try{
+    const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'notify',text}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+    const d=await res.json();
+    toast(d.ok?('✅ 已發送至 '+d.sent+' 個群組'):('❌ '+(d.error||'失敗')));
+  }catch(e){toast('❌ '+e.message)}
+}
+
+/* ── init ── */
+refreshDashboard();
+</script>
+</body>
+</html>

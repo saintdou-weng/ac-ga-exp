@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AC-GA-EXP · Expense Center 費用中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f0f2f7;--card:#fff;--card2:#f7f8fc;
+  --border:#e3e7f0;--border2:#c9d1e8;
+  --text:#1a2035;--text2:#4a5568;--text3:#8896b0;
+  --blue:#2563eb;--blue-l:#eff6ff;--blue-b:#bfdbfe;
+  --green:#16a34a;--green-l:#f0fdf4;
+  --amber:#d97706;--amber-l:#fffbeb;
+  --red:#dc2626;--red-l:#fef2f2;
+  --purple:#7c3aed;--purple-l:#f5f3ff;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'Noto Sans TC','Inter',sans-serif;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh-lg:0 8px 24px rgba(0,0,0,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;}
+
+/* ── HEADER ── */
+header{background:#fff;border-bottom:1px solid var(--border);height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;position:sticky;top:0;z-index:300;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:36px;height:36px;background:var(--blue);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-family:var(--mono);font-size:12px;font-weight:700;}
+.logo-name{font-weight:700;font-size:15px;}
+.logo-sub{font-size:11px;color:var(--text3);}
+.nav{display:flex;gap:2px;}
+.nav-btn{padding:6px 14px;font-size:13px;font-weight:500;background:none;
+  border:none;color:var(--text2);cursor:pointer;border-radius:6px;transition:all .15s;}
+.nav-btn:hover{background:var(--bg);}
+.nav-btn.on{background:var(--blue-l);color:var(--blue);font-weight:600;}
+
+/* ── MAIN ── */
+main{padding:24px 28px;max-width:1440px;margin:0 auto;}
+.tab{display:none;}.tab.on{display:block;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;box-shadow:var(--sh);}
+.kpi-ico{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;margin-bottom:12px;}
+.kpi.b .kpi-ico{background:var(--blue-l);}
+.kpi.g .kpi-ico{background:var(--green-l);}
+.kpi.a .kpi-ico{background:var(--amber-l);}
+.kpi.p .kpi-ico{background:var(--purple-l);}
+.kpi-lbl{font-size:11px;color:var(--text3);font-weight:500;margin-bottom:3px;}
+.kpi-val{font-family:var(--mono);font-size:24px;font-weight:700;margin-bottom:2px;}
+.kpi.b .kpi-val{color:var(--blue);}
+.kpi.g .kpi-val{color:var(--green);}
+.kpi.a .kpi-val{color:var(--amber);}
+.kpi.p .kpi-val{color:var(--purple);}
+.kpi-sub{font-size:11px;color:var(--text3);}
+
+/* ── CARDS ── */
+.charts-row{display:grid;grid-template-columns:5fr 3fr;gap:16px;margin-bottom:22px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;
+  padding:20px;box-shadow:var(--sh);}
+.card-title{font-size:12px;font-weight:600;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;
+  display:flex;justify-content:space-between;align-items:center;}
+
+/* ── TABLE WRAPPER ── */
+.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;
+  box-shadow:var(--sh);overflow:hidden;margin-bottom:22px;}
+.tbl-top{padding:12px 18px;border-bottom:1px solid var(--border);
+  background:var(--card2);display:flex;justify-content:space-between;align-items:center;}
+.tbl-lbl{font-size:13px;font-weight:600;color:var(--text2);}
+.srch{background:#fff;border:1px solid var(--border2);color:var(--text);
+  padding:6px 12px;border-radius:7px;font-size:13px;width:190px;outline:none;
+  transition:border .15s;}
+.srch:focus{border-color:var(--blue);}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--card2);padding:9px 14px;text-align:left;font-size:10px;
+  font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;
+  border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;
+  user-select:none;transition:color .12s;}
+th:hover{color:var(--text2);}
+th.sa::after{content:' ↑';color:var(--blue);}
+th.sd::after{content:' ↓';color:var(--blue);}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f0f2f7;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f7f9ff;}
+.r{text-align:right;font-family:var(--mono);}
+.r.hi{color:var(--blue);font-weight:700;}
+.r.lo{color:var(--text3);}
+.r.ok{color:var(--green);font-weight:600;}
+
+/* ── TAGS ── */
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;}
+.tb{background:var(--blue-l);color:var(--blue);}
+.tg{background:var(--green-l);color:var(--green);}
+.ta{background:var(--amber-l);color:var(--amber);}
+.tr{background:var(--red-l);color:var(--red);}
+.tgr{background:#f1f3f7;color:var(--text3);}
+
+/* ── PROGRESS ── */
+.pb{background:#eef0f6;height:5px;border-radius:3px;overflow:hidden;min-width:60px;}
+.pf{height:100%;border-radius:3px;background:var(--blue);transition:width .3s;}
+.pf.ov{background:var(--red);}
+.pf.wn{background:var(--amber);}
+
+/* ── CAT GRID ── */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.cat-card{background:#fff;border:1px solid var(--border);border-radius:10px;
+  padding:16px;cursor:pointer;transition:all .15s;box-shadow:var(--sh);}
+.cat-card:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);transform:translateY(-1px);}
+.cat-ico{font-size:22px;margin-bottom:8px;}
+.cat-name{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;line-height:1.3;}
+.cat-total{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--blue);margin-bottom:7px;}
+.cat-total.z{color:var(--text3);font-size:14px;}
+.mdots{display:flex;gap:3px;}
+.md{width:7px;height:7px;border-radius:50%;background:#e3e7f0;}
+.md.on{background:var(--blue);}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,20,45,.45);
+  backdrop-filter:blur(4px);z-index:500;overflow-y:auto;padding:32px 16px;}
+.overlay.on{display:flex;align-items:flex-start;justify-content:center;}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:960px;
+  margin:auto;box-shadow:var(--sh-lg);overflow:hidden;animation:su .2s ease;}
+@keyframes su{from{transform:translateY(16px);opacity:0;}to{transform:none;opacity:1;}}
+
+/* Modal header */
+.mh{padding:18px 22px;border-bottom:1px solid var(--border);
+  background:var(--card2);display:flex;justify-content:space-between;align-items:center;}
+.mh-left{display:flex;align-items:center;gap:12px;}
+.mh-ico{font-size:28px;}
+.mh-title{font-size:16px;font-weight:700;}
+.mh-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.mclose{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);
+  background:#fff;color:var(--text2);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mclose:hover{background:var(--red-l);color:var(--red);border-color:var(--red);}
+
+/* Modal view switcher */
+.mviews{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--card2);}
+.mvbtn{padding:10px 20px;font-size:12px;font-weight:600;background:none;
+  border:none;border-bottom:2px solid transparent;color:var(--text3);
+  cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.mvbtn:hover{color:var(--text);}
+.mvbtn.on{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* Modal body */
+.mbody{max-height:60vh;overflow-y:auto;}
+.mbody table th{position:sticky;top:0;z-index:10;}
+
+/* Modal breadcrumb (for drill-down) */
+.mbc{padding:10px 18px;background:#f0f4ff;border-bottom:1px solid var(--blue-b);
+  display:flex;align-items:center;gap:8px;font-size:12px;}
+.mbc-back{background:var(--blue-l);border:1px solid var(--blue-b);
+  color:var(--blue);padding:3px 10px;border-radius:5px;font-size:11px;
+  font-weight:600;cursor:pointer;transition:all .15s;}
+.mbc-back:hover{background:var(--blue);color:#fff;}
+.mbc-sep{color:var(--text3);}
+.mbc-item{font-weight:600;color:var(--text);}
+
+/* Modal footer stats */
+.mfoot{padding:12px 18px;border-top:1px solid var(--border);background:var(--card2);
+  display:flex;gap:20px;flex-wrap:wrap;}
+.mstat{display:flex;flex-direction:column;gap:2px;}
+.mstat-l{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);}
+.mstat-v{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text);}
+
+/* Highlight row */
+.item-row{cursor:pointer;}
+.item-row:hover td{background:#eff6ff !important;}
+.item-row:hover td:first-child{color:var(--blue);}
+.total-row td{background:var(--card2) !important;font-weight:700;border-top:2px solid var(--border2);}
+
+/* BUDGET TAB */
+.bgt-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.bgt-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--sh);}
+.bgt-top{display:flex;justify-content:space-between;margin-bottom:10px;}
+.bgt-name{font-size:13px;font-weight:600;}
+.bgt-ytd{font-family:var(--mono);font-size:12px;color:var(--blue);}
+.bgt-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bgt-inp{background:var(--card2);border:1px solid var(--border2);color:var(--text);
+  padding:5px 9px;border-radius:6px;font-family:var(--mono);font-size:12px;
+  width:88px;outline:none;transition:border .15s;}
+.bgt-inp:focus{border-color:var(--blue);background:#fff;}
+.bgt-st{font-size:11px;font-weight:600;}
+.bgt-st.ok{color:var(--green);}.bgt-st.wn{color:var(--amber);}.bgt-st.ov{color:var(--red);}.bgt-st.un{color:var(--text3);}
+
+/* Section header */
+.sec{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;}
+
+/* Responsive */
+@media(max-width:960px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .charts-row{grid-template-columns:1fr;}
+  .cat-grid{grid-template-columns:repeat(2,1fr);}
+  .bgt-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">VRT</div>
+    <div>
+      <div class="logo-name">AC-GA-EXP · Expense Center</div>
+      <div class="logo-sub">GA 費用分析管控 · <a href="index.html" style="color:inherit">🏠 平台首頁</a></div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-btn on" onclick="goTab('ov',this)">📊 總覽</button>
+    <button class="nav-btn" onclick="goTab('cat',this)">📁 費用分類</button>
+    <button class="nav-btn" onclick="goTab('mo',this)">📅 月度分析</button>
+    <button class="nav-btn" onclick="goTab('bgt',this)">💰 預算管控</button>
+    <button class="nav-btn" onclick="goTab('edit',this)">✏️ 資料維護</button>
+  </div>
+  <div style="font-family:var(--mono);font-size:11px;color:var(--text3);" id="hdr-ts">—</div>
+</header>
+
+<!-- MODAL -->
+<div class="overlay" id="ov-modal" onclick="maybeClose(event)">
+ <div class="modal">
+  <div class="mh">
+   <div class="mh-left">
+    <span class="mh-ico" id="m-ico"></span>
+    <div>
+     <div class="mh-title" id="m-title"></div>
+     <div class="mh-sub" id="m-sub"></div>
+    </div>
+   </div>
+   <button class="mclose" onclick="closeModal()">✕</button>
+  </div>
+  <div class="mviews" id="m-views"></div>
+  <div id="m-bc" style="display:none;" class="mbc">
+   <button class="mbc-back" onclick="backToSummary()">← 返回彙總</button>
+   <span class="mbc-sep">›</span>
+   <span class="mbc-item" id="m-bc-item"></span>
+  </div>
+  <div class="mbody" id="m-body"></div>
+  <div class="mfoot" id="m-foot"></div>
+ </div>
+</div>
+
+<main>
+
+<!-- ===== OVERVIEW ===== -->
+<div id="tab-ov" class="tab on">
+ <div class="kpi-row">
+  <div class="kpi b"><div class="kpi-ico">💵</div><div class="kpi-lbl">YTD 總支出</div><div class="kpi-val" id="k1"></div><div class="kpi-sub" id="k1s"></div></div>
+  <div class="kpi g"><div class="kpi-ico">📅</div><div class="kpi-lbl">月均費用</div><div class="kpi-val" id="k2"></div><div class="kpi-sub" id="k2s"></div></div>
+  <div class="kpi a"><div class="kpi-ico">🔝</div><div class="kpi-lbl">最大費用類別</div><div class="kpi-val" id="k3"></div><div class="kpi-sub" id="k3s"></div></div>
+  <div class="kpi p"><div class="kpi-ico">📋</div><div class="kpi-lbl">採購總筆數</div><div class="kpi-val" id="k4"></div><div class="kpi-sub" id="k4s"></div></div>
+ </div>
+ <div class="charts-row">
+  <div class="card"><div class="card-title">月度費用走勢 <span id="c-note" style="font-weight:400;color:var(--text3);font-size:11px;text-transform:none;letter-spacing:0;"></span></div><div style="height:220px;"><canvas id="cBar"></canvas></div></div>
+  <div class="card"><div class="card-title">費用類別佔比 YTD</div><div style="height:220px;"><canvas id="cPie"></canvas></div></div>
+ </div>
+ <div class="tbl-wrap">
+  <div class="tbl-top"><span class="tbl-lbl">費用類別彙總</span><input class="srch" id="srch" placeholder="🔍 搜尋類別…" oninput="renderSummary()"></div>
+  <div style="overflow-x:auto;">
+  <table>
+   <thead><tr>
+    <th onclick="srt(0)">費用類別</th>
+    <th onclick="srt(1)" style="text-align:right">Jan</th>
+    <th onclick="srt(2)" style="text-align:right">Feb</th>
+    <th onclick="srt(3)" style="text-align:right">Q1</th>
+    <th onclick="srt(4)" style="text-align:right">YTD 合計</th>
+    <th>月份分佈</th>
+    <th>佔比</th>
+    <th>明細</th>
+   </tr></thead>
+   <tbody id="sumBody"></tbody>
+  </table>
+  </div>
+ </div>
+</div>
+
+<!-- ===== CATEGORIES ===== -->
+<div id="tab-cat" class="tab">
+ <div class="sec"><span>點擊查看品項彙總及月度明細</span><span id="cat-note"></span></div>
+ <div class="cat-grid" id="catGrid"></div>
+</div>
+
+<!-- ===== MONTHLY ===== -->
+<div id="tab-mo" class="tab">
+ <div class="card" style="margin-bottom:22px;">
+  <div class="card-title">各類別月度費用堆疊
+   <select id="mflt" onchange="renderMo()" style="font-size:12px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;background:#fff;color:var(--text);outline:none;">
+    <option value="all">全部類別</option><option value="top5">Top 5</option>
+    <option value="util">水電能源</option><option value="supp">物料採購</option>
+   </select>
+  </div>
+  <div style="height:280px;"><canvas id="cStack"></canvas></div>
+ </div>
+ <div class="tbl-wrap">
+  <div class="tbl-top"><span class="tbl-lbl">月度交叉分析</span>
+   <select id="mflt2" onchange="renderMoTbl()" style="font-size:12px;border:1px solid var(--border);border-radius:6px;padding:6px 10px;background:#fff;color:var(--text);outline:none;">
+    <option value="all">全部月份</option><option value="0">January</option><option value="1">February</option>
+   </select>
+  </div>
+  <div style="overflow-x:auto;"><table><thead id="mTblH"></thead><tbody id="mTblB"></tbody></table></div>
+ </div>
+</div>
+
+<!-- ===== BUDGET ===== -->
+<div id="tab-bgt" class="tab">
+ <div class="sec"><span>設定月度預算 — 自動保存</span><span id="bgt-alert" style="color:var(--red);font-weight:700;"></span></div>
+ <div class="bgt-grid" id="bgtGrid"></div>
+</div>
+
+<!-- ===== DATA EDIT（AC-GA-EXP 新增：資料維護 / 雲端 / Excel）===== -->
+<div id="tab-edit" class="tab">
+ <div class="sec">
+  <span>✏️ 月度費用資料維護 — 修改後點「儲存」</span>
+  <span style="display:flex;gap:8px;flex-wrap:wrap">
+   <button class="nav-btn" onclick="addCustomCat()">➕ 新增類別</button>
+   <button class="nav-btn" onclick="saveEditData()" style="background:var(--blue);color:#fff;border-color:var(--blue)">💾 儲存</button>
+   <button class="nav-btn" onclick="exportMatrixExcel()">📊 匯出 Excel</button>
+   <button class="nav-btn" onclick="document.getElementById('exp-xls').click()">📥 匯入 Excel</button>
+   <input type="file" id="exp-xls" accept=".xlsx,.xls" style="display:none" onchange="importMatrixExcel(this)">
+   <button class="nav-btn" onclick="expCloudUpload()">☁️ 上傳雲端</button>
+   <button class="nav-btn" onclick="expCloudDownload()">📥 下載雲端</button>
+  </span>
+ </div>
+ <div style="background:var(--blue-l);border:1px solid var(--blue-b);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--blue)" id="edit-note">
+  💡 直接在表格內修改各月金額（USD）。自訂類別可刪除；內建類別若清空 12 個月即視為停用。雲端同步使用平台設定中心的 GAS URL。
+ </div>
+ <div style="overflow-x:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh)">
+  <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:1100px" id="edit-table">
+   <thead id="edit-thead"></thead>
+   <tbody id="edit-tbody"></tbody>
+  </table>
+ </div>
+ <div style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text3)" id="edit-status"></div>
+</div>
+
+</main>
+
+<script>
+// ================================================================
+//  CONSTANTS
+// ================================================================
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ================================================================
+//  DETAIL DATA  — objects with month field for pivot
+// ================================================================
+// Type 'purchase': each record has {date,month,item,spec,qty,unit,unitPrice,amount,purpose}
+// Type 'utility':  each record has {month,location,consumption,consUnit,amountUSD,detail}
+// Type 'service':  each record has {month,item,amount,note}
+
+const DET = {
+
+  electric: { type:'utility', icon:'⚡', label:'Electricity 電費',
+    locationField:'location', consumField:'consumption', consUnit:'KW', amtField:'amountUSD',
+    rows:[
+      {month:0,location:'工廠 Factory',       consumption:24638, consUnit:'KW', unitPrice:'$0.158/KW', amountUSD:3892.80},
+      {month:0,location:'外籍宿舍 Expat S.H.',consumption:2757,  consUnit:'KW', unitPrice:'730R/KW',   amountUSD:503.15},
+      {month:0,location:'本地宿舍 Local S.H.',consumption:657,   consUnit:'KW', unitPrice:'730R/KW',   amountUSD:119.90},
+      {month:1,location:'工廠 Factory',       consumption:29971, consUnit:'KW', unitPrice:'$0.158/KW', amountUSD:4735.42},
+      {month:1,location:'外籍宿舍 Expat S.H.',consumption:2881,  consUnit:'KW', unitPrice:'730R/KW',   amountUSD:525.78},
+      {month:1,location:'本地宿舍 Local S.H.',consumption:840,   consUnit:'KW', unitPrice:'730R/KW',   amountUSD:153.30},
+    ]
+  },
+
+  water: { type:'utility', icon:'🚿', label:'City Water 城市水費',
+    locationField:'location', consumField:'consumption', consUnit:'m³', amtField:'amountUSD',
+    rows:[
+      {month:0,location:'工廠 Factory',       consumption:514, consUnit:'m³', unitPrice:'1500-2500R/m³', amountUSD:287.13},
+      {month:0,location:'外籍宿舍 Expat S.H.',consumption:3,   consUnit:'m³', unitPrice:'1200-1500R/m³', amountUSD:1.15},
+      {month:0,location:'本地宿舍 Local S.H.',consumption:67,  consUnit:'m³', unitPrice:'2000R/m³',      amountUSD:29.50},
+      {month:1,location:'工廠 Factory',       consumption:570, consUnit:'m³', unitPrice:'1500-2500R/m³', amountUSD:322.13},
+      {month:1,location:'外籍宿舍 Expat S.H.',consumption:3,   consUnit:'m³', unitPrice:'1200-1500R/m³', amountUSD:1.15},
+      {month:1,location:'本地宿舍 Local S.H.',consumption:67,  consUnit:'m³', unitPrice:'2000R/m³',      amountUSD:33.50},
+    ]
+  },
+
+  security: { type:'service', icon:'🛡️', label:'Security 保安費',
+    rows:[
+      {month:0,item:'廠房保安 Factory Security',   qty:1, unit:'月', unitPrice:2970, amount:2970, note:'Staff house 2PPLs'},
+      {month:0,item:'宿舍保安 Staff House Security',qty:1, unit:'月', unitPrice:660,  amount:660,  note:'New staff house'},
+      {month:1,item:'廠房保安 Factory Security',   qty:1, unit:'月', unitPrice:2970, amount:2970, note:'Staff house 2PPLs'},
+      {month:1,item:'宿舍保安 Staff House Security',qty:1, unit:'月', unitPrice:660,  amount:660,  note:'New staff house'},
+    ]
+  },
+
+  drinkwater: { type:'service', icon:'💧', label:'Drinking Water 飲用水',
+    rows:[
+      {month:0,item:'Drinking water Shop 1',qty:1,unit:'month',unitPrice:455,amount:455,note:'Factory drinking water'},
+    ]
+  },
+
+  appform: { type:'purchase', icon:'📝', label:'Application Form 表格印刷',
+    rows:[
+      {date:'2026-01-03',month:0,item:'Copy form (QC form)',        spec:'A4',  qty:3200,unit:'pcs',supplier:'Chheng Hort',unitPrice:0.0375,amount:120.00,purpose:'QC & QA dept'},
+      {date:'2026-01-28',month:0,item:'Stock bin card',             spec:'—',   qty:1500,unit:'pcs',supplier:'Chheng Hort',unitPrice:0.15,  amount:225.00,purpose:'Warehouse Trim'},
+      {date:'2026-02-03',month:1,item:'Fabric report table form',   spec:'—',   qty:2000,unit:'pcs',supplier:'Chheng Hort',unitPrice:0.03,  amount:60.00, purpose:'Cutting use'},
+      {date:'2026-02-26',month:1,item:'Trim requisition form 3-layer',spec:'3ជាន់',qty:20,unit:'Box',supplier:'Chheng Hort',unitPrice:3.00, amount:60.00, purpose:'Warehouse Trim'},
+      {date:'2026-02-28',month:1,item:'Copy form (Cutting)',        spec:'A4',  qty:3200,unit:'pcs',supplier:'Chheng Hort',unitPrice:0.03,  amount:96.00, purpose:'Cutting use'},
+    ]
+  },
+
+  paper: { type:'purchase', icon:'📄', label:'A4/A3 Paper 影印紙',
+    rows:[
+      {date:'2026-01-03',month:0,item:'A4 paper','brand':'IK plus',spec:'70GSM 500sh/5pcs',qty:8, unit:'ctn',supplier:'Various',unitPrice:15,amount:120,purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'A4 paper','brand':'IK',    spec:'70GSM 500sh/5pcs',qty:10,unit:'ctn',supplier:'Various',unitPrice:15,amount:150,purpose:'For stock'},
+    ]
+  },
+
+  mask: { type:'purchase', icon:'😷', label:'Face Mask 口罩',
+    rows:[
+      {date:'2026-01-02',month:0,item:'Face Mask',brand:'Pro care',spec:'50pcs/box',qty:45,unit:'box',supplier:'Various',unitPrice:1,amount:45,purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Face Mask',brand:'BT',      spec:'50pcs/box',qty:50,unit:'box',supplier:'Various',unitPrice:1,amount:50,purpose:'For stock'},
+    ]
+  },
+
+  toilet: { type:'purchase', icon:'🧻', label:'Toilet Paper 廁紙',
+    rows:[
+      {date:'2026-02-02',month:1,item:'Toilet paper',brand:'Comffy',spec:'120pcs/ctn',qty:1,unit:'ctn',supplier:'Various',unitPrice:22,amount:22,purpose:'—'},
+    ]
+  },
+
+  cleaning: { type:'purchase', icon:'🧹', label:'Cleaning 清潔用品',
+    rows:[
+      {date:'2026-01-02',month:0,item:'Hand Wash',       brand:'—',      spec:'26L/tonk',    qty:1, unit:'tonk',supplier:'Various',unitPrice:15,   amount:15,   purpose:'Cleaner & Security'},
+      {date:'2026-01-02',month:0,item:'Bleach',          brand:'Haiter', spec:'2500ml/btl',  qty:1, unit:'btl', supplier:'Various',unitPrice:3,    amount:3,    purpose:'Production'},
+      {date:'2026-01-02',month:0,item:'Insect Killer',   brand:'Raid',   spec:'600ml/btl',   qty:5, unit:'btl', supplier:'Various',unitPrice:3,    amount:15,   purpose:'For stock'},
+      {date:'2026-01-02',month:0,item:'Toilet bleach',   brand:'Duck',   spec:'900ml/btl',   qty:4, unit:'btl', supplier:'Various',unitPrice:1.75, amount:7,    purpose:'For cleaner'},
+      {date:'2026-01-02',month:0,item:'Plastic glove',   brand:'O-Ral',  spec:'L',           qty:3, unit:'pair',supplier:'Various',unitPrice:1.5,  amount:4.5,  purpose:'For cleaner'},
+      {date:'2026-01-02',month:0,item:'Fresher Spray',   brand:'—',      spec:'520ml/btl',   qty:1, unit:'btl', supplier:'Various',unitPrice:2.5,  amount:2.5,  purpose:'For GA'},
+      {date:'2026-01-02',month:0,item:'Plastic broom',   brand:'—',      spec:'—',           qty:1, unit:'pcs', supplier:'Various',unitPrice:2,    amount:2,    purpose:'For cleaner'},
+      {date:'2026-01-02',month:0,item:'Big polybag',     brand:'—',      spec:'70×120 25kg', qty:2, unit:'sack',supplier:'Various',unitPrice:31,   amount:62,   purpose:'For Cleaner'},
+      {date:'2026-01-02',month:0,item:'Soap Powder',     brand:'O Ra',   spec:'4kg/bag 16kg',qty:2, unit:'ctn', supplier:'Various',unitPrice:22,   amount:44,   purpose:'For stock'},
+      {date:'2026-01-03',month:0,item:'Broom',           brand:'—',      spec:'—',           qty:4, unit:'pcs', supplier:'Various',unitPrice:1.75, amount:7,    purpose:'For cleaner'},
+      {date:'2026-01-17',month:0,item:'Liquid soap clothes',brand:'—',   spec:'—',           qty:1, unit:'btl', supplier:'Various',unitPrice:7,    amount:7,    purpose:'Staff house'},
+      {date:'2026-02-02',month:1,item:'Big polybag',     brand:'—',      spec:'70×120 25kg', qty:2, unit:'sack',supplier:'Various',unitPrice:31,   amount:62,   purpose:'For Cleaner'},
+      {date:'2026-02-02',month:1,item:'Soap Powder',     brand:'O Ra',   spec:'4kg/bag 16kg',qty:1, unit:'ctn', supplier:'Various',unitPrice:23,   amount:23,   purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Hand Wash',       brand:'—',      spec:'26L/tonk',    qty:1, unit:'tonk',supplier:'Various',unitPrice:15,   amount:15,   purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Insect Killer',   brand:'Raid',   spec:'600ml/btl',   qty:8, unit:'btl', supplier:'Various',unitPrice:3,    amount:24,   purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Toilet bleach',   brand:'Duck',   spec:'900ml/btl',   qty:2, unit:'btl', supplier:'Various',unitPrice:1.75, amount:3.5,  purpose:'For Cleaner'},
+    ]
+  },
+
+  stationery: { type:'purchase', icon:'✏️', label:'Stationery 文具',
+    rows:[
+      {date:'2026-01-02',month:0,item:'Brown envelop',   brand:'—',         spec:'50pcs/pack', qty:1, unit:'pack',supplier:'Ly heng',unitPrice:3,   amount:3,    purpose:'For stock'},
+      {date:'2026-01-02',month:0,item:'Pencil',          brand:'Deli',      spec:'12pcs/box',  qty:1, unit:'box', supplier:'Ly heng',unitPrice:1.5, amount:1.5,  purpose:'For stock'},
+      {date:'2026-01-02',month:0,item:'Red pen',         brand:'Flexoffice',spec:'—',          qty:5, unit:'pcs', supplier:'Ly heng',unitPrice:0.2, amount:1,    purpose:'For stock'},
+      {date:'2026-01-02',month:0,item:'High Lighter',    brand:'Flexoffice',spec:'4.00mm',     qty:10,unit:'pcs', supplier:'Ly heng',unitPrice:0.5, amount:5,    purpose:'For stock'},
+      {date:'2026-01-02',month:0,item:'Blue pen',        brand:'Candy coco',spec:'50pcs/box',  qty:1, unit:'box', supplier:'Ly heng',unitPrice:4.5, amount:4.5,  purpose:'For stock'},
+      {date:'2026-01-03',month:0,item:'Yellow tape',     brand:'—',         spec:'12pcs/roll', qty:3, unit:'roll',supplier:'Ly heng',unitPrice:6.5, amount:19.5, purpose:'For stock'},
+      {date:'2026-01-03',month:0,item:'Note book',       brand:'Srungoun',  spec:'200sheet',   qty:5, unit:'pcs', supplier:'Ly heng',unitPrice:0.6, amount:3,    purpose:'For stock'},
+      {date:'2026-01-03',month:0,item:'Big book',        brand:'Srungoun',  spec:'604sheet',   qty:2, unit:'pcs', supplier:'Ly heng',unitPrice:1,   amount:2,    purpose:'For stock'},
+      {date:'2026-01-03',month:0,item:'Small Clear tape',brand:'Giraffe',   spec:'10pcs/roll', qty:1, unit:'roll',supplier:'Ly heng',unitPrice:1.5, amount:1.5,  purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Yellow tape',     brand:'—',         spec:'12pcs/box',  qty:3, unit:'roll',supplier:'Ly heng',unitPrice:6.5, amount:19.5, purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Binder clip 51mm',brand:'Lin',       spec:'12pcs/box',  qty:3, unit:'box', supplier:'Ly heng',unitPrice:1.5, amount:4.5,  purpose:'For Office'},
+      {date:'2026-02-02',month:1,item:'Double tape',     brand:'—',         spec:'24pcs/roll', qty:1, unit:'roll',supplier:'Ly heng',unitPrice:3,   amount:3,    purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Small Clear tape',brand:'Giraffe',   spec:'10pcs/roll', qty:2, unit:'roll',supplier:'Ly heng',unitPrice:1.5, amount:3,    purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Blue pen',        brand:'Giraffe',   spec:'50pcs/box',  qty:1, unit:'box', supplier:'Ly heng',unitPrice:4.5, amount:4.5,  purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Correction pen',  brand:'BTS',       spec:'12pcs/box',  qty:1, unit:'box', supplier:'Ly heng',unitPrice:3,   amount:3,    purpose:'Production'},
+      {date:'2026-02-02',month:1,item:'Permanent marker',brand:'Arrow',     spec:'12pcs/box',  qty:1, unit:'box', supplier:'Ly heng',unitPrice:4,   amount:4,    purpose:'Production'},
+      {date:'2026-02-02',month:1,item:'Binder clip 25mm',brand:'Lin',       spec:'12pcs/box',  qty:4, unit:'box', supplier:'Ly heng',unitPrice:0.6, amount:2.4,  purpose:'For Office'},
+      {date:'2026-02-02',month:1,item:'High Lighter',    brand:'Flexoffice',spec:'4.0mm',      qty:10,unit:'pcs', supplier:'Ly heng',unitPrice:0.5, amount:5,    purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Tailor Chalk',    brand:'—',         spec:'12pcs/pack', qty:1, unit:'pack',supplier:'Ly heng',unitPrice:1,   amount:1,    purpose:'Production'},
+      {date:'2026-02-02',month:1,item:'Red pen',         brand:'Flexoffice',spec:'50pcs/box',  qty:5, unit:'pcs', supplier:'Ly heng',unitPrice:0.2, amount:1,    purpose:'For stock'},
+      {date:'2026-02-02',month:1,item:'Battery AA',      brand:'Panasonic', spec:'—',          qty:2, unit:'pack',supplier:'Ly heng',unitPrice:1,   amount:2,    purpose:'For Office'},
+      {date:'2026-02-02',month:1,item:'Battery AAA',     brand:'Panasonic', spec:'—',          qty:1, unit:'pack',supplier:'Ly heng',unitPrice:1,   amount:1,    purpose:'For Office'},
+      {date:'2026-02-02',month:1,item:'Big book',        brand:'Giraffe',   spec:'244sheet',   qty:5, unit:'book',supplier:'Ly heng',unitPrice:2,   amount:10,   purpose:'Production'},
+      {date:'2026-02-02',month:1,item:'Note book',       brand:'Srungoun',  spec:'200sheet',   qty:3, unit:'book',supplier:'Ly heng',unitPrice:0.6, amount:1.8,  purpose:'Production'},
+    ]
+  },
+
+  other: { type:'purchase', icon:'📦', label:'Others 其他雜項',
+    rows:[
+      {date:'2026-01-02',month:0,item:'String folder',          spec:'A4 10pcs/pack', qty:1, unit:'pack',supplier:'Ly heng',unitPrice:5.5,  amount:5.5,  purpose:'For HR'},
+      {date:'2026-01-02',month:0,item:'Plastic clear sheet',    spec:'100sheet/pcs',  qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:2.5,  amount:2.5,  purpose:'Asst.Admin'},
+      {date:'2026-01-02',month:0,item:'Clip board',             spec:'A4',            qty:2, unit:'pcs', supplier:'Ly heng',unitPrice:1.25, amount:2.5,  purpose:'Sewing L11'},
+      {date:'2026-01-02',month:0,item:'Pentel Pencil',          spec:'0.5',           qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:1.5,  amount:1.5,  purpose:'Asst.Admin'},
+      {date:'2026-01-02',month:0,item:'Clear plastic bag',      spec:'5×8',           qty:1, unit:'kg',  supplier:'Various', unitPrice:1.5,  amount:1.5,  purpose:'GA use'},
+      {date:'2026-01-03',month:0,item:'Ink (stamp pad)',        spec:'—',             qty:1, unit:'btl', supplier:'Ly heng',unitPrice:0.5,  amount:0.5,  purpose:'Asst.Admin'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 6×14',       spec:'6×14',          qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 6×11',       spec:'6×11',          qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 5×9',        spec:'5×9',           qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 9×8',        spec:'9×8',           qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 12×20',      spec:'12×20',         qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Plastic bag 20×30',      spec:'20×30',         qty:10,unit:'kg',  supplier:'Various', unitPrice:2,    amount:20,   purpose:'Warehouse Trim'},
+      {date:'2026-01-14',month:0,item:'Rubber band',            spec:'—',             qty:5, unit:'kg',  supplier:'Various', unitPrice:5,    amount:25,   purpose:'Warehouse Trim'},
+      {date:'2026-01-16',month:0,item:'String folder',          spec:'—',             qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:5.5,  amount:5.5,  purpose:'For Account'},
+      {date:'2026-01-16',month:0,item:'Fingertip moisturizer',  spec:'—',             qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:1.5,  amount:1.5,  purpose:'For Account'},
+      {date:'2026-01-16',month:0,item:'Clear plastic folder',   spec:'10pcs/pack',    qty:1, unit:'pack',supplier:'Ly heng',unitPrice:3,    amount:3,    purpose:'For Mr.Sam'},
+      {date:'2026-01-17',month:0,item:'Traffic tape',           spec:'—',             qty:2, unit:'pcs', supplier:'Various', unitPrice:3.5,  amount:7,    purpose:'Container sign'},
+      {date:'2026-01-21',month:0,item:'Black soil',             spec:'—',             qty:8, unit:'bag', supplier:'Various', unitPrice:1,    amount:8,    purpose:'Flower & Tree'},
+      {date:'2026-01-28',month:0,item:'TGTV ID card (Hard)',    spec:'100pcs/box',    qty:1, unit:'box', supplier:'H-T-P-P Royal',unitPrice:40,amount:40, purpose:'For HR'},
+      {date:'2026-01-28',month:0,item:'Mouse glue',             spec:'12btl/ctn',     qty:1, unit:'ctn', supplier:'Various', unitPrice:15,   amount:15,   purpose:'Factory use'},
+      {date:'2026-02-02',month:1,item:'Broom',                  spec:'—',             qty:12,unit:'pcs', supplier:'Various', unitPrice:1.75, amount:21,   purpose:'Production'},
+      {date:'2026-02-02',month:1,item:'Glue Stick',             spec:'—',             qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:1,    amount:1,    purpose:'Asst.Admin'},
+      {date:'2026-02-02',month:1,item:'Clip board',             spec:'A4',            qty:1, unit:'pcs', supplier:'Ly heng',unitPrice:1,    amount:1,    purpose:'For QC'},
+      {date:'2026-02-02',month:1,item:'Fruit',                  spec:'—',             qty:1, unit:'set', supplier:'Various', unitPrice:5,    amount:5,    purpose:'Sacred day'},
+      {date:'2026-02-12',month:1,item:'Photo Frame A4',         spec:'A4',            qty:2, unit:'pcs', supplier:'Ly heng',unitPrice:4,    amount:8,    purpose:'Certificate Warp'},
+    ]
+  },
+
+  kitchen: { type:'purchase', icon:'🍳', label:'Kitchen & Food 廚房食材',
+    rows:[
+      // Jan 5
+      {date:'2026-01-05',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Bag',             spec:'M',     qty:1, unit:'pcs', supplier:'Various',unitPrice:0.1,  amount:0.1,  purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Equal classic',   spec:'100st', qty:1, unit:'pcs', supplier:'Various',unitPrice:5.99, amount:5.99, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Fish sauce',      spec:'750ml', qty:1, unit:'pcs', supplier:'Various',unitPrice:0.79, amount:0.79, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Seasoning',       spec:'400g',  qty:1, unit:'pcs', supplier:'Various',unitPrice:2.19, amount:2.19, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Tomato pure',     spec:'500g',  qty:1, unit:'pcs', supplier:'Various',unitPrice:1.59, amount:1.59, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Soy sauce',       spec:'1.97g', qty:1, unit:'pcs', supplier:'Various',unitPrice:3.69, amount:3.69, purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Spices',          spec:'5L',    qty:1, unit:'btl', supplier:'Various',unitPrice:8,    amount:8,    purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Spices',          spec:'280g',  qty:1, unit:'pkg', supplier:'Various',unitPrice:2,    amount:2,    purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Spices',          spec:'500ml', qty:1, unit:'btl', supplier:'Various',unitPrice:1.5,  amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Spices',          spec:'700g',  qty:2, unit:'pkg', supplier:'Various',unitPrice:1.65, amount:3.3,  purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Spices',          spec:'454g',  qty:1, unit:'pkg', supplier:'Various',unitPrice:3.8,  amount:3.8,  purpose:'For Kitchen'},
+      {date:'2026-01-05',month:0,item:'Oil',             spec:'5L',    qty:1, unit:'btl', supplier:'Various',unitPrice:18.6, amount:18.6, purpose:'For Kitchen'},
+      // Jan 6
+      {date:'2026-01-06',month:0,item:'Oyster sauce',    spec:'—',     qty:1, unit:'btl', supplier:'Various',unitPrice:1.75, amount:1.75, purpose:'For Kitchen'},
+      // Jan 8
+      {date:'2026-01-08',month:0,item:'Egg',             spec:'—',     qty:5, unit:'pcs', supplier:'Various',unitPrice:0.15, amount:0.75, purpose:'For Kitchen'},
+      {date:'2026-01-08',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Jan 12
+      {date:'2026-01-12',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-12',month:0,item:'Sugar + Garlic',  spec:'—',     qty:10,unit:'kg',  supplier:'Various',unitPrice:0.75, amount:7.5,  purpose:'For Kitchen'},
+      // Jan 14
+      {date:'2026-01-14',month:0,item:'Dish washing Liquid',spec:'—',  qty:1, unit:'ctn', supplier:'Various',unitPrice:15,   amount:15,   purpose:'For Kitchen'},
+      // Jan 15
+      {date:'2026-01-15',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-15',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Jan 19
+      {date:'2026-01-19',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-19',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Jan 22
+      {date:'2026-01-22',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-22',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Jan 26
+      {date:'2026-01-26',month:0,item:'Spices',          spec:'5L',    qty:1, unit:'btl', supplier:'Various',unitPrice:8,    amount:8,    purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Spices',          spec:'700g',  qty:1, unit:'pkg', supplier:'Various',unitPrice:1.65, amount:1.65, purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Spices',          spec:'480ml', qty:1, unit:'btl', supplier:'Various',unitPrice:3,    amount:3,    purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Spices',          spec:'1kg',   qty:1, unit:'pkg', supplier:'Various',unitPrice:7.5,  amount:7.5,  purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Khnar soup powder',spec:'—',    qty:1, unit:'bag', supplier:'Various',unitPrice:3,    amount:3,    purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Oyster sauce',    spec:'—',     qty:2, unit:'btl', supplier:'Various',unitPrice:2,    amount:4,    purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Seasoning',       spec:'—',     qty:1, unit:'bag', supplier:'Various',unitPrice:3,    amount:3,    purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-26',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Jan 29
+      {date:'2026-01-29',month:0,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-01-29',month:0,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 2
+      {date:'2026-02-02',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-02',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 5
+      {date:'2026-02-05',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-05',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 6
+      {date:'2026-02-06',month:1,item:'Food (staff meal)',spec:'—',    qty:3, unit:'PPL', supplier:'Various',unitPrice:2.5,  amount:7.5,  purpose:'For Kitchen'},
+      // Feb 9
+      {date:'2026-02-09',month:1,item:'Egg',             spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      {date:'2026-02-09',month:1,item:'Sugar + Garlic',  spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      // Feb 10
+      {date:'2026-02-10',month:1,item:'Fish sauce',      spec:'—',     qty:1, unit:'btl', supplier:'Various',unitPrice:1,    amount:1,    purpose:'For Kitchen'},
+      // Feb 12
+      {date:'2026-02-12',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-12',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 16
+      {date:'2026-02-16',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-16',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 19
+      {date:'2026-02-19',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-19',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 23
+      {date:'2026-02-23',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-23',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 24
+      {date:'2026-02-24',month:1,item:'Oyster sauce',    spec:'700g',  qty:1, unit:'pcs', supplier:'Various',unitPrice:2.49, amount:2.49, purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Fish sauce',      spec:'750ml', qty:1, unit:'pcs', supplier:'Various',unitPrice:0.79, amount:0.79, purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Rati chicken powder',spec:'400g',qty:1,unit:'pcs', supplier:'Various',unitPrice:1.39, amount:1.39, purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Bag',             spec:'xs',    qty:1, unit:'pcs', supplier:'Various',unitPrice:0.1,  amount:0.1,  purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Spices',          spec:'454g',  qty:1, unit:'pkg', supplier:'Various',unitPrice:3.8,  amount:3.8,  purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Spices',          spec:'1.9L',  qty:1, unit:'btl', supplier:'Various',unitPrice:3,    amount:3,    purpose:'For Kitchen'},
+      {date:'2026-02-24',month:1,item:'Spices',          spec:'5L',    qty:1, unit:'btl', supplier:'Various',unitPrice:8,    amount:8,    purpose:'For Kitchen'},
+      // Feb 26
+      {date:'2026-02-26',month:1,item:'Egg',             spec:'—',     qty:10,unit:'pcs', supplier:'Various',unitPrice:0.15, amount:1.5,  purpose:'For Kitchen'},
+      {date:'2026-02-26',month:1,item:'Sugar + Garlic',  spec:'—',     qty:1, unit:'kg',  supplier:'Various',unitPrice:0.75, amount:0.75, purpose:'For Kitchen'},
+      // Feb 27
+      {date:'2026-02-27',month:1,item:'Dish washing Liquid',spec:'4tonk/ctn',qty:1,unit:'ctn',supplier:'Various',unitPrice:15,amount:15,purpose:'For Kitchen'},
+      {date:'2026-02-27',month:1,item:'Egg',             spec:'1×10',  qty:1, unit:'—',   supplier:'Various',unitPrice:2.2,  amount:2.2,  purpose:'For Kitchen'},
+      {date:'2026-02-27',month:1,item:'Oil',             spec:'6×2L',  qty:2, unit:'btl', supplier:'Various',unitPrice:10.11,amount:20.22,purpose:'For Kitchen'},
+      {date:'2026-02-27',month:1,item:'Bag',             spec:'1×1',   qty:1, unit:'pcs', supplier:'Various',unitPrice:0.1,  amount:0.1,  purpose:'For Kitchen'},
+      // Feb 28
+      {date:'2026-02-28',month:1,item:'Bag',             spec:'L',     qty:1, unit:'pcs', supplier:'Various',unitPrice:0.1,  amount:0.1,  purpose:'For Kitchen'},
+      {date:'2026-02-28',month:1,item:'Comfort Ultra Blue AK',spec:'800ml',qty:1,unit:'pcs',supplier:'Various',unitPrice:3.79,amount:3.79,purpose:'For Kitchen'},
+      {date:'2026-02-28',month:1,item:'Rise Laundry Detergent',spec:'3L',qty:1,unit:'pcs',supplier:'Various',unitPrice:6.29,amount:6.29,purpose:'For Kitchen'},
+    ]
+  },
+
+  banner: { type:'purchase', icon:'🪧', label:'Banner / Sign 招牌標識',
+    rows:[
+      {date:'2026-01-05',month:0,item:'No Smoking Sign',     spec:'—', qty:1,unit:'pcs',supplier:'Various',       unitPrice:10,  amount:10,  purpose:'For Shop A'},
+      {date:'2026-01-28',month:0,item:'Print & Laminate',    spec:'—', qty:3,unit:'pcs',supplier:'Chheng Hort',   unitPrice:1.5, amount:4.5, purpose:'Sign for Fire Ext.'},
+    ]
+  },
+
+  gasoline: { type:'purchase', icon:'⛽', label:'Gasoline 汽油',
+    rows:[
+      {date:'2026-01-12',month:0,item:'Gasoline',brand:'EA',spec:'—',qty:4.28,unit:'L',supplier:'Various',unitPrice:0.875, amount:3.745,purpose:'Motorcycle 1H-5117'},
+      {date:'2026-02-03',month:1,item:'Gasoline',brand:'EA',spec:'—',qty:4,   unit:'L',supplier:'Various',unitPrice:0.9375,amount:3.75, purpose:'Motorcycle 1I-9681'},
+      {date:'2026-02-14',month:1,item:'Gasoline',brand:'EA',spec:'—',qty:2.5, unit:'L',supplier:'Various',unitPrice:1,     amount:2.5,  purpose:'Motorcycle 1I-0423'},
+      {date:'2026-02-14',month:1,item:'Gasoline',brand:'EA',spec:'—',qty:2,   unit:'L',supplier:'Various',unitPrice:1,     amount:2,    purpose:'Motorcycle 1H-5117'},
+    ]
+  },
+
+  guest: { type:'purchase', icon:'🍽️', label:'Guest / Auditor 接待餐飲',
+    rows:[
+      {date:'2026-01-08',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',   unitPrice:15,   amount:15,   purpose:'For GRS'},
+      {date:'2026-01-08',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',   unitPrice:7.5,  amount:7.5,  purpose:'For GRS'},
+      {date:'2026-01-08',month:0,item:'Food',  spec:'—',qty:2, unit:'—',supplier:'Various',   unitPrice:3.75, amount:7.5,  purpose:'For GRS'},
+      {date:'2026-01-08',month:0,item:'Food',  spec:'—',qty:3, unit:'—',supplier:'Various',   unitPrice:0.38, amount:1.14, purpose:'For GRS'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:2.625,amount:2.625,purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:2.625,amount:2.625,purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:2.85, amount:2.85, purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:1.325,amount:1.325,purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:1.225,amount:1.225,purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:1.15, amount:1.15, purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:2, unit:'—',supplier:'Lucky',     unitPrice:0.9,  amount:1.8,  purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Snack', spec:'—',qty:1, unit:'—',supplier:'Lucky',     unitPrice:0.1,  amount:0.1,  purpose:'For Customer'},
+      {date:'2026-01-12',month:0,item:'Water', spec:'24btl',qty:1,unit:'ctn',supplier:'Various',unitPrice:5,  amount:5,    purpose:'For Customer'},
+      {date:'2026-01-13',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'ខ្ចប់',   unitPrice:16.2, amount:16.2, purpose:'For Warp'},
+      {date:'2026-01-13',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'ខ្ចប់',   unitPrice:3.75, amount:3.75, purpose:'For Warp'},
+      {date:'2026-01-13',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'ខ្ចប់',   unitPrice:2,    amount:2,    purpose:'For Warp'},
+      {date:'2026-01-13',month:0,item:'Food',  spec:'—',qty:2, unit:'—',supplier:'ខ្ចប់',   unitPrice:0.38, amount:0.76, purpose:'For Warp'},
+      {date:'2026-01-14',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',  unitPrice:3.75, amount:3.75, purpose:'For Warp'},
+      {date:'2026-01-14',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',  unitPrice:15,   amount:15,   purpose:'For Warp'},
+      {date:'2026-01-14',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',  unitPrice:2.5,  amount:2.5,  purpose:'For Warp'},
+      {date:'2026-01-14',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Various',  unitPrice:0.75, amount:0.75, purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:3, unit:'—',supplier:'Chhne Meas',unitPrice:0.5, amount:1.5,  purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:2, unit:'—',supplier:'Chhne Meas',unitPrice:0.75,amount:1.5,  purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:2,   amount:2,    purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:3,   amount:3,    purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:10,  amount:10,   purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:2, unit:'—',supplier:'Chhne Meas',unitPrice:7.5, amount:15,   purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:12,  amount:12,   purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:9,   amount:9,    purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:10,  amount:10,   purpose:'For Warp'},
+      {date:'2026-01-15',month:0,item:'Food',  spec:'—',qty:1, unit:'—',supplier:'Chhne Meas',unitPrice:5,   amount:5,    purpose:'For Warp'},
+      {date:'2026-02-05',month:1,item:'Tissue',spec:'—',qty:1, unit:'—',supplier:'ABA Bank',  unitPrice:2.6, amount:2.6,  purpose:'For Customer'},
+    ]
+  },
+
+  gas: { type:'purchase', icon:'🔥', label:'Gas 煤氣',
+    rows:[
+      {date:'2026-02-24',month:1,item:'LPG Gas 48kg',spec:'48kg/drum',qty:1,unit:'drum',supplier:'KPS',unitPrice:45,amount:45,purpose:'For Kitchen'},
+    ]
+  },
+
+  clinic: { type:'service', icon:'🏥', label:'Clinic 診所藥費',
+    rows:[
+      {month:1,item:'Medical form books',qty:40,unit:'book',unitPrice:1.25,amount:50,note:'For Production Form 4501-8500'},
+    ]
+  },
+
+  donation:   {type:'purchase',icon:'🎁', label:'Donation 捐贈',         rows:[]},
+  biztrip:    {type:'purchase',icon:'✈️', label:'Business Trip 出差',     rows:[]},
+  fireext:    {type:'purchase',icon:'🧯', label:'Fire Extinguisher 滅火器',rows:[]},
+  training:   {type:'purchase',icon:'📚', label:'Training 培訓',          rows:[]},
+  decoration: {type:'purchase',icon:'🎨', label:'Decoration 辦公室裝飾',   rows:[]},
+  independent:{type:'purchase',icon:'🔧', label:'Independent 獨立採購',    rows:[]},
+  covid:      {type:'purchase',icon:'🧪', label:'Covid Test Kit',          rows:[]},
+};
+
+// ================================================================
+//  SUMMARY CATEGORIES (monthly totals from chart sheet)
+// ================================================================
+const CATS = [
+  {key:'electric',   data:[4515.859,5414.5005,0,0,0,0,0,0,0,0,0,0]},
+  {key:'security',   data:[3630,3630,0,0,0,0,0,0,0,0,0,0]},
+  {key:'water',      data:[317.775,356.775,0,0,0,0,0,0,0,0,0,0]},
+  {key:'appform',    data:[345,216,0,0,0,0,0,0,0,0,0,0]},
+  {key:'drinkwater', data:[455,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'other',      data:[239,36,0,0,0,0,0,0,0,0,0,0]},
+  {key:'cleaning',   data:[169,127.5,0,0,0,0,0,0,0,0,0,0]},
+  {key:'guest',      data:[163.55,2.6,0,0,0,0,0,0,0,0,0,0]},
+  {key:'kitchen',    data:[122.45,93.77,0,0,0,0,0,0,0,0,0,0]},
+  {key:'stationery', data:[41,65.7,0,0,0,0,0,0,0,0,0,0]},
+  {key:'mask',       data:[45,50,0,0,0,0,0,0,0,0,0,0]},
+  {key:'paper',      data:[120,150,0,0,0,0,0,0,0,0,0,0]},
+  {key:'gasoline',   data:[3.75,8.25,0,0,0,0,0,0,0,0,0,0]},
+  {key:'gas',        data:[0,45,0,0,0,0,0,0,0,0,0,0]},
+  {key:'toilet',     data:[0,22,0,0,0,0,0,0,0,0,0,0]},
+  {key:'banner',     data:[14.5,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'clinic',     data:[0,50,0,0,0,0,0,0,0,0,0,0]},
+  {key:'donation',   data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'biztrip',    data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'fireext',    data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'training',   data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'decoration', data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'independent',data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+  {key:'covid',      data:[0,0,0,0,0,0,0,0,0,0,0,0]},
+];
+
+// ================================================================
+//  STATE
+// ================================================================
+let sortSt={col:4,dir:'desc'};
+let budgets={};
+let modalKey=null, modalView='summary', modalItem=null;
+try{const s=localStorage.getItem('vrt26b');if(s)budgets=JSON.parse(s);}catch(e){}
+
+/* ── AC-GA-EXP 資料持久層 ──
+   localStorage 'ac_ga_exp_expense' = { cats:{key:[12個月]}, custom:[{key,label,icon}], ts }
+   內建 CATS 為預設值；儲存後以本機/雲端資料覆蓋。 */
+const ACCFG=(()=>{try{return JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}')}catch(e){return{}}})();
+const EXP_LS='ac_ga_exp_expense';
+function applyExpData(saved){
+  if(!saved)return;
+  (saved.custom||[]).forEach(cc=>{
+    if(!CATS.find(c=>c.key===cc.key)){
+      CATS.push({key:cc.key,data:[0,0,0,0,0,0,0,0,0,0,0,0],custom:true});
+      DET[cc.key]={type:'service',icon:cc.icon||'📌',label:cc.label||cc.key,rows:[]};
+    }else{const c=CATS.find(c=>c.key===cc.key);c.custom=true;if(DET[cc.key])DET[cc.key].label=cc.label||cc.key;}
+  });
+  if(saved.cats)Object.keys(saved.cats).forEach(k=>{
+    const c=CATS.find(c=>c.key===k);
+    if(c&&Array.isArray(saved.cats[k]))c.data=saved.cats[k].map(v=>Number(v)||0);
+  });
+  if(saved.ts)document.getElementById('hdr-ts').textContent='更新：'+saved.ts;
+}
+function snapshotExpData(){
+  const cats={};CATS.forEach(c=>cats[c.key]=c.data);
+  const custom=CATS.filter(c=>c.custom).map(c=>({key:c.key,label:DET[c.key]?.label||c.key,icon:DET[c.key]?.icon||'📌'}));
+  const p=n=>String(n).padStart(2,'0');const d=new Date();
+  return {cats,custom,ts:`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`};
+}
+try{applyExpData(JSON.parse(localStorage.getItem(EXP_LS)||'null'));}catch(e){}
+
+// ================================================================
+//  HELPERS
+// ================================================================
+function cs(c){return c.data.reduce((a,b)=>a+b,0);}
+function ytd(){return CATS.reduce((t,c)=>t+cs(c),0);}
+function mTotal(mi){return CATS.reduce((t,c)=>t+(c.data[mi]||0),0);}
+function actMths(){return Math.max(MN.filter((_,i)=>mTotal(i)>0).length,1);}
+function fmt(v,d=2){
+  if(v===null||v===undefined||v==='') return '—';
+  const n=parseFloat(v);
+  if(isNaN(n)||n===0) return '—';
+  return '$'+n.toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+function fmtQ(v,u){
+  if(!v&&v!==0) return '—';
+  const n=parseFloat(v);
+  return n%1===0?n.toFixed(0)+' '+(u||''):n.toFixed(2)+' '+(u||'');
+}
+function totalRec(){return Object.values(DET).reduce((t,d)=>t+d.rows.length,0);}
+function detTotal(key){return DET[key]?DET[key].rows.reduce((t,r)=>{
+  const a=r.amountUSD||r.amount||0; return t+a;},'') || 0 : 0;}
+
+// Build item pivot for a category
+function buildPivot(key){
+  const d=DET[key]; if(!d) return [];
+  const groups={};
+  for(const r of d.rows){
+    const item = d.type==='utility'?(r[d.locationField]||r.location):(r.item||r.location||'—');
+    if(!groups[item]) groups[item]={item,months:Array(12).fill(0),qty:Array(12).fill(0),totalAmt:0,totalQty:0,unit:'',records:[]};
+    const amt = r.amountUSD||r.amount||0;
+    const mi  = r.month||0;
+    groups[item].months[mi] += amt;
+    groups[item].totalAmt   += amt;
+    if(r.qty) {groups[item].qty[mi]+=(r.qty||0); groups[item].totalQty+=(r.qty||0);}
+    if(r.unit&&!groups[item].unit) groups[item].unit=r.unit;
+    if(d.type==='utility'&&r.consumption) {
+      groups[item].qty[mi]+=(r.consumption||0);
+      groups[item].totalQty+=(r.consumption||0);
+      groups[item].unit=r.consUnit||'—';
+    }
+    groups[item].records.push(r);
+  }
+  return Object.values(groups).sort((a,b)=>b.totalAmt-a.totalAmt);
+}
+
+// ================================================================
+//  MODAL
+// ================================================================
+function openModal(key){
+  modalKey=key; modalView='summary'; modalItem=null;
+  const d=DET[key]; if(!d) return;
+  const cat=CATS.find(c=>c.key===key);
+  const total=cat?cs(cat):0;
+
+  document.getElementById('m-ico').textContent=d.icon;
+  document.getElementById('m-title').textContent=d.label;
+  document.getElementById('m-sub').textContent=`${d.rows.length} 筆記錄　YTD: ${fmt(total)}`;
+  document.getElementById('m-bc').style.display='none';
+
+  // Views
+  document.getElementById('m-views').innerHTML=`
+    <button class="mvbtn on" id="vbtn-sum" onclick="switchMView('summary')">📊 品項彙總</button>
+    <button class="mvbtn" id="vbtn-all" onclick="switchMView('all')">📋 全部記錄</button>
+    ${d.type==='utility'?`<button class="mvbtn" id="vbtn-chart" onclick="switchMView('chart')">📈 月度走勢</button>`:''}
+  `;
+
+  renderModalView();
+  renderModalFoot(key);
+  document.getElementById('ov-modal').classList.add('on');
+}
+
+function switchMView(v){
+  modalView=v; modalItem=null;
+  document.getElementById('m-bc').style.display='none';
+  document.querySelectorAll('.mvbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('vbtn-'+v)?.classList.add('on');
+  renderModalView();
+}
+
+function renderModalView(){
+  const key=modalKey; const d=DET[key];
+  const body=document.getElementById('m-body');
+
+  if(d.rows.length===0){
+    body.innerHTML=`<div style="padding:60px;text-align:center;color:var(--text3);">
+      <div style="font-size:40px;margin-bottom:12px;">${d.icon}</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text2);">2026年度尚無採購記錄</div>
+    </div>`;
+    return;
+  }
+
+  if(modalView==='summary') renderItemSummary(key, body);
+  else if(modalView==='all') renderAllRecords(key, body, modalItem);
+  else if(modalView==='chart') renderUtilChart(key, body);
+}
+
+// ── Item Summary (pivot table) ──────────────────────────────
+function renderItemSummary(key, body){
+  const d=DET[key];
+  const pivot=buildPivot(key);
+  const activeMi=MN.map((_,i)=>pivot.some(p=>p.months[i]>0)?i:null).filter(x=>x!==null);
+  const isUtil=d.type==='utility';
+
+  // Show months that have data
+  const shownMi = activeMi.length>0 ? activeMi : [0,1];
+
+  let html=`<table><thead><tr>
+    <th style="min-width:160px;">${isUtil?'區域 / Location':'品項 / Item'}</th>
+    ${shownMi.map(i=>`<th style="text-align:right">${MN[i]}<br><span style="font-size:9px;font-weight:400;">${isUtil?d.consUnit||'KW':'金額'}</span></th>`).join('')}
+    <th style="text-align:right">YTD ${isUtil?d.consUnit||'KW':''}</th>
+    <th style="text-align:right">YTD 金額</th>
+    <th style="text-align:center;font-size:10px;">明細</th>
+  </tr></thead><tbody>`;
+
+  for(const p of pivot){
+    html+=`<tr class="item-row" onclick="drillItem('${p.item.replace(/'/g,"\\'")}')">
+      <td><strong>${p.item}</strong></td>
+      ${shownMi.map(i=>{
+        if(isUtil){
+          const recs=d.rows.filter(r=>(r.location||r.item)===p.item&&r.month===i);
+          const consump=recs.reduce((t,r)=>t+(r.consumption||0),0);
+          const amt=p.months[i];
+          return `<td class="r" style="white-space:nowrap;font-size:12px;">
+            ${consump>0?'<span style="color:var(--text2);">'+fmtQ(consump,d.consUnit||'')+'</span>':'<span style="color:var(--text3);">—</span>'}
+            ${amt>0?'<br><span style="color:var(--blue);font-size:11px;">'+fmt(amt)+'</span>':''}
+          </td>`;
+        } else {
+          const recs=d.rows.filter(r=>r.item===p.item&&r.month===i);
+          const qty=recs.reduce((t,r)=>t+(r.qty||0),0);
+          const amt=p.months[i];
+          return `<td class="r" style="white-space:nowrap;font-size:12px;">
+            ${qty>0?'<span style="color:var(--text2);">'+fmtQ(qty,recs[0]?.unit||'')+'</span>':'<span style="color:var(--text3);">—</span>'}
+            ${amt>0?'<br><span style="color:var(--blue);font-size:11px;">'+fmt(amt)+'</span>':''}
+          </td>`;
+        }
+      }).join('')}
+      <td class="r">
+        ${isUtil?fmtQ(p.totalQty,d.consUnit||'')+'<br>':''}<strong>${fmt(p.totalAmt)}</strong>
+      </td>
+      <td class="r hi">${fmt(p.totalAmt)}</td>
+      <td style="text-align:center;">
+        <span style="font-size:10px;color:var(--blue);font-weight:600;cursor:pointer;">
+          ${p.records.length}筆 →
+        </span>
+      </td>
+    </tr>`;
+  }
+
+  // Total row
+  const grandTotal=pivot.reduce((t,p)=>t+p.totalAmt,0);
+  html+=`<tr class="total-row">
+    <td>合計</td>
+    ${shownMi.map(i=>{
+      const mAmt=pivot.reduce((t,p)=>t+p.months[i],0);
+      const mQ=isUtil?d.rows.filter(r=>r.month===i).reduce((t,r)=>t+(r.consumption||0),0):0;
+      return `<td class="r">${isUtil&&mQ>0?fmtQ(mQ,d.consUnit)+'<br>':''}${mAmt>0?fmt(mAmt):'—'}</td>`;
+    }).join('')}
+    <td class="r"></td>
+    <td class="r hi">${fmt(grandTotal)}</td>
+    <td></td>
+  </tr>`;
+  html+=`</tbody></table>`;
+
+  html+=`<div style="padding:10px 16px;font-size:11px;color:var(--text3);background:#fafbfd;border-top:1px solid var(--border);">
+    💡 點擊任意品項列可查看該品項的所有採購記錄明細
+  </div>`;
+
+  body.innerHTML=html;
+}
+
+function drillItem(item){
+  modalItem=item;
+  // Switch to all-records view filtered by item
+  document.querySelectorAll('.mvbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('vbtn-all')?.classList.add('on');
+  modalView='all';
+
+  const bc=document.getElementById('m-bc');
+  bc.style.display='flex';
+  document.getElementById('m-bc-item').textContent=item;
+
+  renderAllRecords(modalKey, document.getElementById('m-body'), item);
+}
+
+function backToSummary(){
+  modalItem=null; modalView='summary';
+  document.getElementById('m-bc').style.display='none';
+  document.querySelectorAll('.mvbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('vbtn-sum')?.classList.add('on');
+  renderItemSummary(modalKey, document.getElementById('m-body'));
+}
+
+// ── All Records (optionally filtered) ───────────────────────
+function renderAllRecords(key, body, filterItem){
+  const d=DET[key];
+  let rows=d.rows;
+  if(filterItem){
+    if(d.type==='utility') rows=rows.filter(r=>(r.location||r.item)===filterItem);
+    else rows=rows.filter(r=>r.item===filterItem);
+  }
+
+  if(rows.length===0){
+    body.innerHTML=`<div style="padding:40px;text-align:center;color:var(--text3);">無符合記錄</div>`;
+    return;
+  }
+
+  // Build columns based on type
+  let html='<table><thead><tr>';
+  let renderRow;
+
+  if(d.type==='utility'){
+    html+=`<th>月份</th><th>區域</th><th style="text-align:right">消耗量</th><th>單位</th><th>單價</th><th style="text-align:right">金額 ($)</th>`;
+    renderRow=r=>`<tr>
+      <td>${MN[r.month]}</td>
+      <td><strong>${r.location||r.item}</strong></td>
+      <td class="r">${r.consumption?fmtQ(r.consumption,''):'—'}</td>
+      <td style="color:var(--text3);font-size:12px;">${r.consUnit||'—'}</td>
+      <td style="font-family:var(--mono);font-size:12px;">${r.unitPrice||'—'}</td>
+      <td class="r hi">${fmt(r.amountUSD)}</td>
+    </tr>`;
+  } else if(d.type==='service'){
+    html+=`<th>月份</th><th>項目</th><th style="text-align:right">數量</th><th>單位</th><th style="text-align:right">單價 ($)</th><th style="text-align:right">金額 ($)</th><th>備註</th>`;
+    renderRow=r=>`<tr>
+      <td>${MN[r.month]}</td>
+      <td><strong>${r.item}</strong></td>
+      <td class="r">${r.qty??'—'}</td>
+      <td style="color:var(--text3);">${r.unit||'—'}</td>
+      <td class="r">${r.unitPrice?fmt(r.unitPrice):'—'}</td>
+      <td class="r hi">${fmt(r.amount)}</td>
+      <td style="color:var(--text3);font-size:12px;">${r.note||'—'}</td>
+    </tr>`;
+  } else {
+    html+=`<th>日期</th><th>品項</th><th>規格</th><th style="text-align:right">數量</th><th>單位</th><th>供應商</th><th style="text-align:right">單價 ($)</th><th style="text-align:right">金額 ($)</th><th>用途</th>`;
+    renderRow=r=>`<tr>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--text3);">${r.date||MN[r.month]}</td>
+      <td><strong>${r.item||'—'}</strong></td>
+      <td style="color:var(--text3);font-size:12px;">${r.spec||'—'}</td>
+      <td class="r">${r.qty!=null?fmtQ(r.qty,''):'—'}</td>
+      <td style="color:var(--text3);font-size:12px;">${r.unit||'—'}</td>
+      <td style="color:var(--text3);font-size:12px;">${r.supplier||'—'}</td>
+      <td class="r">${r.unitPrice?fmt(r.unitPrice):'—'}</td>
+      <td class="r hi">${fmt(r.amount)}</td>
+      <td style="color:var(--text3);font-size:12px;">${r.purpose||'—'}</td>
+    </tr>`;
+  }
+  html+='</tr></thead><tbody>';
+  html+=rows.map(renderRow).join('');
+
+  // subtotal
+  const sub=rows.reduce((t,r)=>t+(r.amountUSD||r.amount||0),0);
+  html+=`<tr class="total-row"><td colspan="${d.type==='purchase'?7:d.type==='utility'?5:5}">小計 (${rows.length} 筆)</td><td class="r hi">${fmt(sub)}</td>${d.type==='purchase'?'<td></td>':''}</tr>`;
+  html+='</tbody></table>';
+  body.innerHTML=html;
+}
+
+// ── Utility Chart ────────────────────────────────────────────
+function renderUtilChart(key, body){
+  body.innerHTML=`<div style="padding:20px;"><canvas id="utilCanvas" style="max-height:320px;"></canvas></div>`;
+  const d=DET[key];
+  const pivot=buildPivot(key);
+  const COLS=['#2563eb','#16a34a','#d97706','#dc2626'];
+  setTimeout(()=>{
+    const ctx=document.getElementById('utilCanvas').getContext('2d');
+    const activeMi=MN.map((_,i)=>pivot.some(p=>p.months[i]>0)?i:null).filter(x=>x!==null);
+    new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:activeMi.map(i=>MN[i]),
+        datasets:pivot.map((p,i)=>({
+          label:p.item,
+          data:activeMi.map(mi=>p.months[mi]),
+          backgroundColor:COLS[i%COLS.length]+'bb',
+          borderColor:COLS[i%COLS.length],
+          borderWidth:1,borderRadius:4,
+        }))
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{stacked:true,grid:{color:'#f0f2f7'},ticks:{font:{size:11}}},
+          y:{stacked:true,grid:{color:'#f0f2f7'},ticks:{callback:v=>'$'+v.toLocaleString()}}
+        }
+      }
+    });
+  },50);
+}
+
+function renderModalFoot(key){
+  const cat=CATS.find(c=>c.key===key);
+  const total=cat?cs(cat):0;
+  const d=DET[key];
+  const byMonth=MN.map((_,i)=>({m:MN[i],v:cat?cat.data[i]:0})).filter(x=>x.v>0);
+  document.getElementById('m-foot').innerHTML=`
+    <div class="mstat"><div class="mstat-l">YTD 合計</div><div class="mstat-v">${fmt(total)}</div></div>
+    ${byMonth.map(x=>`<div class="mstat"><div class="mstat-l">${x.m}</div><div class="mstat-v">${fmt(x.v)}</div></div>`).join('')}
+    <div class="mstat"><div class="mstat-l">記錄筆數</div><div class="mstat-v">${d.rows.length} 筆</div></div>
+    <div class="mstat"><div class="mstat-l">品項種數</div><div class="mstat-v">${buildPivot(key).length} 種</div></div>
+    <div class="mstat"><div class="mstat-l">佔總支出</div><div class="mstat-v">${ytd()>0?(total/ytd()*100).toFixed(1)+'%':'—'}</div></div>
+  `;
+}
+
+function closeModal(){document.getElementById('ov-modal').classList.remove('on');}
+function maybeClose(e){if(e.target===document.getElementById('ov-modal'))closeModal();}
+
+// ================================================================
+//  OVERVIEW
+// ================================================================
+function renderOverview(){
+  const y=ytd(), am=actMths();
+  const top=[...CATS].sort((a,b)=>cs(b)-cs(a))[0];
+  document.getElementById('k1').textContent=fmt(y);
+  document.getElementById('k1s').textContent=`記錄 ${am} 個月份`;
+  document.getElementById('k2').textContent=fmt(y/am);
+  document.getElementById('k2s').textContent=`基於 ${am} 個活躍月`;
+  document.getElementById('k3').textContent=(DET[top.key]?.icon||'')+'  '+top.key.toUpperCase();
+  document.getElementById('k3s').textContent=fmt(cs(top))+' YTD';
+  document.getElementById('k4').textContent=totalRec()+' 筆';
+  document.getElementById('k4s').textContent='全部類別合計';
+  document.getElementById('c-note').textContent='Jan: '+fmt(mTotal(0))+'   Feb: '+fmt(mTotal(1));
+
+  renderBarChart();
+  renderPieChart();
+  renderSummary();
+}
+
+const CLR=['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#db2777','#65a30d','#ea580c','#0284c7','#9333ea','#15803d'];
+
+function renderBarChart(){
+  const ctx=document.getElementById('cBar').getContext('2d');
+  const tt=MN.map((_,i)=>mTotal(i));
+  if(window._bc) window._bc.destroy();
+  window._bc=new Chart(ctx,{type:'bar',
+    data:{labels:MN,datasets:[{label:'費用',data:tt,
+      backgroundColor:tt.map(v=>v>0?'rgba(37,99,235,.75)':'rgba(226,230,240,.6)'),
+      borderColor:tt.map(v=>v>0?'#2563eb':'#d0d7e8'),
+      borderWidth:1,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` $${c.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}`}}},
+      scales:{x:{grid:{color:'#f1f3f7'},ticks:{color:'#8896b0',font:{size:10,family:'IBM Plex Mono'}}},
+        y:{grid:{color:'#f1f3f7'},ticks:{color:'#8896b0',font:{size:10,family:'IBM Plex Mono'},callback:v=>'$'+v.toLocaleString()}}}}
+  });
+}
+function renderPieChart(){
+  const ctx=document.getElementById('cPie').getContext('2d');
+  const ac=CATS.filter(c=>cs(c)>0).sort((a,b)=>cs(b)-cs(a)).slice(0,10);
+  if(window._pc) window._pc.destroy();
+  window._pc=new Chart(ctx,{type:'doughnut',
+    data:{labels:ac.map(c=>DET[c.key]?.icon+' '+c.key),
+      datasets:[{data:ac.map(c=>cs(c)),backgroundColor:CLR,borderColor:'#fff',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'right',labels:{color:'#4a5568',font:{size:10},boxWidth:10,padding:6}},
+        tooltip:{callbacks:{label:c=>` $${c.raw.toFixed(2)} (${(c.raw/ytd()*100).toFixed(1)}%)`}}},
+      cutout:'55%'}
+  });
+}
+
+function renderSummary(){
+  const y=ytd(), q=document.getElementById('srch').value.toLowerCase();
+  let rows=CATS.filter(c=>!q||DET[c.key]?.label.toLowerCase().includes(q));
+  const col=sortSt.col, dir=sortSt.dir;
+  rows.sort((a,b)=>{
+    const ga=(x,c)=>[DET[x.key]?.label,x.data[0],x.data[1],x.data.slice(0,3).reduce((s,v)=>s+v,0),cs(x)][c]||0;
+    const av=ga(a,col), bv=ga(b,col);
+    return dir==='asc'?(av>bv?1:-1):(av<bv?1:-1);
+  });
+  document.getElementById('sumBody').innerHTML=rows.map(c=>{
+    const s=cs(c), q1=c.data.slice(0,3).reduce((t,v)=>t+v,0);
+    const pct=y>0?s/y*100:0;
+    const dots=MN.map((_,i)=>`<span class="md ${c.data[i]>0?'on':''}"></span>`).join('');
+    const hasD=DET[c.key]?.rows.length>0;
+    return `<tr>
+      <td><span style="margin-right:6px;">${DET[c.key]?.icon||''}</span><span style="font-weight:500;">${DET[c.key]?.label||c.key}</span></td>
+      <td class="r ${c.data[0]>0?'ok':'lo'}">${c.data[0]>0?fmt(c.data[0]):'—'}</td>
+      <td class="r ${c.data[1]>0?'ok':'lo'}">${c.data[1]>0?fmt(c.data[1]):'—'}</td>
+      <td class="r ${q1>0?'ok':'lo'}">${q1>0?fmt(q1):'—'}</td>
+      <td class="r hi">${s>0?fmt(s):'—'}</td>
+      <td><div class="mdots">${dots}</div></td>
+      <td><div style="display:flex;align-items:center;gap:6px;">
+        <div class="pb"><div class="pf" style="width:${Math.min(pct,100)}%"></div></div>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text3);min-width:36px;">${pct.toFixed(1)}%</span>
+      </div></td>
+      <td>
+        <button onclick="openModal('${c.key}')" style="background:${hasD?'var(--blue-l)':'#f1f3f7'};
+          color:${hasD?'var(--blue)':'var(--text3)'};border:1px solid ${hasD?'var(--blue-b)':'var(--border)'};
+          padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">
+          ${hasD?'🔍 明細':buildPivot(c.key).length>0?'📊 查看':'—'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function srt(col){
+  sortSt.col===col?sortSt.dir=sortSt.dir==='asc'?'desc':'asc':(sortSt.col=col,sortSt.dir='desc');
+  document.querySelectorAll('th').forEach((t,i)=>{t.classList.remove('sa','sd');if(i===col)t.classList.add(sortSt.dir==='asc'?'sa':'sd');});
+  renderSummary();
+}
+
+// ================================================================
+//  CATEGORIES TAB
+// ================================================================
+function renderCatTab(){
+  const y=ytd();
+  document.getElementById('cat-note').textContent='YTD: '+fmt(y);
+  document.getElementById('catGrid').innerHTML=CATS.map(c=>{
+    const s=cs(c), d=DET[c.key];
+    const piv=buildPivot(c.key);
+    const dots=MN.map((_,i)=>`<span class="md ${c.data[i]>0?'on':''}"></span>`).join('');
+    return `<div class="cat-card" onclick="openModal('${c.key}')">
+      <div class="cat-ico">${d?.icon||'📦'}</div>
+      <div class="cat-name">${d?.label||c.key}</div>
+      <div class="cat-total ${s===0?'z':''}">${s>0?fmt(s):'$0.00'}</div>
+      <div class="mdots" style="margin-bottom:8px;">${dots}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:var(--text3);">${y>0&&s>0?(s/y*100).toFixed(1)+'%':'佔比 0%'}</span>
+        ${d?.rows.length>0
+          ?`<span class="tag tb">${piv.length}種 × ${d.rows.length}筆</span>`
+          :`<span class="tag tgr">無記錄</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+//  MONTHLY TAB
+// ================================================================
+function renderMo(){
+  const f=document.getElementById('mflt').value;
+  let cats=[...CATS].filter(c=>cs(c)>0).sort((a,b)=>cs(b)-cs(a));
+  if(f==='top5') cats=cats.slice(0,5);
+  else if(f==='util') cats=CATS.filter(c=>['electric','water','drinkwater','gas','gasoline'].includes(c.key)&&cs(c)>0);
+  else if(f==='supp') cats=CATS.filter(c=>!['electric','water','drinkwater','security'].includes(c.key)&&cs(c)>0);
+
+  const ctx=document.getElementById('cStack').getContext('2d');
+  if(window._sc) window._sc.destroy();
+  window._sc=new Chart(ctx,{type:'bar',
+    data:{labels:MN,datasets:cats.map((c,i)=>({
+      label:(DET[c.key]?.icon||'')+' '+c.key,
+      data:c.data,
+      backgroundColor:CLR[i%CLR.length]+'bb',
+      borderColor:CLR[i%CLR.length],
+      borderWidth:1,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#4a5568',font:{size:10},boxWidth:10,padding:8}}},
+      scales:{x:{stacked:true,grid:{color:'#f1f3f7'},ticks:{color:'#8896b0',font:{size:10}}},
+        y:{stacked:true,grid:{color:'#f1f3f7'},ticks:{color:'#8896b0',font:{size:10},callback:v=>'$'+v.toLocaleString()}}}}
+  });
+  renderMoTbl();
+}
+
+function renderMoTbl(){
+  const mf=document.getElementById('mflt2').value;
+  const shownMi=mf==='all'?MN.map((_,i)=>i):[parseInt(mf)];
+  const cats=CATS.filter(c=>shownMi.some(i=>c.data[i]>0)||cs(c)>0);
+
+  document.getElementById('mTblH').innerHTML=`<tr><th>費用類別</th>${shownMi.map(i=>`<th style="text-align:right">${MN[i]}</th>`).join('')}<th style="text-align:right">小計</th></tr>`;
+  document.getElementById('mTblB').innerHTML=cats.map(c=>{
+    const sub=shownMi.reduce((t,i)=>t+(c.data[i]||0),0);
+    return `<tr>
+      <td onclick="openModal('${c.key}')" style="cursor:pointer;" title="點擊查看品項明細">
+        ${DET[c.key]?.icon||''} ${DET[c.key]?.label||c.key}
+      </td>
+      ${shownMi.map(i=>`<td class="r ${c.data[i]>0?'ok':'lo'}">${c.data[i]>0?fmt(c.data[i]):'—'}</td>`).join('')}
+      <td class="r hi">${sub>0?fmt(sub):'—'}</td>
+    </tr>`;
+  }).join('')+`<tr class="total-row">
+    <td>月度合計</td>
+    ${shownMi.map(i=>`<td class="r hi">${fmt(mTotal(i))}</td>`).join('')}
+    <td class="r hi">${fmt(shownMi.reduce((t,i)=>t+mTotal(i),0))}</td>
+  </tr>`;
+}
+
+// ================================================================
+//  BUDGET TAB
+// ================================================================
+function renderBudget(){
+  const am=actMths();
+  let over=0;
+  document.getElementById('bgtGrid').innerHTML=CATS.map(c=>{
+    const s=cs(c), b=budgets[c.key]||0, bY=b*am;
+    const pct=bY>0?Math.min(s/bY*100,120):0;
+    let cls='un', st='未設定';
+    if(b>0){if(s>bY){cls='ov';st='超出 '+fmt(s-bY);over++;}else if(pct>80){cls='wn';st='剩 '+fmt(bY-s);}else{cls='ok';st='剩 '+fmt(bY-s);}}
+    return `<div class="bgt-card">
+      <div class="bgt-top">
+        <div class="bgt-name">${DET[c.key]?.icon||''} ${DET[c.key]?.label||c.key}</div>
+        <div class="bgt-ytd">${fmt(s)} YTD</div>
+      </div>
+      <div class="bgt-row">
+        <span style="font-size:11px;color:var(--text3);">月度 $</span>
+        <input class="bgt-inp" type="number" min="0" step="50" value="${b||''}" placeholder="0"
+          oninput="saveBudget('${c.key}',this.value)">
+        <div class="pb" style="flex:1;height:6px;">
+          <div class="pf ${pct>100?'ov':pct>80?'wn':''}" style="width:${Math.min(pct,100)}%"></div>
+        </div>
+        ${b>0?`<span style="font-family:var(--mono);font-size:10px;color:var(--text3);">${pct.toFixed(0)}%</span>`:''}
+      </div>
+      <div class="bgt-st ${cls}">${st}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('bgt-alert').textContent=over>0?`⚠ ${over} 項超預算`:'';
+}
+
+function saveBudget(k,v){
+  const n=parseFloat(v);
+  if(!isNaN(n)&&n>0) budgets[k]=n; else delete budgets[k];
+  try{localStorage.setItem('vrt26b',JSON.stringify(budgets));}catch(e){}
+  renderBudget();
+}
+
+// ================================================================
+//  TAB SWITCHING
+// ================================================================
+function goTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+id).classList.add('on');
+  btn.classList.add('on');
+  if(id==='cat') renderCatTab();
+  if(id==='mo') renderMo();
+  if(id==='bgt') renderBudget();
+  if(id==='edit') renderEdit();
+}
+
+// ================================================================
+//  AC-GA-EXP：資料維護 / 雲端 / Excel
+// ================================================================
+function refreshAll(){
+  renderOverview();
+  if(document.getElementById('tab-cat').classList.contains('on'))renderCatTab();
+  if(document.getElementById('tab-mo').classList.contains('on'))renderMo();
+  if(document.getElementById('tab-bgt').classList.contains('on'))renderBudget();
+}
+function renderEdit(){
+  document.getElementById('edit-thead').innerHTML=
+    '<tr>'+['類別 Category',...MN,'合計','操作'].map((h,i)=>`<th style="padding:8px ${i===0?'12px':'6px'};text-align:${i===0?'left':'right'};background:var(--card2);border-bottom:2px solid var(--border);white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--text2)">${h}</th>`).join('')+'</tr>';
+  document.getElementById('edit-tbody').innerHTML=CATS.map(c=>{
+    const meta=DET[c.key]||{};
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:6px 12px;white-space:nowrap;font-weight:600">${meta.icon||'📌'} ${meta.label||c.key}${c.custom?' <span style="font-size:10px;color:var(--purple)">自訂</span>':''}</td>
+      ${c.data.map((v,i)=>`<td style="padding:3px"><input type="number" step="0.01" min="0" value="${v||''}" data-k="${c.key}" data-m="${i}" style="width:78px;text-align:right;border:1px solid var(--border);border-radius:5px;padding:4px 6px;font-family:var(--mono);font-size:11px" placeholder="0"></td>`).join('')}
+      <td style="padding:6px;text-align:right;font-family:var(--mono);font-weight:700">${fmt(cs(c))}</td>
+      <td style="padding:6px;text-align:center">${c.custom?`<button onclick="delCustomCat('${c.key}')" style="border:none;background:var(--red-l);color:var(--red);border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px">🗑</button>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+function collectEditInputs(){
+  document.querySelectorAll('#edit-tbody input[data-k]').forEach(inp=>{
+    const c=CATS.find(x=>x.key===inp.dataset.k);
+    if(c)c.data[+inp.dataset.m]=parseFloat(inp.value)||0;
+  });
+}
+function saveEditData(){
+  collectEditInputs();
+  const snap=snapshotExpData();
+  try{localStorage.setItem(EXP_LS,JSON.stringify(snap));}catch(e){alert('本機儲存失敗：'+e.message);return}
+  document.getElementById('hdr-ts').textContent='更新：'+snap.ts;
+  document.getElementById('edit-status').textContent='✅ 已儲存本機 '+snap.ts+'（記得 ☁️ 上傳雲端）';
+  renderEdit();refreshAll();
+}
+function addCustomCat(){
+  const label=prompt('新類別名稱（例：Garden 園藝費）');if(!label)return;
+  const key=('c_'+label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).substring(0,24)||('c_'+Date.now());
+  if(CATS.find(c=>c.key===key)){alert('類別已存在');return}
+  const icon=prompt('圖示 emoji（可留空）','📌')||'📌';
+  CATS.push({key,data:[0,0,0,0,0,0,0,0,0,0,0,0],custom:true});
+  DET[key]={type:'service',icon,label,rows:[]};
+  renderEdit();
+}
+function delCustomCat(key){
+  const c=CATS.find(x=>x.key===key);
+  if(!c||!c.custom)return;
+  if(!confirm('刪除自訂類別「'+(DET[key]?.label||key)+'」？'))return;
+  CATS.splice(CATS.indexOf(c),1);delete DET[key];
+  renderEdit();
+}
+function exportMatrixExcel(){
+  collectEditInputs();
+  const rows=[['Key','Category',...MN,'Total']];
+  CATS.forEach(c=>rows.push([c.key,DET[c.key]?.label||c.key,...c.data,cs(c)]));
+  rows.push(['','TOTAL 合計',...MN.map((_,i)=>mTotal(i)),ytd()]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:26},...MN.map(()=>({wch:10})),{wch:12}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expense');
+  const p=n=>String(n).padStart(2,'0');const d=new Date();
+  XLSX.writeFile(wb,`AC_GA_EXP_Expense_${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.xlsx`);
+}
+function importMatrixExcel(input){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:false,raw:true});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true});
+      let applied=0;
+      rows.slice(1).forEach(r=>{
+        if(!r||!r.length)return;
+        const key=String(r[0]||'').trim(),label=String(r[1]||'').trim();
+        if(!key&&!label)return;
+        if(/^total/i.test(label)||label.includes('合計'))return; // 排除合計列，避免資料膨脹
+        let c=CATS.find(x=>x.key===key)||CATS.find(x=>(DET[x.key]?.label||'')===label);
+        if(!c&&label){
+          const nk=key||('c_'+label.toLowerCase().replace(/[^a-z0-9]+/g,'_')).substring(0,24);
+          c={key:nk,data:[0,0,0,0,0,0,0,0,0,0,0,0],custom:true};CATS.push(c);
+          DET[nk]={type:'service',icon:'📌',label,rows:[]};
+        }
+        if(!c)return;
+        for(let m=0;m<12;m++)c.data[m]=parseFloat(r[m+2])||0;
+        applied++;
+      });
+      renderEdit();
+      document.getElementById('edit-status').textContent=`📥 已匯入 ${applied} 個類別（尚未儲存，請點 💾 儲存）`;
+    }catch(err){alert('匯入失敗：'+err.message)}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(f);
+}
+function expGasUrl(){
+  const u=(ACCFG.gasUrl||'').trim();
+  if(u)return u;
+  const v=prompt('尚未在平台設定中心設定 GAS URL，請輸入：');
+  return v?v.trim():'';
+}
+async function expCloudUpload(){
+  const url=expGasUrl();if(!url)return;
+  collectEditInputs();
+  const st=document.getElementById('edit-status');st.textContent='⏳ 上傳中...';
+  try{
+    const payload={action:'expenseSave',data:{...snapshotExpData(),budgets},ts:Date.now()};
+    const res=await fetch(url,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'save failed');
+    st.textContent='☁️ 雲端上傳成功 '+(d.ts||'');
+  }catch(e){st.textContent='❌ 上傳失敗：'+e.message}
+}
+async function expCloudDownload(){
+  const url=expGasUrl();if(!url)return;
+  const st=document.getElementById('edit-status');st.textContent='⏳ 下載中...';
+  try{
+    const res=await fetch(url+'?action=expenseLoad');
+    const d=await res.json();
+    if(!d.ok)throw new Error(d.error||'load failed');
+    if(!d.data){st.textContent='☁️ 雲端尚無資料';return}
+    if(!confirm('以雲端資料覆蓋目前畫面？（'+(d.ts||'')+'）'))return;
+    applyExpData(d.data);
+    if(d.data.budgets){budgets=d.data.budgets;try{localStorage.setItem('vrt26b',JSON.stringify(budgets));}catch(e){}}
+    try{localStorage.setItem(EXP_LS,JSON.stringify({cats:d.data.cats,custom:d.data.custom,ts:d.data.ts}));}catch(e){}
+    renderEdit();refreshAll();
+    st.textContent='📥 雲端下載成功 '+(d.ts||'');
+  }catch(e){st.textContent='❌ 下載失敗：'+e.message}
+}
+
+// ================================================================
+//  INIT
+// ================================================================
+renderOverview();
+</script>
+</body>
+</html>
