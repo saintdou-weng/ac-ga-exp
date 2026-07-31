@@ -175,6 +175,9 @@
     <div class="topbar-title" id="tt">維修中心 · Maintenance Center</div>
     <div class="topbar-sub">AC-GA-EXP Platform · @acgaexp_bot</div>
   </div>
+  <div id="ga-cloud" class="ga-cloud idle" style="margin:0 6px"></div>
+  <button class="topbar-icon" onclick="mtImport()" title="Smart Import 智慧匯入" style="cursor:pointer">📥</button>
+  <button class="topbar-icon" onclick="mtTelegram()" title="Telegram 摘要 Summary" style="cursor:pointer">✈️</button>
   <div class="lang-toggle">
     <button class="lang-btn active" data-l="zh" onclick="setLang('zh')">中文</button>
     <button class="lang-btn" data-l="en" onclick="setLang('en')">EN</button>
@@ -404,6 +407,7 @@
     <button class="btn-xl" id="rep-export-btn" onclick="exportExcel('rep')">📥 <span id="reprec-x-lbl">下載 Excel</span></button>
   </div>
 
+  <div id="rep-period" style="margin:10px 0"></div>
   <div class="stats-row" id="rep-stats" style="display:none">
     <div class="stat-card"><div class="stat-label" id="reprec-sl-total">總計</div><div class="stat-value" id="rep-sv-total">0</div></div>
     <div class="stat-card"><div class="stat-label" id="reprec-sl-approved">已核可</div><div class="stat-value" id="rep-sv-approved" style="color:var(--green)">0</div></div>
@@ -411,6 +415,7 @@
     <div class="stat-card"><div class="stat-label" id="reprec-sl-rejected">已退件</div><div class="stat-value" id="rep-sv-rejected" style="color:var(--red)">0</div></div>
   </div>
 
+  <div class="ga-charts" id="rep-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">狀態 Status</div><div class="ga-chart-box"><canvas id="rep-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">部門 Dept</div><div class="ga-chart-box"><canvas id="rep-ch-dept"></canvas></div></div></div>
   <div class="rec-wrap" id="rep-rec-wrap">
     <div class="empty-state"><div class="ei">🔧</div><div id="reprec-empty">選擇條件後點「查詢」 · Select filters and query</div></div>
   </div>
@@ -442,6 +447,7 @@
     <button class="btn-xl" id="po-export-btn" onclick="exportExcel('po')">📥 <span id="porec-x-lbl">下載 Excel</span></button>
   </div>
 
+  <div id="po-period" style="margin:10px 0"></div>
   <div class="stats-row" id="po-stats" style="display:none">
     <div class="stat-card"><div class="stat-label" id="porec-sl-total">總計</div><div class="stat-value" id="po-sv-total">0</div></div>
     <div class="stat-card"><div class="stat-label" id="porec-sl-approved">已核可</div><div class="stat-value" id="po-sv-approved" style="color:var(--green)">0</div></div>
@@ -449,6 +455,7 @@
     <div class="stat-card"><div class="stat-label" id="porec-sl-rejected">已退件</div><div class="stat-value" id="po-sv-rejected" style="color:var(--red)">0</div></div>
   </div>
 
+  <div class="ga-charts" id="po-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">狀態 Status</div><div class="ga-chart-box"><canvas id="po-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">部門 Dept</div><div class="ga-chart-box"><canvas id="po-ch-dept"></canvas></div></div></div>
   <div class="rec-wrap" id="po-rec-wrap">
     <div class="empty-state"><div class="ei">📋</div><div id="porec-empty">選擇條件後點「查詢」 · Select filters and query</div></div>
   </div>
@@ -582,6 +589,7 @@ function T(k){return (TXT[lang]&&TXT[lang][k])||TXT.zh[k]||k}
 
 function setLang(l){
   lang=l;
+  try{ GA.setLang(l); }catch(e){}
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===l));
   Object.keys(TXT[l]).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=TXT[l][id]});
   // 記錄分頁共用鍵
@@ -738,10 +746,14 @@ async function fetchHistory(sys,q){
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
 function getV(id){const el=document.getElementById(id);return el?el.value.trim():''}
 
-/* ── POST 提交（text/plain，照片經 GAS 轉發，Token 不外露）── */
+/* ── POST 提交（照片經 GAS 轉發，Token 不外露）──
+   submit 的欄位需在 body 頂層（GAS handleRepairSubmitBody 直接讀 body.xxx），
+   故不用 GA.gasPost（它會把 payload 包進 data）。用共用信封解析錯誤。 */
 async function postGAS(payload){
   const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain;charset=utf-8'}});
-  return res.json();
+  const txt=await res.text();
+  if(txt.trim().charAt(0)==='<') throw new Error('GAS 回傳錯誤頁（可能未部署或權限不足）');
+  return JSON.parse(txt);
 }
 
 /* ── 提交：維修 ── */
@@ -842,6 +854,7 @@ function resetForm(sys){
 
 /* ── 記錄查詢（rep / po 共用）── */
 function fv(sys,cls){const el=document.querySelector(`.${cls}[data-sys="${sys}"]`);return el?el.value.trim():''}
+const mtPC={rep:null,po:null};
 async function queryRecords(sys){
   const year=fv(sys,'rq-year'),month=fv(sys,'rq-month'),status=fv(sys,'rq-status'),search=fv(sys,'rq-search');
   const btn=document.getElementById(sys+'-query-btn');
@@ -851,12 +864,27 @@ async function queryRecords(sys){
   document.getElementById(sys+'-stats').style.display='none';
   document.getElementById(sys+'-export-btn').classList.remove('show');
   try{
-    const url=`${GAS_URL}?action=exportRecords&sys=${sys}&year=${year}&month=${month}&status=${encodeURIComponent(status)}&search=${encodeURIComponent(search)}`;
-    const res=await fetch(url);const d=await res.json();
-    if(d.ok&&d.records){currentData[sys]=d.records;renderRecords(sys,d.records);renderStats(sys,d.records);}
-    else{showToast('❌ '+(d.error||'Error'));wrap.innerHTML=`<div class="empty-state"><div class="ei">❌</div><div>${d.error||'Error'}</div></div>`;}
-  }catch(e){showToast(T('netErr'));wrap.innerHTML=`<div class="empty-state"><div class="ei">⚠️</div><div>Network error</div></div>`;}
+    const d=await GA.gasGet('exportRecords',{sys,year,month,status,search});
+    const recs=(d.records)||(d.data&&d.data.records)||[];
+    currentData[sys]=recs;
+    // 建立期間列（依查詢結果的日期）
+    if(!mtPC[sys]){
+      mtPC[sys]=GA.periodControl('#'+sys+'-period',{ id:'mt_'+sys, type:'month',
+        dates:()=>(currentData[sys]||[]).map(r=>String(r[0]||'').slice(0,10)),
+        onChange:()=>renderFiltered(sys) });
+    }else{ mtPC[sys].refresh(); }
+    renderFiltered(sys);
+  }catch(e){showToast(T('netErr'));wrap.innerHTML=`<div class="empty-state"><div class="ei">⚠️</div><div>${e.message||'Network error'}</div></div>`;}
   btn.disabled=false;btn.innerHTML=`🔍 <span>${T('q-lbl')}</span>`;
+}
+/* 依目前期間過濾並重繪列表、統計、圖表 */
+function renderFiltered(sys){
+  const all=currentData[sys]||[];
+  const st=mtPC[sys]?mtPC[sys].state():null;
+  const recs=st? all.filter(r=>GA.inPeriod(String(r[0]||'').slice(0,10), st.key, st.type)) : all;
+  renderRecords(sys,recs);
+  renderStats(sys,recs);
+  renderRecCharts(sys,recs);
 }
 
 const HDRS={
@@ -883,10 +911,27 @@ function renderStats(sys,records){
   document.getElementById(sys+'-sv-rejected').textContent=records.filter(r=>r[13]==='已退件').length;
   document.getElementById(sys+'-stats').style.display='flex';
 }
+/* 分析圖：狀態分布 + 部門分布（依目前期間過濾後的資料）*/
+function renderRecCharts(sys,records){
+  const box=document.getElementById(sys+'-charts');
+  if(!records.length){ if(box)box.style.display='none'; return; }
+  if(box)box.style.display='grid';
+  const byStatus={};records.forEach(r=>{const s=r[13]||'待審核';byStatus[s]=(byStatus[s]||0)+1;});
+  GA.chart(sys+'-ch-status',{type:'doughnut',
+    data:{labels:Object.keys(byStatus),datasets:[{data:Object.values(byStatus),backgroundColor:['#f59e0b','#10b981','#ef4444','#94a3b8'],borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9}}}}}});
+  const byDept={};records.forEach(r=>{const d=r[2]||'—';byDept[d]=(byDept[d]||0)+1;});
+  const top=Object.entries(byDept).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  GA.chart(sys+'-ch-dept',{type:'bar',
+    data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),backgroundColor:'#0284c7',borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:9},precision:0}},y:{ticks:{font:{size:9}}}}}});
+}
 
 /* ── Excel 匯出（全 16 欄與 Sheet 對齊）── */
 function exportExcel(sys){
-  const data=currentData[sys];
+  const all=currentData[sys]||[];
+  const st=mtPC[sys]?mtPC[sys].state():null;
+  const data=st? all.filter(r=>GA.inPeriod(String(r[0]||'').slice(0,10),st.key,st.type)) : all;
   if(!data.length){showToast(T('noData'));return}
   const hdrs=sys==='rep'
     ?['時間戳記','申請人','部門','維修號','設備名稱','規格/編號','地點/房間','故障描述','處理方式','緊急程度','供應商','預估金額','備註','狀態','核可人','核可時間']
@@ -901,13 +946,86 @@ function exportExcel(sys){
   showToast('✅ '+fn);
 }
 
+/* ════════════════════════════════════════════════════════════
+   v2 附加：智慧匯入 + Telegram 摘要（與核可分離）
+   維修/臨採的「核可」仍走原有 Telegram inline 按鈕流程（提交時觸發）；
+   這裡的 Telegram 只發「摘要」，不帶核可按鈕、不改狀態。
+   ════════════════════════════════════════════════════════════ */
+function mtCurrentSys(){
+  const t=document.querySelector('.tab.active');
+  const id=t?t.id:'';
+  if(id.indexOf('porec')>=0||id==='tab-po')return 'po';
+  return 'rep';
+}
+function mtImport(){
+  GA.smartImport.openModal({
+    allowSubmit:false,   // 匯入一律草稿，不自動送核可（維持核可流程）
+    existing:function(type){
+      const sys=type==='temppo'?'po':(type==='repair'?'rep':null);
+      if(!sys) return [];
+      return (currentData[sys]||[]).map(r=>({date:String(r[0]||'').slice(0,10),item:r[4],qty:r[7],_fp:GA.fingerprint([sys,r[0],r[4],r[7]])}));
+    },
+    onImport:function(payload){
+      const rep=(payload.repair||[]), tpo=(payload.temppo||[]);
+      showToast((lang==='zh'?'已解析：維修 ':'Parsed: repair ')+rep.length+' / 臨採 '+tpo.length+(lang==='zh'?'（草稿，請於線上或群組核可）':' (draft)'));
+      // 匯入資料以草稿留存本機，供後續線上補送；不直接寫 GAS 核可表
+      try{
+        const key='mt_import_draft';
+        const cur=JSON.parse(localStorage.getItem(key)||'{}');
+        cur.repair=(cur.repair||[]).concat(rep); cur.temppo=(cur.temppo||[]).concat(tpo);
+        localStorage.setItem(key,JSON.stringify(cur));
+      }catch(e){}
+    }
+  });
+}
+function mtTelegram(){
+  const sys=mtCurrentSys();
+  try{ GA.setLang(lang); }catch(e){}
+  GA.telegram.open({
+    module:'maintenance',
+    canApprove:false,   // 摘要專用；核可走原提交流程
+    scopes:[
+      {v:'rep',zh:'維修',en:'Repair',km:'ជួសជុល'},
+      {v:'po',zh:'臨採',en:'Temp PO',km:'ទិញបន្ទាន់'}
+    ],
+    periods:function(type){ return (currentData[sys]||[]).map(r=>GA.periodKey(String(r[0]||'').slice(0,10),type)); },
+    summary:function(st){
+      const src=currentData[st.scope]||[];
+      const rows=src.filter(r=>GA.inPeriod(String(r[0]||'').slice(0,10),st.period,st.ptype));
+      const app=rows.filter(r=>r[13]==='已核可').length;
+      const pend=rows.filter(r=>r[13]==='待審核').length;
+      const rej=rows.filter(r=>r[13]==='已退件').length;
+      const byDept={}; rows.forEach(r=>{const d=r[2]||'—';byDept[d]=(byDept[d]||0)+1;});
+      const top=Object.entries(byDept).sort((a,b)=>b[1]-a[1]).slice(0,4);
+      const isRep=st.scope==='rep';
+      // 緊急（維修在第 9 欄）
+      let urgent=0; if(isRep) urgent=rows.filter(r=>/urgent|critical|緊急/.test(String(r[9]||''))).length;
+      return GA.telegram.buildSummary({
+        icon:isRep?'🔧':'🛒', titleZh:isRep?'維修摘要':'臨採摘要', titleEn:isRep?'Repair Summary':'Temp PO Summary',
+        lang:st.lang, period:GA.periodLabel(st.period,st.ptype),
+        rows:[
+          {zh:'總筆數',en:'Total',v:rows.length},
+          {zh:'✅ 已核可',en:'Approved',v:app},
+          {zh:'⏳ 待審',en:'Pending',v:pend},
+          {zh:'❌ 已退件',en:'Rejected',v:rej}
+        ].concat(isRep?[{zh:'🚨 緊急',en:'Urgent',v:urgent}]:[])
+         .concat(top.length?['-']:[])
+         .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,v:n}))),
+        footer:'🕐 '+GA.ymd(new Date())+(rows.length?'':'（'+(lang==='zh'?'請先查詢':'query first')+'）')
+      });
+    }
+  });
+}
+
 /* ── 初始化：URL 參數 ?form=po / ?form=repair 直接開對應分頁 ── */
 (function(){
+  try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
   const f=(params.get('form')||'').toLowerCase();
   if(f==='po'||f==='temp')switchTab('po');
   else if(f==='repair'||f==='rep')switchTab('rep');
   const l=(params.get('lang')||'').toLowerCase();
-  setLang(['zh','en','km'].includes(l)?l:'zh');
+  const platLang=(GA.cfg().lang);
+  setLang(['zh','en','km'].includes(l)?l:(['zh','en','km'].includes(platLang)?platLang:'zh'));
 })();
 </script>
 </body>
