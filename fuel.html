@@ -106,6 +106,13 @@ tr:hover td{background:#f5f8f6}
 <div class="hstat"><div class="hstat-v" id="hGen">0</div><div class="hstat-l tl" data-k="hlGen">發電機</div></div>
 <div class="hstat"><div class="hstat-v" id="hTot">0</div><div class="hstat-l tl" data-k="hlTot">總升數</div></div>
 </div>
+<div id="ga-cloud" class="ga-cloud idle" style="margin:0 6px"></div>
+<div style="display:flex;gap:5px;align-items:center">
+<button class="btn btn-b" style="padding:6px 10px" onclick="cloudUpload()" title="上傳雲端 Upload">⬆️☁</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="cloudDownload()" title="下載雲端 Download">⬇️☁</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelImport()" title="智慧匯入 Smart Import">📥</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelTelegram()" title="Telegram 摘要 Summary">✈️</button>
+</div>
 <div class="lang-group">
 <button class="lang-btn on" data-l="zh" onclick="setLang('zh')">中文</button>
 <button class="lang-btn" data-l="en" onclick="setLang('en')">EN</button>
@@ -348,7 +355,7 @@ kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\
 };
 let lang=localStorage.getItem('vrt_dsl_lang')||'zh';
 function T(k){return I18N[lang]?.[k]||I18N.en[k]||k}
-function setLang(l){lang=l;localStorage.setItem('vrt_dsl_lang',l);document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===l));applyLang()}
+function setLang(l){lang=l;localStorage.setItem('vrt_dsl_lang',l);try{GA.setLang(l);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===l));applyLang()}
 function applyLang(){document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k&&T(k))el.textContent=T(k)});document.getElementById('hTitle').textContent=T('hTitle');['hlDrv','hlFork','hlGen','hlTot'].forEach(k=>{const e=document.getElementById(k.replace('hl',''));/*skip*/});updateHeader()}
 
 // ═══════════════════════════════════════════════════════════
@@ -386,13 +393,15 @@ setupDrop();updateHeader();updateDBCard();setLang(lang);
 // ═══════════════════════════════════════════════════════════
 async function cloudUpload(){
 const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
+try{GA.cloud.mount('#ga-cloud');GA.cloud.set('sync');}catch(e){}
 const st=document.getElementById('gasStatus');st.textContent='⏳ 上傳中 Uploading...';st.className='al al-i';
 try{
 const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'dieselSave',data:DB,ts:Date.now()}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
 const d=await res.json();
 if(!d.ok)throw new Error(d.error||'save failed');
 st.textContent=`✅ 已上傳 ${DB.length} 筆 (${d.chunks} chunks)`;st.className='al al-ok';toast('☁️ 雲端上傳成功');
-}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
+try{GA.cloud.set('up',DB.length+' recs');}catch(e){}
+}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err');try{GA.cloud.set('err',e.message);}catch(x){}}
 }
 async function cloudDownload(){
 const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
@@ -1018,6 +1027,61 @@ try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'AL
 }
 
 // ═══════════════════════════════════════════════════════════
+//  v2 附加：智慧匯入入口 + 共用 Telegram 摘要（期間/語言/群組可選）
+// ═══════════════════════════════════════════════════════════
+function fuelImport(){
+  // 燃油 Excel 為 Paul 既有複雜多表格式，沿用原本已調校好的 processFiles
+  goTab('upload',document.querySelector('.tab[data-t="upload"]'));
+  toast(lang==='zh'?'請拖放或選取 Excel（沿用原自動解析）':'Drop or pick Excel files');
+  const dz=document.getElementById('dropZone')||document.querySelector('.drop-zone');
+  if(dz){ dz.style.boxShadow='0 0 0 3px rgba(2,132,199,.4)'; setTimeout(()=>dz.style.boxShadow='',1600); }
+}
+
+function fuelPeriods(type){ return DB.map(r=>GA.periodKey(r.date,type)); }
+function fuelSummaryText(s){
+  const rows=DB.filter(r=>GA.inPeriod(r.date,s.period,s.ptype));
+  const drv=rows.filter(r=>r.cat==='driver'), fork=rows.filter(r=>r.cat==='forklift'), gen=rows.filter(r=>r.cat==='generator');
+  const L=a=>a.reduce((x,r)=>x+GA.num(r.liters),0);
+  const drvL=L(drv),forkL=L(fork),genL=L(gen);
+  const totKM=drv.reduce((x,r)=>x+GA.num(r.km),0);
+  const forkHr=fork.reduce((x,r)=>x+GA.num(r.hours),0);
+  const genHr=gen.reduce((x,r)=>x+GA.num(r.hours),0);
+  // 效率（分母為 0 顯示「資料不足」，不出現 Infinity）
+  const l100=GA.ratio(drvL*100,totKM);      // L/100km
+  const kmL=GA.ratio(totKM,drvL);           // km/L
+  const forkLh=GA.ratio(forkL,forkHr);      // L/hour
+  const genLh=GA.ratio(genL,genHr);
+  return GA.telegram.buildSummary({
+    icon:'🛢️', titleZh:'柴油摘要', titleEn:'Diesel Summary',
+    lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
+    rows:[
+      {zh:'🚗 司機',en:'Driver',v:drvL.toLocaleString()+'L / '+drv.length+' recs'},
+      {zh:'🏗️ 叉車',en:'Forklift',v:forkL.toLocaleString()+'L / '+fork.length+' recs'},
+      {zh:'⚡ 發電機',en:'Generator',v:genL.toLocaleString()+'L / '+gen.length+' recs'},
+      '-',
+      {zh:'合計',en:'Total',v:(drvL+forkL+genL).toLocaleString()+'L'},
+      {zh:'司機里程',en:'Driver KM',v:totKM.toLocaleString()+' km'},
+      '-',
+      {zh:'油耗 L/100km',en:'L/100km',v:GA.fmtRatio(l100,'',2)},
+      {zh:'效率 km/L',en:'km/L',v:GA.fmtRatio(kmL,'',2)},
+      {zh:'叉車 L/hr',en:'Forklift L/hr',v:GA.fmtRatio(forkLh,'',2)},
+      {zh:'發電機 L/hr',en:'Generator L/hr',v:GA.fmtRatio(genLh,'',2)}
+    ],
+    footer:'🕐 '+GA.ymd(new Date())
+  });
+}
+function fuelTelegram(){
+  try{ GA.setLang(lang); }catch(e){}
+  GA.telegram.open({
+    module:'fuel',
+    canApprove:false,          // 燃油無核可流程，只發摘要
+    periods:fuelPeriods,
+    summary:fuelSummaryText
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
 init();
 </script>
 </body>

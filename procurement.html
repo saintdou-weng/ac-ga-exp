@@ -359,15 +359,16 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
     </div>
     <div class="fl">姓名 / Name</div>
     <select class="fs" id="lu"></select>
-    <div class="fl">PIN 密碼</div>
-    <input class="fi" id="lp" type="password" placeholder="輸入 PIN" maxlength="6"/>
+    <div class="fl" style="margin-top:6px">Telegram ID</div>
+    <input class="fi" id="lp" type="text" inputmode="numeric" placeholder="輸入你的 Telegram ID" maxlength="15"/>
     <button class="login-btn" onclick="doLogin()">🔐 登入 Login</button>
     <div id="lerr"></div>
     <div class="role-hint">
-      <div class="rh-t">角色說明</div>
+      <div class="rh-t">角色說明 · 權限由伺服器驗證</div>
       <div class="rh-row"><span>Applicant 申請人</span><span class="rh-badge" style="background:var(--blue-bg);color:var(--blue)">填寫提交</span></div>
       <div class="rh-row"><span>Review 審查人</span><span class="rh-badge" style="background:var(--amber-bg);color:var(--amber)">審核</span></div>
       <div class="rh-row"><span>Manager 核可人</span><span class="rh-badge" style="background:var(--orange-bg);color:var(--orange)">最終核可</span></div>
+      <div class="rh-row" style="margin-top:6px;color:var(--text2);font-size:10px">💡 由 Telegram 打 /exp 取得登入更方便</div>
     </div>
   </div>
 </div>
@@ -386,6 +387,7 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
     <div class="ptab" onclick="showPage('inv')" id="pt-inv"><span id="tab-inv-lbl">📦 庫存管理</span></div>
     <div class="ptab" onclick="showPage('settings')" id="pt-set"><span id="tab-set-lbl">⚙️ 設定</span></div>
     <div class="ptab" onclick="showPage('recv')" id="pt-recv"><span id="tab-recv-lbl">📋 收貨紀錄</span></div>
+    <div class="ptab" onclick="showPage('anly')" id="pt-anly"><span id="tab-anly-lbl">📊 分析</span></div>
   </div>
 
   <!-- Header -->
@@ -396,6 +398,11 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
         <h1 id="htitle">日常用品採購單</h1>
       </div>
       <div class="hdr-r">
+        <div id="ga-cloud" class="ga-cloud idle" style="margin-right:4px"></div>
+        <button class="inv-btn" onclick="procCloudUp()" title="上傳雲端 Upload">⬆️☁</button>
+        <button class="inv-btn" onclick="procCloudDown()" title="下載雲端 Download">⬇️☁</button>
+        <button class="inv-btn" onclick="procImport()" title="智慧匯入 Smart Import">📥</button>
+        <button class="inv-btn" onclick="procTelegram()" title="Telegram 摘要 Summary">✈️</button>
         <div id="sel-badge"></div>
         <div class="user-chip">
           <div class="uav" id="uav"></div>
@@ -405,6 +412,7 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
         <div class="lang-sw">
           <button class="on" onclick="setL('zh')">中</button>
           <button onclick="setL('en')">EN</button>
+          <button onclick="setL('km')">ខ្មែរ</button>
         </div>
         <select id="msel" onchange="onMonthChange(+this.value)"></select>
         <button id="logout-btn" onclick="doLogout()">↩ Logout</button>
@@ -535,6 +543,19 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
       <table class="inv-table"><thead id="recv-thead"></thead><tbody id="recv-tbody"></tbody></table>
     </div>
   </div>
+
+  <!-- ANALYTICS PAGE (v2) -->
+  <div class="page" id="page-anly">
+    <div id="anly-period" style="margin-bottom:12px"></div>
+    <div class="ga-kpis" id="anly-kpis" style="margin-bottom:12px"></div>
+    <div class="ga-charts">
+      <div class="ga-chart"><div class="ga-chart-t" data-t="chStatus">狀態分布</div><div class="ga-chart-box"><canvas id="pc-status"></canvas></div></div>
+      <div class="ga-chart"><div class="ga-chart-t" data-t="chCat">分類金額</div><div class="ga-chart-box"><canvas id="pc-cat"></canvas></div></div>
+      <div class="ga-chart"><div class="ga-chart-t" data-t="chTrend">月度趨勢</div><div class="ga-chart-box"><canvas id="pc-trend"></canvas></div></div>
+      <div class="ga-chart"><div class="ga-chart-t" data-t="chLow">低庫存 Top</div><div class="ga-chart-box"><canvas id="pc-low"></canvas></div></div>
+    </div>
+    <div class="ga-card" style="margin-top:12px"><div id="anly-tbl"></div></div>
+  </div>
 </div>
 
 <!-- RECEIVE RECORD MODAL -->
@@ -640,8 +661,10 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 const ACCFG=(()=>{try{return JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}')}catch(e){return{}}})();
 const GAS_URL = (ACCFG.gasUrl&&ACCFG.gasUrl.trim()) || "https://script.google.com/macros/s/AKfycbxPTXdEhjb4vhAxO-fQYYLnt_m4BZNkVsPiYVmyUzA-kxgr_b4VMC9yayXQCOS7xYYWAQ/exec";
 const _params = new URLSearchParams(location.search);
-const _UROLE  = _params.get("role") || "";
-const _UNAME  = _params.get("name") || "";
+/* v2：URL 的 role/name 一律忽略（不可作為身分）。
+   僅接受 GAS 簽發的 session token，或 Telegram deep-link 帶的 uid（需回後端換 session）。 */
+const _SESSION = _params.get("session") || (GA.cfg().session || "");
+const _UID     = _params.get("uid") || "";
 
 let _saveTimer = null;
 async function saveStateCloud(){
@@ -649,7 +672,7 @@ async function saveStateCloud(){
     const compactOrds={};
     Object.entries(ords).forEach(([k,v])=>{if(v&&(v.qty>0||v.note))compactOrds[k]=v;});
     const data={ords:compactOrds,poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog};
-    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify({action:"saveState",data})});
   }catch(e){console.warn("Cloud save failed:",e);}
 }
@@ -701,7 +724,7 @@ async function loadInvCloud(year){
 
 async function saveInvCloud(year, month, records){
   try{
-    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify({action:"saveInventory",data:{year,month,records}})});
   }catch(e){console.warn("Inv save failed:",e);}
 }
@@ -728,9 +751,10 @@ async function exportYearExcel(year){
 // USERS
 // ════════════════════════════════
 const USERS = [
-  {id:"u1", name:"Applicant", nameEn:"Applicant", pin:"1111", role:"applicant"},
-  {id:"u2", name:"Review",    nameEn:"Review",    pin:"2222", role:"verifier"},
-  {id:"u3", name:"Manager",   nameEn:"Manager",   pin:"2026", role:"approver"},
+  /* v2：PIN 已移除，權限一律由 GAS APPROVERS 驗證。此清單僅供下拉顯示。 */
+  {id:"u1", name:"Applicant", nameEn:"Applicant", role:"applicant"},
+  {id:"u2", name:"Review",    nameEn:"Review",    role:"verifier"},
+  {id:"u3", name:"Manager",   nameEn:"Manager",   role:"approver"},
 ];
 const RC = {
   applicant:{label:"申請人",en:"Applicant",color:"#2563eb",bg:"#dbeafe",border:"#93c5fd"},
@@ -944,13 +968,15 @@ function showPage(p){
   document.querySelectorAll(".ptab").forEach(el=>el.classList.remove("on"));
   document.getElementById("page-"+p).classList.add("on");
   document.getElementById("pt-"+(p==="settings"?"set":p)).classList.add("on");
-  const titles={po:lang==="zh"?"日常用品採購單":"Monthly Supplies Order",
-    inv:lang==="zh"?"庫存管理":"Inventory",settings:lang==="zh"?"設定":"Settings",
-    recv:lang==="zh"?"收貨紀錄":"Receive Records"};
+  const titles={po:lang==="zh"?"日常用品採購單":lang==="km"?"ការបញ្ជាទិញ":"Monthly Supplies Order",
+    inv:lang==="zh"?"庫存管理":lang==="km"?"ស្តុក":"Inventory",settings:lang==="zh"?"設定":lang==="km"?"ការកំណត់":"Settings",
+    recv:lang==="zh"?"收貨紀錄":lang==="km"?"ការទទួល":"Receive Records",
+    anly:lang==="zh"?"採購分析":lang==="km"?"ការវិភាគ":"Procurement Analytics"};
   document.getElementById("htitle").textContent=titles[p]||titles.po;
   if(p==="inv"){ syncInvMonthDisplay(); renderInv(); loadPOHistory(); }
   if(p==="settings") renderSettings();
   if(p==="recv") renderRecv();
+  if(p==="anly"){ loadPOHistory(); renderAnalytics(); }
 }
 
 function onPoMonthRefChange(poMonth){
@@ -1026,37 +1052,56 @@ function initLogin(){
     opt.textContent=`${u.name} / ${u.nameEn}`;
     sel.appendChild(opt);
   });
-  // Auto-login from Telegram URL params
-  if(_UROLE && _UNAME){
-    const roleUser = USERS.find(u=>u.role===_UROLE);
-    if(roleUser){
-      cu = {...roleUser, name:_UNAME, nameEn:_UNAME};
-      document.getElementById("login-screen").style.display="none";
-      document.getElementById("app").style.display="block";
-      // Show loading overlay
-      showCloudLoading();
-      loadStateCloud().then(()=>{
-        hideCloudLoading();
-        bootApp();
-      });
-      return;
-    }
+  // v2 自動登入：優先用 session token；否則若帶 uid 就向後端換 session
+  if(_SESSION){
+    GA.gasGet("whoami",{session:_SESSION}).then(r=>{
+      const w=r.data;
+      if(w&&w.authenticated){
+        GA.setSession(_SESSION);
+        cu={id:"tg",name:w.name,nameEn:w.name,role:w.role};
+        enterApp();
+      }
+    }).catch(()=>{});
+    return;
+  }
+  if(_UID){
+    GA.gasPost("issueSession",{tgId:_UID}).then(r=>{
+      const d=r.data;
+      if(d&&d.session){
+        GA.setSession(d.session);
+        cu={id:"tg",name:d.name,nameEn:d.name,role:d.role};
+        enterApp();
+      }
+    }).catch(()=>{});
   }
 }
-function doLogin(){
-  const uid=document.getElementById("lu").value;
-  const pin=document.getElementById("lp").value;
-  const err=document.getElementById("lerr");
-  if(!uid){err.style.display="block";err.textContent="請選擇姓名";return;}
-  const user=USERS.find(u=>u.id===uid);
-  if(!user||user.pin!==pin){err.style.display="block";err.textContent="❌ PIN 錯誤，請重試";return;}
-  cu=user;
+function enterApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
   showCloudLoading();
   loadStateCloud().then(()=>{ hideCloudLoading(); bootApp(); });
 }
+function doLogin(){
+  const tgId=document.getElementById("lp").value.trim();
+  const err=document.getElementById("lerr");
+  if(!tgId){err.style.display="block";err.textContent="請輸入你的 Telegram ID";return;}
+  err.style.display="block";err.style.color="var(--text2)";err.textContent="驗證中…";
+  GA.gasPost("issueSession",{tgId:tgId}).then(r=>{
+    const d=r.data;
+    if(d&&d.session){
+      GA.setSession(d.session);
+      cu={id:"tg",name:d.name,nameEn:d.name,role:d.role};
+      enterApp();
+    }else{
+      err.style.color="var(--red)";err.textContent="❌ 此 Telegram ID 未授權";
+    }
+  }).catch(e=>{
+    err.style.color="var(--red)";
+    err.textContent="❌ "+(e.code==="NO_PERM"?"此 Telegram ID 未授權":e.message);
+  });
+}
 function doLogout(){
+  try{ GA.saveCfg({session:''}); }catch(e){}
   cu=null;initOrds();
   document.getElementById("login-screen").style.display="flex";
   document.getElementById("app").style.display="none";
@@ -2029,7 +2074,9 @@ function doEditRejected(){
 }
 
 function setL(l){
-  lang=l;render();
+  lang=l;
+  try{ GA.setLang(l); }catch(e){}   // 讓共用工具列/期間列/匯入/Telegram 同步切三語
+  render();
   // Update page-specific labels
   const invTitle=document.getElementById("inv-title");
   if(invTitle) invTitle.textContent=l==="zh"?"庫存管理":"Inventory";
@@ -2491,6 +2538,232 @@ function saveItemChanges(){
 window.addEventListener("resize",()=>{
   if(document.getElementById("page-inv").classList.contains("on")) renderInv();
 });
+/* ════════════════════════════════════════════════════════════════
+   AC-GA-EXP v2 附加層：共用工具列 + 分析（不動原核可流程）
+   ════════════════════════════════════════════════════════════════ */
+GA.addDict({
+  zh:{ chStatus:'狀態分布',chCat:'分類金額',chTrend:'月度趨勢',chLow:'低庫存 Top',
+    kPO:'採購單數',kPend:'待處理',kAppr:'已核可',kItems:'品項數',kLow:'低庫存',kQty:'總數量' },
+  en:{ chStatus:'By Status',chCat:'By Category',chTrend:'Monthly Trend',chLow:'Low Stock Top',
+    kPO:'PO Count',kPend:'Pending',kAppr:'Approved',kItems:'Items',kLow:'Low Stock',kQty:'Total Qty' },
+  km:{ chStatus:'តាមស្ថានភាព',chCat:'តាមប្រភេទ',chTrend:'និន្នាការប្រចាំខែ',chLow:'ស្តុកតិច',
+    kPO:'ចំនួន PO',kPend:'រង់ចាំ',kAppr:'អនុម័ត',kItems:'ធាតុ',kLow:'ស្តុកតិច',kQty:'បរិមាណសរុប' }
+});
+
+function procCloudUp(){
+  GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
+  saveStateCloud().then(()=>{ GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態'); })
+    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); });
+}
+function procCloudDown(){
+  GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
+  loadStateCloud().then(()=>{ GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態'); })
+    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); });
+}
+
+/* 智慧匯入：PO / 收貨 / 庫存。核可流程不變：
+   applicant 可「匯入並送核可」，其餘僅「匯入草稿」 */
+function procImport(){
+  const canSubmit = cu && ['applicant','verifier','approver','owner'].includes(cu.role);
+  GA.smartImport.openModal({
+    allowSubmit: canSubmit,
+    existing:function(type){
+      if(type==='po') return (poHistoryData||[]).flatMap(po=>(po.items||[]).map(it=>({
+        item:it.name||it.item, qty:it.qty, poNo:po.poNumber, _fp:GA.smartImport.fingerprintOf('po',{poNo:po.poNumber,item:it.name||it.item,qty:it.qty})
+      })));
+      return [];
+    },
+    onImport:function(payload,meta){
+      const po=(payload.po||[]), recv=(payload.receiving||[]), inv=(payload.inventory||[]);
+      let msg=[];
+      if(recv.length){ importRecvRecords(recv); msg.push('收貨 +'+recv.length); }
+      if(inv.length){ importInvItems(inv); msg.push('品項 +'+inv.length); }
+      if(po.length){
+        if(meta.mode==='submitted' && canSubmit){
+          // 匯入並送核可：走原有提交流程（狀態 submitted，Telegram 核可請求）
+          importPoAndSubmit(po);
+          msg.push('採購 +'+po.length+'（已送核可）');
+        }else{
+          importPoDraft(po);
+          msg.push('採購草稿 +'+po.length);
+        }
+      }
+      GA.toast('📥 '+(msg.join('，')||'無資料匯入'));
+      saveState(); render();
+    }
+  });
+}
+/* 匯入收貨→併入收貨記錄（庫存以既有 addRecvRecord 邏輯處理，避免重複加帳）*/
+function importRecvRecords(rows){
+  if(typeof recvRecords==='undefined'){ window.recvRecords=[]; }
+  rows.forEach(r=>{
+    recvRecords.push({ id:r.recordId||GA.uid('rc'), date:r.date||GA.ymd(new Date()),
+      type:(r.type&&/issue|領|out/i.test(r.type))?'issue':'receive',
+      item:r.item, qty:GA.num(r.qty), dept:r.dept||'', by:r.applicant||'',
+      note:r.remarks||r.purpose||'', source:'excel' });
+  });
+  try{ if(typeof saveRecvCloud==='function') saveRecvCloud(); }catch(e){}
+}
+function importInvItems(rows){
+  rows.forEach(r=>{
+    const name=r.item; if(!name) return;
+    const exists=allItems().some(i=>(i.name||'').toLowerCase()===name.toLowerCase());
+    if(exists) return;
+    const id='cust_'+GA.fingerprint([name]).slice(2,10);
+    customItems.push({ id:id, name:name, nameEn:name, catKey:Object.keys(CATS)[0], sz:r.spec||'' });
+    if(r.unit) itemSettings[id]={...(itemSettings[id]||{}),unit:r.unit};
+  });
+}
+function importPoDraft(rows){
+  // 併入目前草稿採購單（不改狀態、不觸發核可）
+  rows.forEach(r=>{
+    const match=allItems().find(i=>(i.name||'').toLowerCase()===String(r.item||'').toLowerCase());
+    if(match){ ords[match.id]={...(ords[match.id]||{}),qty:GA.num(r.qty)||1,note:r.remarks||''}; }
+  });
+}
+function importPoAndSubmit(rows){
+  importPoDraft(rows);
+  if(typeof doSubmit==='function' && poStatus==='draft') doSubmit();
+}
+
+/* Telegram 摘要（與核可分離）— 採購支援摘要 + 核可兩模式 */
+function procTelegram(){
+  const canApprove = cu && ['applicant','verifier','approver','owner'].includes(cu.role);
+  GA.telegram.open({
+    module:'procurement',
+    canApprove: canApprove,
+    periods:function(type){ return (poHistoryData||[]).map(po=>GA.periodKey((po.submitDate||po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01'),type)); },
+    summary:function(s){
+      const rows=poHist_inPeriod(s);
+      const byStatus={}; rows.forEach(po=>{ const st=GA.normStatus(po.status); byStatus[st]=(byStatus[st]||0)+1; });
+      const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
+      const low=lowStockCount();
+      return GA.telegram.buildSummary({
+        icon:'📋', titleZh:'採購摘要', titleEn:'Procurement Summary',
+        lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
+        rows:[
+          {zh:'採購單數',en:'PO Count',v:rows.length},
+          {zh:'待審',en:'Pending',v:(byStatus.submitted||0)+(byStatus.verified||0)},
+          {zh:'已核可',en:'Approved',v:byStatus.approved||0},
+          {zh:'品項數',en:'Items',v:items},
+          {zh:'低庫存',en:'Low Stock',v:low}
+        ],
+        footer:'🕐 '+GA.ymd(new Date())
+      });
+    },
+    approvalItems:function(s){
+      // 只送目前草稿/待送的 PO 品項（走原有核可順序）
+      return ordItems().map(i=>({ item:i.name, qty:(ords[i.id]||{}).qty, dept:'GA', recordId:i.id }));
+    }
+  });
+}
+function poHist_inPeriod(s){
+  return (poHistoryData||[]).filter(po=>{
+    const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
+    return GA.inPeriod(d,s.period,s.ptype);
+  });
+}
+function lowStockCount(){ return lowStockList().length; }
+
+/* ── 分析頁 ── */
+var procPC=null;
+function renderAnalytics(){
+  if(!procPC){
+    procPC=GA.periodControl('#anly-period',{ id:'proc', type:'month',
+      dates:function(){ return (poHistoryData||[]).map(po=>po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01')); },
+      onChange:function(){ drawAnalytics(); } });
+  }
+  drawAnalytics();
+}
+function drawAnalytics(){
+  const st=procPC?procPC.state():{type:'month',key:GA.currentPeriod('month')};
+  const rows=(poHistoryData||[]).filter(po=>{
+    const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
+    return GA.inPeriod(d,st.key,st.type);
+  });
+  const byStatus={}; rows.forEach(po=>{ const s=GA.normStatus(po.status); byStatus[s]=(byStatus[s]||0)+1; });
+  const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
+  const qty=rows.reduce((a,po)=>a+(po.items||[]).reduce((x,it)=>x+GA.num(it.qty),0),0);
+
+  const kpis=[
+    {l:'kPO',v:rows.length,c:'var(--ga-sky)'},
+    {l:'kPend',v:(byStatus.submitted||0)+(byStatus.verified||0),c:'var(--ga-warn)'},
+    {l:'kAppr',v:byStatus.approved||0,c:'var(--ga-ok)'},
+    {l:'kItems',v:items,c:'var(--ga-ind)'},
+    {l:'kQty',v:qty,c:'#8b5cf6'},
+    {l:'kLow',v:lowStockCount(),c:'var(--ga-bad)'}
+  ];
+  document.getElementById('anly-kpis').innerHTML=kpis.map(k=>
+    '<div class="ga-kpi" style="--kc:'+k.c+'"><div class="ga-kpi-l">'+GA.T(k.l)+'</div><div class="ga-kpi-v">'+k.v+'</div></div>').join('');
+
+  // 狀態圓餅
+  const stKeys=Object.keys(byStatus);
+  GA.chart('pc-status',{type:'doughnut',
+    data:{labels:stKeys.map(k=>GA.statusLabel(k)),datasets:[{data:stKeys.map(k=>byStatus[k]),backgroundColor:GA.PALETTE,borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9}}}}}});
+
+  // 分類金額（依品項名歸類到 CATS）
+  const byCat={};
+  rows.forEach(po=>(po.items||[]).forEach(it=>{
+    const cat=catOfItem(it.name||it.item)||'other';
+    byCat[cat]=(byCat[cat]||0)+GA.num(it.qty);
+  }));
+  const catKeys=Object.keys(byCat);
+  GA.chart('pc-cat',{type:'bar',
+    data:{labels:catKeys,datasets:[{data:catKeys.map(k=>byCat[k]),backgroundColor:GA.PALETTE,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+
+  // 月度趨勢（近 12 期）
+  const keys=[]; const cur=GA.currentPeriod(st.type);
+  for(let i=11;i>=0;i--) keys.push(GA.shiftPeriod(cur,st.type,-i));
+  const counts=keys.map(k=>(poHistoryData||[]).filter(po=>{
+    const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
+    return GA.periodKey(d,st.type)===k;
+  }).length);
+  GA.chart('pc-trend',{type:'line',
+    data:{labels:keys.map(k=>GA.periodLabel(k,st.type)),datasets:[{data:counts,borderColor:'#0284c7',backgroundColor:'rgba(2,132,199,.12)',fill:true,tension:.3,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:8},maxRotation:45}}}}});
+
+  // 低庫存 top（若庫存資料可用）
+  const lows=lowStockList();
+  GA.chart('pc-low',{type:'bar',
+    data:{labels:lows.map(x=>x.name),datasets:[{data:lows.map(x=>x.gap),backgroundColor:'#ef4444',borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+
+  // 明細表
+  const anlyTbl=GA.table('#anly-tbl',{size:20,cols:[
+    {k:'poNumber',label:'PO No.'},
+    {k:'period',label:GA.T('month')},
+    {k:'status',label:GA.T('status'),html:r=>GA.statusBadge(r.status)},
+    {k:'applicant',label:'Applicant'},
+    {k:'n',label:GA.T('kItems'),num:true}
+  ]});
+  anlyTbl.data(rows.map(po=>({
+    poNumber:po.poNumber||'(draft)',
+    period:GA.periodLabel(po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01'),'month'),
+    status:po.status, applicant:po.applicant||'—', n:(po.items||[]).length
+  })));
+}
+function catOfItem(name){
+  if(!name) return null;
+  const n=String(name).toLowerCase();
+  for(const key in CATS){
+    if((CATS[key].items||[]).some(i=>(i.name||'').toLowerCase()===n||(i.nameEn||'').toLowerCase()===n)) return key;
+  }
+  return null;
+}
+function lowStockList(){
+  try{
+    const key='inv_'+YEAR+'_'+invDisplayMonth;
+    const rec=(typeof invRecords!=='undefined'&&invRecords[key])?invRecords[key]:null;
+    if(!rec) return [];
+    return allItems().map(i=>{
+      const safety=getSafety(i.id); const r=rec[i.id]; const close=r?GA.num(r.close):0;
+      return {name:i.name,gap:safety-close,safety:safety,close:close};
+    }).filter(x=>x.safety>0&&x.gap>0).sort((a,b)=>b.gap-a.gap).slice(0,8);
+  }catch(e){ return []; }
+}
+
 initLogin();
 </script>
 </body>
