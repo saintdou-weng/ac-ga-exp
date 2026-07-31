@@ -215,8 +215,10 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
   <button class="lang-btn" onclick="setLang('zh')" id="lb-zh">中</button>
   <button class="lang-btn" onclick="setLang('km')" id="lb-km">ខ្មែរ</button>
   <div class="tb-sep"></div>
-  <button class="topbar-icon" onclick="cloudUpload()" title="Upload to cloud" id="cloud-up-btn">☁️</button>
-  <button class="topbar-icon" onclick="cloudDownload()" title="Download from cloud" id="cloud-dn-btn">📥</button>
+  <div id="ga-cloud" class="ga-cloud idle" style="margin:0 4px"></div>
+  <button class="topbar-icon" onclick="cloudUpload()" title="上傳雲端 Upload" id="cloud-up-btn">⬆️</button>
+  <button class="topbar-icon" onclick="cloudDownload()" title="下載雲端 Download" id="cloud-dn-btn">⬇️</button>
+  <button class="topbar-icon" onclick="recvSmartImport()" title="Smart Import 智慧匯入" id="smart-imp-btn">📥</button>
   <button class="topbar-icon" onclick="sendTelegram()" title="Send to Telegram">✈️</button>
   <button class="topbar-icon" onclick="showPage('settings')" title="Settings">⚙️</button>
 </div>
@@ -234,8 +236,9 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
     <span class="period-label" id="period-label" onclick="jumpToToday()">May 2026</span>
     <button class="period-btn" onclick="nextPeriod()">▶</button>
     <select class="period-select" id="period-mode" onchange="changePeriodMode(this.value)">
-      <option value="month">Month</option>
+      <option value="day">Day</option>
       <option value="week">Week</option>
+      <option value="month" selected>Month</option>
       <option value="year">Year</option>
     </select>
   </div>
@@ -343,28 +346,15 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
   <div class="section-title" data-i="settings_title">Settings & Configuration</div>
   <div class="settings-grid">
     <div class="settings-card">
-      <h3 data-i="set_cloud">Cloud Sync (GAS)</h3>
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">GAS Web App URL</label>
-        <input class="form-input" id="set-gas-url" placeholder="https://script.google.com/macros/s/...">
+      <h3>☁️ <span data-i="set_cloud">Cloud & Telegram</span></h3>
+      <div style="background:var(--bg2);border-radius:8px;padding:12px;font-size:12px;line-height:1.8;color:var(--text2)">
+        <div id="plat-gas-status">⏳ …</div>
+        <div style="margin-top:8px;color:var(--text3);font-size:11px">
+          <span data-i="plat_note">GAS 網址、Bot Token、群組皆由「平台設定中心」統一管理，各模組自動沿用，無需在此重填。</span>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label" data-i="set_sheet">Sheet ID</label>
-        <input class="form-input" id="set-sheet-id" placeholder="Google Spreadsheet ID">
-      </div>
-      <button class="nav-btn success" onclick="testCloud()" style="width:100%">🔗 <span data-i="test_conn">Test Connection</span></button>
-    </div>
-    <div class="settings-card">
-      <h3 data-i="set_tg">Telegram Bot</h3>
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">Bot Token</label>
-        <input class="form-input" id="set-tg-token" placeholder="123456:ABC...">
-      </div>
-      <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">Chat ID / Group ID</label>
-        <input class="form-input" id="set-tg-chat" placeholder="-100xxxxxxxxxx">
-      </div>
-      <button class="nav-btn" onclick="testTelegram()" style="width:100%">✈️ <span data-i="test_tg">Test Telegram</span></button>
+      <button class="nav-btn" onclick="location.href='index.html'" style="width:100%;margin-top:10px">⚙️ <span data-i="open_platform_set">開啟平台設定中心</span></button>
+      <button class="nav-btn success" onclick="testCloud()" style="width:100%;margin-top:8px">🔗 <span data-i="test_conn">Test Connection</span></button>
     </div>
     <div class="settings-card">
       <h3 data-i="set_general">General</h3>
@@ -580,12 +570,14 @@ const I18N = {
 let lang = 'en';
 function setLang(l){
   lang = l;
+  try{ GA.setLang(l); }catch(e){}
   ['en','zh','km'].forEach(x=>document.getElementById('lb-'+x).classList.toggle('active', x===l));
   document.querySelectorAll('[data-i]').forEach(el=>{
     const key = el.getAttribute('data-i');
     if(I18N[l][key]) el.textContent = I18N[l][key];
   });
   renderStats(); renderItemsTable(); renderReceiveContent(); renderAnalysis();
+  try{ updatePeriodLabel(); }catch(e){}
 }
 
 // =========== DATA ===========
@@ -594,38 +586,29 @@ let records = []; // { id, date, type:'receive'|'issue', itemId, itemName, qty, 
 let settings = { gasUrl:'', sheetId:'', tgToken:'', tgChat:'', factory:'Vantage River Textiles Co., Ltd.', dept:'GA/Admin', lowThreshold:5 };
 
 // Period state
-let periodMode = 'month'; // month/week/year
+let periodMode = 'month'; // day/week/month/year
 let periodDate = new Date();
 
+/* v2：改用共用 GA 期間引擎（含 day 模式、週一起算） */
+function _pkey(){ return GA.periodKey(GA.ymd(periodDate), periodMode); }
 function getPeriodLabel(){
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const monthsZh = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  const monthsKm = ['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ'];
-  const y = periodDate.getFullYear(), m = periodDate.getMonth();
-  if(periodMode==='month'){
-    const mn = lang==='zh'?monthsZh[m]:lang==='km'?monthsKm[m]:months[m];
-    return mn+' '+y;
-  } else if(periodMode==='week'){
-    const d = new Date(periodDate);
-    const day = d.getDay();
-    const start = new Date(d); start.setDate(d.getDate()-day);
-    const end = new Date(start); end.setDate(start.getDate()+6);
-    return `${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()} ${y}`;
-  } else {
-    return y+'';
-  }
+  try{ return GA.periodLabel(_pkey(), periodMode); }catch(e){ return GA.ymd(periodDate); }
 }
-function prevPeriod(){ 
-  if(periodMode==='month') periodDate.setMonth(periodDate.getMonth()-1);
-  else if(periodMode==='week') periodDate.setDate(periodDate.getDate()-7);
-  else periodDate.setFullYear(periodDate.getFullYear()-1);
+function prevPeriod(){
+  const k = GA.shiftPeriod(_pkey(), periodMode, -1);
+  periodDate = _keyToDate(k, periodMode);
   updatePeriodLabel(); renderAll();
 }
 function nextPeriod(){
-  if(periodMode==='month') periodDate.setMonth(periodDate.getMonth()+1);
-  else if(periodMode==='week') periodDate.setDate(periodDate.getDate()+7);
-  else periodDate.setFullYear(periodDate.getFullYear()+1);
+  const k = GA.shiftPeriod(_pkey(), periodMode, 1);
+  periodDate = _keyToDate(k, periodMode);
   updatePeriodLabel(); renderAll();
+}
+function _keyToDate(k, mode){
+  if(mode==='day') return GA.parseYMD(k)||new Date();
+  if(mode==='week'){ const r=GA.weekRange(k); return r?r.startDate:new Date(); }
+  if(mode==='month'){ const m=String(k).match(/^(\d{4})-(\d{2})$/); return m?new Date(+m[1],+m[2]-1,1):new Date(); }
+  return new Date(parseInt(k,10)||new Date().getFullYear(),0,1);
 }
 function jumpToToday(){ periodDate=new Date(); updatePeriodLabel(); renderAll(); }
 function changePeriodMode(v){ periodMode=v; updatePeriodLabel(); renderAll(); }
@@ -638,12 +621,10 @@ function loadLocal(){
     items = d.items||[]; records = d.records||[];
     const s = JSON.parse(localStorage.getItem('vrt_receive_settings')||'{}');
     Object.assign(settings, s);
-    /* AC-GA-EXP 平台共用設定 fallback */
+    /* v2：GAS URL 一律用平台設定中心（ac_ga_exp_config），本模組不再手填。
+       Bot Token / Chat ID 不落地瀏覽器，Telegram 一律經 GAS 轉發。 */
     try{
-      const cfg = JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}');
-      if(!settings.gasUrl && cfg.gasUrl) settings.gasUrl = cfg.gasUrl;
-      if(!settings.tgToken && cfg.tgToken) settings.tgToken = cfg.tgToken;
-      if(!settings.tgChat && cfg.tgChat) settings.tgChat = cfg.tgChat;
+      settings.gasUrl = GA.gasUrl();   // 平台設定 → 否則預設部署網址
     }catch(e){}
     loadSettingsForm();
   } catch(e){}
@@ -653,19 +634,20 @@ function saveLocal(){
   localStorage.setItem('vrt_receive_settings', JSON.stringify(settings));
 }
 function loadSettingsForm(){
-  document.getElementById('set-gas-url').value = settings.gasUrl||'';
-  document.getElementById('set-sheet-id').value = settings.sheetId||'';
-  document.getElementById('set-tg-token').value = settings.tgToken||'';
-  document.getElementById('set-tg-chat').value = settings.tgChat||'';
   document.getElementById('set-factory').value = settings.factory||'Vantage River Textiles Co., Ltd.';
   document.getElementById('set-dept').value = settings.dept||'GA/Admin';
   document.getElementById('set-low-threshold').value = settings.lowThreshold||5;
+  // 顯示平台 GAS 設定狀態
+  const el=document.getElementById('plat-gas-status');
+  if(el){
+    const u=(GA.gasUrl()||'');
+    const isDefault = u===GA.DEFAULT_GAS;
+    el.innerHTML = u
+      ? '✅ GAS: <code style="font-size:10px;word-break:break-all">'+u.slice(0,52)+'…</code>'+(isDefault?'<br><span style="color:var(--text3)">(平台預設)</span>':'')
+      : '⚠️ 尚未設定 GAS（請至平台設定中心）';
+  }
 }
 function saveAll(){
-  settings.gasUrl = document.getElementById('set-gas-url').value;
-  settings.sheetId = document.getElementById('set-sheet-id').value;
-  settings.tgToken = document.getElementById('set-tg-token').value;
-  settings.tgChat = document.getElementById('set-tg-chat').value;
   settings.factory = document.getElementById('set-factory').value;
   settings.dept = document.getElementById('set-dept').value;
   settings.lowThreshold = +document.getElementById('set-low-threshold').value||5;
@@ -926,7 +908,7 @@ function renderItemsTable(){
             <span style="font-size:20px;font-weight:700;color:${x.stock<th?'var(--red)':'var(--green)'}">${x.stock}</span>
             <span class="badge ${x.category==='Cleaning'?'clean':'stat'}">${x.category==='Cleaning'?'🧹':'📎'}</span>
           </div>
-          ${pIssued>0?`<div style="font-size:10px;color:var(--accent);margin-top:4px">Used ${pIssued} in ${periodLbl}</div>`:''}
+          ${pIssued>0?`<div style="font-size:10px;color:var(--accent);margin-top:4px">${lang==="zh"?"用了":lang==="km"?"ប្រើ":"Used"} ${pIssued} · ${periodLbl}</div>`:''}
         </div>`;
       }).join('') + `</div>`;
     if(tbody) tbody.innerHTML='';
@@ -939,8 +921,8 @@ function renderItemsTable(){
         <th class="hide-xs">${I18N[lang].th_brand}</th>
         <th class="hide-sm">${I18N[lang].th_size}</th>
         <th class="num" onclick="sortBy('stock')">${I18N[lang].th_stock}</th>
-        <th class="num hide-xs">${periodLbl} Recv</th>
-        <th class="num hide-xs">${periodLbl} Used</th>
+        <th class="num hide-xs">${periodLbl} ${lang==="zh"?"收":lang==="km"?"ទទួល":"Recv"}</th>
+        <th class="num hide-xs">${periodLbl} ${lang==="zh"?"用":lang==="km"?"ប្រើ":"Used"}</th>
         <th>${I18N[lang].th_status}</th>
         <th></th>
       </tr></thead>
@@ -1184,39 +1166,41 @@ function renderReceiveContent(){
 }
 
 function deleteRecord(id){
-  if(!confirm('Delete?')) return;
+  const msg = lang==='zh'?'刪除此筆？庫存會一併還原。':lang==='km'?'លុប? ស្តុកនឹងត្រឡប់វិញ។':'Delete? Stock will be reversed.';
+  if(!confirm(msg)) return;
+  const rec = records.find(r=>r.id===id);
+  if(rec){
+    // 反沖庫存：收貨刪除→扣回；領用刪除→加回（避免只刪記錄不還原庫存）
+    const item = items.find(x=>x.id===rec.itemId);
+    if(item){
+      const q = GA.num(rec.qty);
+      if(rec.type==='receive'){ item.ytdPurchased=Math.max(0,(item.ytdPurchased||0)-q); item.stock=Math.max(0,(item.stock||0)-q); }
+      else { item.ytdUsed=Math.max(0,(item.ytdUsed||0)-q); item.stock=(item.stock||0)+q; }
+    }
+  }
   records = records.filter(r=>r.id!==id);
-  saveLocal(); renderReceiveContent();
-  toast('Deleted','success');
+  saveLocal(); renderStats(); renderItemsTable(); renderReceiveContent();
+  toast(lang==='zh'?'已刪除並還原庫存':'Deleted & stock reversed','success');
 }
 
 function getRecordsForPeriod(){
-  const y=periodDate.getFullYear(), m=periodDate.getMonth();
-  return records.filter(r=>{
-    if(!r.date) return false;
-    const d=new Date(r.date);
-    if(periodMode==='month') return d.getFullYear()===y && d.getMonth()===m;
-    if(periodMode==='year') return d.getFullYear()===y;
-    if(periodMode==='week'){
-      const weekStart=new Date(periodDate); weekStart.setDate(periodDate.getDate()-periodDate.getDay());
-      const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
-      return d>=weekStart && d<=weekEnd;
-    }
-    return true;
-  });
+  const key=_pkey();
+  return records.filter(r=> r.date && GA.inPeriod(r.date, key, periodMode));
 }
 
 // =========== ANALYSIS ===========
 let charts = {};
 function renderAnalysis(){
-  // Category chart
+  const P = getRecordsForPeriod();          // v2：依目前期間過濾
+  const periodLbl = getPeriodLabel();
+  // Category chart（期間內領用）
   const catData = {};
-  records.forEach(r=>{ if(r.type==='issue'){ const item=items.find(x=>x.id===r.itemId); const cat=item?item.category:'Other'; catData[cat]=(catData[cat]||0)+r.qty; }});
+  P.forEach(r=>{ if(r.type==='issue'){ const item=items.find(x=>x.id===r.itemId); const cat=item?item.category:'Other'; catData[cat]=(catData[cat]||0)+r.qty; }});
   renderChart('chart-category', 'doughnut', Object.keys(catData), Object.values(catData), ['#c47a3c','#3c6dc4','#3c8c5c','#7c3cc4']);
   
-  // Top 10
+  // Top 10（期間內領用）
   const itemData = {};
-  records.filter(r=>r.type==='issue').forEach(r=>{ itemData[r.itemName]=(itemData[r.itemName]||0)+r.qty; });
+  P.filter(r=>r.type==='issue').forEach(r=>{ itemData[r.itemName]=(itemData[r.itemName]||0)+r.qty; });
   const top10 = Object.entries(itemData).sort((a,b)=>b[1]-a[1]).slice(0,10);
   renderChart('chart-top10','bar',top10.map(x=>x[0]),top10.map(x=>x[1]),['#c47a3c']);
   
@@ -1231,9 +1215,9 @@ function renderAnalysis(){
   });
   renderChartMulti('chart-trend','line',months,[{label:'Purchase',data:monthPurchase,color:'#3c8c5c'},{label:'Issue',data:monthIssue,color:'#c47a3c'}]);
   
-  // Dept chart
+  // Dept chart（期間內領用）
   const deptData={};
-  records.filter(r=>r.type==='issue').forEach(r=>{ deptData[r.dept||'Unknown']=(deptData[r.dept||'Unknown']||0)+r.qty; });
+  P.filter(r=>r.type==='issue').forEach(r=>{ deptData[r.dept||'Unknown']=(deptData[r.dept||'Unknown']||0)+r.qty; });
   const top8dept = Object.entries(deptData).sort((a,b)=>b[1]-a[1]).slice(0,8);
   renderChart('chart-dept','bar',top8dept.map(x=>x[0]),top8dept.map(x=>x[1]),['#3c6dc4']);
   
@@ -1309,70 +1293,124 @@ function renderAll(){
 
 // =========== CLOUD / TELEGRAM ===========
 async function cloudUpload(){
-  const url = settings.gasUrl;
-  if(!url){ toast('Set GAS URL in Settings','warning'); showPage('settings'); return; }
   const btn = document.getElementById('cloud-up-btn');
-  btn.textContent='⏳'; btn.classList.add('cloud-ok');
+  btn.textContent='⏳';
+  try{ GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync'); }catch(e){}
   try {
-    const payload = JSON.stringify({action:'recvSave', data:{items,records}, ts:Date.now()});
-    const res = await fetch(url, {method:'POST', body:payload, headers:{'Content-Type':'text/plain;charset=utf-8'}});
-    const txt = await res.text();
-    btn.textContent='☁️';
-    toast('Cloud upload OK: '+txt.substring(0,60),'success');
-  } catch(e){ btn.textContent='☁️'; btn.classList.remove('cloud-ok'); btn.classList.add('cloud-err'); toast('Upload failed: '+e.message,'error'); }
+    const r = await GA.gasPost('recvSave', {items,records}, {ts:Date.now()});
+    btn.textContent='⬆️'; btn.classList.remove('cloud-err'); btn.classList.add('cloud-ok');
+    try{ GA.cloud.set('up',(r.data&&r.data.rows!==undefined?r.data.rows+' recs':'')); GA.saveCfg({sync_recv:r.ts}); }catch(e){}
+    toast(lang==='zh'?'☁️ 已上傳雲端':'Cloud upload OK','success');
+  } catch(e){ btn.textContent='⬆️'; btn.classList.remove('cloud-ok'); btn.classList.add('cloud-err'); try{GA.cloud.set('err',e.message);}catch(x){} toast('Upload failed: '+e.message,'error'); }
 }
 async function cloudDownload(){
-  const url = settings.gasUrl;
-  if(!url){ toast('Set GAS URL in Settings','warning'); showPage('settings'); return; }
   const btn = document.getElementById('cloud-dn-btn');
   btn.textContent='⏳';
+  try{ GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync'); }catch(e){}
   try {
-    const res = await fetch(url+'?action=recvLoad');
-    const json = await res.json();
-    if(json.items) items=json.items;
-    if(json.records) records=json.records;
-    saveLocal(); renderAll();
-    btn.textContent='📥';
-    toast('Cloud download OK','success');
-  } catch(e){ btn.textContent='📥'; toast('Download failed: '+e.message,'error'); }
+    const r = await GA.gasGet('recvLoad');
+    const d = r.data||r;
+    if(d && (d.items||d.records)){
+      if(d.items) items=d.items;
+      if(d.records) records=d.records;
+      saveLocal(); renderAll();
+      btn.textContent='⬇️';
+      try{ GA.cloud.set('down',r.ts); }catch(e){}
+      toast(lang==='zh'?'📥 已下載雲端':'Cloud download OK','success');
+    } else {
+      btn.textContent='⬇️'; try{GA.cloud.set('idle');}catch(e){}
+      toast(lang==='zh'?'☁️ 雲端尚無資料':'No cloud data','warning');
+    }
+  } catch(e){ btn.textContent='⬇️'; try{GA.cloud.set('err',e.message);}catch(x){} toast('Download failed: '+e.message,'error'); }
 }
 async function testCloud(){
-  const url = document.getElementById('set-gas-url').value;
-  if(!url){ toast('Enter GAS URL first','warning'); return; }
-  settings.gasUrl=url;
-  try {
-    const res = await fetch(url+'?action=ping');
-    const txt = await res.text();
-    toast('Connected: '+txt.substring(0,80),'success');
+  try{
+    const r = await GA.gasGet('ping');
+    toast((lang==='zh'?'✅ 連線成功 ':'Connected: ')+(r.msg||r.ts||''),'success');
   } catch(e){ toast('Failed: '+e.message,'error'); }
 }
-async function sendTelegram(){
-  const token = settings.tgToken, chat = settings.tgChat;
-  if(!token||!chat){ toast('Set Telegram token+chat in Settings','warning'); showPage('settings'); return; }
-  const now = new Date();
-  const lowItems = items.filter(x=>x.stock<(settings.lowThreshold||5));
-  let msg = `📦 <b>VRT Receive Report</b>\n🏭 ${settings.factory||'VRT'}\n📅 ${now.toLocaleDateString()}\n\n`;
-  msg += `📊 <b>Summary</b>\n`;
-  msg += `• Total Items: ${items.length}\n`;
-  msg += `• Low Stock Items: ${lowItems.length}\n`;
-  if(lowItems.length>0){
-    msg += `\n⚠️ <b>Low Stock Alert</b>\n`;
-    lowItems.slice(0,10).forEach(x=>{ msg+=`• ${x.name}: ${x.stock} pcs\n`; });
-  }
-  msg += `\n_Generated by VRT Receive Report System_`;
-  try {
-    const res = await GA.gasPost('tgSummary', {
-      module:'receiving', ptype:'month', period:'ALL', lang:'both',
-      chatId: settings.tgChat||'', text: msg
-    });
-    const j=await res.json();
-    if(j.ok) toast('Telegram sent!','success');
-    else toast('Telegram error: '+j.description,'error');
-  } catch(e){ toast('Telegram failed: '+e.message,'error'); }
+function recvSmartImport(){
+  GA.smartImport.openModal({
+    allowSubmit:false,
+    existing:function(type){
+      if(type==='receiving') return records.map(r=>({date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,_row:r.id,
+        _fp:GA.smartImport.fingerprintOf('receiving',{date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,_row:r.id})}));
+      if(type==='inventory') return items.map(i=>({item:i.name,_fp:GA.smartImport.fingerprintOf('inventory',{item:i.name})}));
+      return [];
+    },
+    onImport:function(payload){
+      let addRec=0, addItem=0;
+      (payload.inventory||[]).forEach(function(r){
+        if(!r.item) return;
+        if(items.some(function(i){return (i.name||'').toLowerCase()===String(r.item).toLowerCase();})) return;
+        items.push({ id:newId(), no:items.length+1, name:r.item, category:r.category||'Other',
+          brand:r.spec||'', size:'', stock:GA.num(r.qty)||0, minStock:GA.num(r.minStock)||(settings.lowThreshold||5),
+          remarks:r.remarks||'', ytdPurchased:0, ytdUsed:0, monthData:{} });
+        addItem++;
+      });
+      (payload.receiving||[]).forEach(function(r){
+        var type=(r.type&&/issue|out/i.test(r.type))?'issue':'receive';
+        var item=items.find(function(i){return (i.name||'').toLowerCase()===String(r.item||'').toLowerCase();});
+        if(!item && r.item){ item={ id:newId(), no:items.length+1, name:r.item, category:r.category||'Other',
+          brand:'', size:'', stock:0, minStock:settings.lowThreshold||5, remarks:'', ytdPurchased:0, ytdUsed:0, monthData:{} };
+          items.push(item); addItem++; }
+        if(!item) return;
+        var q=GA.num(r.qty);
+        records.push({ id:newId(), date:r.date||GA.ymd(new Date()), type:type,
+          itemId:item.id, itemName:item.name, qty:q, dept:r.dept||'', requester:r.applicant||'', remarks:r.remarks||r.purpose||'' });
+        if(type==='receive'){ item.ytdPurchased=(item.ytdPurchased||0)+q; item.stock=(item.stock||0)+q; }
+        else { item.ytdUsed=(item.ytdUsed||0)+q; item.stock=Math.max(0,(item.stock||0)-q); }
+        addRec++;
+      });
+      saveLocal(); renderAll();
+      toast((lang==='zh'?'匯入完成：收發 +':'Imported: recs +')+addRec+(addItem?(lang==='zh'?'，品項 +':', items +')+addItem:''),'success');
+    }
+  });
+}
+
+function sendTelegram(){
+  // v2：共用摘要 modal（可選期間/語言/群組；摘要與核可分離）
+  try{ GA.setLang(lang); }catch(e){}
+  GA.telegram.open({
+    module:'receiving',
+    canApprove:false,     // 收貨無核可流程，只發摘要
+    scopes:[
+      {v:'both',zh:'收發全部',en:'Recv+Issue',km:'ទាំងអស់'},
+      {v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},
+      {v:'issue',zh:'領用',en:'Issue',km:'ចេញ'}
+    ],
+    periods:function(type){ return records.map(r=>GA.periodKey(r.date,type)); },
+    summary:function(st){
+      const P=records.filter(r=>r.date&&GA.inPeriod(r.date,st.period,st.ptype));
+      const scope=st.scope||'both';
+      const recv=P.filter(r=>r.type==='receive'), issue=P.filter(r=>r.type==='issue');
+      const recvQ=recv.reduce((a,r)=>a+GA.num(r.qty),0), issueQ=issue.reduce((a,r)=>a+GA.num(r.qty),0);
+      const low=items.filter(x=>GA.num(x.stock)<(settings.lowThreshold||5));
+      const rows=[];
+      if(scope!=='issue'){ rows.push({zh:'📥 收貨筆數',en:'Receive recs',v:recv.length});
+        rows.push({zh:'收貨數量',en:'Receive qty',v:recvQ.toLocaleString()}); }
+      if(scope!=='receive'){ rows.push({zh:'📤 領用筆數',en:'Issue recs',v:issue.length});
+        rows.push({zh:'領用數量',en:'Issue qty',v:issueQ.toLocaleString()}); }
+      rows.push('-');
+      rows.push({zh:'⚠️ 低庫存品項',en:'Low stock items',v:low.length});
+      // 部門 top（領用）
+      if(scope!=='receive'){
+        const dept={}; issue.forEach(r=>{dept[r.dept||'—']=(dept[r.dept||'—']||0)+GA.num(r.qty);});
+        const top=Object.entries(dept).sort((a,b)=>b[1]-a[1]).slice(0,3);
+        if(top.length){ rows.push('-'); top.forEach(([d,q])=>rows.push({zh:'部門·'+d,en:'dept·'+d,v:q.toLocaleString()})); }
+      }
+      // 低庫存明細
+      if(low.length){ rows.push('-'); low.slice(0,6).forEach(x=>rows.push({zh:x.name,en:x.name,v:'stock '+GA.num(x.stock)})); }
+      return GA.telegram.buildSummary({
+        icon:'📦', titleZh:'收貨報告摘要', titleEn:'Receiving Summary',
+        lang:st.lang, period:GA.periodLabel(st.period,st.ptype), rows:rows,
+        footer:'🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())
+      });
+    }
+  });
 }
 async function testTelegram(){
-  settings.tgToken=document.getElementById('set-tg-token').value;
-  settings.tgChat=document.getElementById('set-tg-chat').value;
+  // v2：Telegram 一律經 GAS，測試改用平台群組通知
   sendTelegram();
 }
 
@@ -1410,6 +1448,16 @@ loadLocal();
 filteredItems=[...items];
 filterItems();
 updatePeriodLabel();
+// v2：掛載雲端狀態燈、同步平台預設語言、顯示最後同步時間
+try{
+  GA.cloud.mount('#ga-cloud');
+  const lastSync=GA.cfg()['sync_recv'];
+  if(lastSync) GA.cloud.set('idle', GA.T('lastSync')+' '+lastSync);
+  const platLang=GA.cfg().lang;
+  if(platLang && platLang!==lang){ setLang(platLang); }
+  else { setLang(lang); }
+}catch(e){}
+
 </script>
 </body>
 </html>
