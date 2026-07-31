@@ -160,6 +160,11 @@
     .fg{width:100%}select.fi{min-width:unset;width:100%}
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="shared/ga.css">
+<script src="shared/ga-core.js"></script>
+<script src="shared/ga-import.js"></script>
+<script src="shared/ga-telegram.js"></script>
 </head>
 <body>
 
@@ -459,7 +464,7 @@
    流程：Repair Request → Approval → Temp PO(如需採購) → Repair Record
    ════════════════════════════════════════════════════════════ */
 const ACCFG=(()=>{try{return JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}')}catch(e){return{}}})();
-const GAS_URL=(ACCFG.gasUrl&&ACCFG.gasUrl.trim())||'https://script.google.com/macros/s/AKfycbwVxpnEQGhEHkKt6RTTp-EEEf8Unr7qg0yITiyu8zIXS1tHJrKZL73To7FOikBsatKU/exec';
+const GAS_URL=(ACCFG.gasUrl&&ACCFG.gasUrl.trim())||'https://script.google.com/macros/s/AKfycbxPTXdEhjb4vhAxO-fQYYLnt_m4BZNkVsPiYVmyUzA-kxgr_b4VMC9yayXQCOS7xYYWAQ/exec';
 
 let lang='zh',currentTs='',currentDate='',photos=[];
 const currentData={rep:[],po:[]};

@@ -89,6 +89,10 @@ tr:hover td{background:#f5f8f6}
 }
 .hidden{display:none!important}
 </style>
+<link rel="stylesheet" href="shared/ga.css">
+<script src="shared/ga-core.js"></script>
+<script src="shared/ga-import.js"></script>
+<script src="shared/ga-telegram.js"></script>
 </head>
 <body>
 
@@ -371,7 +375,7 @@ function localYMD(d){d=d||new Date();const p=n=>String(n).padStart(2,'0');return
 function init(){
 load();
 document.getElementById('gasUrl').value=localStorage.getItem('vrt_dsl_gas')||ACCFG.gasUrl||'';
-document.getElementById('tgToken').value=localStorage.getItem('vrt_dsl_tg_token')||ACCFG.tgToken||'';
+/* v2：Token 已移至 GAS，不再由瀏覽器保存 */try{localStorage.removeItem('vrt_dsl_tg_token')}catch(e){}
 document.getElementById('tgChat').value=localStorage.getItem('vrt_dsl_tg_chat')||ACCFG.tgChat||'';
 document.getElementById('sumDate').value=localYMD();
 setupDrop();updateHeader();updateDBCard();setLang(lang);
@@ -1009,7 +1013,8 @@ async function sendTgSummary(){
 const token=document.getElementById('tgToken').value.trim();const chatId=document.getElementById('tgChat').value.trim();
 if(!token||!chatId){toast('Set Telegram token & chat ID','err');return}
 genSummary();const text=document.getElementById('sumBox').textContent;
-try{await fetch(`https://api.telegram.org/bot${token}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chatId,text})});toast('Sent!')}catch(e){toast(e.message,'err')}
+/* v2：一律經 GAS 轉發，Token 不落地瀏覽器 */
+try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'ALL',lang:'both',chatId:chatId||'',text});toast('✈️ '+((r.data&&r.data.sent)||1)+' group(s)')}catch(e){toast(e.message,'err')}
 }
 
 // ═══════════════════════════════════════════════════════════
