@@ -1,47 +1,23 @@
-# AC-GA-EXP CHANGELOG
 
-## v2.0-alpha1 — 2026-07-31（基礎層）
+## v2.0-alpha2 — 2026-07-31（expense.html 佈線完成）
 
-### 新增檔案
-- `shared/ga-core.js` — 設定、GAS 客戶端（統一信封）、三語 i18n、本地日期、
-  期間控制（日/週/月/年，週一起算）、雲端六態指示器、表格（排序/搜尋/分頁）、
-  圖表登錄（destroy 後重建）、狀態代碼正規化、canonical record 戳記、安全除法
-- `shared/ga-import.js` — 智慧匯入：多檔多工作表自動辨識、表頭別名對應、
-  合計/簽核列略過、Excel serial date 時區安全、指紋去重、預覽與欄位配對 UI
-- `shared/ga-telegram.js` — Telegram 摘要／核可完全分離的視窗與送出邏輯
-- `shared/ga.css` — Onboarding 淺色緊湊樣式；桌機圖示＋文字、手機純圖示
+### expense.html 完整重寫（第一個接上共用引擎的模組）
+- **硬寫資料遷移**：原 HTML 內寫死的 201 筆 1–2 月交易，逐筆抽出為 canonical records
+  存入 `shared/exp-seed.js`（`sourceModule:'seed'`）。**已核對每類別總額與原矩陣完全一致**
+  （2026-01 = $10,181.88、2026-02 = $10,268.10），無任何資料遺失
+- **逐筆交易資料庫**取代原月度矩陣：txns[] 為正式資料結構，線上新增與 Excel 匯入同源
+- **六分頁**：總覽 KPI / 明細帳（排序搜尋分頁）/ 分類分析 / 期間趨勢 / 預算差異 / 新增費用
+- **統一期間控制列**：日／週／月／年、前後、下拉、日期選擇，週一起算
+- **完整三語**：i18n 字典 EN/KM 零缺漏；切 EN/KM 後 UI 無殘留中文
+  （類別 label 如「⚡ Electricity 電費」屬業務資料，依規範保持雙語不翻譯）
+- **圖表**：分類占比環圈、來源模組長條、分類金額橫條、期間趨勢折線（切期間 destroy 重建）
+- **雲端上/下載**：頁首圖示，六態指示；`expenseSave/Load` 走既有 chunked KV，相容
+- **智慧匯入**：接 `GA.smartImport`，Excel 費用自動辨識、去重、預覽
+- **Telegram 摘要**：`canApprove:false`（費用無核可流程），只發摘要、可選日/週/月/年與中英雙語
+- **手動新增費用**：預估／實際金額分開，線上逐筆建立
+- **來源可追溯**：每筆保留 sourceModule / recordId，為後續「PO/Repair/Fuel 自動彙總」預留
 
-### AC_GA_EXP.gs（補齊 ZIP 缺件並升級 v2）
-- **統一回應信封** `{ok,data,error,code,ts,revision}`；新增 `jsonErr()`
-- **伺服器端權限**：新增 `APPROVERS` 工作表為權限唯一真實來源；
-  `canDo()` 依角色矩陣驗證；Owner Telegram ID `5026942575` 預先寫入
-- **Session token**：GAS 簽發、含效期（12h）與 SHA-256 簽章，
-  取代 `?role=`/`?name=` 登入
-- **摘要與核可分離**：
-  - `tgSummary` — 純通知，`newGroupMsg(cid, html, null)` 永無按鈕，不改狀態
-  - `tgApproval` — 建立批次、帶原有核可按鈕、`idempotencyKey` 重送更新原訊息、
-    已關閉批次拒絕重送
-- **`handleBatchCallback`** — 以 `callback_query.from.id` 驗證權限，
-  `LockService` 防併發，全程寫入 `AUDIT_LOG`
-- 新增工作表：`APPROVERS`、`APPROVAL_BATCHES`、`AUDIT_LOG`、`IMPORT_LOG`、`SOURCE_LINKS`
-- 新增 action：`whoami`、`approvers`、`batchList`、`issueSession`
-- 新增 `initPlatformV2()`
-
-### 安全修正（已驗證）
-- **移除 fuel.html 與 receiving.html 的 `api.telegram.org` 直連**
-  → 全部改走 GAS `tgSummary`；全專案已無任何前端 Telegram 直連
-- **移除 `vrt_dsl_tg_token`** localStorage 保存
-- 全部 HTML 的 GAS URL 更新為新部署網址
-
-### 相容性
-- 所有既有 action 保留：`ping` `dashboard` `getGroups` `saveGroups` `notify`
-  `getState` `saveState` `getInventory` `saveInventory` `getHistory` `submit`
-  `voidPO` `repairHistory` `tempHistory` `repairSubmit` `tempSubmit`
-  `exportRecords` `recvLoad` `recvSave` `dieselLoad` `dieselSave`
-  `expenseLoad` `expenseSave` `all`
-- Bot 指令保留：`/order` `/po` `/purchase` `/repair` `/status` `/help` `/exp`
-- `GA.normStatus()` 將舊資料的「已核可 / Approved / 待審核」統一為代碼
-
-### 尚未完成（下一階段）
-各模組頁面尚未接上共用元件的 UI 佈線：頁首工具列、期間控制列、
-分析圖表、三語標記、Expense 硬寫資料遷移。程式庫已就緒，屬佈線工作。
+### 驗證（jsdom 實測通過）
+- GA 引擎載入、期間工具（週一起算、Excel serial 不跨日、ratio 分母 0 顯示「資料不足」）
+- 三語切換、i18n audit（EN/KM 缺漏 0）
+- seed 遷移總額核對一致、KPI 計算、DOM 渲染
