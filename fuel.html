@@ -89,10 +89,14 @@ tr:hover td{background:#f5f8f6}
 }
 .hidden{display:none!important}
 </style>
-<link rel="stylesheet" href="shared/ga.css">
+<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
+<script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+</script>
+
 </head>
 <body>
 

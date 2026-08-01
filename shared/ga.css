@@ -4,15 +4,15 @@
    桌機顯示圖示＋文字，手機只顯示圖示（title 仍保留完整說明）
    ════════════════════════════════════════════════════════════ */
 :root{
-  --ga-bg:#f1f5f9; --ga-card:#fff; --ga-line:#e2e8f0; --ga-line2:#f1f5f9;
-  --ga-txt:#0f172a; --ga-txt2:#475569; --ga-mut:#94a3b8;
-  --ga-sky:#0284c7; --ga-sky-l:#e0f2fe; --ga-sky-b:#bae6fd;
-  --ga-ind:#4f46e5; --ga-ind-l:#eef2ff; --ga-ind-b:#c7d2fe;
-  --ga-ok:#059669;  --ga-ok-l:#d1fae5;
-  --ga-warn:#d97706;--ga-warn-l:#fef3c7;
-  --ga-bad:#dc2626; --ga-bad-l:#fee2e2;
+  --ga-bg:#eef2f7; --ga-card:#fff; --ga-line:#cbd5e1; --ga-line2:#e8edf3;
+  --ga-txt:#0f172a; --ga-txt2:#334155; --ga-mut:#64748b;
+  --ga-sky:#0369a1; --ga-sky-l:#e0f2fe; --ga-sky-b:#7dd3fc;
+  --ga-ind:#4338ca; --ga-ind-l:#eef2ff; --ga-ind-b:#a5b4fc;
+  --ga-ok:#047857;  --ga-ok-l:#d1fae5;
+  --ga-warn:#b45309;--ga-warn-l:#fef3c7;
+  --ga-bad:#b91c1c; --ga-bad-l:#fee2e2;
   --ga-mono:'JetBrains Mono','IBM Plex Mono',ui-monospace,monospace;
-  --ga-sh:0 1px 3px rgba(15,23,42,.07);
+  --ga-sh:0 1px 3px rgba(15,23,42,.12);
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ga-bg);color:var(--ga-txt);

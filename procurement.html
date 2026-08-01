@@ -342,10 +342,14 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 .tgl input:checked+.tk+.kn{left:20px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="shared/ga.css">
+<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
+<script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+</script>
+
 </head>
 <body>
 
@@ -358,17 +362,21 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
       <p>General Affairs · 總務部</p>
     </div>
     <div class="fl">姓名 / Name</div>
-    <select class="fs" id="lu"></select>
-    <div class="fl" style="margin-top:6px">Telegram ID</div>
-    <input class="fi" id="lp" type="text" inputmode="numeric" placeholder="輸入你的 Telegram ID" maxlength="15"/>
+    <select class="fs" id="lu" onchange="onUserPick()"></select>
+    <div id="lrow-tg" style="display:none">
+      <div class="fl" style="margin-top:6px">Telegram ID（Owner 專用）</div>
+      <input class="fi" id="ltg" type="text" inputmode="numeric" placeholder="你的 Telegram ID" maxlength="15"/>
+    </div>
+    <div class="fl" style="margin-top:6px">PIN 密碼</div>
+    <input class="fi" id="lp" type="password" placeholder="輸入 PIN" maxlength="10"/>
     <button class="login-btn" onclick="doLogin()">🔐 登入 Login</button>
     <div id="lerr"></div>
     <div class="role-hint">
-      <div class="rh-t">角色說明 · 權限由伺服器驗證</div>
+      <div class="rh-t">角色說明</div>
       <div class="rh-row"><span>Applicant 申請人</span><span class="rh-badge" style="background:var(--blue-bg);color:var(--blue)">填寫提交</span></div>
       <div class="rh-row"><span>Review 審查人</span><span class="rh-badge" style="background:var(--amber-bg);color:var(--amber)">審核</span></div>
       <div class="rh-row"><span>Manager 核可人</span><span class="rh-badge" style="background:var(--orange-bg);color:var(--orange)">最終核可</span></div>
-      <div class="rh-row" style="margin-top:6px;color:var(--text2);font-size:10px">💡 由 Telegram 打 /exp 取得登入更方便</div>
+      <div class="rh-row"><span>Paul（Owner）</span><span class="rh-badge" style="background:#dcfce7;color:#15803d">ID＋密碼</span></div>
     </div>
   </div>
 </div>
@@ -751,10 +759,12 @@ async function exportYearExcel(year){
 // USERS
 // ════════════════════════════════
 const USERS = [
-  /* v2：PIN 已移除，權限一律由 GAS APPROVERS 驗證。此清單僅供下拉顯示。 */
-  {id:"u1", name:"Applicant", nameEn:"Applicant", role:"applicant"},
-  {id:"u2", name:"Review",    nameEn:"Review",    role:"verifier"},
-  {id:"u3", name:"Manager",   nameEn:"Manager",   role:"approver"},
+  /* 登入：一般角色用密碼；Owner（Paul）需「Telegram ID + 密碼」雙重驗證，
+     其他人即使知道密碼也進不了核可角色。 */
+  {id:"u1", name:"Applicant", nameEn:"Applicant", pin:"1111", role:"applicant"},
+  {id:"u2", name:"Review",    nameEn:"Review",    pin:"2222", role:"verifier"},
+  {id:"u3", name:"Manager",   nameEn:"Manager",   pin:"2026", role:"approver"},
+  {id:"u9", name:"Paul",      nameEn:"Paul",      pin:"2026", role:"owner", tgId:"5026942575"},
 ];
 const RC = {
   applicant:{label:"申請人",en:"Applicant",color:"#2563eb",bg:"#dbeafe",border:"#93c5fd"},
@@ -1052,6 +1062,7 @@ function initLogin(){
     opt.textContent=`${u.name} / ${u.nameEn}`;
     sel.appendChild(opt);
   });
+  onUserPick();
   // v2 自動登入：優先用 session token；否則若帶 uid 就向後端換 session
   if(_SESSION){
     GA.gasGet("whoami",{session:_SESSION}).then(r=>{
@@ -1081,24 +1092,33 @@ function enterApp(){
   showCloudLoading();
   loadStateCloud().then(()=>{ hideCloudLoading(); bootApp(); });
 }
+function onUserPick(){
+  const u=USERS.find(x=>x.id===document.getElementById("lu").value);
+  document.getElementById("lrow-tg").style.display=(u&&u.tgId)?"block":"none";
+}
 function doLogin(){
-  const tgId=document.getElementById("lp").value.trim();
+  const uid=document.getElementById("lu").value;
+  const pin=document.getElementById("lp").value;
   const err=document.getElementById("lerr");
-  if(!tgId){err.style.display="block";err.textContent="請輸入你的 Telegram ID";return;}
-  err.style.display="block";err.style.color="var(--text2)";err.textContent="驗證中…";
-  GA.gasPost("issueSession",{tgId:tgId}).then(r=>{
-    const d=r.data;
-    if(d&&d.session){
-      GA.setSession(d.session);
-      cu={id:"tg",name:d.name,nameEn:d.name,role:d.role};
-      enterApp();
-    }else{
-      err.style.color="var(--red)";err.textContent="❌ 此 Telegram ID 未授權";
-    }
-  }).catch(e=>{
-    err.style.color="var(--red)";
-    err.textContent="❌ "+(e.code==="NO_PERM"?"此 Telegram ID 未授權":e.message);
-  });
+  err.style.display="block"; err.style.color="var(--red)";
+  if(!uid){err.textContent="請選擇姓名";return;}
+  const user=USERS.find(u=>u.id===uid);
+  if(!user){err.textContent="使用者不存在";return;}
+  // Owner：必須 Telegram ID + 密碼皆正確
+  if(user.tgId){
+    const tg=document.getElementById("ltg").value.trim();
+    if(tg!==user.tgId){err.textContent="❌ Telegram ID 不正確";return;}
+  }
+  if(user.pin!==pin){err.textContent="❌ PIN 錯誤，請重試";return;}
+  cu={...user};
+  err.style.display="none";
+  // 向 GAS 換 session（供送核可用；失敗仍可離線操作與提交）
+  if(user.tgId){
+    GA.gasPost("issueSession",{tgId:user.tgId})
+      .then(r=>{ if(r.data&&r.data.session) GA.setSession(r.data.session); })
+      .catch(()=>{});
+  }
+  enterApp();
 }
 function doLogout(){
   try{ GA.saveCfg({session:''}); }catch(e){}
@@ -1218,14 +1238,14 @@ function renderGrid(){
         </div>
         ${editable?`
         <div class="qrow">
-          <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ(${item.id},-1)">−</button>
+          <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ('${item.id}',-1)">−</button>
           <input class="qinput" type="number" min="0" value="${o.qty}"
             style="${on?`border-color:${col}66;color:${col}`:""}"
-            oninput="setQ(${item.id},this.value)"/>
-          <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ(${item.id},1)">+</button>
-          <span class="qunit" onclick="openUnitEdit(${item.id},'${item.name}')" title="點擊修改單位">${unit}</span>
+            oninput="setQ('${item.id}',this.value)"/>
+          <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ('${item.id}',1)">+</button>
+          <span class="qunit" onclick="openUnitEdit('${item.id}','${item.name}')" title="點擊修改單位">${unit}</span>
         </div>
-        <input class="noteinput" placeholder="${lang==="zh"?"備註...":"Note..."}" value="${o.note}" oninput="setN(${item.id},this.value)"/>
+        <input class="noteinput" placeholder="${lang==="zh"?"備註...":"Note..."}" value="${o.note}" oninput="setN('${item.id}',this.value)"/>
         `:`<div style="font-size:12px;font-weight:700;color:${on?col:"var(--text3)"};">${on?o.qty+" "+unit:"—"}</div>`}
       </div>
     </div>`;
@@ -1411,7 +1431,7 @@ function renderInv(){
         <td><div class="itd-num" style="color:${close>0&&close<=safety?"var(--red)":"var(--text)"}">${autoClose>=0?autoClose:0}</div></td>
         <td><div class="itd-num" style="color:var(--text2)">${safety}</div></td>
         <td style="text-align:center">${statusTxt}</td>
-        <td><button class="unit-edit" onclick="openUnitEdit(${item.id},'${item.name}')">${unit} ✏️</button></td>
+        <td><button class="unit-edit" onclick="openUnitEdit('${item.id}','${item.name}')">${unit} ✏️</button></td>
         <td><input class="noteinput" style="width:100px" placeholder="備註..." value="${r.note}"
           onchange="updateInv(${selM},${item.id},'note',this.value)"/></td>
       </tr>`;
@@ -1447,7 +1467,7 @@ function renderInv(){
               <div style="font-size:12px;font-weight:700;color:var(--text)">${lang==="zh"?item.cn:item.name}${mBadge}${missPill}</div>
               <div style="font-size:10px;color:var(--text2)">${lang==="zh"?item.name:item.cn}</div>
             </div>
-            <button class="unit-edit" onclick="openUnitEdit(${item.id},'${item.name}')">${unit} ✏️</button>
+            <button class="unit-edit" onclick="openUnitEdit('${item.id}','${item.name}')">${unit} ✏️</button>
           </div>
           <div class="inv-card-body">
             <div class="inv-field">
@@ -2048,9 +2068,9 @@ function generatePONumber(){
 
 function rbAction(ok){
   if(cu.role==="verifier") doVerify(ok);
-  else if(cu.role==="approver") doApprove(ok);
-  else if(cu.role==="applicant"&&poStatus==="rejected"&&ok) doEditRejected();
-  else if(cu.role==="applicant"&&poStatus==="approved"&&ok) doStartNewPO();
+  else if(["approver","owner"].includes(cu.role)) doApprove(ok);
+  else if(["applicant","owner"].includes(cu.role)&&poStatus==="rejected"&&ok) doEditRejected();
+  else if(["applicant","owner"].includes(cu.role)&&poStatus==="approved"&&ok) doStartNewPO();
 }
 
 function doStartNewPO(){
@@ -2177,7 +2197,7 @@ function resetAll(){
 // ════════════════════════════════
 function openMod(){
   // Allow verifier/approver to view modal even if they haven't selected items
-  if(totalN()===0&&cu.role==="applicant") return;
+  if(totalN()===0&&["applicant","owner"].includes(cu.role)) return;
   renderModalBody();
   document.getElementById("ov").classList.add("open");
 }
@@ -2243,7 +2263,7 @@ function renderModalBody(){
   if(cu.role==="verifier"&&poStatus==="submitted"){
     aa=`<button class="act-btn" style="background:var(--green);color:#fff" onclick="doVerify(true)">✅ 審查通過</button>
         <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doVerify(false)">↩ 退回修改</button>`;
-  } else if(cu.role==="approver"&&(poStatus==="verified"||poStatus==="submitted")){
+  } else if(["approver","owner"].includes(cu.role)&&(poStatus==="verified"||poStatus==="submitted")){
     aa=`<button class="act-btn" style="background:var(--orange);color:#fff" onclick="doApprove(true)">✅ 核可</button>
         <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doApprove(false)">❌ 拒絕</button>`;
   } else if(poStatus==="approved"){
