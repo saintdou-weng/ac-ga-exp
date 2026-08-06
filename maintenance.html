@@ -165,6 +165,7 @@
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
 if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
 </script>
@@ -419,7 +420,8 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <div class="stat-card"><div class="stat-label" id="reprec-sl-rejected">已退件</div><div class="stat-value" id="rep-sv-rejected" style="color:var(--red)">0</div></div>
   </div>
 
-  <div class="ga-charts" id="rep-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">狀態 Status</div><div class="ga-chart-box"><canvas id="rep-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">部門 Dept</div><div class="ga-chart-box"><canvas id="rep-ch-dept"></canvas></div></div></div>
+  <div class="ga-kpis" id="rep-extra-kpi" style="margin-bottom:10px"></div>
+  <div class="ga-charts" id="rep-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">🔧 設備故障排行 Top Failing Equipment</div><div class="ga-chart-box"><canvas id="rep-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">🚨 緊急程度 Urgency</div><div class="ga-chart-box"><canvas id="rep-ch-dept"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">📍 地點分布 Location</div><div class="ga-chart-box"><canvas id="rep-ch-loc"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">💰 維修成本 Top Cost</div><div class="ga-chart-box"><canvas id="rep-ch-cost"></canvas></div></div></div>
   <div class="rec-wrap" id="rep-rec-wrap">
     <div class="empty-state"><div class="ei">🔧</div><div id="reprec-empty">選擇條件後點「查詢」 · Select filters and query</div></div>
   </div>
@@ -915,11 +917,16 @@ function renderStats(sys,records){
   document.getElementById(sys+'-sv-rejected').textContent=records.filter(r=>r[13]==='已退件').length;
   document.getElementById(sys+'-stats').style.display='flex';
 }
-/* 分析圖：狀態分布 + 部門分布（依目前期間過濾後的資料）*/
+/* 分析圖：依模組給不同視角
+   · 臨採 po：狀態 + 部門（採購關心誰在買）
+   · 維修 rep：設備故障排行 + 緊急程度 + 地點 + 維修成本（維修關心什麼壞、多急、多貴）*/
 function renderRecCharts(sys,records){
   const box=document.getElementById(sys+'-charts');
   if(!records.length){ if(box)box.style.display='none'; return; }
   if(box)box.style.display='grid';
+
+  if(sys==='rep'){ renderRepairCharts(records); return; }
+
   const byStatus={};records.forEach(r=>{const s=r[13]||'待審核';byStatus[s]=(byStatus[s]||0)+1;});
   GA.chart(sys+'-ch-status',{type:'doughnut',
     data:{labels:Object.keys(byStatus),datasets:[{data:Object.values(byStatus),backgroundColor:['#f59e0b','#10b981','#ef4444','#94a3b8'],borderWidth:1}]},
@@ -929,6 +936,55 @@ function renderRecCharts(sys,records){
   GA.chart(sys+'-ch-dept',{type:'bar',
     data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),backgroundColor:'#0284c7',borderRadius:5}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:9},precision:0}},y:{ticks:{font:{size:9}}}}}});
+}
+
+/* ── 維修專屬分析 ──
+   欄位：4=設備名稱 6=地點 7=故障描述 9=緊急程度 11=預估金額 13=狀態 */
+function renderRepairCharts(records){
+  // 1) 設備故障次數排行（什麼最常壞）
+  const byEquip={};
+  records.forEach(r=>{ const e=(r[4]||'—').toString().trim(); byEquip[e]=(byEquip[e]||0)+1; });
+  const topE=Object.entries(byEquip).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  GA.chart('rep-ch-status',{type:'bar',
+    data:{labels:topE.map(x=>x[0]),datasets:[{label:'次數',data:topE.map(x=>x[1]),backgroundColor:'#0d9488',borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{font:{size:9},precision:0}},y:{ticks:{font:{size:9}}}}}});
+
+  // 2) 緊急程度分布
+  const byUrg={};
+  records.forEach(r=>{ let u=(r[9]||'normal').toString().toLowerCase();
+    u=/urgent|緊急/.test(u)?'🚨 緊急':/critical|重大/.test(u)?'⛔ 重大':'一般';
+    byUrg[u]=(byUrg[u]||0)+1; });
+  GA.chart('rep-ch-dept',{type:'doughnut',
+    data:{labels:Object.keys(byUrg),datasets:[{data:Object.values(byUrg),backgroundColor:['#ef4444','#b91c1c','#94a3b8'],borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9}}}}}});
+
+  // 3) 地點分布
+  const byLoc={};
+  records.forEach(r=>{ const l=(r[6]||'—').toString().trim(); byLoc[l]=(byLoc[l]||0)+1; });
+  const topL=Object.entries(byLoc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  GA.chart('rep-ch-loc',{type:'bar',
+    data:{labels:topL.map(x=>x[0]),datasets:[{label:'次數',data:topL.map(x=>x[1]),backgroundColor:'#8b5cf6',borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,ticks:{font:{size:9},precision:0}},x:{ticks:{font:{size:9},maxRotation:45}}}}});
+
+  // 4) 維修成本 Top（哪台設備最花錢）
+  const costBy={};
+  records.forEach(r=>{ const e=(r[4]||'—').toString().trim(); costBy[e]=(costBy[e]||0)+GA.num(r[11]); });
+  const topC=Object.entries(costBy).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  GA.chart('rep-ch-cost',{type:'bar',
+    data:{labels:topC.map(x=>x[0]),datasets:[{label:'金額 $',data:topC.map(x=>Math.round(x[1]*100)/100),backgroundColor:'#f59e0b',borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
+
+  // KPI 補充：總維修成本、平均、重複故障設備數
+  const totalCost=records.reduce((a,r)=>a+GA.num(r[11]),0);
+  const repeat=Object.values(byEquip).filter(v=>v>1).length;
+  const el=document.getElementById('rep-extra-kpi');
+  if(el) el.innerHTML=
+    '<div class="ga-kpi" style="--kc:#f59e0b"><div class="ga-kpi-l">維修總成本</div><div class="ga-kpi-v">'+GA.money(totalCost,2)+'</div></div>'+
+    '<div class="ga-kpi" style="--kc:#0d9488"><div class="ga-kpi-l">平均每筆</div><div class="ga-kpi-v">'+GA.money(records.length?totalCost/records.length:0,2)+'</div></div>'+
+    '<div class="ga-kpi" style="--kc:#ef4444"><div class="ga-kpi-l">重複故障設備</div><div class="ga-kpi-v">'+repeat+'</div></div>';
 }
 
 /* ── Excel 匯出（全 16 欄與 Sheet 對齊）── */

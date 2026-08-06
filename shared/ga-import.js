@@ -81,6 +81,7 @@ var TYPES = {
     module: 'expense', icon: '💰',
     label: { zh: '費用 Expense', en: 'Expense', km: 'ចំណាយ' },
     nameHints: ['expense', '費用', 'cost', '支出', 'budget', '預算'],
+    negHints: ['repair', '維修', 'forklift', '叉車', 'maintenance', 'purchase', '採購'],
     headHints: [['amount', '金額', 'cost', '費用'], ['category', '類別', '分類', 'date', '日期']],
     approval: false
   }
@@ -103,7 +104,7 @@ SI.register = function (type, handler) { CUSTOM[type] = handler; };
 /* ═══════════ 3. 表頭偵測 ═══════════ */
 function norm(v) {
   return String(v === null || v === undefined ? '' : v).trim().toLowerCase()
-    .replace(/[\s_\-\.\/()（）]/g, '');
+    .replace(/[\s_\-\.\/()（）'’`,:：]/g, '');   // 含單引號：Q'ty → qty
 }
 /* 找出最像表頭的那一列（前 15 列中，非空字串最多且不含大量數字者） */
 function findHeaderRow(rows) {
@@ -123,7 +124,15 @@ function findHeaderRow(rows) {
 }
 function headerCells(rows, hi) {
   if (hi < 0) return [];
-  return (rows[hi] || []).map(norm);
+  var a = (rows[hi] || []).map(norm);
+  // 表頭常跨兩列（例：上列 Received、下列 Date）→ 合併下一列補強
+  var b = (rows[hi + 1] || []).map(norm);
+  return a.map(function (v, i) {
+    var w = b[i] || '';
+    if (!v) return w;
+    if (w && w !== v) return v + w;   // received + date → receiveddate
+    return v;
+  });
 }
 
 /* ═══════════ 4. 類型判定 ═══════════ */
@@ -154,7 +163,7 @@ SI.detect = function (ctx) {
     if (CUSTOM[t] && CUSTOM[t].detect) {
       try {
         var cs = CUSTOM[t].detect(ctx);
-        if (cs > 0) { s += cs * 5; why.push('模組解析器辨識'); }
+        if (cs > 0) { s += cs * 12; why.push('專用格式解析器辨識'); }   // 專用格式優先於一般關鍵字
       } catch (e) {}
     }
     scores[t] = s; reasons[t] = why;
@@ -179,20 +188,26 @@ SI.detect = function (ctx) {
 
 /* ═══════════ 5. 通用長表解析（一列一筆）═══════════ */
 var FIELD_ALIASES = {
-  date:      ['date', '日期', 'day', 'transactiondate', '交易日期', 'docdate'],
-  item:      ['item', 'itemname', '品項', '品名', 'description', 'desc', 'material', '物料', 'product'],
-  qty:       ['qty', 'quantity', '數量', 'pcs', 'amountqty'],
+  date:      ['date', '日期', 'day', 'transactiondate', '交易日期', 'docdate',
+              'received', 'receiveddate', 'receiveddate', 'datereceived', 'mnth', 'month'],
+  item:      ['item', 'itemname', '品項', '品名', 'description', 'desc', 'descitem',
+              'material', '物料', 'product', 'descriptions'],
+  qty:       ['qty', 'quantity', '數量', 'pcs', 'amountqty', 'qty1', 'qtty'],
+  spec:      ['spec', 'size', 'sizespec', '規格', 'specification'],
   unit:      ['unit', '單位', 'uom'],
-  price:     ['price', 'unitprice', '單價', 'cost'],
-  amount:    ['amount', '金額', 'total', 'totalamount', '合計', 'subtotal', 'value'],
+  brand:     ['brand', '品牌'],
+  price:     ['price', 'unitprice', '單價', 'cost', 'up', 'u/p', 'unitprice$'],
+  amount:    ['amount', '金額', 'total', 'totalamount', '合計', 'subtotal', 'value',
+              'ttl', 'totalprice', 'amount$', 'grandtotal'],
   dept:      ['dept', 'department', '部門', '需求部門', 'section'],
   applicant: ['applicant', '申請人', 'requester', 'requestedby', 'by', 'name', 'staff'],
-  supplier:  ['supplier', '供應商', 'vendor', 'shop'],
-  remarks:   ['remark', 'remarks', '備註', 'note', 'notes', 'comment'],
+  supplier:  ['supplier', 'suppliers', '供應商', 'vendor', 'shop', 'shop1', 'shop2'],
+  remarks:   ['remark', 'remarks', '備註', 'note', 'notes', 'comment', 'purpose', '用途'],
   status:    ['status', '狀態', 'state'],
   poNo:      ['pono', 'po', 'ponumber', 'po號', '採購單號', 'ordernumber', 'docno'],
   repairNo:  ['repairno', '維修號', 'repairnumber', 'jobno', 'workorder'],
-  location:  ['location', '地點', '位置', 'room', 'area', 'place', 'site'],
+  location:  ['location', '地點', '位置', 'room', 'area', 'place', 'site',
+              'localstaffhosue', 'localstaffhouse', 'expatstaffhouse', 'factory'],
   issue:     ['issue', '故障', '故障描述', 'problem', 'fault', 'symptom', 'description'],
   action:    ['action', '處理', '處理方式', 'solution', 'remedy'],
   urgency:   ['urgency', '緊急', '緊急程度', 'priority'],
@@ -574,3 +589,176 @@ SI.openModal = function (opt) {
 };
 
 })(window);
+
+/* ════════════════════════════════════════════════════════════════════
+   VRT 實際檔案格式專用解析器（依 Paul 提供的真實檔案調校）
+   ──────────────────────────────────────────────────────────────────
+   A. VRT_General_Expense_2026.xlsb 的分類工作表（Electric / Water /
+      Security / Paper ...）：寬表，每列一個月，橫向是 Old/New/
+      Consumption/Unit price/Amount，且可能有多個區塊（Factory /
+      Expat staff house）。
+   B. VRT_Repair-Maintainance.xlsb 的 Forklift 工作表：左右並排兩台
+      設備，各自 Mnth / Description / U/P / Amount / Date / Supplier。
+   ════════════════════════════════════════════════════════════════ */
+(function () {
+  var GA = window.GA; if (!GA || !GA.smartImport) return;
+  var SI = GA.smartImport;
+
+  var MON = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 };
+  function monthOf(v) {
+    var s = String(v == null ? '' : v).trim().toLowerCase().slice(0, 3);
+    return MON[s] || 0;
+  }
+  function yearOf(rows) {
+    // 從前幾列找 4 位數年份
+    for (var i = 0; i < Math.min(8, rows.length); i++) {
+      for (var j = 0; j < (rows[i] || []).length; j++) {
+        var m = String(rows[i][j] == null ? '' : rows[i][j]).match(/(20\d{2})/);
+        if (m) return +m[1];
+      }
+    }
+    return new Date().getFullYear();
+  }
+
+  /* ── A. 費用分類寬表 ── */
+  SI.register('expense', {
+    detect: function (ctx) {
+      var rows = ctx.rows || [];
+      // 維修/採購表交給各自的解析器，不在此攔截
+      var head8 = rows.slice(0, 8).map(function (r) { return (r || []).join('|'); }).join('|').toLowerCase();
+      if (/repair|maintenance|forklift|description/.test(head8)) return 0;
+      // 特徵：某欄由上往下出現 Jan/Feb/Mar…，且同列有 Amount 類數字
+      var monthCol = -1, hits = 0;
+      for (var i = 0; i < Math.min(30, rows.length); i++) {
+        var r = rows[i] || [];
+        for (var j = 0; j < Math.min(6, r.length); j++) {
+          if (monthOf(r[j])) { if (monthCol < 0) monthCol = j; if (j === monthCol) hits++; }
+        }
+      }
+      return hits >= 4 ? 0.9 : 0;    // 至少 4 個月份 → 認定為寬表
+    },
+    parse: function (ctx) {
+      var rows = ctx.rows || [], out = [];
+      var year = yearOf(rows);
+      var cat = String(ctx.sheetName || 'other').trim().toLowerCase().replace(/\s+/g, '_');
+      // 找月份欄
+      var monthCol = -1;
+      for (var i = 0; i < Math.min(30, rows.length) && monthCol < 0; i++) {
+        var r = rows[i] || [];
+        for (var j = 0; j < Math.min(6, r.length); j++) if (monthOf(r[j])) { monthCol = j; break; }
+      }
+      if (monthCol < 0) return [];
+      // 找「Amount」欄（表頭含 amount / total price）
+      var amtCols = [];
+      for (var h = 0; h < Math.min(8, rows.length); h++) {
+        (rows[h] || []).forEach(function (c, j) {
+          var t = String(c == null ? '' : c).toLowerCase().replace(/\s|\n/g, '');
+          if (/amount|totalprice/.test(t) && amtCols.indexOf(j) < 0) amtCols.push(j);
+        });
+      }
+      if (!amtCols.length) {
+        // 退而求其次：月份欄右側第一個全為數字的欄
+        for (var j2 = monthCol + 1; j2 < 14; j2++) {
+          var num = 0;
+          rows.forEach(function (r) { if (typeof r[j2] === 'number' && r[j2] > 0) num++; });
+          if (num >= 3) { amtCols.push(j2); break; }
+        }
+      }
+      var curMonth = 0;
+      rows.forEach(function (r, ri) {
+        if (!r) return;
+        var m = monthOf(r[monthCol]);
+        if (m) curMonth = m;
+        if (!curMonth) return;
+        // 略過 TTL / G.TTL 小計列
+        var lab = String(r[monthCol] == null ? '' : r[monthCol]).toUpperCase();
+        if (/TTL|TOTAL/.test(lab)) return;
+        amtCols.forEach(function (ac, idx) {
+          var v = r[ac];
+          if (typeof v !== 'number' || !isFinite(v) || v === 0) return;
+          if (v < 0) return;                      // G.TTL 常為負值彙總
+          out.push({
+            date: year + '-' + String(curMonth).padStart(2, '0') + '-01',
+            category: cat,
+            item: ctx.sheetName + (amtCols.length > 1 ? (' #' + (idx + 1)) : ''),
+            amount: Math.round(v * 100) / 100,
+            estAmount: Math.round(v * 100) / 100,
+            sourceModule: 'excel',
+            _row: ri + 1
+          });
+        });
+      });
+      return out;
+    }
+  });
+
+  /* ── B. 維修：左右並排設備區塊 ── */
+  SI.register('repair', {
+    detect: function (ctx) {
+      var joined = (ctx.rows || []).slice(0, 8).map(function (r) {
+        return (r || []).join('|');
+      }).join('|').toLowerCase();
+      // 特徵：含 maintenance/repair 且有 Mnth 與 Description
+      return (/maintenance|repair/.test(joined) && /mnth|month/.test(joined) && /description/.test(joined)) ? 0.9 : 0;
+    },
+    parse: function (ctx) {
+      var rows = ctx.rows || [], out = [];
+      var year = yearOf(rows);
+      // 找出所有「Mnth」欄位（每個代表一個設備區塊）
+      var blocks = [];
+      for (var i = 0; i < Math.min(10, rows.length); i++) {
+        (rows[i] || []).forEach(function (c, j) {
+          var t = String(c == null ? '' : c).trim().toLowerCase();
+          if ((t === 'mnth' || t === 'month') && !blocks.some(function (b) { return b.monthCol === j; })) {
+            blocks.push({ monthCol: j, headerRow: i });
+          }
+        });
+      }
+      if (!blocks.length) return [];
+      // 每個區塊：monthCol, +1=Description, +2=U/P, +3=Amount, +4=Date, +5=Supplier
+      blocks.forEach(function (b, bi) {
+        // 設備名稱：往上找該欄附近的標題
+        var equip = '';
+        for (var h = 0; h < b.headerRow; h++) {
+          for (var j = b.monthCol; j < b.monthCol + 6; j++) {
+            var t = String((rows[h] || [])[j] == null ? '' : rows[h][j]);
+            if (/forklift|machine|truck|設備/i.test(t)) { equip = t.trim(); break; }
+          }
+          if (equip) break;
+        }
+        if (!equip) equip = (ctx.sheetName || 'Equipment') + ' #' + (bi + 1);
+
+        var curMonth = 0;
+        rows.forEach(function (r, ri) {
+          if (!r || ri <= b.headerRow) return;
+          var m = monthOf(r[b.monthCol]);
+          if (m) curMonth = m;
+          var desc = r[b.monthCol + 1];
+          var amt = r[b.monthCol + 3];
+          if (amt === undefined) amt = r[b.monthCol + 2];
+          if (!desc || !String(desc).trim()) return;
+          if (typeof amt !== 'number' || !isFinite(amt) || amt === 0) {
+            // 無金額也保留（維修有時免費/保固）
+            amt = 0;
+          }
+          var dv = r[b.monthCol + 4];
+          var dateStr = dv ? GA.excelDate(dv) : '';
+          if (!dateStr && curMonth) dateStr = year + '-' + String(curMonth).padStart(2, '0') + '-01';
+          out.push({
+            date: dateStr,
+            item: equip,                                   // 設備
+            issue: String(desc).trim(),                    // 故障/維修內容
+            action: String(desc).trim(),
+            price: GA.num(r[b.monthCol + 2]),
+            amount: GA.num(amt),
+            supplier: String(r[b.monthCol + 5] == null ? '' : r[b.monthCol + 5]).trim(),
+            location: equip,
+            dept: 'Maintenance',
+            _row: ri + 1
+          });
+        });
+      });
+      return out;
+    }
+  });
+})();

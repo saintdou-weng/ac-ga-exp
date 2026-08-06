@@ -68,3 +68,105 @@
 - index.html（**改淡色系** + Dashboard 接數據）← 最後收尾
 - README / TEST_CHECKLIST、xlsx 範本
 - 庫存結轉邏輯（另議）
+
+## v2.0-alpha6 — 2026-07-31（index 淡色 + 兩個 bug 修正 + 交接文件）
+
+### index.html — 全新淡色系（用戶指定）
+- 深黑底（#0d0f14）改為與其他模組一致的淺色（沿用 shared/ga.css 變數）
+- Dashboard 六格 KPI 可點擊直接進對應模組
+- 設定中心／群組管理改用 GA 統一客戶端與 modal 樣式
+- 三語切換、雲端六態狀態燈
+
+### 🐞 Bug 修正
+1. **自訂品項無法選取（procurement）**
+   樣板字串 `chQ(${item.id},-1)` 未加引號 → 字串 id（自訂品項）被當 JS 變數名 →
+   ReferenceError → 數量按鈕失效、卡片不變色、無法送核。
+   已全面修正為 `chQ('${item.id}',-1)`（含 setQ/setN/openUnitEdit 等 7 處）
+2. **登入方式改回密碼（依用戶要求）**
+   - Applicant 1111 / Review 2222 / Manager 2026
+   - **Paul（Owner）需 Telegram ID + 密碼雙重驗證**，他人無法進入核可
+   - Owner 同時具申請與核可權限（可送核、可核可）
+   - 實測：錯 ID 擋下、錯密碼擋下、雙對放行
+
+### 📄 新增 系統架構與交接_HANDOVER.md
+供新對話窗接手用：架構、共用 API、不可破壞規則、進度、異常處理、開場建議
+
+### ⏳ 待辦（已寫入交接文件第八節）
+- 摘要底部加 Dashboard
+- 群組核可完成後產生可下載文件
+- 異常報告推送
+- 庫存結轉邏輯（另議）
+- README / TEST_CHECKLIST、xlsx 範本
+
+## v2.0-alpha7 — 2026-07-31（單獨開檔修正 + 加深淡色）
+
+### 🐞 修正「GA is not defined」與「看起來沒框沒底」
+根因：單獨開一個 HTML 檔（下載後直接開／App 預覽）時，找不到旁邊的 shared/ 資料夾，
+導致 ga.css（樣式）與 ga-core.js（功能）都沒載入 →「GA is not defined」、姓名下拉空白、
+採購進不去、畫面沒框沒底看起來很淡。
+
+修正：
+- 所有 6 個 HTML 加入**自動補救**：若相對路徑的 shared/ 載入失敗，
+  自動改從 GitHub 絕對網址（saintdou-weng.github.io/ac-ga-exp/shared/）補載
+  - CSS 用 `<link onerror>` 切換
+  - JS 用 `typeof GA==="undefined"` 偵測後 document.write 絕對網址
+  - 實測：單獨開檔時會自動去 GitHub 補載 ga-core.js
+- **前提**：shared/ 資料夾至少要上傳到 GitHub 一次，補救才抓得到
+
+### 🎨 加深淡色（用戶反映太淡看不到框跟字）
+- ga.css 邊框 #e2e8f0 → #cbd5e1；次要文字 #475569 → #334155；提示色 #94a3b8 → #64748b
+- 主色加深一階（sky #0284c7→#0369a1 等），對比更明顯
+- index KPI 卡與模組卡邊框 1px → 1.5px，左側色條 3px → 4px，標籤字加粗
+
+## v2.1 — 2026-07-31（三大平台功能 + 文件收尾）
+
+### 三大功能（Paul 要求）
+1. **摘要底部附 Dashboard**：`handleTgSummary` 每則摘要底部自動附平台六大概況
+   （採購/臨採/維修/收貨/柴油/費用），`buildDashboardBlock()`
+2. **核可完成產生可下載文件**：`handleBatchCallback` 核可通過後 `generateApprovalDoc()`
+   建 Google Sheet（知連結可讀），回貼 Excel/PDF/線上檢視三個連結到 Telegram 訊息
+3. **異常報告**：`computeAnomalies()` 檢查低庫存、超預算、逾期未核(>3天)、
+   油耗異常(>30 L/100km)；`/anomaly` `/dashboard` 指令、index「⚠️ 異常」鈕、
+   `anomalyReport` action 觸發推送
+- `handleDashboard` 拆出可重用的 `computeDashboard()`，並支援 expense v2（逐筆 txns）
+- 需 Drive 權限（產生文件），initPlatformV2 首次授權時一併允許
+
+### 文件收尾
+- README.md 更新（部署、登入、指令、三大功能、FAQ）
+- TEST_CHECKLIST.md（逐項測試清單）
+- AC_GA_EXP_Import_Template.xlsx（智慧匯入範本，含說明頁與五模組範例）
+- 交接文件標記前三項完成
+
+## v2.2 — 2026-08-05（VRT 真實 Excel 格式解析 + 維修專屬分析）
+
+### 🐞 修正：expense 讀不到 General Expense / Purchase Report
+根因：這些檔案的格式通用解析器讀不到——
+表頭不在第 1 列、日期是 Excel serial、月份/類別分頁的寬表、
+同分頁左右並排多區塊、部分金額欄是瑞爾不是美金。
+
+新增 `shared/ga-vrt-parsers.js`，針對 Paul 實際檔案寫專用解析器並註冊進智慧匯入：
+| 來源 | 解析結果（實測對照原檔） |
+|---|---|
+| Purchasing_Record › `purchase ` | 17 筆，合計 **$1,228.90**（與原檔 TTL 一致）|
+| other_repair-expenses › `expenses` | 152 筆，合計 **$4,466.10**（與原檔 TTL 一致）|
+| Repair-Maintainance › `Forklift` | 26 筆，$1,370（左右兩台並排、月份向下填滿）|
+| General_Expense › 類別分頁 | Electric 30 筆，2024-01 = $4,445.38 |
+| General_Expense › 月份分頁 | Jan 6 筆，Clinic 357.6 / Security 840+1960 等 |
+
+處理要點：
+- **幣別**：Amount(R) 是瑞爾，右側標 `$` 的才是美金 → 自動取美金欄，
+  避免把 510,270 R 當成美金加總
+- **負數列**：來源檔某月「New 讀數」未填時公式算出負值 → 跳過並記錄原因，
+  可查 `GA.vrtParsers.skipped`
+- **WATER 瑞爾金額**：標記 `需確認匯率`，不直接當美金計入
+- Excel serial 日期正確轉換（46059 → 2026-02-06）
+- ⚠️ `.xlsb` 在瀏覽器端 SheetJS 支援有限，若讀不到請先另存 `.xlsx`
+
+### 🔧 維修分析改為專屬視角（原本與臨採同格式）
+維修記錄分頁不再只有「狀態＋部門」，改為維修真正關心的四張圖：
+1. **設備故障排行** — 什麼設備最常壞
+2. **緊急程度分布** — 緊急/重大/一般
+3. **地點分布** — 哪裡最常出問題
+4. **維修成本 Top** — 哪台設備最花錢
+另加三個 KPI：維修總成本、平均每筆、重複故障設備數。
+臨採分頁維持原本的狀態＋部門（採購關心誰在買），兩者視角分開。
