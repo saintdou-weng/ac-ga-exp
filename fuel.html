@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="ac-ga-exp-build" content="20260808-4">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>AC-GA-EXP · Fuel Center 燃油中心</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -105,7 +109,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <!-- HEADER -->
 <div class="header">
 <div class="logo">🛢️</div>
-<div><div class="h-title" id="hTitle">AC-GA-EXP 燃油中心</div><div class="h-sub">Fuel Center · Diesel Management · <a href="index.html" style="color:inherit;text-decoration:underline">🏠 平台首頁</a></div></div>
+<div><div class="h-title" id="hTitle">AC-GA-EXP 燃油中心</div><div class="h-sub"><span class="tl" data-k="fuelSub">Fuel Center · Diesel Management</span> · <a href="index.html" style="color:inherit;text-decoration:underline"><span class="tl" data-k="home">🏠 平台首頁</span></a></div></div>
 <div class="h-stats">
 <div class="hstat"><div class="hstat-v" id="hDrv">0</div><div class="hstat-l tl" data-k="hlDrv">司機記錄</div></div>
 <div class="hstat"><div class="hstat-v" id="hFork">0</div><div class="hstat-l tl" data-k="hlFork">叉車記錄</div></div>
@@ -114,11 +118,11 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 </div>
 <div id="ga-cloud" class="ga-cloud idle" style="margin:0 6px"></div>
 <div style="display:flex;gap:5px;align-items:center">
-<button class="btn btn-b" style="padding:6px 10px" onclick="cloudUpload()" title="上傳雲端 Upload">⬆️☁</button>
-<button class="btn btn-b" style="padding:6px 10px" onclick="cloudDownload()" title="下載雲端 Download">⬇️☁</button>
-<button class="btn btn-b" style="padding:6px 10px" onclick="fuelImport()" title="智慧匯入 Smart Import">📥</button>
-<button class="btn btn-b" style="padding:6px 10px" onclick="fuelTelegram()" title="Telegram 摘要 Summary">✈️</button>
-<button class="btn btn-b" style="padding:6px 10px" onclick="fuelDataPanel()" title="資料管理 Data">🗂️</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="cloudUpload()" data-fuel-title="uploadCloud" title="上傳雲端 Upload">⬆️☁</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="cloudDownload()" data-fuel-title="downloadCloud" title="下載雲端 Download">⬇️☁</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelImport()" data-fuel-title="smartImport" title="智慧匯入 Smart Import">📥</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelTelegram()" data-fuel-title="telegramSummary" title="Telegram 摘要 Summary">✈️</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelDataPanel()" data-fuel-title="dataManagement" title="資料管理 Data">🗂️</button>
 </div>
 <div class="lang-group">
 <button class="lang-btn on" data-l="zh" onclick="setLang('zh')">中文</button>
@@ -129,13 +133,13 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- TABS -->
 <div class="tabs" id="tabBar">
-<div class="tab on" data-t="upload" onclick="goTab('upload',this)">📥 <span class="tl" data-k="tUpload">匯入資料</span></div>
-<div class="tab" data-t="daily" onclick="goTab('daily',this)">📊 <span class="tl" data-k="tDaily">每日報告</span></div>
-<div class="tab" data-t="weekly" onclick="goTab('weekly',this)">📅 <span class="tl" data-k="tWeekly">週統計</span></div>
-<div class="tab" data-t="monthly" onclick="goTab('monthly',this)">📆 <span class="tl" data-k="tMonthly">月/年趨勢</span></div>
-<div class="tab" data-t="compare" onclick="goTab('compare',this)">🔍 <span class="tl" data-k="tCompare">分類比對</span></div>
-<div class="tab" data-t="records" onclick="goTab('records',this)">📋 <span class="tl" data-k="tRecords">所有記錄</span></div>
-<div class="tab" data-t="settings" onclick="goTab('settings',this)">⚙️ <span class="tl" data-k="tSettings">設定</span></div>
+<div class="tab on" data-tab="upload" onclick="goTab('upload',this)">📥 <span class="tl" data-k="tUpload">匯入資料</span></div>
+<div class="tab" data-tab="daily" onclick="goTab('daily',this)">📊 <span class="tl" data-k="tDaily">每日報告</span></div>
+<div class="tab" data-tab="weekly" onclick="goTab('weekly',this)">📅 <span class="tl" data-k="tWeekly">週統計</span></div>
+<div class="tab" data-tab="monthly" onclick="goTab('monthly',this)">📆 <span class="tl" data-k="tMonthly">月/年趨勢</span></div>
+<div class="tab" data-tab="compare" onclick="goTab('compare',this)">🔍 <span class="tl" data-k="tCompare">分類比對</span></div>
+<div class="tab" data-tab="records" onclick="goTab('records',this)">📋 <span class="tl" data-k="tRecords">所有記錄</span></div>
+<div class="tab" data-tab="settings" onclick="goTab('settings',this)">⚙️ <span class="tl" data-k="tSettings">設定</span></div>
 </div>
 
 <!-- SEC: UPLOAD -->
@@ -181,7 +185,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <button class="btn btn-g" onclick="navDay(1)" style="padding:6px 10px;font-size:15px">▶</button>
 <select id="dCat" onchange="renderDaily()"><option value="">🛢️ 全部</option><option value="driver">🚗 司機</option><option value="forklift">🏗️ 叉車</option><option value="generator">⚡ 發電機</option></select>
 <span id="dMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
-<button class="btn btn-ex" onclick="exportTab('daily')">⬇ Excel</button>
+<button class="btn btn-ex" onclick="exportTab('daily')">⬇ <span class="tl" data-k="excel">Excel</span></button>
 </div>
 <div id="dKpi" class="kpi-strip"></div>
 <div class="card"><div class="ct"><span class="tl" data-k="detailTable">當日明細表</span></div>
@@ -199,7 +203,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <select id="wSel" onchange="renderWeekly()"></select>
 <button class="btn btn-g" onclick="navWeek(1)" style="padding:6px 10px;font-size:15px">▶</button>
 <span id="wMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
-<button class="btn btn-ex" onclick="exportTab('weekly')">⬇ Excel</button>
+<button class="btn btn-ex" onclick="exportTab('weekly')">⬇ <span class="tl" data-k="excel">Excel</span></button>
 </div>
 <div id="wKpi" class="kpi-strip"></div>
 <div class="card"><div class="ct"><span class="tl" data-k="weekTable">本週每日明細</span></div>
@@ -216,7 +220,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <button class="btn btn-b" id="btnMon" onclick="setPeriod('month')"><span class="tl" data-k="monReport">月報</span></button>
 <button class="btn btn-g" id="btnYr" onclick="setPeriod('year')"><span class="tl" data-k="yrReport">年報</span></button>
 <span id="pMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
-<button class="btn btn-ex" onclick="exportTab('period')">⬇ Excel</button>
+<button class="btn btn-ex" onclick="exportTab('period')">⬇ <span class="tl" data-k="excel">Excel</span></button>
 </div>
 <div class="card"><div class="ct" id="pTitle">📆 <span class="tl" data-k="periodTable">月別報表</span></div>
 <div class="tw"><table><thead id="pHead"></thead><tbody id="pBody"></tbody></table></div></div>
@@ -229,7 +233,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <select id="cmpMonth" onchange="renderCompare()"><option value="">所有月份</option></select>
 <select id="cmpCat" onchange="renderCompare()"><option value="">🛢️ 全部</option><option value="driver">🚗 司機</option><option value="forklift">🏗️ 叉車</option><option value="generator">⚡ 發電機</option></select>
 <span id="cmpMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
-<button class="btn btn-ex" onclick="exportTab('compare')">⬇ Excel</button>
+<button class="btn btn-ex" onclick="exportTab('compare')">⬇ <span class="tl" data-k="excel">Excel</span></button>
 </div>
 <div id="cmpKpi" class="kpi-strip"></div>
 <div class="g2">
@@ -247,7 +251,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <select id="rMonth" onchange="renderRecs()"><option value="">所有月份</option></select>
 <input class="inp" id="rSearch" placeholder="搜尋..." style="min-width:130px" oninput="renderRecs()">
 <span id="rMeta" style="font-size:11px;color:#8b95b8;margin-left:auto"></span>
-<button class="btn btn-ex" onclick="exportTab('records')">⬇ Excel</button>
+<button class="btn btn-ex" onclick="exportTab('records')">⬇ <span class="tl" data-k="excel">Excel</span></button>
 </div>
 <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
 <button class="btn btn-r" onclick="deleteFiltered()">🗑 <span class="tl" data-k="delFiltered">刪除篩選結果</span></button>
@@ -261,20 +265,20 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <div class="sec" id="sec-settings">
 <div class="g2">
 <div class="card">
-<div class="ct">🔗 GAS Backend URL</div>
-<div class="form-group"><label>Google Apps Script URL</label>
+<div class="ct">🔗 <span class="tl" data-k="gasBackend">GAS Backend URL</span></div>
+<div class="form-group"><label class="tl" data-k="gasUrlLabel">Google Apps Script URL</label>
 <input class="inp" type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveCfg()"></div>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-b" onclick="cloudUpload()">☁️ 上傳雲端 Upload</button>
-<button class="btn btn-b" onclick="cloudDownload()">📥 下載雲端 Download</button>
+<button class="btn btn-b" onclick="cloudUpload()">☁️ <span class="tl" data-k="uploadCloud">上傳雲端 Upload</span></button>
+<button class="btn btn-b" onclick="cloudDownload()">📥 <span class="tl" data-k="downloadCloud">下載雲端 Download</span></button>
 <button class="btn" onclick="syncGAS()">🔄 <span class="tl" data-k="syncGAS">舊系統匯入 (action=all)</span></button>
 </div>
-<div class="al al-i" style="margin-top:10px" id="gasStatus">Enter your GAS deployment URL above.</div>
+<div class="al al-i" style="margin-top:10px" id="gasStatus"><span class="tl" data-k="gasPrompt">Enter your GAS deployment URL above.</span></div>
 </div>
 <div class="card">
-<div class="ct">📱 Telegram</div>
-<div class="form-group"><label>Bot Token</label><input class="inp" type="text" id="tgToken" oninput="saveCfg()"></div>
-<div class="form-group"><label>Chat ID</label><input class="inp" type="text" id="tgChat" oninput="saveCfg()"></div>
+<div class="ct">📱 <span class="tl" data-k="telegram">Telegram</span></div>
+<div class="form-group"><label class="tl" data-k="botToken">Bot Token</label><input class="inp" type="text" id="tgToken" oninput="saveCfg()"></div>
+<div class="form-group"><label class="tl" data-k="chatId">Chat ID</label><input class="inp" type="text" id="tgChat" oninput="saveCfg()"></div>
 <button class="btn btn-b" onclick="sendTgSummary()">📤 <span class="tl" data-k="sendTG">發送 Telegram 報告</span></button>
 </div>
 </div>
@@ -360,11 +364,39 @@ date:'\u1780\u17B6\u179B\u1794\u179A\u17B7\u1785\u17D2\u1786\u17C1\u1791',driver
 dept:'\u1795\u17D2\u1793\u17C2\u1780',forklift:'\u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A',startKM:'\u1785\u17B6\u1794\u17CB\u1795\u17D2\u178F\u17BE\u1798',arriveKM:'\u1798\u1780\u178A\u179B\u17CB',totalKM:'\u179F\u179A\u17BB\u1794',
 kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\u17C4\u1784',machine:'\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',remarks:'\u179F\u1798\u17D2\u1782\u17B6\u179B\u17CB',total:'\u179F\u179A\u17BB\u1794',avg:'\u1798\u17B6\u178F\u17CB\u1798\u17B6'}
 };
+/* Fuel-page labels are kept in one dictionary so a language switch also updates
+   the buttons, filters, settings and dynamically-rendered table headings. */
+Object.assign(I18N.zh,{
+  fuelSub:'燃油中心 · 柴油管理',home:'🏠 平台首頁',uploadCloud:'上傳雲端',downloadCloud:'下載雲端',smartImport:'智慧匯入',telegramSummary:'Telegram 摘要',dataManagement:'資料管理',excel:'Excel',all:'全部',category:'分類',detail:'明細',day:'日',week:'週',period:'期間',days:'天',activeDays:'有資料天數',periods:'期間',name:'名稱',percent:'百分比',gasBackend:'GAS 後端設定',gasUrlLabel:'Google Apps Script URL',gasPrompt:'請在上方輸入 GAS 部署 URL。',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'搜尋…',uploading:'上傳中',downloading:'下載中',cancelled:'已取消',noCloud:'雲端尚無資料',syncing:'同步中',synced:'已同步',invalid:'無效',error:'錯誤',noValidData:'找不到有效資料',more:'更多',duplicateSkipped:'重複資料已略過',overwriteCloud:'雲端有 {cloud} 筆資料，將覆蓋本機 {local} 筆資料。確定？',setTelegram:'請設定 Telegram Token 與 Chat ID',gasUrlMissing:'請先設定 GAS URL',syncAll:'匯入 GAS 全部資料'
+});
+Object.assign(I18N.en,{
+  fuelSub:'Fuel Center · Diesel Management',home:'🏠 Home',uploadCloud:'Upload to cloud',downloadCloud:'Download from cloud',smartImport:'Smart Import',telegramSummary:'Telegram Summary',dataManagement:'Data Management',excel:'Excel',all:'All',category:'Category',detail:'Detail',day:'Day',week:'week',period:'Period',days:'Days',activeDays:'Active days',periods:'periods',name:'Name',percent:'%',gasBackend:'GAS Backend',gasUrlLabel:'Google Apps Script URL',gasPrompt:'Enter your GAS deployment URL above.',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'Search…',uploading:'Uploading',downloading:'Downloading',cancelled:'Cancelled',noCloud:'No cloud data yet',syncing:'Syncing',synced:'Synced',invalid:'Invalid',error:'Error',noValidData:'No valid data found',more:'more',duplicateSkipped:'duplicates skipped',overwriteCloud:'Cloud has {cloud} records and will overwrite the {local} local records. Continue?',setTelegram:'Set Telegram token and chat ID',gasUrlMissing:'Set the GAS URL first',syncAll:'Import all GAS data'
+});
+Object.assign(I18N.km,{
+  fuelSub:'មជ្ឈមណ្ឌលប្រេង · ការគ្រប់គ្រងម៉ាស៊ូត',home:'🏠 ទំព័រដើម',uploadCloud:'ផ្ទុកឡើងទៅពពក',downloadCloud:'ទាញយកពីពពក',smartImport:'នាំចូលឆ្លាតវៃ',telegramSummary:'សង្ខេប Telegram',dataManagement:'គ្រប់គ្រងទិន្នន័យ',excel:'Excel',all:'ទាំងអស់',category:'ប្រភេទ',detail:'លម្អិត',day:'ថ្ងៃ',week:'សប្តាហ៍',period:'រយៈពេល',days:'ថ្ងៃ',activeDays:'ថ្ងៃមានសកម្មភាព',periods:'រយៈពេល',name:'ឈ្មោះ',percent:'%',gasBackend:'ផ្នែកខាងក្រោយ GAS',gasUrlLabel:'URL Google Apps Script',gasPrompt:'សូមបញ្ចូល URL នៃការដាក់ពង្រាយ GAS ខាងលើ។',telegram:'Telegram',botToken:'សញ្ញាសម្ងាត់ Bot',chatId:'លេខសម្គាល់ Chat',searchPlaceholder:'ស្វែងរក…',uploading:'កំពុងផ្ទុកឡើង',downloading:'កំពុងទាញយក',cancelled:'បានបោះបង់',noCloud:'មិនទាន់មានទិន្នន័យក្នុងពពក',syncing:'កំពុងធ្វើសមកាលកម្ម',synced:'បានធ្វើសមកាលកម្ម',invalid:'មិនត្រឹមត្រូវ',error:'កំហុស',noValidData:'រកមិនឃើញទិន្នន័យត្រឹមត្រូវ',more:'បន្ថែម',duplicateSkipped:'បានរំលងទិន្នន័យស្ទួន',overwriteCloud:'ទិន្នន័យពពក {cloud} នឹងជំនួសទិន្នន័យក្នុងម៉ាស៊ីន {local}។ បន្ត?',setTelegram:'កំណត់ Token Telegram និង Chat ID',gasUrlMissing:'សូមកំណត់ URL GAS ជាមុន',syncAll:'នាំចូលទិន្នន័យ GAS ទាំងអស់'
+});
 let lang=(typeof GA !== 'undefined' && GA.lang)||localStorage.getItem('vrt_dsl_lang')||'zh';
 function T(k){return I18N[lang]?.[k]||I18N.en[k]||k}
+function catLabel(c){return c==='driver'?T('driver'):c==='forklift'?T('forklift'):c==='generator'?T('machine'):c}
+function weekdayLabel(i){const names={zh:['日','一','二','三','四','五','六'],en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],km:['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍']};return (names[lang]||names.en)[i]}
 function setLang(l){lang=['zh','en','km'].includes(l)?l:'zh';localStorage.setItem('vrt_dsl_lang',lang);try{GA.setLang(lang);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));applyLang()}
-GA.on('lang',function(l){if(l!==lang)setLang(l);});
-function applyLang(){document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k&&T(k))el.textContent=T(k)});document.getElementById('hTitle').textContent=T('hTitle');['hlDrv','hlFork','hlGen','hlTot'].forEach(k=>{const e=document.getElementById(k.replace('hl',''));/*skip*/});updateHeader()}
+if(typeof GA!=='undefined'&&GA.on)GA.on('lang',function(l){if(l!==lang)setLang(l);});
+function applyLang(){
+  document.documentElement.lang=lang==='zh'?'zh-TW':lang;
+  document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k)el.textContent=T(k)});
+  document.getElementById('hTitle').textContent=T('hTitle');
+  document.querySelectorAll('[data-fuel-title]').forEach(el=>el.title=T(el.dataset.fuelTitle));
+  /* The explicit tab pass keeps older cached markup from leaving the first
+     five tabs in English when only the last two were translated. */
+  const tabKeys={upload:'tUpload',daily:'tDaily',weekly:'tWeekly',monthly:'tMonthly',compare:'tCompare',records:'tRecords',settings:'tSettings'};
+  document.querySelectorAll('.tab[data-tab]').forEach(el=>{const s=el.querySelector('.tl');if(s&&tabKeys[el.dataset.tab])s.textContent=T(tabKeys[el.dataset.tab])});
+  const optionSets={dCat:[['','all'],['driver','driver'],['forklift','forklift'],['generator','machine']],cmpCat:[['','all'],['driver','driver'],['forklift','forklift'],['generator','machine']],rCat:[['','all'],['driver','driver'],['forklift','forklift'],['generator','machine']]};
+  Object.entries(optionSets).forEach(([id,items])=>{const el=document.getElementById(id);if(!el)return;const old=el.value;el.innerHTML=items.map(([v,k],i)=>`<option value="${v}">${i===0?'🛢️ ':''}${T(k)}</option>`).join('');if(items.some(([v])=>v===old))el.value=old});
+  const search=document.getElementById('rSearch');if(search)search.placeholder=T('searchPlaceholder');
+  updateHeader();
+  const active=document.querySelector('.sec.on')?.id.replace('sec-','');
+  if(active==='daily')renderDaily();else if(active==='weekly')renderWeekly();else if(active==='monthly')renderPeriod();else if(active==='compare')initCompare();else if(active==='records')initRecs();else if(active==='upload')updateDBCard();else if(active==='settings')genSummary();
+}
 
 // ═══════════════════════════════════════════════════════════
 //  DATA
@@ -400,9 +432,9 @@ setupDrop();updateHeader();updateDBCard();setLang(GA.lang||lang);
 //  AC-GA-EXP 雲端上傳 / 下載（AC_GA_EXP GAS：dieselSave / dieselLoad）
 // ═══════════════════════════════════════════════════════════
 async function cloudUpload(){
-const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast(T('gasUrlMissing'),'err');document.querySelector('.tab[data-tab="settings"]')?.click();return}
 try{GA.cloud.mount('#ga-cloud');GA.cloud.set('sync');}catch(e){}
-const st=document.getElementById('gasStatus');st.textContent='⏳ 上傳中 Uploading...';st.className='al al-i';
+const st=document.getElementById('gasStatus');st.textContent='⏳ '+T('uploading')+'...';st.className='al al-i';
 try{
 const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'dieselSave',data:DB,ts:Date.now()}),headers:{'Content-Type':'text/plain;charset=utf-8'}});
 const d=await res.json();
@@ -412,16 +444,16 @@ try{GA.cloud.set('up',DB.length+' recs');}catch(e){}
 }catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err');try{GA.cloud.set('err',e.message);}catch(x){}}
 }
 async function cloudDownload(){
-const url=document.getElementById('gasUrl').value.trim();if(!url){toast('請先設定 GAS URL','err');document.querySelector('.tab[data-t="settings"]')?.click();return}
-const st=document.getElementById('gasStatus');st.textContent='⏳ 下載中 Downloading...';st.className='al al-i';
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast(T('gasUrlMissing'),'err');document.querySelector('.tab[data-tab="settings"]')?.click();return}
+const st=document.getElementById('gasStatus');st.textContent='⏳ '+T('downloading')+'...';st.className='al al-i';
 try{
 const res=await fetch(url+'?action=dieselLoad');const d=await res.json();
 if(!d.ok)throw new Error(d.error||'load failed');
 if(d.data&&Array.isArray(d.data)){
-if(DB.length&&!confirm(`雲端有 ${d.data.length} 筆資料，將覆蓋本機 ${DB.length} 筆。確定？\nCloud has ${d.data.length} records. Overwrite local?`)){st.textContent='已取消 Cancelled';return}
+if(DB.length&&!confirm(T('overwriteCloud').replace('{cloud}',d.data.length).replace('{local}',DB.length))){st.textContent=T('cancelled');return}
 DB=d.data;save();updateHeader();updateDBCard();
 st.textContent=`✅ 已下載 ${DB.length} 筆 (${d.ts||''})`;st.className='al al-ok';toast('📥 雲端下載成功');
-}else{st.textContent='☁️ 雲端尚無資料 No cloud data yet';st.className='al al-i'}
+}else{st.textContent='☁️ '+T('noCloud');st.className='al al-i'}
 }catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
 }
 
@@ -470,7 +502,7 @@ ${[['🚗',drv.length,T('driver')+'('+drvL.toLocaleString()+'L)','#1a6b3f'],['�
 // ═══════════════════════════════════════════════════════════
 function goTab(t,el){
 document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-if(el)el.classList.add('on');else document.querySelector(`.tab[data-t="${t}"]`)?.classList.add('on');
+if(el)el.classList.add('on');else document.querySelector(`.tab[data-tab="${t}"]`)?.classList.add('on');
 document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
 document.getElementById('sec-'+t)?.classList.add('on');
 destroyCharts();
@@ -694,7 +726,7 @@ for(const f of files){
     inf.push({name:f.name,type:ftype,count:parsed.length});
   }catch(e){toast(T('error')+': '+e.message,'err');console.error(e)}
 }
-if(all.length===0){toast('No valid data found','err');return}
+if(all.length===0){toast(T('noValidData'),'err');return}
 pendingImport=all;
 const pre=document.getElementById('importPreview');pre.classList.remove('hidden');
 const byType={driver:0,forklift:0,generator:0};all.forEach(r=>byType[r.cat]=(byType[r.cat]||0)+1);
@@ -702,9 +734,9 @@ pre.innerHTML=`
 <div class="al al-ok">✅ ${T('imported')} <b>${all.length}</b> ${T('records')} · ${inf.map(s=>s.name+' ['+s.type+':'+s.count+']').join(', ')}</div>
 <div style="margin-bottom:8px;font-size:12px">🚗 ${T('driver')}: ${byType.driver||0} · 🏗️ ${T('forklift')}: ${byType.forklift||0} · ⚡ ${T('machine')}: ${byType.generator||0}</div>
 <div class="tw" style="max-height:260px;overflow-y:auto;margin-bottom:12px;border:1px solid #e2e6f0;border-radius:8px">
-<table><thead><tr><th>#</th><th>Cat</th><th>Date</th><th>Detail</th><th>Liters</th></tr></thead>
-<tbody>${all.slice(0,50).map((r,i)=>`<tr><td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat}</span></td><td>${esc(r.date)}</td><td>${esc(r.driver||r.forklift||r.machine||'')}</td><td class="mono">${r.liters||0}L</td></tr>`).join('')}
-${all.length>50?`<tr><td colspan="5" class="empty">... +${all.length-50} more</td></tr>`:''}</tbody></table>
+<table><thead><tr><th>#</th><th>${T('category')}</th><th>${T('date')}</th><th>${T('detail')}</th><th>${T('liters')}</th></tr></thead>
+<tbody>${all.slice(0,50).map((r,i)=>`<tr><td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${catLabel(r.cat)}</span></td><td>${esc(r.date)}</td><td>${esc(r.driver||r.forklift||r.machine||'')}</td><td class="mono">${r.liters||0}L</td></tr>`).join('')}
+${all.length>50?`<tr><td colspan="5" class="empty">... +${all.length-50} ${T('more')}</td></tr>`:''}</tbody></table>
 </div>
 <div style="display:flex;gap:8px">
 <button class="btn btn-b" onclick="confirmImport()">✅ ${T('imported')} (${all.length})</button>
@@ -722,7 +754,7 @@ const fresh=pendingImport.filter(r=>{
 });
 const skipped=pendingImport.length-fresh.length;
 DB=DB.concat(fresh);save();updateHeader();updateDBCard();
-toast(`${T('imported')} ${fresh.length} ${T('records')}`+(skipped?` (${skipped} duplicates skipped)`:''));
+toast(`${T('imported')} ${fresh.length} ${T('records')}`+(skipped?` (${skipped} ${T('duplicateSkipped')})`:''));
 pendingImport=null;document.getElementById('importPreview').classList.add('hidden');
 }
 function cancelImport(){pendingImport=null;document.getElementById('importPreview').classList.add('hidden')}
@@ -792,7 +824,7 @@ function clearAll(){if(!confirm(T('confirmClear')))return;DB=[];save();updateHea
 //  BACKUP / EXPORT
 // ═══════════════════════════════════════════════════════════
 function backupJSON(){const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`vrt_diesel_backup_${localYMD()}.json`;a.click();toast(T('exported'))}
-function restoreJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d)){toast('Invalid','err');return}DB=d;save();updateHeader();updateDBCard();toast(`${T('imported')} ${d.length}`)}catch{toast('Error','err')}};r.readAsText(f);e.target.value=''}
+function restoreJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d)){toast(T('invalid'),'err');return}DB=d;save();updateHeader();updateDBCard();toast(`${T('imported')} ${d.length}`)}catch{toast(T('error'),'err')}};r.readAsText(f);e.target.value=''}
 function exportAllExcel(){
 const wb=XLSX.utils.book_new();
 const drv=DB.filter(r=>r.cat==='driver');const fork=DB.filter(r=>r.cat==='forklift');const gen=DB.filter(r=>r.cat==='generator');
@@ -827,13 +859,13 @@ const drvL=recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0);
 const forkL=recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0);
 const genL=recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0);
 const totL=drvL+forkL+genL;
-const dow=d?WEEKDAYS[new Date(d).getDay()]:'';
+const dow=d?weekdayLabel(new Date(d).getDay()):'';
 document.getElementById('dMeta').textContent=d?`${d} (${dow}) · ${recs.length} ${T('records')}`:'';
 document.getElementById('dKpi').innerHTML=[
 ['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',drvL+'L',T('driver'),'#2563eb'],['🏗️',forkL+'L',T('forklift'),'#e6a700'],['⚡',genL+'L',T('machine'),'#c62828']
 ].map(([ic,v,l,c])=>`<div class="kpi"><div class="kpi-icon">${ic}</div><div class="kpi-n" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
 
-document.getElementById('dHead').innerHTML=`<tr><th>#</th><th>Cat</th><th>${T('date')}</th><th>Detail</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th></tr>`;
+document.getElementById('dHead').innerHTML=`<tr><th>#</th><th>${T('category')}</th><th>${T('date')}</th><th>${T('detail')}</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th></tr>`;
 document.getElementById('dBody').innerHTML=recs.length?recs.map((r,i)=>`<tr>
 <td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat==='driver'?'🚗':r.cat==='forklift'?'🏗️':'⚡'}</span></td>
 <td>${esc(r.date)}</td><td style="font-weight:600">${esc(r.driver||r.forklift||r.machine||'')}</td>
@@ -853,7 +885,7 @@ charts.dDrv=new Chart(document.getElementById('cDayDrv'),{type:'bar',data:{label
 function initWeekly(){
 const weeks=[...new Set(DB.map(r=>r.date?getWeekKey(r.date):null).filter(Boolean))].sort();
 const sel=document.getElementById('wSel');const cur=sel.value;
-sel.innerHTML=weeks.map(w=>`<option value="${w}"${w===cur?' selected':''}>${w} week</option>`).join('');
+sel.innerHTML=weeks.map(w=>`<option value="${w}"${w===cur?' selected':''}>${w} ${T('week')}</option>`).join('');
 if(!cur&&weeks.length)sel.value=weeks[weeks.length-1];
 renderWeekly();
 }
@@ -866,15 +898,15 @@ const recs=DB.filter(r=>r.date>=wk&&r.date<=endStr);
 const days=[];
 for(let i=0;i<7;i++){const dt=new Date(wk);dt.setDate(dt.getDate()+i);const ds=localYMD(dt);
 const dr=recs.filter(r=>r.date===ds);
-days.push({date:ds,day:WEEKDAYS[dt.getDay()],drvL:dr.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:dr.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:dr.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),count:dr.length})}
+days.push({date:ds,day:weekdayLabel(dt.getDay()),drvL:dr.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:dr.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:dr.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),count:dr.length})}
 
 const totL=days.reduce((s,d)=>s+d.drvL+d.forkL+d.genL,0);const activeDays=days.filter(d=>d.count>0).length;
-document.getElementById('wMeta').textContent=`${activeDays} active days · ${totL.toLocaleString()}L ${T('total')}`;
+document.getElementById('wMeta').textContent=`${activeDays} ${T('activeDays')} · ${totL.toLocaleString()}L ${T('total')}`;
 document.getElementById('wKpi').innerHTML=[
-['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',days.reduce((s,d)=>s+d.drvL,0)+'L',T('driver'),'#2563eb'],['🏗️',days.reduce((s,d)=>s+d.forkL,0)+'L',T('forklift'),'#e6a700'],['⚡',days.reduce((s,d)=>s+d.genL,0)+'L',T('machine'),'#c62828'],['📅',activeDays,'Days','#6b21a8']
+['🛢️',totL.toLocaleString()+'L',T('total'),'#1a6b3f'],['🚗',days.reduce((s,d)=>s+d.drvL,0)+'L',T('driver'),'#2563eb'],['🏗️',days.reduce((s,d)=>s+d.forkL,0)+'L',T('forklift'),'#e6a700'],['⚡',days.reduce((s,d)=>s+d.genL,0)+'L',T('machine'),'#c62828'],['📅',activeDays,T('days'),'#6b21a8']
 ].map(([ic,v,l,c])=>`<div class="kpi"><div class="kpi-icon">${ic}</div><div class="kpi-n" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
 
-document.getElementById('wHead').innerHTML=`<tr><th>${T('date')}</th><th>Day</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
+document.getElementById('wHead').innerHTML=`<tr><th>${T('date')}</th><th>${T('day')}</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
 document.getElementById('wBody').innerHTML=days.map(d=>{const tot=d.drvL+d.forkL+d.genL;return`<tr ${d.count===0?'style="opacity:.4"':''}><td>${d.date}</td><td>${d.day}</td><td class="mono" style="color:#2563eb">${d.drvL}</td><td class="mono" style="color:#e6a700">${d.forkL}</td><td class="mono" style="color:#c62828">${d.genL}</td><td class="mono" style="font-weight:800">${tot}L</td><td>${d.count}</td></tr>`}).join('');
 
 charts.week=new Chart(document.getElementById('cWeek'),{type:'bar',data:{labels:days.map(d=>d.date.slice(5)+' '+d.day),datasets:[
@@ -903,8 +935,8 @@ const years=[...new Set(DB.map(r=>r.date?.slice(0,4)).filter(Boolean))].sort();
 years.forEach(y=>{const recs=DB.filter(r=>r.date?.startsWith(y));
 periods.push({label:y,drvL:recs.filter(r=>r.cat==='driver').reduce((s,r)=>s+(r.liters||0),0),forkL:recs.filter(r=>r.cat==='forklift').reduce((s,r)=>s+(r.liters||0),0),genL:recs.filter(r=>r.cat==='generator').reduce((s,r)=>s+(r.liters||0),0),days:new Set(recs.map(r=>r.date)).size,count:recs.length})})
 }
-document.getElementById('pMeta').textContent=`${periods.length} periods · ${DB.length} ${T('records')}`;
-document.getElementById('pHead').innerHTML=`<tr><th>Period</th><th>Days</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
+document.getElementById('pMeta').textContent=`${periods.length} ${T('periods')} · ${DB.length} ${T('records')}`;
+document.getElementById('pHead').innerHTML=`<tr><th>${T('period')}</th><th>${T('days')}</th><th>🚗 ${T('driver')}</th><th>🏗️ ${T('forklift')}</th><th>⚡ ${T('machine')}</th><th>${T('total')}</th><th>#</th></tr>`;
 document.getElementById('pBody').innerHTML=periods.map(p=>{const tot=p.drvL+p.forkL+p.genL;return`<tr><td style="font-weight:700">${p.label}</td><td>${p.days}</td><td class="mono" style="color:#2563eb">${p.drvL.toLocaleString()}</td><td class="mono" style="color:#e6a700">${p.forkL.toLocaleString()}</td><td class="mono" style="color:#c62828">${p.genL.toLocaleString()}</td><td class="mono" style="font-weight:800">${tot.toLocaleString()}L</td><td>${p.count}</td></tr>`}).join('');
 
 charts.period=new Chart(document.getElementById('cPeriod'),{type:'bar',data:{labels:periods.map(p=>p.label),datasets:[
@@ -920,7 +952,7 @@ charts.period=new Chart(document.getElementById('cPeriod'),{type:'bar',data:{lab
 function initCompare(){
 const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
 const sel=document.getElementById('cmpMonth');const cur=sel.value;
-sel.innerHTML='<option value="">'+T('total')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+sel.innerHTML='<option value="">'+T('all')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
 renderCompare();
 }
 function renderCompare(){
@@ -950,8 +982,8 @@ charts.cmpPie=new Chart(document.getElementById('cCmpPie'),{type:'doughnut',data
 // Detail table by entity
 const byName={};recs.forEach(r=>{const n=r.driver||r.forklift||r.machine||'?';if(!byName[n])byName[n]={name:n,cat:r.cat,liters:0,count:0,km:0};byName[n].liters+=(r.liters||0);byName[n].km+=(r.km||r.totalKM||0);byName[n].count++});
 const sorted=Object.values(byName).sort((a,b)=>b.liters-a.liters);
-document.getElementById('cmpHead').innerHTML=`<tr><th>Name</th><th>Cat</th><th>${T('liters')}</th><th>${T('km')}</th><th>#</th><th>%</th></tr>`;
-document.getElementById('cmpBody').innerHTML=sorted.map(r=>`<tr><td style="font-weight:600">${esc(r.name)}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat}</span></td><td class="mono">${r.liters.toLocaleString()}L</td><td class="mono">${r.km||'-'}</td><td>${r.count}</td><td class="mono">${totL?(r.liters/totL*100).toFixed(1)+'%':'-'}</td></tr>`).join('');
+document.getElementById('cmpHead').innerHTML=`<tr><th>${T('name')}</th><th>${T('category')}</th><th>${T('liters')}</th><th>${T('km')}</th><th>#</th><th>${T('percent')}</th></tr>`;
+document.getElementById('cmpBody').innerHTML=sorted.map(r=>`<tr><td style="font-weight:600">${esc(r.name)}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${catLabel(r.cat)}</span></td><td class="mono">${r.liters.toLocaleString()}L</td><td class="mono">${r.km||'-'}</td><td>${r.count}</td><td class="mono">${totL?(r.liters/totL*100).toFixed(1)+'%':'-'}</td></tr>`).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -968,13 +1000,13 @@ return true});
 function initRecs(){
 const months=[...new Set(DB.map(r=>r.date?.slice(0,7)).filter(Boolean))].sort();
 const sel=document.getElementById('rMonth');const cur=sel.value;
-sel.innerHTML='<option value="">'+T('total')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+sel.innerHTML='<option value="">'+T('all')+'</option>'+months.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
 renderRecs();
 }
 function renderRecs(){
 const recs=getFilteredRecs();
 document.getElementById('rMeta').textContent=`${recs.length} ${T('records')} · ${recs.reduce((s,r)=>s+(r.liters||0),0).toLocaleString()}L`;
-document.getElementById('rHead').innerHTML=`<tr><th>#</th><th>Cat</th><th>${T('date')}</th><th>Detail</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th><th></th></tr>`;
+document.getElementById('rHead').innerHTML=`<tr><th>#</th><th>${T('category')}</th><th>${T('date')}</th><th>${T('detail')}</th><th>${T('liters')}</th><th>${T('km')}</th><th>${T('remarks')}</th><th></th></tr>`;
 document.getElementById('rBody').innerHTML=recs.length?recs.slice(0,500).map((r,i)=>`<tr>
 <td>${i+1}</td><td><span class="badge ${r.cat==='driver'?'b-norm':r.cat==='forklift'?'b-lo':'b-hi'}">${r.cat==='driver'?'🚗':r.cat==='forklift'?'🏗️':'⚡'}</span></td>
 <td>${esc(r.date)}</td><td style="font-weight:600">${esc(r.driver||'')}${esc(r.forklift||'')}${esc(r.machine||'')}${r.plate?' ('+esc(r.plate)+')':''}</td>
@@ -987,8 +1019,8 @@ document.getElementById('rBody').innerHTML=recs.length?recs.slice(0,500).map((r,
 //  GAS SYNC
 // ═══════════════════════════════════════════════════════════
 async function syncGAS(){
-const url=document.getElementById('gasUrl').value.trim();if(!url){toast('Enter GAS URL','err');return}
-document.getElementById('gasStatus').textContent='⏳ Syncing...';document.getElementById('gasStatus').className='al al-i';
+const url=document.getElementById('gasUrl').value.trim();if(!url){toast(T('gasUrlMissing'),'err');return}
+document.getElementById('gasStatus').textContent='⏳ '+T('syncing')+'...';document.getElementById('gasStatus').className='al al-i';
 try{
 const res=await fetch(url+'?action=all');const data=await res.json();if(!data.ok)throw new Error(data.error);
 let count=0;
@@ -996,7 +1028,7 @@ let count=0;
 (data.forklift?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'forklift',date:parseExcelDate(r[0]),dept:r[1],forklift:r[2],liters:cleanNum(r[3]),startKM:cleanNum(r[4]),arriveKM:cleanNum(r[5]),totalKM:cleanNum(r[6]),remarks:r[7]||''});count++});
 (data.generator?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'generator',date:parseExcelDate(r[5]||''),kw:0,liters:cleanNum(r[2]),machine:'',hours:'',remarks:r[8]||''});count++});
 save();updateHeader();updateDBCard();
-document.getElementById('gasStatus').textContent=`✅ Synced ${count} records`;document.getElementById('gasStatus').className='al al-ok';
+document.getElementById('gasStatus').textContent=`✅ ${T('synced')} ${count} ${T('records')}`;document.getElementById('gasStatus').className='al al-ok';
 toast(`${T('imported')} ${count}`);
 }catch(e){document.getElementById('gasStatus').textContent='❌ '+e.message;document.getElementById('gasStatus').className='al al-w';toast(e.message,'err')}
 }
@@ -1028,7 +1060,7 @@ document.getElementById('sumBox').textContent=txt;
 function copySummary(){navigator.clipboard.writeText(document.getElementById('sumBox').textContent).then(()=>toast(T('copy')+'!'));} 
 async function sendTgSummary(){
 const token=document.getElementById('tgToken').value.trim();const chatId=document.getElementById('tgChat').value.trim();
-if(!token||!chatId){toast('Set Telegram token & chat ID','err');return}
+if(!token||!chatId){toast(T('setTelegram'),'err');return}
 genSummary();const text=document.getElementById('sumBox').textContent;
 /* v2：一律經 GAS 轉發，Token 不落地瀏覽器 */
 try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'ALL',lang:'both',chatId:chatId||'',text});toast('✈️ '+((r.data&&r.data.sent)||1)+' group(s)')}catch(e){toast(e.message,'err')}
@@ -1039,8 +1071,8 @@ try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'AL
 // ═══════════════════════════════════════════════════════════
 function fuelImport(){
   // 燃油 Excel 為 Paul 既有複雜多表格式，沿用原本已調校好的 processFiles
-  goTab('upload',document.querySelector('.tab[data-t="upload"]'));
-  toast(lang==='zh'?'請拖放或選取 Excel（沿用原自動解析）':'Drop or pick Excel files');
+  goTab('upload',document.querySelector('.tab[data-tab="upload"]'));
+  toast(lang==='zh'?'請拖放或選取 Excel（沿用原自動解析）':lang==='km'?'សូមអូស ឬជ្រើសឯកសារ Excel':'Drop or pick Excel files');
   const dz=document.getElementById('dropZone')||document.querySelector('.drop-zone');
   if(dz){ dz.style.boxShadow='0 0 0 3px rgba(2,132,199,.4)'; setTimeout(()=>dz.style.boxShadow='',1600); }
 }

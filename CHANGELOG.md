@@ -207,3 +207,10 @@
 
 ### 摘要錯誤
 - fuel、receiving、expense 對 `GA.futureWarnText` 加安全檢查，避免舊版核心載入時把 `GA.futureWarnText is not a function` 當成 Telegram 摘要送出。
+## v2.0-alpha5 — 2026-08-08（Fuel 三語切換修正）
+
+### fuel.html（燃油中心）— 統一語言更新路徑
+- 修正分頁路由誤用 `data-t` 導致共用翻譯核心把 `upload / daily / monthly` 直接顯示在畫面上的問題；路由改用 `data-tab`。
+- 分頁、月報／年報按鈕、表格標題、篩選器、雲端設定、Telegram 設定及狀態訊息統一使用中／英／柬三語字典。
+- 切換語言後會重新繪製目前分頁，避免標題已切換但表格仍停留在上一種語言。
+- 平台首頁的燃油入口加入版本查詢參數，避免瀏覽器繼續使用舊版快取。
