@@ -8,12 +8,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
+<script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script src="shared/exp-seed.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}
 </script>
 
 <style>
@@ -461,23 +462,60 @@ function expImport(){
 function expTelegram(){
   GA.telegram.open({
     module:'expense', canApprove:false,
+    scopes:[
+      {v:'all',zh:'全部類別',en:'All',km:'ទាំងអស់'},
+      {v:'top',zh:'僅前十大',en:'Top 10',km:'ដប់ធំបំផុត'},
+      {v:'src',zh:'依來源',en:'By source',km:'តាមប្រភព'}
+    ],
     periods:function(type){ return txns.map(function(r){return GA.periodKey(r.date,type);}); },
     summary:function(s){
       var rows=txns.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
       var total=rows.reduce(function(a,r){return a+amt(r);},0);
       var byCat={}; rows.forEach(function(r){byCat[r.category]=(byCat[r.category]||0)+amt(r);});
-      var top=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];}).slice(0,5);
+      var cats=Object.keys(byCat).filter(function(k){return byCat[k]>0;})
+                     .sort(function(a,b){return byCat[b]-byCat[a];});
+      var out=[
+        {zh:'總支出',en:'Total',v:GA.money(total)},
+        {zh:'交易筆數',en:'Records',v:rows.length},
+        {zh:'活躍類別',en:'Categories',v:cats.length}
+      ];
+      var list = (s.scope==='top') ? cats.slice(0,10) : cats;   // 預設列出全部類別
+      if(s.scope!=='src' && list.length){
+        out.push('-');
+        list.forEach(function(k){
+          var pct = total? (byCat[k]/total*100).toFixed(1)+'%' : '0%';
+          out.push({ zh:catLabel(k), en:catLabel(k),
+                     v:GA.money(byCat[k],2)+' ('+pct+')' });
+        });
+      }
+      // 來源分布
       var bySrc={}; rows.forEach(function(r){var m=r.sourceModule||'manual';bySrc[m]=(bySrc[m]||0)+amt(r);});
+      if(Object.keys(bySrc).length){
+        out.push('-');
+        Object.keys(bySrc).sort(function(a,b){return bySrc[b]-bySrc[a];}).forEach(function(m){
+          out.push({zh:'來源·'+m,en:'src·'+m,v:GA.money(bySrc[m],2)});
+        });
+      }
+      // 預算超支提醒
+      var over=[];
+      cats.forEach(function(k){
+        var b=GA.num(budgets[k]);
+        if(b>0 && byCat[k]>b) over.push({k:k,b:b,sp:byCat[k]});
+      });
+      if(over.length){
+        out.push('-');
+        out.push({zh:'⚠️ 超預算類別',en:'Over budget',v:over.length});
+        over.slice(0,6).forEach(function(x){
+          out.push({zh:'  '+catLabel(x.k),en:'  '+catLabel(x.k),
+                    v:GA.money(x.sp,0)+' / 預算 '+GA.money(x.b,0)+' (超 '+GA.money(x.sp-x.b,0)+')'});
+        });
+      }
+      var warn=GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh'));
       return GA.telegram.buildSummary({
         icon:'💰', titleZh:'費用摘要', titleEn:'Expense Summary',
         lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
-        rows:[ {zh:'總支出',en:'Total',v:GA.money(total)},
-          {zh:'交易筆數',en:'Records',v:rows.length},
-          {zh:'活躍類別',en:'Categories',v:Object.keys(byCat).filter(function(k){return byCat[k]>0;}).length}, '-' ]
-          .concat(top.map(function(k){return {zh:catLabel(k),en:catLabel(k),v:GA.money(byCat[k])};}))
-          .concat(['-'])
-          .concat(Object.keys(bySrc).map(function(m){return {zh:'來源·'+m,en:'src·'+m,v:GA.money(bySrc[m])};})),
-        footer:'🕐 '+GA.ymd(new Date())
+        rows:out,
+        footer:(warn?warn+'\n':'')+'🕐 '+GA.ymd(new Date())
       });
     }
   });
@@ -487,6 +525,38 @@ function expTelegram(){
 loadData();
 GA.boot({ header:{ sel:'#ga-header', icon:'💰', name:'Expense Center 費用中心', version:'v2.0', cloudKey:'expense',
   onUpload:expUpload, onDownload:expDownload, onTelegram:expTelegram, onImport:expImport, onExport:expExport }});
+/* 資料管理鈕（頁首工具列旁） */
+(function(){
+  var tools=document.querySelector('.ga-hd-tools');
+  if(tools){ var b=document.createElement('button'); b.className='ga-ico';
+    b.title='資料管理 Data'; b.innerHTML='🗂️<span>資料</span>';
+    b.onclick=expDataPanel; tools.insertBefore(b, tools.querySelector('.ga-lang')); }
+})();
+function expDataPanel(){
+  GA.dataPanel({
+    module:'expense',
+    count:function(){return txns.length;},
+    data:function(){return {txns:txns,cats:CATMETA,budgets:budgets};},
+    restore:function(obj,mode){
+      if(mode==='replace'){
+        if(obj.txns) txns=obj.txns;
+        if(obj.cats) CATMETA=obj.cats;
+        if(obj.budgets) budgets=obj.budgets;
+      }else{
+        var seen={}; txns.forEach(function(r){seen[r._fp||r.recordId]=1;});
+        (obj.txns||[]).forEach(function(r){ var k=r._fp||r.recordId;
+          if(!seen[k]){ txns.push(r); seen[k]=1; } });
+        if(obj.cats) for(var k2 in obj.cats) if(!CATMETA[k2]) CATMETA[k2]=obj.cats[k2];
+        if(obj.budgets) for(var k3 in obj.budgets) if(!budgets[k3]) budgets[k3]=obj.budgets[k3];
+      }
+      saveTxns(); saveCats();
+      try{ localStorage.setItem(LS_BGT,JSON.stringify(budgets)); }catch(e){}
+    },
+    clear:function(){ txns=[]; saveTxns(); },
+    exportXlsx:expExport,
+    onChange:function(){ fillFilters(); render(); }
+  });
+}
 
 pc = GA.periodControl('#exp-period',{ id:'expense', type:'month',
   dates:function(){ return txns.map(function(r){return r.date;}); }, onChange:function(){ render(); } });

@@ -91,11 +91,12 @@ tr:hover td{background:#f5f8f6}
 </style>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
+<script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -117,6 +118,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <button class="btn btn-b" style="padding:6px 10px" onclick="cloudDownload()" title="下載雲端 Download">⬇️☁</button>
 <button class="btn btn-b" style="padding:6px 10px" onclick="fuelImport()" title="智慧匯入 Smart Import">📥</button>
 <button class="btn btn-b" style="padding:6px 10px" onclick="fuelTelegram()" title="Telegram 摘要 Summary">✈️</button>
+<button class="btn btn-b" style="padding:6px 10px" onclick="fuelDataPanel()" title="資料管理 Data">🗂️</button>
 </div>
 <div class="lang-group">
 <button class="lang-btn on" data-l="zh" onclick="setLang('zh')">中文</button>
@@ -1045,34 +1047,96 @@ function fuelImport(){
 function fuelPeriods(type){ return DB.map(r=>GA.periodKey(r.date,type)); }
 function fuelSummaryText(s){
   const rows=DB.filter(r=>GA.inPeriod(r.date,s.period,s.ptype));
+  const scope=s.scope||'all';
   const drv=rows.filter(r=>r.cat==='driver'), fork=rows.filter(r=>r.cat==='forklift'), gen=rows.filter(r=>r.cat==='generator');
   const L=a=>a.reduce((x,r)=>x+GA.num(r.liters),0);
   const drvL=L(drv),forkL=L(fork),genL=L(gen);
   const totKM=drv.reduce((x,r)=>x+GA.num(r.km),0);
   const forkHr=fork.reduce((x,r)=>x+GA.num(r.hours),0);
   const genHr=gen.reduce((x,r)=>x+GA.num(r.hours),0);
-  // 效率（分母為 0 顯示「資料不足」，不出現 Infinity）
-  const l100=GA.ratio(drvL*100,totKM);      // L/100km
-  const kmL=GA.ratio(totKM,drvL);           // km/L
-  const forkLh=GA.ratio(forkL,forkHr);      // L/hour
-  const genLh=GA.ratio(genL,genHr);
+  const out=[];
+
+  if(scope==='all'||scope==='driver'){
+    out.push({zh:'🚗 司機',en:'Driver',v:drvL.toLocaleString()+'L / '+drv.length+' recs'});
+  }
+  if(scope==='all'||scope==='forklift'){
+    out.push({zh:'🏗️ 叉車',en:'Forklift',v:forkL.toLocaleString()+'L / '+fork.length+' recs'});
+  }
+  if(scope==='all'||scope==='generator'){
+    out.push({zh:'⚡ 發電機',en:'Generator',v:genL.toLocaleString()+'L / '+gen.length+' recs'});
+  }
+  if(scope==='all'){
+    out.push('-');
+    out.push({zh:'合計',en:'Total',v:(drvL+forkL+genL).toLocaleString()+'L'});
+    out.push({zh:'司機里程',en:'Driver KM',v:totKM.toLocaleString()+' km'});
+    out.push('-');
+    out.push({zh:'油耗 L/100km',en:'L/100km',v:GA.fmtRatio(GA.ratio(drvL*100,totKM),'',2)});
+    out.push({zh:'效率 km/L',en:'km/L',v:GA.fmtRatio(GA.ratio(totKM,drvL),'',2)});
+    out.push({zh:'叉車 L/hr',en:'Forklift L/hr',v:GA.fmtRatio(GA.ratio(forkL,forkHr),'',2)});
+    out.push({zh:'發電機 L/hr',en:'Generator L/hr',v:GA.fmtRatio(GA.ratio(genL,genHr),'',2)});
+  }
+
+  /* 明細：誰開多少 km、發電機哪幾天用多少 */
+  if(scope==='all'||scope==='driver'){
+    const byDrv={};
+    drv.forEach(r=>{
+      const k=(r.plate||r.driver||'—').toString().trim();
+      if(!byDrv[k]) byDrv[k]={L:0,km:0,n:0};
+      byDrv[k].L+=GA.num(r.liters); byDrv[k].km+=GA.num(r.km); byDrv[k].n++;
+    });
+    const list=Object.entries(byDrv).sort((a,b)=>b[1].km-a[1].km).slice(0,10);
+    if(list.length){
+      out.push('-');
+      out.push({zh:'🚗 各車明細',en:'Per vehicle',v:list.length+' 台'});
+      list.forEach(([k,v])=>out.push({
+        zh:'  '+k, en:'  '+k,
+        v:v.km.toLocaleString()+'km / '+v.L.toLocaleString()+'L · '+GA.fmtRatio(GA.ratio(v.km,v.L),'km/L',1)
+      }));
+    }
+  }
+  if(scope==='all'||scope==='generator'){
+    const byDay={};
+    gen.forEach(r=>{
+      const k=r.date||'—';
+      if(!byDay[k]) byDay[k]={L:0,hr:0,n:0};
+      byDay[k].L+=GA.num(r.liters); byDay[k].hr+=GA.num(r.hours); byDay[k].n++;
+    });
+    const days=Object.entries(byDay).sort((a,b)=>a[0]<b[0]?1:-1).slice(0,12);
+    if(days.length){
+      out.push('-');
+      out.push({zh:'⚡ 發電機每日',en:'Generator daily',v:days.length+' 天'});
+      days.forEach(([d,v])=>out.push({
+        zh:'  '+d, en:'  '+d,
+        v:v.L.toLocaleString()+'L'+(v.hr?' / '+v.hr+'hr':'')
+      }));
+    }
+  }
+  if(scope==='all'||scope==='forklift'){
+    const byF={};
+    fork.forEach(r=>{
+      const k=(r.plate||r.unit||'Forklift').toString().trim();
+      if(!byF[k]) byF[k]={L:0,hr:0};
+      byF[k].L+=GA.num(r.liters); byF[k].hr+=GA.num(r.hours);
+    });
+    const fl=Object.entries(byF).sort((a,b)=>b[1].L-a[1].L).slice(0,8);
+    if(fl.length){
+      out.push('-');
+      out.push({zh:'🏗️ 各叉車',en:'Per forklift',v:fl.length+' 台'});
+      fl.forEach(([k,v])=>out.push({
+        zh:'  '+k, en:'  '+k,
+        v:v.L.toLocaleString()+'L'+(v.hr?' / '+v.hr+'hr':'')
+      }));
+    }
+  }
+
+  // 未來日期異常（例如 8 月卻出現 9 月紀錄）
+  const warn=GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh'));
+
   return GA.telegram.buildSummary({
     icon:'🛢️', titleZh:'柴油摘要', titleEn:'Diesel Summary',
     lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
-    rows:[
-      {zh:'🚗 司機',en:'Driver',v:drvL.toLocaleString()+'L / '+drv.length+' recs'},
-      {zh:'🏗️ 叉車',en:'Forklift',v:forkL.toLocaleString()+'L / '+fork.length+' recs'},
-      {zh:'⚡ 發電機',en:'Generator',v:genL.toLocaleString()+'L / '+gen.length+' recs'},
-      '-',
-      {zh:'合計',en:'Total',v:(drvL+forkL+genL).toLocaleString()+'L'},
-      {zh:'司機里程',en:'Driver KM',v:totKM.toLocaleString()+' km'},
-      '-',
-      {zh:'油耗 L/100km',en:'L/100km',v:GA.fmtRatio(l100,'',2)},
-      {zh:'效率 km/L',en:'km/L',v:GA.fmtRatio(kmL,'',2)},
-      {zh:'叉車 L/hr',en:'Forklift L/hr',v:GA.fmtRatio(forkLh,'',2)},
-      {zh:'發電機 L/hr',en:'Generator L/hr',v:GA.fmtRatio(genLh,'',2)}
-    ],
-    footer:'🕐 '+GA.ymd(new Date())
+    rows:out,
+    footer:(warn?warn+'\n':'')+'🕐 '+GA.ymd(new Date())
   });
 }
 function fuelTelegram(){
@@ -1080,8 +1144,36 @@ function fuelTelegram(){
   GA.telegram.open({
     module:'fuel',
     canApprove:false,          // 燃油無核可流程，只發摘要
+    scopes:[
+      {v:'all',zh:'全部',en:'All',km:'ទាំងអស់'},
+      {v:'driver',zh:'司機',en:'Driver',km:'អ្នកបើកបរ'},
+      {v:'forklift',zh:'叉車',en:'Forklift',km:'ឡានស្ទូច'},
+      {v:'generator',zh:'發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង'}
+    ],
     periods:fuelPeriods,
     summary:fuelSummaryText
+  });
+}
+
+function fuelDataPanel(){
+  GA.dataPanel({
+    module:'fuel',
+    count:()=>DB.length,
+    data:()=>({DB:DB}),
+    restore:(obj,mode)=>{
+      const inc=obj.DB||obj.db||[];
+      if(!Array.isArray(inc)) throw new Error('備份檔缺少 DB 陣列');
+      if(mode==='replace'){ DB=inc; }
+      else {
+        const seen={}; DB.forEach(r=>seen[GA.fingerprint([r.cat,r.date,r.plate||r.driver,r.liters,r.km||r.hours])]=1);
+        inc.forEach(r=>{ const k=GA.fingerprint([r.cat,r.date,r.plate||r.driver,r.liters,r.km||r.hours]);
+          if(!seen[k]){ DB.push(r); seen[k]=1; } });
+      }
+      save();
+    },
+    clear:()=>{ DB=[]; save(); },
+    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast('本模組匯出：請用各分頁的匯出鈕','err'); } },
+    onChange:()=>{ render(); }
   });
 }
 

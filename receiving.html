@@ -201,11 +201,12 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
 </style>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
+<script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -224,6 +225,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   <button class="topbar-icon" onclick="cloudUpload()" title="上傳雲端 Upload" id="cloud-up-btn">⬆️</button>
   <button class="topbar-icon" onclick="cloudDownload()" title="下載雲端 Download" id="cloud-dn-btn">⬇️</button>
   <button class="topbar-icon" onclick="recvSmartImport()" title="Smart Import 智慧匯入" id="smart-imp-btn">📥</button>
+  <button class="topbar-icon" onclick="recvDataPanel()" title="資料管理 Data">🗂️</button>
   <button class="topbar-icon" onclick="sendTelegram()" title="Send to Telegram">✈️</button>
   <button class="topbar-icon" onclick="showPage('settings')" title="Settings">⚙️</button>
 </div>
@@ -1334,6 +1336,29 @@ async function testCloud(){
     toast((lang==='zh'?'✅ 連線成功 ':'Connected: ')+(r.msg||r.ts||''),'success');
   } catch(e){ toast('Failed: '+e.message,'error'); }
 }
+function recvDataPanel(){
+  GA.dataPanel({
+    module:'receiving',
+    count:()=>records.length,
+    data:()=>({items:items,records:records,settings:settings}),
+    restore:(obj,mode)=>{
+      if(mode==='replace'){
+        if(obj.items) items=obj.items;
+        if(obj.records) records=obj.records;
+      }else{
+        const seen={}; records.forEach(r=>seen[r.id]=1);
+        (obj.records||[]).forEach(r=>{ if(!seen[r.id]){ records.push(r); seen[r.id]=1; } });
+        const inames={}; items.forEach(i=>inames[(i.name||'').toLowerCase()]=1);
+        (obj.items||[]).forEach(i=>{ if(!inames[(i.name||'').toLowerCase()]) items.push(i); });
+      }
+      saveLocal();
+    },
+    clear:()=>{ items=[]; records=[]; saveLocal(); },
+    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast('請用分頁的匯出鈕','err'); } },
+    onChange:()=>{ filteredItems=[...items]; filterItems(); renderAll(); }
+  });
+}
+
 function recvSmartImport(){
   GA.smartImport.openModal({
     allowSubmit:false,
@@ -1396,20 +1421,48 @@ function sendTelegram(){
         rows.push({zh:'收貨數量',en:'Receive qty',v:recvQ.toLocaleString()}); }
       if(scope!=='receive'){ rows.push({zh:'📤 領用筆數',en:'Issue recs',v:issue.length});
         rows.push({zh:'領用數量',en:'Issue qty',v:issueQ.toLocaleString()}); }
-      rows.push('-');
-      rows.push({zh:'⚠️ 低庫存品項',en:'Low stock items',v:low.length});
-      // 部門 top（領用）
+
+      /* 部門明細（全部列出，不只前三） */
       if(scope!=='receive'){
         const dept={}; issue.forEach(r=>{dept[r.dept||'—']=(dept[r.dept||'—']||0)+GA.num(r.qty);});
-        const top=Object.entries(dept).sort((a,b)=>b[1]-a[1]).slice(0,3);
-        if(top.length){ rows.push('-'); top.forEach(([d,q])=>rows.push({zh:'部門·'+d,en:'dept·'+d,v:q.toLocaleString()})); }
+        const dl=Object.entries(dept).sort((a,b)=>b[1]-a[1]);
+        if(dl.length){
+          rows.push('-');
+          rows.push({zh:'🏭 各部門領用',en:'Issue by dept',v:dl.length+' 部門'});
+          dl.forEach(([d,q])=>rows.push({zh:'  '+d,en:'  '+d,v:q.toLocaleString()}));
+        }
       }
-      // 低庫存明細
-      if(low.length){ rows.push('-'); low.slice(0,6).forEach(x=>rows.push({zh:x.name,en:x.name,v:'stock '+GA.num(x.stock)})); }
+      /* 品項明細 Top */
+      if(scope!=='receive'){
+        const it={}; issue.forEach(r=>{it[r.itemName||'—']=(it[r.itemName||'—']||0)+GA.num(r.qty);});
+        const il=Object.entries(it).sort((a,b)=>b[1]-a[1]).slice(0,12);
+        if(il.length){
+          rows.push('-');
+          rows.push({zh:'📦 領用品項 Top',en:'Top issued items',v:il.length});
+          il.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,v:q.toLocaleString()}));
+        }
+      }
+      if(scope!=='issue'){
+        const rv={}; recv.forEach(r=>{rv[r.itemName||'—']=(rv[r.itemName||'—']||0)+GA.num(r.qty);});
+        const rl=Object.entries(rv).sort((a,b)=>b[1]-a[1]).slice(0,10);
+        if(rl.length){
+          rows.push('-');
+          rows.push({zh:'📥 收貨品項 Top',en:'Top received',v:rl.length});
+          rl.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,v:q.toLocaleString()}));
+        }
+      }
+      /* 低庫存明細（全部列，超過 15 才截斷） */
+      rows.push('-');
+      rows.push({zh:'⚠️ 低庫存品項',en:'Low stock items',v:low.length});
+      low.slice(0,15).forEach(x=>rows.push({zh:'  '+x.name,en:'  '+x.name,
+        v:'stock '+GA.num(x.stock)+' / min '+GA.num(x.minStock||settings.lowThreshold||5)}));
+      if(low.length>15) rows.push({zh:'  …',en:'  …',v:'+'+(low.length-15)});
+
+      const warn=GA.futureWarnText(P,'date',st.lang==='en'?'en':(st.lang==='km'?'km':'zh'));
       return GA.telegram.buildSummary({
         icon:'📦', titleZh:'收貨報告摘要', titleEn:'Receiving Summary',
         lang:st.lang, period:GA.periodLabel(st.period,st.ptype), rows:rows,
-        footer:'🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())
+        footer:(warn?warn+'\n':'')+'🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())
       });
     }
   });
