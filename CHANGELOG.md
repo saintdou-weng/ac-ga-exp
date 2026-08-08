@@ -194,3 +194,16 @@
 - 匯入備份，可選**合併**（保留現有、自動去重）或**覆蓋**
 - 清空全部資料（需輸入 DELETE 二次確認）
 - 已接上 fuel / receiving / expense
+## v2.3-fixed — 2026-08-08（語言、Telegram 異常推送與未來日期警示修正）
+
+### 共用語言
+- 三語改由 `GA.lang` 與 `ac_ga_exp_lang` 統一保存，舊燃油語言鍵同步保留，避免不同頁面啟動時互相覆蓋。
+- receiving、maintenance、fuel、procurement 都監聽共用 `lang` 事件；切換後頁面內容與按鈕狀態同步更新。
+
+### Telegram／異常報告
+- Telegram polling 加入 Script Lock，並用單一 offset 流程去重，避免同一 update 被兩個時間觸發器重複處理。
+- `/anomaly`、`/abnomaly`、`/abnormaly`、`/alert` 改為完整指令比對；同一異常內容對同一群組 2 分鐘內不重複發送。
+- 群組 Chat ID 自動去重；新增管理員指令 `/stopanomaly`、`/startanomaly`。
+
+### 摘要錯誤
+- fuel、receiving、expense 對 `GA.futureWarnText` 加安全檢查，避免舊版核心載入時把 `GA.futureWarnText is not a function` 當成 Telegram 摘要送出。

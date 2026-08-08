@@ -480,7 +480,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 const ACCFG=(()=>{try{return JSON.parse(localStorage.getItem('ac_ga_exp_config')||'{}')}catch(e){return{}}})();
 const GAS_URL=(ACCFG.gasUrl&&ACCFG.gasUrl.trim())||'https://script.google.com/macros/s/AKfycbxPTXdEhjb4vhAxO-fQYYLnt_m4BZNkVsPiYVmyUzA-kxgr_b4VMC9yayXQCOS7xYYWAQ/exec';
 
-let lang='zh',currentTs='',currentDate='',photos=[];
+let lang=(typeof GA !== 'undefined' && GA.lang)||'zh',currentTs='',currentDate='',photos=[];
 const currentData={rep:[],po:[]};
 const params=new URLSearchParams(location.search);
 
@@ -595,10 +595,10 @@ km:{
 function T(k){return (TXT[lang]&&TXT[lang][k])||TXT.zh[k]||k}
 
 function setLang(l){
-  lang=l;
+  lang=['zh','en','km'].includes(l)?l:'zh';
   try{ GA.setLang(l); }catch(e){}
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.l===l));
-  Object.keys(TXT[l]).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=TXT[l][id]});
+  Object.keys(TXT[lang]||TXT.zh).forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=(TXT[lang]||TXT.zh)[id]});
   // 記錄分頁共用鍵
   ['reprec','porec'].forEach(p=>{
     ['fl-year','fl-month','fl-status','fl-search'].forEach(k=>{const el=document.getElementById(p+'-'+k);if(el)el.textContent=T(k)});
@@ -606,8 +606,9 @@ function setLang(l){
     ['sl-total','sl-approved','sl-pending','sl-rejected'].forEach(k=>{const el=document.getElementById(p+'-'+k);if(el)el.textContent=T(k)});
     const em=document.getElementById(p+'-empty');if(em)em.textContent=T('empty');
   });
-  updateDropdowns(l);
+  updateDropdowns(lang);
 }
+GA.on('lang', function(l){ if(l !== lang) setLang(l); });
 
 const ACTIONS={
   zh:['','Repair 維修','Buy new part 買新品','Change from stock 換庫存'],
@@ -1085,8 +1086,7 @@ function mtTelegram(){
   if(f==='po'||f==='temp')switchTab('po');
   else if(f==='repair'||f==='rep')switchTab('rep');
   const l=(params.get('lang')||'').toLowerCase();
-  const platLang=(GA.cfg().lang);
-  setLang(['zh','en','km'].includes(l)?l:(['zh','en','km'].includes(platLang)?platLang:'zh'));
+  setLang(['zh','en','km'].includes(l)?l:(GA.lang||'zh'));
 })();
 </script>
 </body>

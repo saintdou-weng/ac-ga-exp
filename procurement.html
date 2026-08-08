@@ -420,9 +420,9 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
           <span class="role-tag" id="urole"></span>
         </div>
         <div class="lang-sw">
-          <button class="on" onclick="setL('zh')">中</button>
-          <button onclick="setL('en')">EN</button>
-          <button onclick="setL('km')">ខ្មែរ</button>
+          <button class="on" data-l="zh" onclick="setL('zh')">中</button>
+          <button data-l="en" onclick="setL('en')">EN</button>
+          <button data-l="km" onclick="setL('km')">ខ្មែរ</button>
         </div>
         <select id="msel" onchange="onMonthChange(+this.value)"></select>
         <button id="logout-btn" onclick="doLogout()">↩ Logout</button>
@@ -860,7 +860,7 @@ const YEAR=new Date().getFullYear();
 // ════════════════════════════════
 // STATE
 // ════════════════════════════════
-let lang="zh", cu=null, activeCat="cleaning", curMonth=new Date().getMonth(), srchQ="";
+let lang=(typeof GA !== 'undefined' && GA.lang)||'zh', cu=null, activeCat="cleaning", curMonth=new Date().getMonth(), srchQ="";
 let ords={}, poStatus="draft", sigs={applicant:null,verifier:null,approver:null};
 let poNumber=null; // assigned on approval
 let hiddenItems={}; // id -> true means hidden from grid
@@ -2096,9 +2096,10 @@ function doEditRejected(){
 }
 
 function setL(l){
-  lang=l;
-  try{ GA.setLang(l); }catch(e){}   // 讓共用工具列/期間列/匯入/Telegram 同步切三語
-  render();
+  lang=['zh','en','km'].includes(l)?l:'zh';
+  try{ GA.setLang(lang); }catch(e){}   // 共用平台語言唯一來源
+  document.querySelectorAll('.lang-sw button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));
+  if(cu) render();
   // Update page-specific labels
   const invTitle=document.getElementById("inv-title");
   if(invTitle) invTitle.textContent=l==="zh"?"庫存管理":"Inventory";
@@ -2136,10 +2137,11 @@ function setL(l){
   const rtt=document.getElementById("recv-title"); if(rtt) rtt.textContent=l==="zh"?"收貨紀錄":"Receive Records";
   // Re-render current page if inv or settings
   const activeP=document.querySelector(".page.on");
-  if(activeP&&activeP.id==="page-inv") renderInv();
-  if(activeP&&activeP.id==="page-settings") renderSettings();
-  if(activeP&&activeP.id==="page-recv") renderRecv();
+  if(cu&&activeP&&activeP.id==="page-inv") renderInv();
+  if(cu&&activeP&&activeP.id==="page-settings") renderSettings();
+  if(cu&&activeP&&activeP.id==="page-recv") renderRecv();
 }
+GA.on('lang',function(l){ if(l!==lang) setL(l); });
 function setCat(k){activeCat=k;render();}
 function onSrch(v){srchQ=v;document.getElementById("sclear").style.display=v?"block":"none";render();}
 function clrSrch(){srchQ="";document.getElementById("sinput").value="";document.getElementById("sclear").style.display="none";render();}
@@ -2786,6 +2788,7 @@ function lowStockList(){
   }catch(e){ return []; }
 }
 
+setL(GA.lang||lang);
 initLogin();
 </script>
 </body>

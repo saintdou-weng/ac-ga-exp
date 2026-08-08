@@ -574,18 +574,19 @@ const I18N = {
     period_day: "ថ្ងៃ", period_week: "សប្តាហ៍", period_month: "ខែ", period_year: "ឆ្នាំ",
   }
 };
-let lang = 'en';
+let lang = (typeof GA !== 'undefined' && GA.lang) || 'zh';
 function setLang(l){
-  lang = l;
+  lang = ['zh','en','km'].includes(l) ? l : 'zh';
   try{ GA.setLang(l); }catch(e){}
   ['en','zh','km'].forEach(x=>document.getElementById('lb-'+x).classList.toggle('active', x===l));
   document.querySelectorAll('[data-i]').forEach(el=>{
     const key = el.getAttribute('data-i');
-    if(I18N[l][key]) el.textContent = I18N[l][key];
+    if(I18N[lang] && I18N[lang][key]) el.textContent = I18N[lang][key];
   });
   renderStats(); renderItemsTable(); renderReceiveContent(); renderAnalysis();
   try{ updatePeriodLabel(); }catch(e){}
 }
+GA.on('lang', function(l){ if(l !== lang) setLang(l); });
 
 // =========== DATA ===========
 let items = []; // { id, no, name, category, brand, size, stock, minStock, remarks, ytdPurchased, ytdUsed, monthData:{} }
@@ -1458,7 +1459,7 @@ function sendTelegram(){
         v:'stock '+GA.num(x.stock)+' / min '+GA.num(x.minStock||settings.lowThreshold||5)}));
       if(low.length>15) rows.push({zh:'  …',en:'  …',v:'+'+(low.length-15)});
 
-      const warn=GA.futureWarnText(P,'date',st.lang==='en'?'en':(st.lang==='km'?'km':'zh'));
+      const warn=(typeof GA.futureWarnText==='function') ? GA.futureWarnText(P,'date',st.lang==='en'?'en':(st.lang==='km'?'km':'zh')) : '';
       return GA.telegram.buildSummary({
         icon:'📦', titleZh:'收貨報告摘要', titleEn:'Receiving Summary',
         lang:st.lang, period:GA.periodLabel(st.period,st.ptype), rows:rows,
@@ -1511,9 +1512,7 @@ try{
   GA.cloud.mount('#ga-cloud');
   const lastSync=GA.cfg()['sync_recv'];
   if(lastSync) GA.cloud.set('idle', GA.T('lastSync')+' '+lastSync);
-  const platLang=GA.cfg().lang;
-  if(platLang && platLang!==lang){ setLang(platLang); }
-  else { setLang(lang); }
+  setLang(GA.lang || lang);
 }catch(e){}
 
 </script>

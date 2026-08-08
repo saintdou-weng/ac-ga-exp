@@ -18,7 +18,16 @@ GA.VERSION = '2.0';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
+var LANG_KEY = 'ac_ga_exp_lang';
 var DEFAULT_GAS = 'https://script.google.com/macros/s/AKfycbxPTXdEhjb4vhAxO-fQYYLnt_m4BZNkVsPiYVmyUzA-kxgr_b4VMC9yayXQCOS7xYYWAQ/exec';
+
+function validLang(l) { return l === 'zh' || l === 'en' || l === 'km'; }
+function storedLang() {
+  var c = GA.cfg();
+  var shared = '';
+  try { shared = localStorage.getItem(LANG_KEY) || localStorage.getItem('vrt_dsl_lang') || ''; } catch (e) {}
+  return validLang(c.lang) ? c.lang : (validLang(shared) ? shared : 'zh');
+}
 
 GA.cfg = function () {
   try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); }
@@ -87,10 +96,7 @@ GA.gasPost = function (action, payload, extra) {
 };
 
 /* ═══════════════════ 3. 三語 i18n ═══════════════════ */
-GA.lang = (function () {
-  var l = GA.cfg().lang;
-  return (l === 'en' || l === 'km' || l === 'zh') ? l : 'zh';
-})();
+GA.lang = storedLang();
 
 /* 平台共用字典（各模組再用 GA.addDict 疊加自己的） */
 var DICT = {
@@ -176,12 +182,28 @@ GA.applyLang = function (root) {
 };
 
 GA.setLang = function (l) {
-  if (['zh', 'en', 'km'].indexOf(l) < 0) l = 'zh';
+  if (!validLang(l)) l = 'zh';
+  if (GA.lang === l) {
+    GA.applyLang();
+    return GA.lang;
+  }
   GA.lang = l;
   GA.saveCfg({ lang: l });
+  try {
+    localStorage.setItem(LANG_KEY, l);
+    // Keep the legacy fuel key in sync so old cached pages do not revert language.
+    localStorage.setItem('vrt_dsl_lang', l);
+  } catch (e) {}
   GA.applyLang();
   GA.emit('lang', l);
+  return GA.lang;
 };
+
+// Keep already-open tabs synchronized without allowing a stale module default
+// to overwrite the platform language on the next render.
+if (global.addEventListener) global.addEventListener('storage', function (e) {
+  if (e.key === LANG_KEY && validLang(e.newValue) && e.newValue !== GA.lang) GA.setLang(e.newValue);
+});
 
 /* i18n 完整性檢查（開發用：GA.i18nAudit() 會列出缺漏 key） */
 GA.i18nAudit = function () {
@@ -326,6 +348,43 @@ GA.currentPeriod = function (type) { return GA.periodKey(GA.ymd(new Date()), typ
 GA.inPeriod = function (dateStr, key, type) {
   if (!key || key === 'ALL') return true;
   return GA.periodKey(dateStr, type) === key;
+};
+
+/* ═══════════════════ 5b. 未來日期偵測 ═══════════════════
+   實務問題：Excel 誤植或手誤，會出現「超過今天」的記錄
+   （例如 8 月卻有 9 月的柴油紀錄），彙總時會被算進去而不自知。
+   規則：日期 > 今天 → 標記為異常，摘要中獨立列出要求確認。      */
+GA.isFuture = function (dateStr) {
+  var d = GA.parseYMD(dateStr);
+  if (!d) return false;
+  var today = new Date(); today.setHours(23, 59, 59, 999);
+  return d.getTime() > today.getTime();
+};
+/* 從一批記錄挑出未來日期者
+   rows: 記錄陣列; field: 日期欄位名或取值函式（預設 'date'） */
+GA.futureRecords = function (rows, field) {
+  var f = field || 'date';
+  return (rows || []).filter(function (r) {
+    var v = (typeof f === 'function') ? f(r) : r[f];
+    return GA.isFuture(v);
+  });
+};
+/* 產生「未來日期」警示文字（給摘要用；無異常回空字串）*/
+GA.futureWarnText = function (rows, field, lang) {
+  var fut = GA.futureRecords(rows, field);
+  if (!fut.length) return '';
+  var L = lang || GA.lang;
+  var f = field || 'date';
+  var title = L === 'en' ? '⚠️ FUTURE-DATED records (please verify)'
+            : L === 'km' ? '⚠️ កាលបរិច្ឆេទអនាគត (សូមផ្ទៀងផ្ទាត់)'
+            : '⚠️ 日期超過今天，請確認 Future-dated';
+  var lines = fut.slice(0, 6).map(function (r) {
+    var v = (typeof f === 'function') ? f(r) : r[f];
+    var who = r.plate || r.driver || r.item || r.itemName || r.category || r.unit || '';
+    return '  • ' + v + (who ? ' · ' + who : '');
+  });
+  return '\n' + title + '（' + fut.length + '）\n' + lines.join('\n') +
+    (fut.length > 6 ? '\n  … +' + (fut.length - 6) : '');
 };
 
 /* ═══════════════════ 6. 期間控制列 PeriodControl ═══════════════════

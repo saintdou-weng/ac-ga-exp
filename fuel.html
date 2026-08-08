@@ -360,9 +360,10 @@ date:'\u1780\u17B6\u179B\u1794\u179A\u17B7\u1785\u17D2\u1786\u17C1\u1791',driver
 dept:'\u1795\u17D2\u1793\u17C2\u1780',forklift:'\u179A\u17C1\u179C\u17B6\u1791\u17D0\u179A',startKM:'\u1785\u17B6\u1794\u17CB\u1795\u17D2\u178F\u17BE\u1798',arriveKM:'\u1798\u1780\u178A\u179B\u17CB',totalKM:'\u179F\u179A\u17BB\u1794',
 kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\u17C4\u1784',machine:'\u1798\u17C9\u17B6\u179F\u17CA\u17B8\u1793',remarks:'\u179F\u1798\u17D2\u1782\u17B6\u179B\u17CB',total:'\u179F\u179A\u17BB\u1794',avg:'\u1798\u17B6\u178F\u17CB\u1798\u17B6'}
 };
-let lang=localStorage.getItem('vrt_dsl_lang')||'zh';
+let lang=(typeof GA !== 'undefined' && GA.lang)||localStorage.getItem('vrt_dsl_lang')||'zh';
 function T(k){return I18N[lang]?.[k]||I18N.en[k]||k}
-function setLang(l){lang=l;localStorage.setItem('vrt_dsl_lang',l);try{GA.setLang(l);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===l));applyLang()}
+function setLang(l){lang=['zh','en','km'].includes(l)?l:'zh';localStorage.setItem('vrt_dsl_lang',lang);try{GA.setLang(lang);}catch(e){}document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));applyLang()}
+GA.on('lang',function(l){if(l!==lang)setLang(l);});
 function applyLang(){document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k&&T(k))el.textContent=T(k)});document.getElementById('hTitle').textContent=T('hTitle');['hlDrv','hlFork','hlGen','hlTot'].forEach(k=>{const e=document.getElementById(k.replace('hl',''));/*skip*/});updateHeader()}
 
 // ═══════════════════════════════════════════════════════════
@@ -392,7 +393,7 @@ document.getElementById('gasUrl').value=localStorage.getItem('vrt_dsl_gas')||ACC
 /* v2：Token 已移至 GAS，不再由瀏覽器保存 */try{localStorage.removeItem('vrt_dsl_tg_token')}catch(e){}
 document.getElementById('tgChat').value=localStorage.getItem('vrt_dsl_tg_chat')||ACCFG.tgChat||'';
 document.getElementById('sumDate').value=localYMD();
-setupDrop();updateHeader();updateDBCard();setLang(lang);
+setupDrop();updateHeader();updateDBCard();setLang(GA.lang||lang);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1130,7 +1131,7 @@ function fuelSummaryText(s){
   }
 
   // 未來日期異常（例如 8 月卻出現 9 月紀錄）
-  const warn=GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh'));
+  const warn=(typeof GA.futureWarnText==='function') ? GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh')) : '';
 
   return GA.telegram.buildSummary({
     icon:'🛢️', titleZh:'柴油摘要', titleEn:'Diesel Summary',

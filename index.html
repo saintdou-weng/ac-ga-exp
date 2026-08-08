@@ -335,8 +335,9 @@ function pushAnomaly(){
   if(!GA.gasUrl()){ GA.toast('請先在設定中心填 GAS URL'); return; }
   GA.toast('⏳ 檢查異常中...');
   GA.gasPost('anomalyReport', {}).then(d=>{
+    if(d.data&&d.data.disabled){ GA.toast('⏹ 異常推送目前已停止 / Anomaly pushes are stopped'); return; }
     const c=(d.data&&d.data.counts)||{};
-    const total=(c.lowStock||0)+(c.overBudget||0)+(c.overdue||0)+(c.fuelAbnormal||0);
+    const total=(c.lowStock||0)+(c.overBudget||0)+(c.overdue||0)+(c.fuelAbnormal||0)+(c.futureDated||0);
     GA.toast(total? ('⚠️ 發現 '+total+' 項異常，已推送群組') : '✅ 目前無異常');
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
