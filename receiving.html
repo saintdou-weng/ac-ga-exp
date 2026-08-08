@@ -483,6 +483,10 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <label class="form-label">Requester</label>
         <input class="form-input" id="rf-req" placeholder="Name">
       </div>
+      <div class="form-group">
+        <label class="form-label" data-i="inspector">Inspector</label>
+        <input class="form-input" id="rf-inspector" placeholder="Name">
+      </div>
       <div class="form-group full">
         <label class="form-label">Remarks</label>
         <input class="form-input" id="rf-remarks" placeholder="Notes...">
@@ -523,7 +527,7 @@ const I18N = {
     stat_issue: "This Month Issue", stat_low: "Low Stock",
     st_items: "Supply Items Master List", st_receive: "Monthly Receive & Issue Records",
     st_analysis: "Analysis & Reports",
-    period_day: "Day", period_week: "Week", period_month: "Month", period_year: "Year",
+    period_day: "Day", period_week: "Week", period_month: "Month", period_year: "Year", inspector: "Inspector",
   },
   zh: {
     items: "品項", receive: "收發記錄", analysis: "分析報告",
@@ -547,7 +551,7 @@ const I18N = {
     stat_issue: "本月領用", stat_low: "低庫存",
     st_items: "物資品項總表", st_receive: "月度收發記錄",
     st_analysis: "分析報告",
-    period_day: "日", period_week: "週", period_month: "月", period_year: "年",
+    period_day: "日", period_week: "週", period_month: "月", period_year: "年", inspector: "檢查人",
   },
   km: {
     items: "ទំនិញ", receive: "កំណត់ត្រា", analysis: "វិភាគ",
@@ -571,7 +575,7 @@ const I18N = {
     stat_issue: "ចែកខែនេះ", stat_low: "ស្តុកទាប",
     st_items: "បញ្ជីទំនិញ", st_receive: "កំណត់ត្រាទទួល/ចែក",
     st_analysis: "វិភាគ",
-    period_day: "ថ្ងៃ", period_week: "សប្តាហ៍", period_month: "ខែ", period_year: "ឆ្នាំ",
+    period_day: "ថ្ងៃ", period_week: "សប្តាហ៍", period_month: "ខែ", period_year: "ឆ្នាំ", inspector: "អ្នកត្រួតពិនិត្យ",
   }
 };
 let lang = (typeof GA !== 'undefined' && GA.lang) || 'zh';
@@ -590,7 +594,7 @@ GA.on('lang', function(l){ if(l !== lang) setLang(l); });
 
 // =========== DATA ===========
 let items = []; // { id, no, name, category, brand, size, stock, minStock, remarks, ytdPurchased, ytdUsed, monthData:{} }
-let records = []; // { id, date, type:'receive'|'issue', itemId, itemName, qty, dept, requester, remarks }
+let records = []; // { id, date, type:'receive'|'issue', itemId, itemName, qty, dept, requester, inspector, remarks }
 let settings = { gasUrl:'', sheetId:'', tgToken:'', tgChat:'', factory:'Vantage River Textiles Co., Ltd.', dept:'GA/Admin', lowThreshold:5 };
 
 // Period state
@@ -797,7 +801,7 @@ function importExcel(input){
               if(!dup){
                 records.push({ id:newId(), date:dateStr, type:'issue',
                   itemId:item.id, itemName:item.name, qty, dept,
-                  requester:'', remarks:'Imported' });
+                  requester:'', inspector:'', remarks:'Imported' });
                 importedRecords++;
               }
             });
@@ -811,7 +815,7 @@ function importExcel(input){
           if(!dup){
             records.push({ id:newId(), date:pDateStr, type:'receive',
               itemId:item.id, itemName:item.name, qty:ytdPurchased,
-              dept:'GA/Admin', requester:'', remarks:'Imported' });
+              dept:'GA/Admin', requester:'', inspector:'', remarks:'Imported' });
           }
           item.ytdPurchased = ytdPurchased;
         }
@@ -842,8 +846,8 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(iRows), 'Items');
   
   // Records sheet
-  const rRows = [['Date','Type','Item','Qty','Dept','Requester','Remarks']];
-  records.forEach(r=>rRows.push([r.date,r.type,r.itemName,r.qty,r.dept,r.requester,r.remarks]));
+  const rRows = [['Date','Type','Item','Qty','Dept','Requester','Inspector','Remarks']];
+  records.forEach(r=>rRows.push([r.date,r.type,r.itemName,r.qty,r.dept,r.requester,r.inspector||'',r.remarks]));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rRows), 'Records');
   
   XLSX.writeFile(wb, `VRT_Receive_Report_${localYMD()}.xlsx`);
@@ -1059,6 +1063,7 @@ function showReceiveForm(type){
   document.getElementById('rf-qty').value=1;
   document.getElementById('rf-dept').value=settings.dept||'';
   document.getElementById('rf-req').value='';
+  document.getElementById('rf-inspector').value='';
   document.getElementById('rf-remarks').value='';
   // Populate item select
   const sel = document.getElementById('rf-item');
@@ -1076,6 +1081,7 @@ function saveReceiveRecord(){
     qty: +document.getElementById('rf-qty').value||1,
     dept: document.getElementById('rf-dept').value.trim(),
     requester: document.getElementById('rf-req').value.trim(),
+    inspector: document.getElementById('rf-inspector').value.trim(),
     remarks: document.getElementById('rf-remarks').value.trim(),
   };
   if(id){ const r=records.find(x=>x.id===id); if(r) Object.assign(r,data); }
@@ -1155,13 +1161,13 @@ function renderReceiveContent(){
   } else {
     const filtered = periodRecords.filter(r=>r.type===receiveTab).sort((a,b)=>b.date.localeCompare(a.date));
     html += `<div class="table-wrap"><table><thead><tr>
-      <th>Date</th><th>Item</th><th>Dept</th><th>Requester</th><th class="num">Qty</th><th>Remarks</th><th></th>
+      <th>Date</th><th>Item</th><th>Dept</th><th>Requester</th><th>${I18N[lang].inspector}</th><th class="num">Qty</th><th>Remarks</th><th></th>
     </tr></thead><tbody>`;
-    if(!filtered.length) html+=`<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:24px">No records for this period</td></tr>`;
+    if(!filtered.length) html+=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:24px">No records for this period</td></tr>`;
     filtered.forEach(r=>{ html+=`<tr>
       <td style="color:var(--text2);font-size:12px">${r.date}</td>
       <td style="font-weight:600">${r.itemName}</td>
-      <td>${r.dept||'-'}</td><td>${r.requester||'-'}</td>
+      <td>${r.dept||'-'}</td><td>${r.requester||'-'}</td><td>${r.inspector||'-'}</td>
       <td class="num" style="font-weight:700">${r.qty}</td>
       <td style="color:var(--text3);font-size:12px">${r.remarks||''}</td>
       <td><div class="row-actions">
@@ -1364,8 +1370,8 @@ function recvSmartImport(){
   GA.smartImport.openModal({
     allowSubmit:false,
     existing:function(type){
-      if(type==='receiving') return records.map(r=>({date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,_row:r.id,
-        _fp:GA.smartImport.fingerprintOf('receiving',{date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,_row:r.id})}));
+      if(type==='receiving') return records.map(r=>({date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,inspector:r.inspector||'',_row:r.id,
+        _fp:GA.smartImport.fingerprintOf('receiving',{date:r.date,type:r.type,item:r.itemName,qty:r.qty,dept:r.dept,applicant:r.requester,inspector:r.inspector||'',_row:r.id})}));
       if(type==='inventory') return items.map(i=>({item:i.name,_fp:GA.smartImport.fingerprintOf('inventory',{item:i.name})}));
       return [];
     },
@@ -1388,7 +1394,7 @@ function recvSmartImport(){
         if(!item) return;
         var q=GA.num(r.qty);
         records.push({ id:newId(), date:r.date||GA.ymd(new Date()), type:type,
-          itemId:item.id, itemName:item.name, qty:q, dept:r.dept||'', requester:r.applicant||'', remarks:r.remarks||r.purpose||'' });
+          itemId:item.id, itemName:item.name, qty:q, dept:r.dept||'', requester:r.applicant||'', inspector:r.inspector||'', remarks:r.remarks||r.purpose||'' });
         if(type==='receive'){ item.ytdPurchased=(item.ytdPurchased||0)+q; item.stock=(item.stock||0)+q; }
         else { item.ytdUsed=(item.ytdUsed||0)+q; item.stock=Math.max(0,(item.stock||0)-q); }
         addRec++;
@@ -1417,11 +1423,18 @@ function sendTelegram(){
       const recv=P.filter(r=>r.type==='receive'), issue=P.filter(r=>r.type==='issue');
       const recvQ=recv.reduce((a,r)=>a+GA.num(r.qty),0), issueQ=issue.reduce((a,r)=>a+GA.num(r.qty),0);
       const low=items.filter(x=>GA.num(x.stock)<(settings.lowThreshold||5));
+      const scoped=P.filter(r=>scope==='receive'?r.type==='receive':scope==='issue'?r.type==='issue':true);
+      const byInspector={}; scoped.forEach(r=>{const n=String(r.inspector||'').trim()||'—';byInspector[n]=(byInspector[n]||0)+1;});
+      const inspectorList=Object.entries(byInspector).sort((a,b)=>b[1]-a[1]);
       const rows=[];
       if(scope!=='issue'){ rows.push({zh:'📥 收貨筆數',en:'Receive recs',v:recv.length});
         rows.push({zh:'收貨數量',en:'Receive qty',v:recvQ.toLocaleString()}); }
       if(scope!=='receive'){ rows.push({zh:'📤 領用筆數',en:'Issue recs',v:issue.length});
         rows.push({zh:'領用數量',en:'Issue qty',v:issueQ.toLocaleString()}); }
+
+      rows.push('-');
+      rows.push({zh:'🔎 檢查人',en:'Inspector',v:inspectorList.length});
+      inspectorList.forEach(([n,c])=>rows.push({zh:'  '+(n==='—'?'未填':n),en:'  '+(n==='—'?'Not entered':n),v:c+' 筆 / '+c+' recs'}));
 
       /* 部門明細（全部列出，不只前三） */
       if(scope!=='receive'){

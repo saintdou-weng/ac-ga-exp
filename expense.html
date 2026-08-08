@@ -123,6 +123,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <div><label data-t="item">項目</label><input id="a-item" placeholder="Item"></div>
         <div><label data-t="dept">部門</label><input id="a-dept" placeholder="Dept"></div>
         <div><label>Supplier</label><input id="a-sup" placeholder="Supplier"></div>
+        <div><label data-t="inspector">檢查人</label><input id="a-inspector" placeholder="姓名 / Name"></div>
         <div><label data-t="qty">數量</label><input type="number" id="a-qty" step="0.01" placeholder="0"></div>
         <div><label data-t="estAmt">預估金額 Est.</label><input type="number" id="a-est" step="0.01" placeholder="0.00"></div>
         <div><label data-t="actAmt">實際金額 Actual</label><input type="number" id="a-amt" step="0.01" placeholder="0.00"></div>
@@ -153,21 +154,21 @@ GA.addDict({
     addBtn:'新增並保存',est:'預估',act:'實際',budget:'預算',spent:'已花',remain:'剩餘',
     estAmt:'預估金額',actAmt:'實際金額',item:'項目',remark:'備註',cat:'類別',save:'儲存',add:'新增',
     kTotal:'本期支出',kYtd:'年度累計',kTxn:'交易筆數',kCat:'活躍類別',kAvg:'平均單筆',kEst:'預估vs實際',
-    allCat:'全部類別',allSrc:'全部來源',delTxn:'刪除此筆？' },
+    allCat:'全部類別',allSrc:'全部來源',inspector:'檢查人',delTxn:'刪除此筆？' },
   en:{ tabOv:'Overview',tabLedger:'Ledger',tabCat:'Category',tabTrend:'Trend',tabBgt:'Budget',tabAdd:'Add',
     chCat:'By Category',chSrc:'By Source',chCatBar:'Category Amount',chTrend:'Period Trend',topSpend:'Top Spend',
     catBreak:'Category Detail',trendList:'Period Summary',bgtSet:'Monthly Budget',addManual:'Add Manual Expense',editCat:'Category Manager',
     addBtn:'Add & Save',est:'Est.',act:'Actual',budget:'Budget',spent:'Spent',remain:'Remain',
     estAmt:'Estimated',actAmt:'Actual',item:'Item',remark:'Remark',cat:'Category',save:'Save',add:'Add',
     kTotal:'Period Spend',kYtd:'YTD Total',kTxn:'Transactions',kCat:'Active Cats',kAvg:'Avg / txn',kEst:'Est vs Actual',
-    allCat:'All Categories',allSrc:'All Sources',delTxn:'Delete this record?' },
+    allCat:'All Categories',allSrc:'All Sources',inspector:'Inspector',delTxn:'Delete this record?' },
   km:{ tabOv:'ទិដ្ឋភាព',tabLedger:'បញ្ជី',tabCat:'ប្រភេទ',tabTrend:'និន្នាការ',tabBgt:'ថវិកា',tabAdd:'បន្ថែម',
     chCat:'តាមប្រភេទ',chSrc:'តាមប្រភព',chCatBar:'ចំនួនតាមប្រភេទ',chTrend:'និន្នាការ',topSpend:'ចំណាយច្រើន',
     catBreak:'លម្អិតប្រភេទ',trendList:'សង្ខេប',bgtSet:'ថវិកាប្រចាំខែ',addManual:'បន្ថែមចំណាយ',editCat:'គ្រប់គ្រងប្រភេទ',
     addBtn:'បន្ថែម',est:'ប៉ាន់',act:'ជាក់ស្តែង',budget:'ថវិកា',spent:'បានចាយ',remain:'នៅសល់',
     estAmt:'ប៉ាន់ស្មាន',actAmt:'ជាក់ស្តែង',item:'ធាតុ',remark:'ចំណាំ',cat:'ប្រភេទ',save:'រក្សាទុក',add:'បន្ថែម',
     kTotal:'ចំណាយ',kYtd:'សរុបឆ្នាំ',kTxn:'ប្រតិបត្តិការ',kCat:'ប្រភេទសកម្ម',kAvg:'មធ្យម',kEst:'ប៉ាន់vsជាក់',
-    allCat:'ប្រភេទទាំងអស់',allSrc:'ប្រភពទាំងអស់',delTxn:'លុបកំណត់ត្រានេះ?' }
+    allCat:'ប្រភេទទាំងអស់',allSrc:'ប្រភពទាំងអស់',inspector:'អ្នកត្រួតពិនិត្យ',delTxn:'លុបកំណត់ត្រានេះ?' }
 });
 
 var CATMETA = {}, txns = [], budgets = {};
@@ -190,7 +191,7 @@ function loadData(){
         qty:GA.num(r.qty), unit:r.unit||'', supplier:r.supplier||'', dept:r.dept||'',
         amount:GA.num(r.amount), estAmount:GA.num(r.amount), purpose:r.purpose||'',
         consumption:GA.num(r.consumption), consUnit:r.consUnit||'',
-        sourceModule:'seed', status:'approved' };
+        sourceModule:'seed', status:'approved', inspector:r.inspector||'' };
       GA.stamp(rec,{source:'seed',prefix:'exp'});
       rec._fp = GA.smartImport.fingerprintOf('expense',rec);
       return rec;
@@ -267,6 +268,7 @@ function ledgerCols(){
     {k:'item',t:'item'},
     {k:'dept',t:'dept'},
     {k:'supplier',label:'Supplier'},
+    {k:'inspector',t:'inspector'},
     {k:'qty',t:'qty',num:true},
     {k:'estAmount',label:GA.T('est'),num:true,html:function(r){return r.estAmount?GA.money(r.estAmount,2):'—';}},
     {k:'amount',label:GA.T('act'),num:true,html:function(r){return GA.money(r.amount,2);}},
@@ -374,12 +376,13 @@ function addManual(){
   var rec={ date:document.getElementById('a-date').value||GA.ymd(new Date()),
     category:cat, item:document.getElementById('a-item').value.trim(),
     dept:document.getElementById('a-dept').value.trim(), supplier:document.getElementById('a-sup').value.trim(),
+    inspector:document.getElementById('a-inspector').value.trim(),
     qty:GA.num(document.getElementById('a-qty').value), estAmount:estV||amtV, amount:amtV||estV,
     purpose:document.getElementById('a-note').value.trim(), sourceModule:'manual', status:'approved' };
   GA.stamp(rec,{source:'online',prefix:'exp'});
   rec._fp=GA.smartImport.fingerprintOf('expense',rec);
   txns.push(rec); saveTxns();
-  ['a-item','a-dept','a-sup','a-qty','a-est','a-amt','a-note'].forEach(function(id){document.getElementById(id).value='';});
+  ['a-item','a-dept','a-sup','a-inspector','a-qty','a-est','a-amt','a-note'].forEach(function(id){document.getElementById(id).value='';});
   GA.toast('➕ OK'); fillFilters(); render();
 }
 function delTxn(id){
@@ -433,8 +436,8 @@ function expDownload(){
 function expExport(){
   var rows=applyFilters(periodTxns());
   if(!rows.length){ GA.toast(GA.T('noData'),'err'); return; }
-  var hdr=['Date','Category','Item','Dept','Supplier','Qty','Unit','Est','Actual','Source','Purpose'];
-  var aoa=[hdr].concat(rows.map(function(r){ return [r.date,catLabel(r.category),r.item,r.dept,r.supplier,r.qty,r.unit,r.estAmount,r.amount,r.sourceModule,r.purpose]; }));
+  var hdr=['Date','Category','Item','Dept','Supplier','Inspector','Qty','Unit','Est','Actual','Source','Purpose'];
+  var aoa=[hdr].concat(rows.map(function(r){ return [r.date,catLabel(r.category),r.item,r.dept,r.supplier,r.inspector||'',r.qty,r.unit,r.estAmount,r.amount,r.sourceModule,r.purpose]; }));
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=hdr.map(function(_,i){return {wch:i<1?12:i===2?24:13};});
   var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Expense');
@@ -448,6 +451,7 @@ function expImport(){
       var add=(payload.expense||[]);
       add.forEach(function(r){
         if(!r.amount && r.estAmount) r.amount=r.estAmount;
+        r.inspector=r.inspector||'';
         if(!r.category) r.category='other';
         if(!CATMETA[r.category]) CATMETA[r.category]={icon:'📌',label:r.category,type:'service'};
         r.sourceModule=r.sourceModule||'excel'; r.status='approved';
@@ -472,6 +476,8 @@ function expTelegram(){
       var rows=txns.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
       var total=rows.reduce(function(a,r){return a+amt(r);},0);
       var byCat={}; rows.forEach(function(r){byCat[r.category]=(byCat[r.category]||0)+amt(r);});
+      var byInspector={}; rows.forEach(function(r){var n=String(r.inspector||'').trim()||'—';byInspector[n]=(byInspector[n]||0)+1;});
+      var inspectorList=Object.entries(byInspector).sort(function(a,b){return b[1]-a[1];});
       var cats=Object.keys(byCat).filter(function(k){return byCat[k]>0;})
                      .sort(function(a,b){return byCat[b]-byCat[a];});
       var out=[
@@ -496,6 +502,11 @@ function expTelegram(){
           out.push({zh:'來源·'+m,en:'src·'+m,v:GA.money(bySrc[m],2)});
         });
       }
+      out.push('-');
+      out.push({zh:'🔎 檢查人',en:'Inspector',v:inspectorList.length});
+      inspectorList.forEach(function(x){
+        out.push({zh:'  '+(x[0]==='—'?'未填':x[0]),en:'  '+(x[0]==='—'?'Not entered':x[0]),v:x[1]+' 筆 / '+x[1]+' recs'});
+      });
       // 預算超支提醒
       var over=[];
       cats.forEach(function(k){

@@ -235,6 +235,10 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <div class="cell-label"><span id="rep-l-date">申請日期 Date</span></div>
         <input class="cell-input f-date" type="text" readonly style="color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px">
       </div>
+      <div class="info-cell">
+        <div class="cell-label"><span id="rep-l-inspector">檢查人 Inspector</span></div>
+        <input class="cell-input" id="rep-inspector" type="text" placeholder="姓名 / Name" maxlength="50">
+      </div>
     </div>
   </div>
 
@@ -280,7 +284,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <div class="history-head">🔧 <span id="rep-h-title">上次維修記錄 (已核可)</span><span class="h-badge" id="rep-h-count">0</span></div>
     <div class="h-for" id="rep-h-for"></div>
     <table class="htable">
-      <thead><tr><th id="rep-ht-date">日期</th><th id="rep-ht-dept">部門</th><th id="rep-ht-item">設備</th><th id="rep-ht-loc">地點</th><th id="rep-ht-issue">故障</th><th id="rep-ht-action">處理</th><th id="rep-ht-supplier">供應商</th><th id="rep-ht-price">金額</th></tr></thead>
+      <thead><tr><th id="rep-ht-date">日期</th><th id="rep-ht-dept">部門</th><th id="rep-ht-item">設備</th><th id="rep-ht-loc">地點</th><th id="rep-ht-issue">故障</th><th id="rep-ht-action">處理</th><th id="rep-ht-supplier">供應商</th><th id="rep-ht-price">金額</th><th id="rep-ht-inspector">檢查人</th></tr></thead>
       <tbody id="rep-history-body"></tbody>
     </table>
   </div>
@@ -333,6 +337,10 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <div class="cell-label"><span id="po-l-date">申請日期 Date</span></div>
         <input class="cell-input f-date" type="text" readonly style="color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:12px">
       </div>
+      <div class="info-cell">
+        <div class="cell-label"><span id="po-l-inspector">檢查人 Inspector</span></div>
+        <input class="cell-input" id="po-inspector" type="text" placeholder="姓名 / Name" maxlength="50">
+      </div>
     </div>
   </div>
 
@@ -368,7 +376,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <table class="htable">
       <thead><tr>
         <th id="po-ht-date">日期</th><th id="po-ht-dept">部門</th><th id="po-ht-item">品項</th>
-        <th id="po-ht-qty">數量</th><th id="po-ht-brand">品牌</th><th id="po-ht-supplier">供應商</th><th id="po-ht-price">金額</th>
+        <th id="po-ht-qty">數量</th><th id="po-ht-brand">品牌</th><th id="po-ht-supplier">供應商</th><th id="po-ht-price">金額</th><th id="po-ht-inspector">檢查人</th>
       </tr></thead>
       <tbody id="po-history-body"></tbody>
     </table>
@@ -498,7 +506,7 @@ zh:{
   'rep-l-dept':'需求部門 Dept','po-l-dept':'需求部門 Dept',
   'rep-l-no':'維修號 Repair No.','po-l-po':'PO No.',
   'rep-l-no-opt':'如有 if any','po-l-po-opt':'如有 if any',
-  'rep-l-date':'申請日期 Date','po-l-date':'申請日期 Date',
+  'rep-l-date':'申請日期 Date','po-l-date':'申請日期 Date','rep-l-inspector':'檢查人 Inspector','po-l-inspector':'檢查人 Inspector',
   'rep-th-item':'設備名稱 Item','rep-th-spec':'規格/編號','rep-th-loc':'地點/房間','rep-th-issue':'故障描述',
   'rep-th-action':'處理方式','rep-th-urgency':'緊急程度','rep-th-sup':'供應商','rep-th-price':'預估$',
   'po-th-item':'品項名稱 Item','po-th-bs':'品牌/規格','po-th-size':'尺寸','po-th-qty':'數量 Qty',
@@ -506,8 +514,8 @@ zh:{
   'rep-l-photo':'現場照片','rep-l-photo-opt':'（選填，最多3張）','rep-photo-drop-text':'點此上傳照片 · Click to upload',
   'rep-l-remark':'📝 備註 Remark','po-l-remark':'📝 備註 Remark',
   'rep-h-title':'上次維修記錄 (已核可)','po-h-title':'上次採購記錄 (已核可)',
-  'rep-ht-date':'日期','rep-ht-dept':'部門','rep-ht-item':'設備','rep-ht-loc':'地點','rep-ht-issue':'故障','rep-ht-action':'處理','rep-ht-supplier':'供應商','rep-ht-price':'金額',
-  'po-ht-date':'日期','po-ht-dept':'部門','po-ht-item':'品項','po-ht-qty':'數量','po-ht-brand':'品牌','po-ht-supplier':'供應商','po-ht-price':'金額',
+  'rep-ht-date':'日期','rep-ht-dept':'部門','rep-ht-item':'設備','rep-ht-loc':'地點','rep-ht-issue':'故障','rep-ht-action':'處理','rep-ht-supplier':'供應商','rep-ht-price':'金額','rep-ht-inspector':'檢查人',
+  'po-ht-date':'日期','po-ht-dept':'部門','po-ht-item':'品項','po-ht-qty':'數量','po-ht-brand':'品牌','po-ht-supplier':'供應商','po-ht-price':'金額','po-ht-inspector':'檢查人',
   'rep-btn-label':'提交維修申請 Submit Repair Request','po-btn-label':'提交採購申請 Submit Purchase Request',
   'e-name':'請選擇申請人','e-dept':'請選擇需求部門',
   'e-rep-items':'請至少填寫1項（設備名稱、地點、故障描述）','e-po-items':'請至少填寫第1項（品項、數量、用途）',
@@ -533,7 +541,7 @@ en:{
   'rep-l-dept':'Requesting Dept','po-l-dept':'Requesting Dept',
   'rep-l-no':'Repair No.','po-l-po':'PO No.',
   'rep-l-no-opt':'if any','po-l-po-opt':'if any',
-  'rep-l-date':'Apply Date','po-l-date':'Apply Date',
+  'rep-l-date':'Apply Date','po-l-date':'Apply Date','rep-l-inspector':'Inspector','po-l-inspector':'Inspector',
   'rep-th-item':'Item Name','rep-th-spec':'Spec/ID','rep-th-loc':'Location','rep-th-issue':'Issue',
   'rep-th-action':'Action','rep-th-urgency':'Urgency','rep-th-sup':'Supplier','rep-th-price':'Est.$',
   'po-th-item':'Item Name','po-th-bs':'Brand/Spec','po-th-size':'Size','po-th-qty':'Qty',
@@ -541,8 +549,8 @@ en:{
   'rep-l-photo':'Site Photo','rep-l-photo-opt':'(Optional, max 3)','rep-photo-drop-text':'Click to upload photos',
   'rep-l-remark':'📝 Remark','po-l-remark':'📝 Remark',
   'rep-h-title':'Last Repair Records (Approved)','po-h-title':'Last Purchase Records (Approved)',
-  'rep-ht-date':'Date','rep-ht-dept':'Dept','rep-ht-item':'Item','rep-ht-loc':'Location','rep-ht-issue':'Issue','rep-ht-action':'Action','rep-ht-supplier':'Supplier','rep-ht-price':'Amount',
-  'po-ht-date':'Date','po-ht-dept':'Dept','po-ht-item':'Item','po-ht-qty':'Qty','po-ht-brand':'Brand','po-ht-supplier':'Supplier','po-ht-price':'Amount',
+  'rep-ht-date':'Date','rep-ht-dept':'Dept','rep-ht-item':'Item','rep-ht-loc':'Location','rep-ht-issue':'Issue','rep-ht-action':'Action','rep-ht-supplier':'Supplier','rep-ht-price':'Amount','rep-ht-inspector':'Inspector',
+  'po-ht-date':'Date','po-ht-dept':'Dept','po-ht-item':'Item','po-ht-qty':'Qty','po-ht-brand':'Brand','po-ht-supplier':'Supplier','po-ht-price':'Amount','po-ht-inspector':'Inspector',
   'rep-btn-label':'Submit Repair Request','po-btn-label':'Submit Purchase Request',
   'e-name':'Please select applicant','e-dept':'Please select department',
   'e-rep-items':'Please fill at least 1 item (name, location, issue)','e-po-items':'Please fill item 1 (name, qty, purpose)',
@@ -568,7 +576,7 @@ km:{
   'rep-l-dept':'ផ្នែក','po-l-dept':'ផ្នែក',
   'rep-l-no':'លេខជួសជុល','po-l-po':'លេខ PO',
   'rep-l-no-opt':'បើមាន','po-l-po-opt':'បើមាន',
-  'rep-l-date':'កាលបរិច្ឆេទ','po-l-date':'កាលបរិច្ឆេទ',
+  'rep-l-date':'កាលបរិច្ឆេទ','po-l-date':'កាលបរិច្ឆេទ','rep-l-inspector':'អ្នកត្រួតពិនិត្យ','po-l-inspector':'អ្នកត្រួតពិនិត្យ',
   'rep-th-item':'ឈ្មោះឧបករណ៍ *','rep-th-spec':'លក្ខណៈ/លេខ','rep-th-loc':'ទីតាំង *','rep-th-issue':'បញ្ហា *',
   'rep-th-action':'វិធីដោះស្រាយ','rep-th-urgency':'អាទិភាព','rep-th-sup':'អ្នកផ្គត់ផ្គង់','rep-th-price':'តម្លៃប៉ាន់$',
   'po-th-item':'ឈ្មោះទំនិញ *','po-th-bs':'ម៉ាក/លក្ខណៈ','po-th-size':'ទំហំ','po-th-qty':'ចំនួន *',
@@ -576,8 +584,8 @@ km:{
   'rep-l-photo':'រូបថតកន្លែង','rep-l-photo-opt':'(ជម្រើស, អតិបរមា 3)','rep-photo-drop-text':'ចុចដើម្បីផ្ទុករូបថត',
   'rep-l-remark':'📝 ចំណាំ','po-l-remark':'📝 ចំណាំ',
   'rep-h-title':'កំណត់ត្រាជួសជុលចុងក្រោយ (អនុម័ត)','po-h-title':'កំណត់ត្រាទិញចុងក្រោយ (អនុម័ត)',
-  'rep-ht-date':'កាលបរិច្ឆេទ','rep-ht-dept':'ផ្នែក','rep-ht-item':'ឧបករណ៍','rep-ht-loc':'ទីតាំង','rep-ht-issue':'បញ្ហា','rep-ht-action':'ដោះស្រាយ','rep-ht-supplier':'អ្នកផ្គត់ផ្គង់','rep-ht-price':'ចំនួនទឹកប្រាក់',
-  'po-ht-date':'កាលបរិច្ឆេទ','po-ht-dept':'ផ្នែក','po-ht-item':'ទំនិញ','po-ht-qty':'ចំនួន','po-ht-brand':'ម៉ាក','po-ht-supplier':'អ្នកផ្គត់ផ្គង់','po-ht-price':'ចំនួនទឹកប្រាក់',
+  'rep-ht-date':'កាលបរិច្ឆេទ','rep-ht-dept':'ផ្នែក','rep-ht-item':'ឧបករណ៍','rep-ht-loc':'ទីតាំង','rep-ht-issue':'បញ្ហា','rep-ht-action':'ដោះស្រាយ','rep-ht-supplier':'អ្នកផ្គត់ផ្គង់','rep-ht-price':'ចំនួនទឹកប្រាក់','rep-ht-inspector':'អ្នកត្រួតពិនិត្យ',
+  'po-ht-date':'កាលបរិច្ឆេទ','po-ht-dept':'ផ្នែក','po-ht-item':'ទំនិញ','po-ht-qty':'ចំនួន','po-ht-brand':'ម៉ាក','po-ht-supplier':'អ្នកផ្គត់ផ្គង់','po-ht-price':'ចំនួនទឹកប្រាក់','po-ht-inspector':'អ្នកត្រួតពិនិត្យ',
   'rep-btn-label':'ដាក់ស្នើសុំជួសជុល','po-btn-label':'ដាក់ស្នើសុំទិញ',
   'e-name':'សូមជ្រើសរើសអ្នកស្នើសុំ','e-dept':'សូមជ្រើសរើសផ្នែក',
   'e-rep-items':'សូមបំពេញយ៉ាងហោចណាស់ 1 ធាតុ','e-po-items':'សូមបំពេញធាតុទី 1',
@@ -744,8 +752,8 @@ async function fetchHistory(sys,q){
     document.getElementById(sys+'-h-for').textContent=T('searching')+'"'+q+'"';
     document.getElementById(sys+'-history-body').innerHTML=records.map(r=>
       sys==='rep'
-      ?`<tr><td>${r.date}</td><td>${r.dept}</td><td>${r.item}</td><td>${r.location||'-'}</td><td>${r.issue||'-'}</td><td>${r.action||'-'}</td><td>${r.supplier||'-'}</td><td>${r.price||'-'}</td></tr>`
-      :`<tr><td>${r.date}</td><td>${r.dept}</td><td>${r.item}</td><td>${r.qty||'-'}</td><td>${r.brand||'N/A'}</td><td>${r.supplier||'-'}</td><td>${r.price||'-'}</td></tr>`
+      ?`<tr><td>${r.date}</td><td>${r.dept}</td><td>${r.item}</td><td>${r.location||'-'}</td><td>${r.issue||'-'}</td><td>${r.action||'-'}</td><td>${r.supplier||'-'}</td><td>${r.price||'-'}</td><td>${r.inspector||'-'}</td></tr>`
+      :`<tr><td>${r.date}</td><td>${r.dept}</td><td>${r.item}</td><td>${r.qty||'-'}</td><td>${r.brand||'N/A'}</td><td>${r.supplier||'-'}</td><td>${r.price||'-'}</td><td>${r.inspector||'-'}</td></tr>`
     ).join('');
     panel.classList.add('show');
   }else{panel.classList.remove('show')}
@@ -784,7 +792,7 @@ async function submitRepair(){
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${T('submitting')}`;
   if(photos.length>0){document.getElementById('prog-wrap').style.display='block';document.getElementById('prog-fill').style.width='40%';}
 
-  const payload={action:'repairSubmit',timestamp:currentTs,applicantName:name,department:dept,repairNo:getV('rep-no'),remarks:getV('rep-remark'),items,photos,tgUid:params.get('uid')||''};
+  const payload={action:'repairSubmit',timestamp:currentTs,applicantName:name,department:dept,repairNo:getV('rep-no'),inspector:getV('rep-inspector'),remarks:getV('rep-remark'),items,photos,tgUid:params.get('uid')||''};
   try{
     const d=await postGAS(payload);
     if(d.ok){
@@ -822,7 +830,7 @@ async function submitTempPo(){
 
   const btn=document.getElementById('po-submit-btn');
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${T('submitting')}`;
-  const payload={action:'tempSubmit',timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),remarks:getV('po-remark'),items,tgUid:params.get('uid')||''};
+  const payload={action:'tempSubmit',timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),inspector:getV('po-inspector'),remarks:getV('po-remark'),items,tgUid:params.get('uid')||''};
   try{
     const d=await postGAS(payload);
     if(d.ok){
@@ -855,6 +863,7 @@ function resetForm(sys){
     const urg=document.getElementById(`rep-urg${i}`);if(sys==='rep'&&urg)urg.value='normal';
   }
   document.getElementById(sys==='rep'?'rep-remark':'po-remark').value='';
+  document.getElementById(sys==='rep'?'rep-inspector':'po-inspector').value='';
   if(sys==='rep'){photos=[];renderPreviews();document.getElementById(sys+'-no').value='';}
   else document.getElementById('po-no').value='';
   document.getElementById(sys+'-history-panel').classList.remove('show');
@@ -896,8 +905,8 @@ function renderFiltered(sys){
 }
 
 const HDRS={
-  rep:['時間','申請人','部門','維修號','設備名稱','規格/編號','地點','故障描述','處理方式','緊急程度','供應商','預估金額','備註','狀態','核可人','核可時間'],
-  po:['時間','申請人','部門','PO號','品項','品牌/規格','尺寸','數量','庫存','用途','供應商','預估金額','備註','狀態','核可人','核可時間']
+  rep:['時間','申請人','部門','維修號','設備名稱','規格/編號','地點','故障描述','處理方式','緊急程度','供應商','預估金額','備註','狀態','核可人','核可時間','檢查人'],
+  po:['時間','申請人','部門','PO號','品項','品牌/規格','尺寸','數量','庫存','用途','供應商','預估金額','備註','狀態','核可人','核可時間','檢查人']
 };
 function renderRecords(sys,records){
   const wrap=document.getElementById(sys+'-rec-wrap');
@@ -1059,6 +1068,8 @@ function mtTelegram(){
       const rej=rows.filter(r=>r[13]==='已退件').length;
       const byDept={}; rows.forEach(r=>{const d=r[2]||'—';byDept[d]=(byDept[d]||0)+1;});
       const top=Object.entries(byDept).sort((a,b)=>b[1]-a[1]).slice(0,4);
+      const byInspector={}; rows.forEach(r=>{const n=String(r[16]||'').trim()||'—';byInspector[n]=(byInspector[n]||0)+1;});
+      const inspectors=Object.entries(byInspector).sort((a,b)=>b[1]-a[1]);
       const isRep=st.scope==='rep';
       // 緊急（維修在第 9 欄）
       let urgent=0; if(isRep) urgent=rows.filter(r=>/urgent|critical|緊急/.test(String(r[9]||''))).length;
@@ -1072,7 +1083,9 @@ function mtTelegram(){
           {zh:'❌ 已退件',en:'Rejected',v:rej}
         ].concat(isRep?[{zh:'🚨 緊急',en:'Urgent',v:urgent}]:[])
          .concat(top.length?['-']:[])
-         .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,v:n}))),
+         .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,v:n})))
+         .concat(inspectors.length?['-']:[{zh:'🔎 檢查人',en:'Inspector',v:0}])
+         .concat(inspectors.map(([n,c])=>({zh:'🔎 '+(n==='—'?'未填':n),en:'🔎 '+(n==='—'?'Not entered':n),v:c}))),
         footer:'🕐 '+GA.ymd(new Date())+(rows.length?'':'（'+(lang==='zh'?'請先查詢':'query first')+'）')
       });
     }
