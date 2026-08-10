@@ -268,18 +268,13 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <div class="ct">🔗 <span class="tl" data-k="gasBackend">GAS Backend URL</span></div>
 <div class="form-group"><label class="tl" data-k="gasUrlLabel">Google Apps Script URL</label>
 <input class="inp" type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveCfg()"></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-b" onclick="cloudUpload()">☁️ <span class="tl" data-k="uploadCloud">上傳雲端 Upload</span></button>
-<button class="btn btn-b" onclick="cloudDownload()">📥 <span class="tl" data-k="downloadCloud">下載雲端 Download</span></button>
-<button class="btn" onclick="syncGAS()">🔄 <span class="tl" data-k="syncGAS">舊系統匯入 (action=all)</span></button>
-</div>
+<div class="al al-i" style="margin-top:10px"><span class="tl" data-k="toolbarHint">請使用頁首工具列的雲端上傳、下載、智慧匯入與 Telegram 按鈕。</span></div>
 <div class="al al-i" style="margin-top:10px" id="gasStatus"><span class="tl" data-k="gasPrompt">Enter your GAS deployment URL above.</span></div>
 </div>
 <div class="card">
 <div class="ct">📱 <span class="tl" data-k="telegram">Telegram</span></div>
-<div class="form-group"><label class="tl" data-k="botToken">Bot Token</label><input class="inp" type="text" id="tgToken" oninput="saveCfg()"></div>
-<div class="form-group"><label class="tl" data-k="chatId">Chat ID</label><input class="inp" type="text" id="tgChat" oninput="saveCfg()"></div>
-<button class="btn btn-b" onclick="sendTgSummary()">📤 <span class="tl" data-k="sendTG">發送 Telegram 報告</span></button>
+<input type="hidden" id="tgToken"><input type="hidden" id="tgChat">
+<div class="al al-i"><span class="tl" data-k="telegramHint">Telegram 由頁首按鈕開啟期間／語言／群組摘要視窗，Bot Token 由 GAS 統一管理。</span></div>
 </div>
 </div>
 <div class="card">
@@ -367,13 +362,13 @@ kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\
 /* Fuel-page labels are kept in one dictionary so a language switch also updates
    the buttons, filters, settings and dynamically-rendered table headings. */
 Object.assign(I18N.zh,{
-  fuelSub:'燃油中心 · 柴油管理',home:'🏠 平台首頁',uploadCloud:'上傳雲端',downloadCloud:'下載雲端',smartImport:'智慧匯入',telegramSummary:'Telegram 摘要',dataManagement:'資料管理',excel:'Excel',all:'全部',category:'分類',detail:'明細',day:'日',week:'週',period:'期間',days:'天',activeDays:'有資料天數',periods:'期間',name:'名稱',percent:'百分比',gasBackend:'GAS 後端設定',gasUrlLabel:'Google Apps Script URL',gasPrompt:'請在上方輸入 GAS 部署 URL。',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'搜尋…',uploading:'上傳中',downloading:'下載中',cancelled:'已取消',noCloud:'雲端尚無資料',syncing:'同步中',synced:'已同步',invalid:'無效',error:'錯誤',noValidData:'找不到有效資料',more:'更多',duplicateSkipped:'重複資料已略過',overwriteCloud:'雲端有 {cloud} 筆資料，將覆蓋本機 {local} 筆資料。確定？',setTelegram:'請設定 Telegram Token 與 Chat ID',gasUrlMissing:'請先設定 GAS URL',syncAll:'匯入 GAS 全部資料'
+  fuelSub:'燃油中心 · 柴油管理',home:'🏠 平台首頁',uploadCloud:'上傳雲端',downloadCloud:'下載雲端',smartImport:'智慧匯入',telegramSummary:'Telegram 摘要',dataManagement:'資料管理',toolbarHint:'請使用頁首工具列的雲端上傳、下載、智慧匯入與 Telegram 按鈕。',telegramHint:'Telegram 由頁首按鈕開啟期間／語言／群組摘要視窗，Bot Token 由 GAS 統一管理。',excel:'Excel',all:'全部',category:'分類',detail:'明細',day:'日',week:'週',period:'期間',days:'天',activeDays:'有資料天數',periods:'期間',name:'名稱',percent:'百分比',gasBackend:'GAS 後端設定',gasUrlLabel:'Google Apps Script URL',gasPrompt:'請在上方輸入 GAS 部署 URL。',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'搜尋…',uploading:'上傳中',downloading:'下載中',cancelled:'已取消',noCloud:'雲端尚無資料',syncing:'同步中',synced:'已同步',invalid:'無效',error:'錯誤',noValidData:'找不到有效資料',more:'更多',duplicateSkipped:'重複資料已略過',overwriteCloud:'雲端有 {cloud} 筆資料，將覆蓋本機 {local} 筆資料。確定？',setTelegram:'請設定 Telegram Token 與 Chat ID',gasUrlMissing:'請先設定 GAS URL',syncAll:'匯入 GAS 全部資料'
 });
 Object.assign(I18N.en,{
-  fuelSub:'Fuel Center · Diesel Management',home:'🏠 Home',uploadCloud:'Upload to cloud',downloadCloud:'Download from cloud',smartImport:'Smart Import',telegramSummary:'Telegram Summary',dataManagement:'Data Management',excel:'Excel',all:'All',category:'Category',detail:'Detail',day:'Day',week:'week',period:'Period',days:'Days',activeDays:'Active days',periods:'periods',name:'Name',percent:'%',gasBackend:'GAS Backend',gasUrlLabel:'Google Apps Script URL',gasPrompt:'Enter your GAS deployment URL above.',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'Search…',uploading:'Uploading',downloading:'Downloading',cancelled:'Cancelled',noCloud:'No cloud data yet',syncing:'Syncing',synced:'Synced',invalid:'Invalid',error:'Error',noValidData:'No valid data found',more:'more',duplicateSkipped:'duplicates skipped',overwriteCloud:'Cloud has {cloud} records and will overwrite the {local} local records. Continue?',setTelegram:'Set Telegram token and chat ID',gasUrlMissing:'Set the GAS URL first',syncAll:'Import all GAS data'
+  fuelSub:'Fuel Center · Diesel Management',home:'🏠 Home',uploadCloud:'Upload to cloud',downloadCloud:'Download from cloud',smartImport:'Smart Import',telegramSummary:'Telegram Summary',dataManagement:'Data Management',toolbarHint:'Use the header toolbar for cloud upload, download, Smart Import, and Telegram.',telegramHint:'Use the header Telegram button to choose period, language, and groups. The bot token is managed by GAS.',excel:'Excel',all:'All',category:'Category',detail:'Detail',day:'Day',week:'week',period:'Period',days:'Days',activeDays:'Active days',periods:'periods',name:'Name',percent:'%',gasBackend:'GAS Backend',gasUrlLabel:'Google Apps Script URL',gasPrompt:'Enter your GAS deployment URL above.',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'Search…',uploading:'Uploading',downloading:'Downloading',cancelled:'Cancelled',noCloud:'No cloud data yet',syncing:'Syncing',synced:'Synced',invalid:'Invalid',error:'Error',noValidData:'No valid data found',more:'more',duplicateSkipped:'duplicates skipped',overwriteCloud:'Cloud has {cloud} records and will overwrite the {local} local records. Continue?',setTelegram:'Set Telegram token and chat ID',gasUrlMissing:'Set the GAS URL first',syncAll:'Import all GAS data'
 });
 Object.assign(I18N.km,{
-  fuelSub:'មជ្ឈមណ្ឌលប្រេង · ការគ្រប់គ្រងម៉ាស៊ូត',home:'🏠 ទំព័រដើម',uploadCloud:'ផ្ទុកឡើងទៅពពក',downloadCloud:'ទាញយកពីពពក',smartImport:'នាំចូលឆ្លាតវៃ',telegramSummary:'សង្ខេប Telegram',dataManagement:'គ្រប់គ្រងទិន្នន័យ',excel:'Excel',all:'ទាំងអស់',category:'ប្រភេទ',detail:'លម្អិត',day:'ថ្ងៃ',week:'សប្តាហ៍',period:'រយៈពេល',days:'ថ្ងៃ',activeDays:'ថ្ងៃមានសកម្មភាព',periods:'រយៈពេល',name:'ឈ្មោះ',percent:'%',gasBackend:'ផ្នែកខាងក្រោយ GAS',gasUrlLabel:'URL Google Apps Script',gasPrompt:'សូមបញ្ចូល URL នៃការដាក់ពង្រាយ GAS ខាងលើ។',telegram:'Telegram',botToken:'សញ្ញាសម្ងាត់ Bot',chatId:'លេខសម្គាល់ Chat',searchPlaceholder:'ស្វែងរក…',uploading:'កំពុងផ្ទុកឡើង',downloading:'កំពុងទាញយក',cancelled:'បានបោះបង់',noCloud:'មិនទាន់មានទិន្នន័យក្នុងពពក',syncing:'កំពុងធ្វើសមកាលកម្ម',synced:'បានធ្វើសមកាលកម្ម',invalid:'មិនត្រឹមត្រូវ',error:'កំហុស',noValidData:'រកមិនឃើញទិន្នន័យត្រឹមត្រូវ',more:'បន្ថែម',duplicateSkipped:'បានរំលងទិន្នន័យស្ទួន',overwriteCloud:'ទិន្នន័យពពក {cloud} នឹងជំនួសទិន្នន័យក្នុងម៉ាស៊ីន {local}។ បន្ត?',setTelegram:'កំណត់ Token Telegram និង Chat ID',gasUrlMissing:'សូមកំណត់ URL GAS ជាមុន',syncAll:'នាំចូលទិន្នន័យ GAS ទាំងអស់'
+  fuelSub:'មជ្ឈមណ្ឌលប្រេង · ការគ្រប់គ្រងម៉ាស៊ូត',home:'🏠 ទំព័រដើម',uploadCloud:'ផ្ទុកឡើងទៅពពក',downloadCloud:'ទាញយកពីពពក',smartImport:'នាំចូលឆ្លាតវៃ',telegramSummary:'សង្ខេប Telegram',dataManagement:'គ្រប់គ្រងទិន្នន័យ',toolbarHint:'សូមប្រើប៊ូតុងនៅជួរខាងលើសម្រាប់ផ្ទុកឡើង ទាញយក នាំចូលឆ្លាតវៃ និង Telegram។',telegramHint:'សូមប្រើប៊ូតុង Telegram ខាងលើ ដើម្បីជ្រើសរយៈពេល ភាសា និងក្រុម។ Bot Token គ្រប់គ្រងដោយ GAS។',excel:'Excel',all:'ទាំងអស់',category:'ប្រភេទ',detail:'លម្អិត',day:'ថ្ងៃ',week:'សប្តាហ៍',period:'រយៈពេល',days:'ថ្ងៃ',activeDays:'ថ្ងៃមានសកម្មភាព',periods:'រយៈពេល',name:'ឈ្មោះ',percent:'%',gasBackend:'ផ្នែកខាងក្រោយ GAS',gasUrlLabel:'URL Google Apps Script',gasPrompt:'សូមបញ្ចូល URL នៃការដាក់ពង្រាយ GAS ខាងលើ។',telegram:'Telegram',botToken:'សញ្ញាសម្ងាត់ Bot',chatId:'លេខសម្គាល់ Chat',searchPlaceholder:'ស្វែងរក…',uploading:'កំពុងផ្ទុកឡើង',downloading:'កំពុងទាញយក',cancelled:'បានបោះបង់',noCloud:'មិនទាន់មានទិន្នន័យក្នុងពពក',syncing:'កំពុងធ្វើសមកាលកម្ម',synced:'បានធ្វើសមកាលកម្ម',invalid:'មិនត្រឹមត្រូវ',error:'កំហុស',noValidData:'រកមិនឃើញទិន្នន័យត្រឹមត្រូវ',more:'បន្ថែម',duplicateSkipped:'បានរំលងទិន្នន័យស្ទួន',overwriteCloud:'ទិន្នន័យពពក {cloud} នឹងជំនួសទិន្នន័យក្នុងម៉ាស៊ីន {local}។ បន្ត?',setTelegram:'កំណត់ Token Telegram និង Chat ID',gasUrlMissing:'សូមកំណត់ URL GAS ជាមុន',syncAll:'នាំចូលទិន្នន័យ GAS ទាំងអស់'
 });
 let lang=(typeof GA !== 'undefined' && GA.lang)||localStorage.getItem('vrt_dsl_lang')||'zh';
 function T(k){return I18N[lang]?.[k]||I18N.en[k]||k}
@@ -412,7 +407,14 @@ const MON_MAP={jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:
 
 function save(){localStorage.setItem(LS,JSON.stringify(DB))}
 function load(){try{DB=JSON.parse(localStorage.getItem(LS))||[]}catch{DB=[]}}
-function saveCfg(){localStorage.setItem('vrt_dsl_gas',document.getElementById('gasUrl').value);localStorage.setItem('vrt_dsl_tg_token',document.getElementById('tgToken').value);localStorage.setItem('vrt_dsl_tg_chat',document.getElementById('tgChat').value)}
+function saveCfg(){
+  const gas=document.getElementById('gasUrl');
+  const token=document.getElementById('tgToken');
+  const chat=document.getElementById('tgChat');
+  if(gas) localStorage.setItem('vrt_dsl_gas',gas.value);
+  if(token) localStorage.setItem('vrt_dsl_tg_token',token.value);
+  if(chat) localStorage.setItem('vrt_dsl_tg_chat',chat.value);
+}
 
 // ═══════════════════════════════════════════════════════════
 //  INIT
@@ -423,7 +425,7 @@ function init(){
 load();
 document.getElementById('gasUrl').value=localStorage.getItem('vrt_dsl_gas')||ACCFG.gasUrl||'';
 /* v2：Token 已移至 GAS，不再由瀏覽器保存 */try{localStorage.removeItem('vrt_dsl_tg_token')}catch(e){}
-document.getElementById('tgChat').value=localStorage.getItem('vrt_dsl_tg_chat')||ACCFG.tgChat||'';
+if(document.getElementById('tgChat')) document.getElementById('tgChat').value=localStorage.getItem('vrt_dsl_tg_chat')||ACCFG.tgChat||'';
 document.getElementById('sumDate').value=localYMD();
 setupDrop();updateHeader();updateDBCard();setLang(GA.lang||lang);
 }

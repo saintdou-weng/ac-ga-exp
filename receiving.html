@@ -253,7 +253,6 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   
   <button class="nav-btn success" onclick="showAddForm()">➕ <span data-i="add">Add</span></button>
   <button class="nav-btn" onclick="saveAll()">💾 <span data-i="save">Save</span></button>
-  <button class="nav-btn" onclick="triggerImport()">📂 <span data-i="import">Import Excel</span></button>
   <button class="nav-btn" onclick="exportExcel()">📤 <span data-i="export">Export</span></button>
   <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
   
@@ -382,10 +381,12 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       <h3 data-i="set_data">Data Management</h3>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="nav-btn" onclick="exportAll()" style="justify-content:center">📤 <span data-i="export_all">Export All Data</span></button>
-        <button class="nav-btn" onclick="triggerImport()" style="justify-content:center">📂 <span data-i="import_excel">Import from Excel</span></button>
         <button class="nav-btn danger" onclick="clearAllData()" style="justify-content:center">🗑️ <span data-i="clear_data">Clear All Data</span></button>
       </div>
-      <div style="margin-top:14px">
+      <div style="margin-top:12px;background:var(--bg2);border-radius:8px;padding:10px;font-size:11px;color:var(--text3)">
+        📥 <span data-i="toolbar_import_note">Smart Import is available from the top toolbar.</span>
+      </div>
+      <div style="display:none;margin-top:14px">
         <div class="import-drop" id="drop-area" onclick="triggerImport()">
           <div style="font-size:32px">📁</div>
           <p data-i="drop_hint">Drop Excel file here or click to import</p>
@@ -518,7 +519,7 @@ const I18N = {
     set_cloud: "Cloud Sync (GAS)", set_sheet: "Sheet ID", set_tg: "Telegram Bot",
     set_general: "General", set_factory: "Factory / Company", set_dept: "Default Department",
     set_low: "Low Stock Alert Threshold", set_data: "Data Management",
-    export_all: "Export All Data", import_excel: "Import from Excel", clear_data: "Clear All Data",
+    export_all: "Export All Data", import_excel: "Import from Excel", toolbar_import_note: "Smart Import is available from the top toolbar.", clear_data: "Clear All Data",
     drop_hint: "Drop Excel file here or click to import",
     fl_name: "Item Name", fl_cat: "Category", fl_brand: "Brand", fl_size: "Size / Unit",
     fl_stock: "Current Stock", fl_min: "Min Stock Alert", fl_remarks: "Remarks",
@@ -542,7 +543,7 @@ const I18N = {
     set_cloud: "雲端同步(GAS)", set_sheet: "試算表ID", set_tg: "Telegram Bot",
     set_general: "一般設定", set_factory: "公司名稱", set_dept: "預設部門",
     set_low: "低庫存警示門檻", set_data: "資料管理",
-    export_all: "匯出所有資料", import_excel: "從Excel匯入", clear_data: "清除所有資料",
+    export_all: "匯出所有資料", import_excel: "從Excel匯入", toolbar_import_note: "智慧匯入請使用頁首工具列按鈕。", clear_data: "清除所有資料",
     drop_hint: "拖曳Excel至此或點擊匯入",
     fl_name: "品名", fl_cat: "類別", fl_brand: "品牌", fl_size: "規格",
     fl_stock: "現有庫存", fl_min: "最低警示庫存", fl_remarks: "備註",
@@ -566,7 +567,7 @@ const I18N = {
     set_cloud: "Cloud Sync (GAS)", set_sheet: "Sheet ID", set_tg: "Telegram Bot",
     set_general: "ការកំណត់ទូទៅ", set_factory: "ឈ្មោះក្រុមហ៊ុន", set_dept: "នាយកដ្ឋានលំនាំដើម",
     set_low: "ដែនកំណត់ស្តុកទាប", set_data: "ការគ្រប់គ្រងទិន្នន័យ",
-    export_all: "នាំចេញទិន្នន័យទាំងអស់", import_excel: "នាំចូលពី Excel", clear_data: "លុបទិន្នន័យ",
+    export_all: "នាំចេញទិន្នន័យទាំងអស់", import_excel: "នាំចូលពី Excel", toolbar_import_note: "សូមប្រើប៊ូតុងនាំចូលឆ្លាតវៃនៅជួរខាងលើ។", clear_data: "លុបទិន្នន័យ",
     drop_hint: "ទម្លាក់ Excel នៅទីនេះ ឬចុចដើម្បីនាំចូល",
     fl_name: "ឈ្មោះទំនិញ", fl_cat: "ប្រភេទ", fl_brand: "ម៉ាក", fl_size: "ទំហំ",
     fl_stock: "ស្តុកបច្ចុប្បន្ន", fl_min: "ស្តុកអប្បបរមា", fl_remarks: "កំណត់ចំណាំ",
