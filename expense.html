@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AC-GA-EXP · Expense Center 費用中心</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
@@ -13,583 +12,171 @@
 <script src="shared/ga-telegram.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script src="shared/exp-seed.js"></script>
-<script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}
-</script>
-
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}</script>
 <style>
-  .exp-wrap{max-width:1180px;margin:0 auto;padding:12px}
-  .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;
-    padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
-  .exp-tab{border:0;background:transparent;border-radius:8px;padding:9px 15px;font-size:13px;
-    font-weight:600;color:var(--ga-txt2);cursor:pointer;font-family:inherit;white-space:nowrap;transition:.15s}
-  .exp-tab.on{background:var(--ga-sky);color:#fff}
-  .exp-tab:not(.on):hover{background:var(--ga-sky-l);color:var(--ga-sky)}
-  .exp-pane{display:none}.exp-pane.on{display:block}
-  .exp-sec{background:#fff;border:1px solid var(--ga-line);border-radius:12px;padding:14px;
-    margin-bottom:11px;box-shadow:var(--ga-sh)}
-  .exp-sec-t{font-size:12px;font-weight:700;color:var(--ga-txt2);margin-bottom:11px;
-    display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
+  .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
+  .exp-tab{border:0;background:transparent;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--ga-txt2);cursor:pointer;font-family:inherit;white-space:nowrap}
+  .exp-tab.on{background:var(--ga-sky);color:#fff}.exp-tab:not(.on):hover{background:var(--ga-sky-l);color:var(--ga-sky)}
+  .exp-sec{background:#fff;border:1px solid var(--ga-line);border-radius:12px;padding:14px;margin-bottom:11px;box-shadow:var(--ga-sh)}
+  .exp-sec-t{font-size:13px;font-weight:800;color:var(--ga-txt2);margin-bottom:11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
   .exp-sec-t .sp{margin-left:auto;font-size:11px;color:var(--ga-mut);font-family:var(--ga-mono);font-weight:400}
-  .exp-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}
-  .exp-filters select,.exp-filters input{border:1px solid var(--ga-line);border-radius:8px;padding:7px 10px;
-    font-size:12px;font-family:inherit;background:#fff;outline:none}
-  .exp-filters select:focus,.exp-filters input:focus{border-color:var(--ga-sky)}
-  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px;margin-bottom:11px}
-  .form-grid label{display:block;font-size:10px;font-weight:700;color:var(--ga-mut);
-    text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-  .form-grid input,.form-grid select{width:100%;border:1px solid var(--ga-line);border-radius:8px;
-    padding:8px 10px;font-size:13px;font-family:inherit;outline:none}
-  .form-grid input:focus,.form-grid select:focus{border-color:var(--ga-sky)}
-  .diff-pos{color:var(--ga-bad)}.diff-neg{color:var(--ga-ok)}
+  .exp-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.exp-actions .ga-btn{white-space:nowrap}
+  .exp-tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}.exp-tools input,.exp-tools select{border:1px solid var(--ga-line);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;background:#fff;min-width:120px}
+  .exp-tools input:focus,.exp-tools select:focus{outline:none;border-color:var(--ga-sky)}
+  .exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+  .exp-card{border:1px solid var(--ga-line);border-radius:10px;padding:12px;background:linear-gradient(135deg,#fff,#f8fbff)}
+  .exp-card .lbl{font-size:11px;color:var(--ga-mut);font-weight:700}.exp-card .val{font-size:23px;font-weight:800;color:var(--ga-txt);font-family:var(--ga-mono);margin-top:5px}.exp-card .sub{font-size:11px;color:var(--ga-mut);margin-top:3px}
+  .exp-compare{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}.exp-compare .box{border:1px solid var(--ga-line);border-radius:9px;padding:10px}.exp-compare b{display:block;font-size:11px;color:var(--ga-mut);margin-bottom:4px}.exp-compare span{font-family:var(--ga-mono);font-weight:800}.diff-pos{color:var(--ga-bad)}.diff-neg{color:var(--ga-ok)}
+  .exp-bars{display:grid;gap:7px}.exp-bar-row{display:grid;grid-template-columns:minmax(100px,180px) 1fr 90px;gap:8px;align-items:center;font-size:12px}.exp-bar{height:10px;border-radius:99px;background:#e8eef7;overflow:hidden}.exp-bar i{display:block;height:100%;background:linear-gradient(90deg,#1683d8,#22a06b);border-radius:99px}.exp-bar-row em{font-family:var(--ga-mono);font-style:normal;text-align:right}
+  .exp-table-wrap{overflow:auto}.exp-table{width:100%;border-collapse:collapse;min-width:820px;font-size:12px}.exp-table th{background:#f4f7fb;color:var(--ga-txt2);font-size:11px;text-align:left;padding:9px 8px;border-bottom:2px solid var(--ga-line);white-space:nowrap}.exp-table td{padding:8px;border-bottom:1px solid #edf1f6;vertical-align:top}.exp-table td.n{text-align:right;font-family:var(--ga-mono);white-space:nowrap}.exp-table tr:hover td{background:#fbfdff}.exp-muted{color:var(--ga-mut)}.exp-empty{padding:28px;text-align:center;color:var(--ga-mut)}
+  .exp-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}.exp-form label{display:block;font-size:10px;font-weight:800;color:var(--ga-mut);margin-bottom:4px}.exp-form input,.exp-form select{width:100%;box-sizing:border-box;border:1px solid var(--ga-line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit}.exp-form input:focus,.exp-form select:focus{outline:none;border-color:var(--ga-sky)}
+  .exp-note{font-size:11px;color:var(--ga-mut);margin:7px 0 0}.exp-file{display:none}
+  @media(max-width:680px){.exp-wrap{padding:7px}.exp-sec{padding:10px}.exp-tab{padding:8px 10px}.exp-card .val{font-size:19px}.exp-bar-row{grid-template-columns:95px 1fr 75px}.exp-table{font-size:11px}}
 </style>
 </head>
 <body>
-
 <div id="ga-header"></div>
-
 <div class="exp-wrap">
   <div id="exp-period"></div>
-
+  <div class="exp-note" id="exp-source-note"></div>
   <div class="exp-nav">
-    <button class="exp-tab on" data-p="ov"    onclick="expTab('ov')">📊 <span data-t="tabOv">總覽</span></button>
-    <button class="exp-tab"    data-p="ledger" onclick="expTab('ledger')">📒 <span data-t="tabLedger">明細帳</span></button>
-    <button class="exp-tab"    data-p="cat"   onclick="expTab('cat')">📁 <span data-t="tabCat">分類分析</span></button>
-    <button class="exp-tab"    data-p="trend" onclick="expTab('trend')">📈 <span data-t="tabTrend">趨勢</span></button>
-    <button class="exp-tab"    data-p="bgt"   onclick="expTab('bgt')">💰 <span data-t="tabBgt">預算差異</span></button>
-    <button class="exp-tab"    data-p="add"   onclick="expTab('add')">➕ <span data-t="tabAdd">新增費用</span></button>
+    <button class="exp-tab on" data-p="summary" onclick="expTab('summary')">📊 <span data-t="expSummary">整合總覽</span></button>
+    <button class="exp-tab" data-p="repair" onclick="expTab('repair')">🔧 <span data-t="expRepair">其他維修費用</span></button>
+    <button class="exp-tab" data-p="purchase" onclick="expTab('purchase')">📋 <span data-t="expPurchase">採購記錄</span></button>
+    <button class="exp-tab" data-p="general" onclick="expTab('general')">💰 <span data-t="expGeneral">一般費用</span></button>
+    <button class="exp-tab" data-p="legacy" onclick="expTab('legacy')">🗂️ <span data-t="expLegacy">手動／歷史</span></button>
   </div>
-
-  <!-- 總覽 -->
-  <div class="exp-pane on" id="pane-ov">
-    <div class="ga-kpis" id="exp-kpis" style="margin-bottom:11px"></div>
-    <div class="ga-charts">
-      <div class="ga-chart"><div class="ga-chart-t" data-t="chCat">分類占比</div><div class="ga-chart-box"><canvas id="ch-cat"></canvas></div></div>
-      <div class="ga-chart"><div class="ga-chart-t" data-t="chSrc">來源模組</div><div class="ga-chart-box"><canvas id="ch-src"></canvas></div></div>
-    </div>
-    <div class="exp-sec" style="margin-top:11px">
-      <div class="exp-sec-t">🏆 <span data-t="topSpend">主要支出 Top</span><span class="sp" id="ov-count"></span></div>
-      <div id="ov-top"></div>
-    </div>
-  </div>
-
-  <!-- 明細帳 -->
-  <div class="exp-pane" id="pane-ledger">
-    <div class="exp-sec">
-      <div class="exp-filters">
-        <select id="fl-cat"><option value="">— 全部類別 —</option></select>
-        <select id="fl-src">
-          <option value="" data-t-opt="allSrc">— 全部來源 —</option>
-          <option value="manual">✍️ Manual</option><option value="excel">📥 Excel</option>
-          <option value="seed">🗂️ Historical</option><option value="po">📋 PO</option>
-          <option value="repair">🔧 Repair</option><option value="fuel">🛢️ Fuel</option>
-        </select>
-        <input id="fl-dept" data-t-ph="dept" placeholder="部門">
-        <input id="fl-sup" placeholder="Supplier">
-      </div>
-      <div id="ledger-tbl"></div>
-    </div>
-  </div>
-
-  <!-- 分類分析 -->
-  <div class="exp-pane" id="pane-cat">
-    <div class="ga-chart" style="margin-bottom:11px"><div class="ga-chart-t" data-t="chCatBar">分類金額</div><div class="ga-chart-box" style="height:300px"><canvas id="ch-catbar"></canvas></div></div>
-    <div class="exp-sec"><div class="exp-sec-t">📁 <span data-t="catBreak">分類明細</span></div><div id="cat-tbl"></div></div>
-  </div>
-
-  <!-- 趨勢 -->
-  <div class="exp-pane" id="pane-trend">
-    <div class="ga-chart" style="margin-bottom:11px"><div class="ga-chart-t" data-t="chTrend">期間趨勢</div><div class="ga-chart-box" style="height:300px"><canvas id="ch-trend"></canvas></div></div>
-    <div class="exp-sec"><div class="exp-sec-t">📈 <span data-t="trendList">期間彙總</span></div><div id="trend-tbl"></div></div>
-  </div>
-
-  <!-- 預算差異 -->
-  <div class="exp-pane" id="pane-bgt">
-    <div class="exp-sec">
-      <div class="exp-sec-t">💰 <span data-t="bgtSet">月度預算設定</span>
-        <span class="sp"><button class="ga-btn" onclick="saveBudgets()">💾 <span data-t="save">儲存</span></button></span>
-      </div>
-      <div id="bgt-tbl"></div>
-    </div>
-  </div>
-
-  <!-- 新增費用 -->
-  <div class="exp-pane" id="pane-add">
-    <div class="exp-sec">
-      <div class="exp-sec-t">➕ <span data-t="addManual">新增手動費用 Manual Expense</span></div>
-      <div class="form-grid">
-        <div><label data-t="date">日期</label><input type="date" id="a-date"></div>
-        <div><label data-t="cat">類別</label><select id="a-cat"></select></div>
-        <div><label data-t="item">項目</label><input id="a-item" placeholder="Item"></div>
-        <div><label data-t="dept">部門</label><input id="a-dept" placeholder="Dept"></div>
-        <div><label>Supplier</label><input id="a-sup" placeholder="Supplier"></div>
-        <div><label data-t="inspector">檢查人</label><input id="a-inspector" placeholder="姓名 / Name"></div>
-        <div><label data-t="qty">數量</label><input type="number" id="a-qty" step="0.01" placeholder="0"></div>
-        <div><label data-t="estAmt">預估金額 Est.</label><input type="number" id="a-est" step="0.01" placeholder="0.00"></div>
-        <div><label data-t="actAmt">實際金額 Actual</label><input type="number" id="a-amt" step="0.01" placeholder="0.00"></div>
-        <div style="grid-column:1/-1"><label data-t="remark">備註</label><input id="a-note" placeholder="Remark"></div>
-      </div>
-      <button class="ga-btn primary" onclick="addManual()">➕ <span data-t="addBtn">新增並保存</span></button>
-    </div>
-    <div class="exp-sec">
-      <div class="exp-sec-t">✏️ <span data-t="editCat">類別管理</span></div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <input id="nc-label" placeholder="新類別名 e.g. Garden 園藝" style="flex:1;min-width:160px;border:1px solid var(--ga-line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit">
-        <input id="nc-icon" placeholder="📌" maxlength="2" style="width:56px;text-align:center;border:1px solid var(--ga-line);border-radius:8px;padding:8px;font-size:15px">
-        <button class="ga-btn" onclick="addCat()">➕ <span data-t="add">新增</span></button>
-      </div>
-    </div>
-  </div>
+  <div id="exp-view"></div>
 </div>
+<input id="exp-file" class="exp-file" type="file" multiple accept=".xlsx,.xlsb,.xls">
 
 <script>
-/* ════════════════════════════════════════════════════════════════
-   AC-GA-EXP · Expense Center v2 — 逐筆交易資料庫（取代原硬寫矩陣）
-   ════════════════════════════════════════════════════════════════ */
+/* AC-GA-EXP Expense Center v3
+   三份來源檔案採各自正規化，不把寬表、明細表及圖表摘要混在一起。 */
 GA.addDict({
-  zh:{ tabOv:'總覽',tabLedger:'明細帳',tabCat:'分類分析',tabTrend:'趨勢',tabBgt:'預算差異',tabAdd:'新增費用',
-    chCat:'分類占比',chSrc:'來源模組',chCatBar:'分類金額',chTrend:'期間趨勢',topSpend:'主要支出 Top',
-    catBreak:'分類明細',trendList:'期間彙總',bgtSet:'月度預算設定',addManual:'新增手動費用',editCat:'類別管理',
-    addBtn:'新增並保存',est:'預估',act:'實際',budget:'預算',spent:'已花',remain:'剩餘',
-    estAmt:'預估金額',actAmt:'實際金額',item:'項目',remark:'備註',cat:'類別',save:'儲存',add:'新增',
-    kTotal:'本期支出',kYtd:'年度累計',kTxn:'交易筆數',kCat:'活躍類別',kAvg:'平均單筆',kEst:'預估vs實際',
-    allCat:'全部類別',allSrc:'全部來源',inspector:'檢查人',delTxn:'刪除此筆？' },
-  en:{ tabOv:'Overview',tabLedger:'Ledger',tabCat:'Category',tabTrend:'Trend',tabBgt:'Budget',tabAdd:'Add',
-    chCat:'By Category',chSrc:'By Source',chCatBar:'Category Amount',chTrend:'Period Trend',topSpend:'Top Spend',
-    catBreak:'Category Detail',trendList:'Period Summary',bgtSet:'Monthly Budget',addManual:'Add Manual Expense',editCat:'Category Manager',
-    addBtn:'Add & Save',est:'Est.',act:'Actual',budget:'Budget',spent:'Spent',remain:'Remain',
-    estAmt:'Estimated',actAmt:'Actual',item:'Item',remark:'Remark',cat:'Category',save:'Save',add:'Add',
-    kTotal:'Period Spend',kYtd:'YTD Total',kTxn:'Transactions',kCat:'Active Cats',kAvg:'Avg / txn',kEst:'Est vs Actual',
-    allCat:'All Categories',allSrc:'All Sources',inspector:'Inspector',delTxn:'Delete this record?' },
-  km:{ tabOv:'ទិដ្ឋភាព',tabLedger:'បញ្ជី',tabCat:'ប្រភេទ',tabTrend:'និន្នាការ',tabBgt:'ថវិកា',tabAdd:'បន្ថែម',
-    chCat:'តាមប្រភេទ',chSrc:'តាមប្រភព',chCatBar:'ចំនួនតាមប្រភេទ',chTrend:'និន្នាការ',topSpend:'ចំណាយច្រើន',
-    catBreak:'លម្អិតប្រភេទ',trendList:'សង្ខេប',bgtSet:'ថវិកាប្រចាំខែ',addManual:'បន្ថែមចំណាយ',editCat:'គ្រប់គ្រងប្រភេទ',
-    addBtn:'បន្ថែម',est:'ប៉ាន់',act:'ជាក់ស្តែង',budget:'ថវិកា',spent:'បានចាយ',remain:'នៅសល់',
-    estAmt:'ប៉ាន់ស្មាន',actAmt:'ជាក់ស្តែង',item:'ធាតុ',remark:'ចំណាំ',cat:'ប្រភេទ',save:'រក្សាទុក',add:'បន្ថែម',
-    kTotal:'ចំណាយ',kYtd:'សរុបឆ្នាំ',kTxn:'ប្រតិបត្តិការ',kCat:'ប្រភេទសកម្ម',kAvg:'មធ្យម',kEst:'ប៉ាន់vsជាក់',
-    allCat:'ប្រភេទទាំងអស់',allSrc:'ប្រភពទាំងអស់',inspector:'អ្នកត្រួតពិនិត្យ',delTxn:'លុបកំណត់ត្រានេះ?' }
+  zh:{expSummary:'整合總覽',expRepair:'其他維修費用',expPurchase:'採購記錄',expGeneral:'一般費用',expLegacy:'手動／歷史',
+    expData:'資料筆數',expAmount:'本期金額',expAllAmount:'三類整合總額',expCompare:'期間比較',expCurrent:'目前期間',expPrevious:'上一期間',expChange:'差額',
+    expSource:'來源',expSheet:'工作表',expItem:'項目／說明',expSpec:'規格／用途',expPrice:'單價',expSupplier:'供應商',expQty:'數量',expTotal:'總額',expRecords:'明細',expPeriodTrend:'期間趨勢',
+    expImport:'匯入來源 Excel',expImportHint:'可一次選取三份原始檔，系統會依檔名及工作表自動分流',expExportCurrent:'匯出目前分頁',expExportAll:'匯出整合資料',expRefresh:'重整',
+    expNoData:'此期間沒有資料',expNoDate:'未辨識日期',expManual:'新增手動費用',expSave:'新增並保存',expCategory:'類別',expDepartment:'部門',expInspector:'檢查人',expRemark:'備註',
+    expEstimate:'預估單價',expLineTotal:'項目總額',expBudget:'預算',expBudgetSave:'儲存預算',expManage:'資料管理',expSourceRepair:'其他維修',expSourcePurchase:'採購',expSourceGeneral:'一般費用',
+    expImported:'已匯入',expSkipped:'略過',expFileAsk:'無法從檔名判斷來源，請輸入 repair / purchase / general',expCloudData:'三個來源與既有手動資料會一起同步',expPrev:'上一期',expNext:'下一期',
+    expTotalAll:'三類合計',expLegacyTotal:'手動／歷史合計',expTop:'分類排行',expBySource:'來源加總',expRows:'筆',expActual:'實際',expUnit:'單位',expPurpose:'用途／備註'},
+  en:{expSummary:'Integrated Summary',expRepair:'Other Repair Expenses',expPurchase:'Purchasing Record',expGeneral:'General Expense',expLegacy:'Manual / Historical',
+    expData:'Records',expAmount:'Period Amount',expAllAmount:'Integrated Total',expCompare:'Period Comparison',expCurrent:'Current',expPrevious:'Previous',expChange:'Change',
+    expSource:'Source',expSheet:'Sheet',expItem:'Item / Description',expSpec:'Spec / Purpose',expPrice:'Unit Price',expSupplier:'Supplier',expQty:'Qty',expTotal:'Total',expRecords:'Details',expPeriodTrend:'Period Trend',
+    expImport:'Import Source Excel',expImportHint:'Select the three original files together; the importer routes them by filename and sheet',expExportCurrent:'Export Current Tab',expExportAll:'Export Integrated Data',expRefresh:'Refresh',
+    expNoData:'No data for this period',expNoDate:'Date not recognised',expManual:'Add Manual Expense',expSave:'Add & Save',expCategory:'Category',expDepartment:'Department',expInspector:'Inspector',expRemark:'Remark',
+    expEstimate:'Estimated Unit Price',expLineTotal:'Line Total',expBudget:'Budget',expBudgetSave:'Save Budget',expManage:'Data Manager',expSourceRepair:'Other Repair',expSourcePurchase:'Purchasing',expSourceGeneral:'General Expense',
+    expImported:'Imported',expSkipped:'Skipped',expFileAsk:'Source could not be identified from filename. Enter repair / purchase / general',expCloudData:'All three sources and existing manual data sync together',expPrev:'Previous',expNext:'Next',
+    expTotalAll:'Three-source Total',expLegacyTotal:'Manual / Historical Total',expTop:'Category Ranking',expBySource:'Source Totals',expRows:'records',expActual:'Actual',expUnit:'Unit',expPurpose:'Purpose / Remark'},
+  km:{expSummary:'សង្ខេបរួម',expRepair:'ចំណាយជួសជុលផ្សេងៗ',expPurchase:'កំណត់ត្រាទិញ',expGeneral:'ចំណាយទូទៅ',expLegacy:'ដោយដៃ / ប្រវត្តិ',
+    expData:'កំណត់ត្រា',expAmount:'ចំនួនក្នុងរយៈពេល',expAllAmount:'សរុបរួម',expCompare:'ប្រៀបធៀបរយៈពេល',expCurrent:'បច្ចុប្បន្ន',expPrevious:'មុន',expChange:'បម្រែបម្រួល',
+    expSource:'ប្រភព',expSheet:'សន្លឹក',expItem:'មុខទំនិញ / ពិពណ៌នា',expSpec:'លម្អិត / គោលបំណង',expPrice:'តម្លៃឯកតា',expSupplier:'អ្នកផ្គត់ផ្គង់',expQty:'បរិមាណ',expTotal:'សរុប',expRecords:'លម្អិត',expPeriodTrend:'និន្នាការ',
+    expImport:'នាំចូល Excel',expImportHint:'ជ្រើសឯកសារដើមទាំងបី ហើយប្រព័ន្ធបែងចែកតាមឈ្មោះឯកសារ និងសន្លឹក',expExportCurrent:'នាំចេញផ្ទាំងនេះ',expExportAll:'នាំចេញទិន្នន័យរួម',expRefresh:'ធ្វើឡើងវិញ',
+    expNoData:'គ្មានទិន្នន័យក្នុងរយៈពេលនេះ',expNoDate:'មិនស្គាល់កាលបរិច្ឆេទ',expManual:'បន្ថែមចំណាយដោយដៃ',expSave:'បន្ថែម និងរក្សាទុក',expCategory:'ប្រភេទ',expDepartment:'ផ្នែក',expInspector:'អ្នកត្រួតពិនិត្យ',expRemark:'ចំណាំ',
+    expEstimate:'តម្លៃឯកតាប៉ាន់ស្មាន',expLineTotal:'សរុបបន្ទាត់',expBudget:'ថវិកា',expBudgetSave:'រក្សាទុកថវិកា',expManage:'គ្រប់គ្រងទិន្នន័យ',expSourceRepair:'ជួសជុលផ្សេងៗ',expSourcePurchase:'ការទិញ',expSourceGeneral:'ចំណាយទូទៅ',
+    expImported:'បាននាំចូល',expSkipped:'បានរំលង',expFileAsk:'មិនអាចស្គាល់ប្រភពពីឈ្មោះឯកសារ។ បញ្ចូល repair / purchase / general',expCloudData:'ប្រភពទាំងបី និងទិន្នន័យដោយដៃនឹងធ្វើសមកាលកម្មជាមួយគ្នា',expPrev:'មុន',expNext:'បន្ទាប់',
+    expTotalAll:'សរុបប្រភពទាំងបី',expLegacyTotal:'សរុបដោយដៃ / ប្រវត្តិ',expTop:'ចំណាត់ថ្នាក់ប្រភេទ',expBySource:'សរុបតាមប្រភព',expRows:'កំណត់ត្រា',expActual:'ជាក់ស្តែង',expUnit:'ឯកតា',expPurpose:'គោលបំណង / ចំណាំ'}
 });
 
-var CATMETA = {}, txns = [], budgets = {};
-var pc, ledgerTbl, catTbl, trendTbl;
-var LS_TXN = 'ac_ga_exp_txns_v2', LS_CAT = 'ac_ga_exp_cats_v2', LS_BGT = 'vrt26b';
-
-function catLabel(k){ return (CATMETA[k] && CATMETA[k].label) || k; }
-function catIcon(k){ return (CATMETA[k] && CATMETA[k].icon) || '📌'; }
-function amt(r){ return GA.num(r.amount || r.estAmount || 0); }
+var EXP3={repair:[],purchase:[],general:[]}, CATMETA={}, txns=[], budgets={}, activeTab='summary', pc;
+var LS_EXP3='ac_ga_exp_source_v3', LS_TXN='ac_ga_exp_txns_v2', LS_CAT='ac_ga_exp_cats_v2', LS_BGT='vrt26b';
+var SRC_META={
+  repair:{key:'repair',icon:'🔧',label:'expRepair',file:/other|repair|maintain|fix|維修/i},
+  purchase:{key:'purchase',icon:'📋',label:'expPurchase',file:/purchas|purchase|採購/i},
+  general:{key:'general',icon:'💰',label:'expGeneral',file:/general|expense|費用|支出/i}
+};
+function esc(v){return GA.esc(v===null||v===undefined?'':v);}
+function num(v){return GA.num(v);}
+function money(v){return GA.money(num(v),2);}
+function text(v){return String(v===null||v===undefined?'':v).trim();}
+function lower(v){return text(v).toLowerCase().replace(/[\s_\-\.\/()（）'’`,：:]/g,'');}
+function dateOf(v){var s=text(v),m=s.match(/^(\d{1,2})-(\d{1,2})--(20\d{2})$/);if(m)return m[3]+'-'+String(+m[2]).padStart(2,'0')+'-'+String(+m[1]).padStart(2,'0');return GA.excelDate(v);}
+function sourceLabel(k){return GA.T(SRC_META[k]?SRC_META[k].label:k);}
+function amt(r){return num(r.amount||r.estAmount||0);}
+function allSourceRows(){return ['repair','purchase','general'].reduce(function(a,k){return a.concat(EXP3[k]||[]);},[]);}
+function allRows(){return allSourceRows().concat(txns.map(function(r){var x=Object.assign({},r);x._source='legacy';x.sourceModule=x.sourceModule||'manual';return x;}));}
+function currentState(){return pc?pc.state():{type:'month',key:GA.currentPeriod('month')};}
+function inCurrent(r){var s=currentState();return GA.inPeriod(r.date,s.key,s.type);}
+function rowsFor(k){return (k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[])).filter(inCurrent);}
+function value(r){return amt(r);}
 
 function loadData(){
-  try{ CATMETA = JSON.parse(localStorage.getItem(LS_CAT)) || null; }catch(e){ CATMETA=null; }
-  if(!CATMETA) CATMETA = JSON.parse(JSON.stringify((window.EXP_SEED&&EXP_SEED.categories)||{}));
-  var saved=null;
-  try{ saved = JSON.parse(localStorage.getItem(LS_TXN)); }catch(e){}
-  if(saved && saved.length){ txns = saved; }
-  else {
-    txns = ((window.EXP_SEED&&EXP_SEED.transactions)||[]).map(function(r){
-      var rec = { date:r.date, category:r.category, item:r.item, spec:r.spec||'',
-        qty:GA.num(r.qty), unit:r.unit||'', supplier:r.supplier||'', dept:r.dept||'',
-        amount:GA.num(r.amount), estAmount:GA.num(r.amount), purpose:r.purpose||'',
-        consumption:GA.num(r.consumption), consUnit:r.consUnit||'',
-        sourceModule:'seed', status:'approved', inspector:r.inspector||'' };
-      GA.stamp(rec,{source:'seed',prefix:'exp'});
-      rec._fp = GA.smartImport.fingerprintOf('expense',rec);
-      return rec;
-    });
-    saveTxns(true);
-  }
-  try{ budgets = JSON.parse(localStorage.getItem(LS_BGT)) || {}; }catch(e){ budgets={}; }
+  try{CATMETA=JSON.parse(localStorage.getItem(LS_CAT))||null;}catch(e){CATMETA=null;}
+  if(!CATMETA)CATMETA=JSON.parse(JSON.stringify((window.EXP_SEED&&EXP_SEED.categories)||{}));
+  try{var t=JSON.parse(localStorage.getItem(LS_TXN));if(Array.isArray(t)&&t.length)txns=t;}catch(e){}
+  if(!txns.length&&window.EXP_SEED){txns=EXP_SEED.transactions.map(function(r){var x=Object.assign({},r);x.amount=num(x.amount);x.estAmount=num(x.estAmount||x.amount);x.sourceModule=x.sourceModule||'seed';x.status=x.status||'approved';GA.stamp(x,{source:'seed',prefix:'exp'});x._fp=GA.fingerprint([x.date,x.category,x.item,x.amount]);return x;});saveTxns(true);}
+  try{budgets=JSON.parse(localStorage.getItem(LS_BGT))||{};}catch(e){budgets={};}
+  try{var x=JSON.parse(localStorage.getItem(LS_EXP3));if(x&&typeof x==='object'){['repair','purchase','general'].forEach(function(k){if(Array.isArray(x[k]))EXP3[k]=x[k];});}}catch(e){}
 }
-function saveTxns(silent){ try{ localStorage.setItem(LS_TXN, JSON.stringify(txns)); }catch(e){ if(!silent)GA.toast('本機儲存失敗','err'); } }
-function saveCats(){ try{ localStorage.setItem(LS_CAT, JSON.stringify(CATMETA)); }catch(e){} }
+function saveTxns(silent){try{localStorage.setItem(LS_TXN,JSON.stringify(txns));}catch(e){if(!silent)GA.toast('Local save failed','err');}}
+function saveExp3(){try{localStorage.setItem(LS_EXP3,JSON.stringify(EXP3));}catch(e){GA.toast('Local save failed','err');}}
+function saveCats(){try{localStorage.setItem(LS_CAT,JSON.stringify(CATMETA));}catch(e){}}
+function saveBudgets(){try{localStorage.setItem(LS_BGT,JSON.stringify(budgets));}catch(e){}}
 
-function periodTxns(){ var st=pc.state(); return txns.filter(function(r){ return GA.inPeriod(r.date, st.key, st.type); }); }
+function headRow(rows){
+  var best=-1,score=0;
+  for(var i=0;i<Math.min(12,rows.length);i++){var s=(rows[i]||[]).map(lower).join('|'),n=0;if(/date|received|purchase|print/.test(s))n+=3;if(/desc|description|item|part|name/.test(s))n+=2;if(/amount|total|ttl|unitprice|price|qty|quantity/.test(s))n+=2;if(/month/.test(s))n+=2;if(n>score){score=n;best=i;}}
+  return best;
+}
+function colIndex(headers,re){for(var i=0;i<headers.length;i++)if(re.test(headers[i]))return i;return -1;}
+function rowYear(rows){for(var i=0;i<Math.min(10,rows.length);i++){var m=(rows[i]||[]).map(text).join(' ').match(/20\d{2}/);if(m)return +m[0];}return new Date().getFullYear();}
+function monthNo(v){var s=lower(v).slice(0,3),m={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};return m[s]||0;}
+function normalise(r,src,meta){
+  var x=Object.assign({},r),a=num(x.amount||x.total||x.ttl||0),q=num(x.qty||x.quantity||0),p=num(x.price||x.unitPrice||x.unit_price||0);if(!a&&q&&p)a=q*p;if(!q&&a)q=1;
+  x.date=dateOf(x.date)||x.date||'';x.item=text(x.item||x.description||x.desc||x.name||x.issue||meta.sheet||'');x.spec=text(x.spec||x.brand||'');x.qty=q;x.unit=text(x.unit);x.price=p;x.unitPrice=p;x.amount=Math.round(a*100)/100;x.estAmount=x.amount;x.supplier=text(x.supplier||x.vendor);x.purpose=text(x.purpose||x.remark||x.remarks||x.location||'');x.category=text(x.category||meta.sheet||src).toLowerCase().replace(/[^a-z0-9]+/g,'_')||src;x.categoryLabel=text(x.categoryLabel||meta.sheet||sourceLabel(src));x.sourceModule='excel';x.sourceFile=meta.file||'';x.sourceSheet=meta.sheet||'';x.sourceRow=meta.row||0;x._source=src;x.recordId=x.recordId||GA.uid('exp');x._fp=x._fp||GA.fingerprint([src,x.date,x.item,x.spec,x.qty,x.price,x.amount,x.sourceFile,x.sourceSheet,x.sourceRow]);return x;
+}
+function parseDetailRows(rows,src,meta){
+  var out=[],hi=headRow(rows);if(hi<0)return out;var h=(rows[hi]||[]).map(lower),dc=colIndex(h,/date|received|purchase|print/),ic=colIndex(h,/desc|description|item|part|name|issue|brand/),qc=colIndex(h,/qty|quantity/),uc=colIndex(h,/^unit$|unit/),pcx=colIndex(h,/unitprice|price|^up/),ac=colIndex(h,/amount|total|ttl/),sc=colIndex(h,/supplier|vendor/),rc=colIndex(h,/remark|purpose|location|note/);
+  if(dc<0||ic<0)return out;for(var i=hi+1;i<rows.length;i++){var r=rows[i]||[],d=dateOf(r[dc]),item=text(r[ic]);if(!d||!item||/^(ttl|total|date|desc|item)$/i.test(item))continue;var x={date:d,item:item,spec:text(r[2]),qty:num(r[qc]),unit:text(r[uc]),price:num(r[pcx]),amount:num(r[ac]),supplier:text(r[sc]),purpose:text(r[rc])};if(!x.amount&&!x.qty&&!x.price)continue;out.push(normalise(x,src,{file:meta.file,sheet:meta.sheet,row:i+1}));}return out;
+}
+function parseMonthlyRows(rows,src,meta){
+  var out=[],year=rowYear(rows),hi=headRow(rows),h=hi>=0?(rows[hi]||[]).map(lower):[],mc=colIndex(h,/^month$|month/),ac=colIndex(h,/total|amount|ttl/);if(mc<0)mc=0;if(ac<0){for(var j=mc+1;j<Math.min((rows[hi]||[]).length,12);j++){if(/remark|note/.test(h[j]))continue;ac=j;break;}}if(hi<0)return out;
+  for(var i=hi+1;i<rows.length;i++){var r=rows[i]||[],m=monthNo(r[mc]);if(!m)continue;var a=ac>=0?num(r[ac]):0;if(!a){for(var j2=mc+1;j2<r.length;j2++){var n=num(r[j2]);if(n){a=n;break;}}}if(!a)continue;var item=(typeof r[1]==='string'&&text(r[1]))?text(r[1]):meta.sheet;out.push(normalise({date:year+'-'+String(m).padStart(2,'0')+'-01',item:item,amount:a,price:a,qty:1,purpose:text(r[r.length-1])},src,{file:meta.file,sheet:meta.sheet,row:i+1}));}return out;
+}
+function parseWorkbook(wb,src,fileName){
+  var out=[];if(!wb||!wb.SheetNames)return out;wb.SheetNames.forEach(function(sheet){var sn=text(sheet),sl=sn.toLowerCase();if(/chart|supplier list|stop supply|staff house break down/.test(sl))return;var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:''}),meta={file:fileName,sheet:sn,sheetName:sn};
+    if(src==='purchase'){if(/^purchase/.test(sl))out=out.concat((window.VRT&&VRT.parsePurchase?VRT.parsePurchase(rows,meta):parseDetailRows(rows,src,meta)).map(function(r){return normalise(r,src,meta);}));return;}
+    if(src==='repair'){out=out.concat(parseDetailRows(rows,src,meta));return;}
+    if(/^(electric|water)\s*$/.test(sl)&&rowYear(rows)>=2026&&window.VRT&&VRT.parseExpenseCategorySheet){out=out.concat(VRT.parseExpenseCategorySheet(rows,meta).map(function(r){return normalise(r,src,meta);}));return;}
+    var detail=parseDetailRows(rows,src,meta);if(detail.length){out=out.concat(detail);return;}if(/month|total|amount|ttl|clinic|security/.test(rows.slice(0,8).map(function(r){return(r||[]).join('|').toLowerCase();}).join('|')))out=out.concat(parseMonthlyRows(rows,src,meta));
+  });return out.filter(function(r){return r.date&&r.item&&value(r)>=0;});
+}
+function classifyFile(name){for(var k in SRC_META)if(SRC_META[k].file.test(name))return k;var v=window.prompt(GA.T('expFileAsk'),'general');return /repair|維修/i.test(v||'')?'repair':/purchase|採購/i.test(v||'')?'purchase':'general';}
+function readWorkbook(file){return new Promise(function(resolve,reject){var rd=new FileReader();rd.onload=function(){try{resolve(XLSX.read(rd.result,{type:'array',cellDates:true}));}catch(e){reject(e);}};rd.onerror=reject;rd.readAsArrayBuffer(file);});}
+function importFiles(files){var list=Array.prototype.slice.call(files||[]);if(!list.length)return;var added={repair:0,purchase:0,general:0},skipped=0;Promise.all(list.map(function(file){var src=classifyFile(file.name);return readWorkbook(file).then(function(wb){var rs=parseWorkbook(wb,src,file.name),seen={};EXP3[src].forEach(function(x){seen[x._fp]=1;});rs.forEach(function(x){if(x._fp&&seen[x._fp]){skipped++;return;}seen[x._fp]=1;EXP3[src].push(x);added[src]++;});});})).then(function(){saveExp3();GA.toast('📥 '+GA.T('expImported')+' · '+added.repair+'/'+added.purchase+'/'+added.general+' · '+GA.T('expSkipped')+' '+skipped);render();}).catch(function(e){GA.toast('❌ Excel: '+e.message,'err');});}
+function expImport(){document.getElementById('exp-file').value='';document.getElementById('exp-file').click();}
 
-function expTab(p){
-  document.querySelectorAll('.exp-tab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-p')===p); });
-  document.querySelectorAll('.exp-pane').forEach(function(x){ x.classList.toggle('on', x.id==='pane-'+p); });
-  render();
-}
-function render(){
-  var on = document.querySelector('.exp-tab.on').getAttribute('data-p');
-  if(on==='ov') renderOv();
-  else if(on==='ledger') renderLedger();
-  else if(on==='cat') renderCat();
-  else if(on==='trend') renderTrend();
-  else if(on==='bgt') renderBudget();
-  else if(on==='add') renderAdd();
-}
-
-function renderOv(){
-  var rows = periodTxns();
-  var total = rows.reduce(function(a,r){ return a+amt(r); },0);
-  var ytd = txns.reduce(function(a,r){return a+amt(r);},0);
-  var byCat = {}; rows.forEach(function(r){ byCat[r.category]=(byCat[r.category]||0)+amt(r); });
-  var activeCats = Object.keys(byCat).filter(function(k){return byCat[k]>0;}).length;
-  var est = rows.reduce(function(a,r){return a+GA.num(r.estAmount);},0);
-  var act = rows.reduce(function(a,r){return a+GA.num(r.amount);},0);
-
-  var kpis=[
-    {l:'kTotal',v:GA.money(total),s:rows.length+' '+GA.T('records'),c:'var(--ga-sky)'},
-    {l:'kYtd',v:GA.money(ytd),s:'YTD',c:'var(--ga-ind)'},
-    {l:'kTxn',v:rows.length,s:GA.T('kTxn'),c:'var(--ga-ok)'},
-    {l:'kCat',v:activeCats,s:GA.T('kCat'),c:'var(--ga-warn)'},
-    {l:'kAvg',v:GA.money(rows.length?total/rows.length:0),s:GA.T('kAvg'),c:'#8b5cf6'},
-    {l:'kEst',v:(est?Math.round((act-est)/est*100):0)+'%',s:GA.T('est')+' '+GA.money(est),c:'var(--ga-bad)'}
-  ];
-  document.getElementById('exp-kpis').innerHTML = kpis.map(function(k){
-    return '<div class="ga-kpi" style="--kc:'+k.c+'"><div class="ga-kpi-l">'+GA.T(k.l)+'</div>'+
-      '<div class="ga-kpi-v">'+k.v+'</div><div class="ga-kpi-s">'+GA.esc(k.s)+'</div></div>';
-  }).join('');
-
-  var cats = Object.keys(byCat).filter(function(k){return byCat[k]>0;}).sort(function(a,b){return byCat[b]-byCat[a];});
-  GA.chart('ch-cat',{ type:'doughnut',
-    data:{ labels:cats.map(function(k){return catIcon(k)+' '+catLabel(k);}),
-      datasets:[{ data:cats.map(function(k){return Math.round(byCat[k]);}), backgroundColor:GA.PALETTE, borderWidth:1 }]},
-    options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9}}}}}});
-
-  var bySrc={}; rows.forEach(function(r){ var s=r.sourceModule||'manual'; bySrc[s]=(bySrc[s]||0)+amt(r); });
-  var srcs=Object.keys(bySrc);
-  GA.chart('ch-src',{ type:'bar',
-    data:{ labels:srcs, datasets:[{ data:srcs.map(function(s){return Math.round(bySrc[s]);}), backgroundColor:GA.PALETTE, borderRadius:5 }]},
-    options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
-
-  document.getElementById('ov-count').textContent = rows.length+' '+GA.T('records');
-  var top = rows.slice().sort(function(a,b){return amt(b)-amt(a);}).slice(0,12);
-  document.getElementById('ov-top').innerHTML = top.length ? tableHTML(top) :
-    '<div class="ga-empty"><div class="ga-empty-i">📭</div><div>'+GA.T('noData')+'</div></div>';
-}
-
-function ledgerCols(){
-  return [
-    {k:'date',t:'date',label:'Date'},
-    {k:'category',label:GA.T('cat'),html:function(r){return catIcon(r.category)+' '+GA.esc(catLabel(r.category));}},
-    {k:'item',t:'item'},
-    {k:'dept',t:'dept'},
-    {k:'supplier',label:'Supplier'},
-    {k:'inspector',t:'inspector'},
-    {k:'qty',t:'qty',num:true},
-    {k:'estAmount',label:GA.T('est'),num:true,html:function(r){return r.estAmount?GA.money(r.estAmount,2):'—';}},
-    {k:'amount',label:GA.T('act'),num:true,html:function(r){return GA.money(r.amount,2);}},
-    {k:'sourceModule',label:'Src',html:function(r){
-      var m={seed:'🗂️',manual:'✍️',excel:'📥',po:'📋',repair:'🔧',fuel:'🛢️'};
-      return (m[r.sourceModule]||'✍️')+' '+GA.esc(r.sourceModule||'manual');}},
-    {k:'_del',label:'',html:function(r){return '<button class="ga-btn" style="padding:2px 8px" onclick="delTxn(\''+r.recordId+'\')">🗑</button>';}}
-  ];
-}
-function tableHTML(rows){
-  var cols=ledgerCols();
-  return '<div class="ga-tbl-scroll"><table class="ga-tbl"><thead><tr>'+
-    cols.map(function(c){return '<th>'+GA.esc(c.t?GA.T(c.t):c.label||c.k)+'</th>';}).join('')+
-    '</tr></thead><tbody>'+rows.map(function(r){
-      return '<tr>'+cols.map(function(c){
-        var v=c.html?c.html(r):GA.esc(r[c.k]);
-        return '<td'+(c.num?' class="n"':'')+'>'+(v===''||v===undefined?'—':v)+'</td>';
-      }).join('')+'</tr>';
-    }).join('')+'</tbody></table></div>';
-}
-function renderLedger(){ ledgerTbl.data(applyFilters(periodTxns())); }
-function applyFilters(rows){
-  var fc=document.getElementById('fl-cat').value, fs=document.getElementById('fl-src').value,
-      fd=document.getElementById('fl-dept').value.toLowerCase(), fsup=document.getElementById('fl-sup').value.toLowerCase();
-  return rows.filter(function(r){
-    if(fc && r.category!==fc) return false;
-    if(fs && (r.sourceModule||'manual')!==fs) return false;
-    if(fd && String(r.dept||'').toLowerCase().indexOf(fd)<0) return false;
-    if(fsup && String(r.supplier||'').toLowerCase().indexOf(fsup)<0) return false;
-    return true;
-  });
-}
-
-function renderCat(){
-  var rows=periodTxns(), byCat={};
-  rows.forEach(function(r){ byCat[r.category]=(byCat[r.category]||0)+amt(r); });
-  var cats=Object.keys(byCat).filter(function(k){return byCat[k]>0;}).sort(function(a,b){return byCat[b]-byCat[a];});
-  GA.chart('ch-catbar',{ type:'bar',
-    data:{ labels:cats.map(function(k){return catLabel(k);}),
-      datasets:[{ label:GA.T('act'), data:cats.map(function(k){return Math.round(byCat[k]);}), backgroundColor:GA.PALETTE, borderRadius:5 }]},
-    options:{ indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:10}}}}}});
-  var total=cats.reduce(function(a,k){return a+byCat[k];},0);
-  catTbl.data(cats.map(function(k){
-    return { cat:catIcon(k)+' '+catLabel(k), amount:byCat[k],
-             pct:total?(byCat[k]/total*100).toFixed(1)+'%':'0%',
-             cnt:rows.filter(function(r){return r.category===k;}).length };
-  }));
-}
-
-function renderTrend(){
-  var st=pc.state();
-  var keys=[], cur=GA.currentPeriod(st.type);
-  for(var i=11;i>=0;i--) keys.push(GA.shiftPeriod(cur,st.type,-i));
-  var sums=keys.map(function(k){
-    return txns.filter(function(r){return GA.periodKey(r.date,st.type)===k;}).reduce(function(a,r){return a+amt(r);},0);
-  });
-  GA.chart('ch-trend',{ type:'line',
-    data:{ labels:keys.map(function(k){return GA.periodLabel(k,st.type);}),
-      datasets:[{ label:GA.T('act'), data:sums.map(function(v){return Math.round(v);}),
-        borderColor:'#0284c7',backgroundColor:'rgba(2,132,199,.12)',fill:true,tension:.3,borderWidth:2 }]},
-    options:{ responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9},maxRotation:45}}}}});
-  trendTbl.data(keys.map(function(k,i){
-    var rs=txns.filter(function(r){return GA.periodKey(r.date,st.type)===k;});
-    return { period:GA.periodLabel(k,st.type), amount:sums[i], cnt:rs.length };
-  }).reverse());
-}
-
-function renderBudget(){
-  var rows=periodTxns(), byCat={};
-  rows.forEach(function(r){ byCat[r.category]=(byCat[r.category]||0)+amt(r); });
-  var cats=Object.keys(CATMETA).sort(function(a,b){return (byCat[b]||0)-(byCat[a]||0);});
-  document.getElementById('bgt-tbl').innerHTML='<div class="ga-tbl-scroll"><table class="ga-tbl"><thead><tr>'+
-    [GA.T('cat'),GA.T('budget'),GA.T('spent'),GA.T('remain'),'%'].map(function(h){return '<th>'+GA.esc(h)+'</th>';}).join('')+
-    '</tr></thead><tbody>'+cats.map(function(k){
-      var sp=byCat[k]||0, b=GA.num(budgets[k]);
-      var rem=b-sp, pct=b?Math.round(sp/b*100):0, over=b&&sp>b;
-      return '<tr><td>'+catIcon(k)+' '+GA.esc(catLabel(k))+'</td>'+
-        '<td class="n"><input type="number" value="'+(b||'')+'" data-bk="'+k+'" style="width:90px;text-align:right;border:1px solid var(--ga-line);border-radius:5px;padding:3px 6px;font-family:var(--ga-mono);font-size:11px"></td>'+
-        '<td class="n">'+GA.money(sp,2)+'</td>'+
-        '<td class="n '+(over?'diff-pos':'diff-neg')+'">'+(b?GA.money(rem,2):'—')+'</td>'+
-        '<td class="n">'+(b?'<span class="ga-badge '+(over?'bad':pct>80?'warn':'ok')+'">'+pct+'%</span>':'—')+'</td></tr>';
-    }).join('')+'</tbody></table></div>';
-}
-function saveBudgets(){
-  document.querySelectorAll('[data-bk]').forEach(function(inp){
-    var v=GA.num(inp.value); if(v>0) budgets[inp.dataset.bk]=v; else delete budgets[inp.dataset.bk];
-  });
-  try{ localStorage.setItem(LS_BGT,JSON.stringify(budgets)); }catch(e){}
-  GA.toast('💾 '+GA.T('save')+' OK'); renderBudget();
-}
-
-function renderAdd(){
-  var sel=document.getElementById('a-cat');
-  sel.innerHTML=Object.keys(CATMETA).map(function(k){return '<option value="'+k+'">'+catIcon(k)+' '+GA.esc(catLabel(k))+'</option>';}).join('');
-  if(!document.getElementById('a-date').value) document.getElementById('a-date').value=GA.ymd(new Date());
-}
-function addManual(){
-  var cat=document.getElementById('a-cat').value;
-  var amtV=GA.num(document.getElementById('a-amt').value);
-  var estV=GA.num(document.getElementById('a-est').value);
-  if(!cat){ GA.toast('請選類別','err'); return; }
-  if(!amtV && !estV){ GA.toast('請填金額','err'); return; }
-  var rec={ date:document.getElementById('a-date').value||GA.ymd(new Date()),
-    category:cat, item:document.getElementById('a-item').value.trim(),
-    dept:document.getElementById('a-dept').value.trim(), supplier:document.getElementById('a-sup').value.trim(),
-    inspector:document.getElementById('a-inspector').value.trim(),
-    qty:GA.num(document.getElementById('a-qty').value), estAmount:estV||amtV, amount:amtV||estV,
-    purpose:document.getElementById('a-note').value.trim(), sourceModule:'manual', status:'approved' };
-  GA.stamp(rec,{source:'online',prefix:'exp'});
-  rec._fp=GA.smartImport.fingerprintOf('expense',rec);
-  txns.push(rec); saveTxns();
-  ['a-item','a-dept','a-sup','a-inspector','a-qty','a-est','a-amt','a-note'].forEach(function(id){document.getElementById(id).value='';});
-  GA.toast('➕ OK'); fillFilters(); render();
-}
-function delTxn(id){
-  GA.confirm(GA.T('delTxn')).then(function(ok){
-    if(!ok) return;
-    txns=txns.filter(function(r){return r.recordId!==id;});
-    saveTxns(); GA.toast('🗑 OK'); render();
-  });
-}
-function addCat(){
-  var lbl=document.getElementById('nc-label').value.trim();
-  if(!lbl){ GA.toast('請輸入類別名','err'); return; }
-  var key='c_'+lbl.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,20)||('c_'+Date.now());
-  if(CATMETA[key]){ GA.toast('類別已存在','err'); return; }
-  CATMETA[key]={ icon:document.getElementById('nc-icon').value||'📌', label:lbl, type:'service' };
-  saveCats();
-  document.getElementById('nc-label').value=''; document.getElementById('nc-icon').value='';
-  GA.toast('➕ OK'); fillFilters(); render();
-}
-
-function fillFilters(){
-  var sel=document.getElementById('fl-cat'), cur=sel.value;
-  sel.innerHTML='<option value="">— '+GA.T('allCat')+' —</option>'+
-    Object.keys(CATMETA).map(function(k){return '<option value="'+k+'">'+catIcon(k)+' '+GA.esc(catLabel(k))+'</option>';}).join('');
-  sel.value=cur;
-  // 來源篩選 default option 三語
-  var srcOpt=document.querySelector('#fl-src option[value=""]');
-  if(srcOpt) srcOpt.textContent='— '+GA.T('allSrc')+' —';
-}
-
-function expUpload(){
-  GA.cloud.set('sync');
-  GA.gasPost('expenseSave',{ txns:txns, cats:CATMETA, budgets:budgets, schema:2 })
-    .then(function(r){ GA.cloud.set('up',(r.data&&r.data.rows||txns.length)+' '+GA.T('records')); GA.toast('☁️ '+GA.T('up')+' OK'); })
-    .catch(function(e){ GA.cloud.set('err',e.message); GA.toast(e.message,'err'); });
-}
-function expDownload(){
-  GA.cloud.set('sync');
-  GA.gasGet('expenseLoad').then(function(r){
-    var d=r.data;
-    if(!d){ GA.cloud.set('idle'); GA.toast('☁️ 雲端尚無資料'); return; }
-    GA.confirm('以雲端資料覆蓋目前畫面？').then(function(ok){
-      if(!ok){ GA.cloud.set('idle'); return; }
-      if(d.txns){ txns=d.txns; saveTxns(); }
-      if(d.cats){ CATMETA=d.cats; saveCats(); }
-      if(d.budgets){ budgets=d.budgets; try{localStorage.setItem(LS_BGT,JSON.stringify(budgets));}catch(e){} }
-      GA.cloud.set('down',r.ts); GA.toast('📥 '+GA.T('down')+' OK'); fillFilters(); render();
-    });
-  }).catch(function(e){ GA.cloud.set('err',e.message); GA.toast(e.message,'err'); });
-}
-function expExport(){
-  var rows=applyFilters(periodTxns());
-  if(!rows.length){ GA.toast(GA.T('noData'),'err'); return; }
-  var hdr=['Date','Category','Item','Dept','Supplier','Inspector','Qty','Unit','Est','Actual','Source','Purpose'];
-  var aoa=[hdr].concat(rows.map(function(r){ return [r.date,catLabel(r.category),r.item,r.dept,r.supplier,r.inspector||'',r.qty,r.unit,r.estAmount,r.amount,r.sourceModule,r.purpose]; }));
-  var ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=hdr.map(function(_,i){return {wch:i<1?12:i===2?24:13};});
-  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Expense');
-  XLSX.writeFile(wb,'AC_GA_EXP_Expense_'+GA.ymd(new Date())+'.xlsx');
-}
-function expImport(){
-  GA.smartImport.openModal({
-    allowSubmit:false,
-    existing:function(type){ return type==='expense'?txns:[]; },
-    onImport:function(payload){
-      var add=(payload.expense||[]);
-      add.forEach(function(r){
-        if(!r.amount && r.estAmount) r.amount=r.estAmount;
-        r.inspector=r.inspector||'';
-        if(!r.category) r.category='other';
-        if(!CATMETA[r.category]) CATMETA[r.category]={icon:'📌',label:r.category,type:'service'};
-        r.sourceModule=r.sourceModule||'excel'; r.status='approved';
-        txns.push(r);
-      });
-      saveTxns(); saveCats();
-      GA.toast('📥 +'+add.length+' '+GA.T('records'));
-      fillFilters(); render();
-    }
-  });
-}
-function expTelegram(){
-  GA.telegram.open({
-    module:'expense', canApprove:false,
-    scopes:[
-      {v:'all',zh:'全部類別',en:'All',km:'ទាំងអស់'},
-      {v:'top',zh:'僅前十大',en:'Top 10',km:'ដប់ធំបំផុត'},
-      {v:'src',zh:'依來源',en:'By source',km:'តាមប្រភព'}
-    ],
-    periods:function(type){ return txns.map(function(r){return GA.periodKey(r.date,type);}); },
-    summary:function(s){
-      var rows=txns.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
-      var total=rows.reduce(function(a,r){return a+amt(r);},0);
-      var byCat={}; rows.forEach(function(r){byCat[r.category]=(byCat[r.category]||0)+amt(r);});
-      var byInspector={}; rows.forEach(function(r){var n=String(r.inspector||'').trim()||'—';byInspector[n]=(byInspector[n]||0)+1;});
-      var inspectorList=Object.entries(byInspector).sort(function(a,b){return b[1]-a[1];});
-      var cats=Object.keys(byCat).filter(function(k){return byCat[k]>0;})
-                     .sort(function(a,b){return byCat[b]-byCat[a];});
-      var out=[
-        {zh:'總支出',en:'Total',v:GA.money(total)},
-        {zh:'交易筆數',en:'Records',v:rows.length},
-        {zh:'活躍類別',en:'Categories',v:cats.length}
-      ];
-      var list = (s.scope==='top') ? cats.slice(0,10) : cats;   // 預設列出全部類別
-      if(s.scope!=='src' && list.length){
-        out.push('-');
-        list.forEach(function(k){
-          var pct = total? (byCat[k]/total*100).toFixed(1)+'%' : '0%';
-          out.push({ zh:catLabel(k), en:catLabel(k),
-                     v:GA.money(byCat[k],2)+' ('+pct+')' });
-        });
-      }
-      // 來源分布
-      var bySrc={}; rows.forEach(function(r){var m=r.sourceModule||'manual';bySrc[m]=(bySrc[m]||0)+amt(r);});
-      if(Object.keys(bySrc).length){
-        out.push('-');
-        Object.keys(bySrc).sort(function(a,b){return bySrc[b]-bySrc[a];}).forEach(function(m){
-          out.push({zh:'來源·'+m,en:'src·'+m,v:GA.money(bySrc[m],2)});
-        });
-      }
-      out.push('-');
-      out.push({zh:'🔎 檢查人',en:'Inspector',v:inspectorList.length});
-      inspectorList.forEach(function(x){
-        out.push({zh:'  '+(x[0]==='—'?'未填':x[0]),en:'  '+(x[0]==='—'?'Not entered':x[0]),v:x[1]+' 筆 / '+x[1]+' recs'});
-      });
-      // 預算超支提醒
-      var over=[];
-      cats.forEach(function(k){
-        var b=GA.num(budgets[k]);
-        if(b>0 && byCat[k]>b) over.push({k:k,b:b,sp:byCat[k]});
-      });
-      if(over.length){
-        out.push('-');
-        out.push({zh:'⚠️ 超預算類別',en:'Over budget',v:over.length});
-        over.slice(0,6).forEach(function(x){
-          out.push({zh:'  '+catLabel(x.k),en:'  '+catLabel(x.k),
-                    v:GA.money(x.sp,0)+' / 預算 '+GA.money(x.b,0)+' (超 '+GA.money(x.sp-x.b,0)+')'});
-        });
-      }
-      var warn=(typeof GA.futureWarnText==='function') ? GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh')) : '';
-      return GA.telegram.buildSummary({
-        icon:'💰', titleZh:'費用摘要', titleEn:'Expense Summary',
-        lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
-        rows:out,
-        footer:(warn?warn+'\n':'')+'🕐 '+GA.ymd(new Date())
-      });
-    }
-  });
-}
-
-/* 啟動 */
-loadData();
-GA.boot({ header:{ sel:'#ga-header', icon:'💰', name:'Expense Center 費用中心', version:'v2.0', cloudKey:'expense',
-  onUpload:expUpload, onDownload:expDownload, onTelegram:expTelegram, onImport:expImport, onExport:expExport }});
-/* 資料管理鈕（頁首工具列旁） */
-(function(){
-  var tools=document.querySelector('.ga-hd-tools');
-  if(tools){ var b=document.createElement('button'); b.className='ga-ico';
-    b.title='資料管理 Data'; b.innerHTML='🗂️<span>資料</span>';
-    b.onclick=expDataPanel; tools.insertBefore(b, tools.querySelector('.ga-lang')); }
-})();
-function expDataPanel(){
-  GA.dataPanel({
-    module:'expense',
-    count:function(){return txns.length;},
-    data:function(){return {txns:txns,cats:CATMETA,budgets:budgets};},
-    restore:function(obj,mode){
-      if(mode==='replace'){
-        if(obj.txns) txns=obj.txns;
-        if(obj.cats) CATMETA=obj.cats;
-        if(obj.budgets) budgets=obj.budgets;
-      }else{
-        var seen={}; txns.forEach(function(r){seen[r._fp||r.recordId]=1;});
-        (obj.txns||[]).forEach(function(r){ var k=r._fp||r.recordId;
-          if(!seen[k]){ txns.push(r); seen[k]=1; } });
-        if(obj.cats) for(var k2 in obj.cats) if(!CATMETA[k2]) CATMETA[k2]=obj.cats[k2];
-        if(obj.budgets) for(var k3 in obj.budgets) if(!budgets[k3]) budgets[k3]=obj.budgets[k3];
-      }
-      saveTxns(); saveCats();
-      try{ localStorage.setItem(LS_BGT,JSON.stringify(budgets)); }catch(e){}
-    },
-    clear:function(){ txns=[]; saveTxns(); },
-    exportXlsx:expExport,
-    onChange:function(){ fillFilters(); render(); }
-  });
-}
-
-pc = GA.periodControl('#exp-period',{ id:'expense', type:'month',
-  dates:function(){ return txns.map(function(r){return r.date;}); }, onChange:function(){ render(); } });
-
-ledgerTbl = GA.table('#ledger-tbl',{ size:50, sort:'date', cols:ledgerCols() });
-catTbl = GA.table('#cat-tbl',{ size:50, cols:[
-  {k:'cat',label:GA.T('cat')},
-  {k:'amount',label:GA.T('act'),num:true,html:function(r){return GA.money(r.amount,2);}},
-  {k:'pct',label:'%',num:true},
-  {k:'cnt',label:GA.T('kTxn'),num:true}
-]});
-trendTbl = GA.table('#trend-tbl',{ size:20, cols:[
-  {k:'period',label:GA.T('period')},
-  {k:'amount',label:GA.T('act'),num:true,html:function(r){return GA.money(r.amount,2);}},
-  {k:'cnt',label:GA.T('kTxn'),num:true}
-]});
-
-['fl-cat','fl-src','fl-dept','fl-sup'].forEach(function(id){
-  document.getElementById(id).addEventListener('input',renderLedger);
-});
-fillFilters();
-GA.on('lang',function(){ fillFilters(); render(); });
-render();
+function formatDiff(v){return(v>0?'+':'')+money(v);}function rowsFor(k){return(k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[])).filter(inCurrent);}function sumRows(rows){return rows.reduce(function(a,r){return a+value(r);},0);}function card(label,val,sub){return'<div class="exp-card"><div class="lbl">'+esc(label)+'</div><div class="val">'+esc(val)+'</div><div class="sub">'+esc(sub||'')+'</div></div>';}
+function compareHtml(rows,prev){var cur=sumRows(rows),old=sumRows(prev),d=cur-old;return'<div class="exp-compare"><div class="box"><b>'+esc(GA.T('expCurrent'))+'</b><span>'+money(cur)+'</span><small> · '+rows.length+' '+esc(GA.T('expRows'))+'</small></div><div class="box"><b>'+esc(GA.T('expPrevious'))+'</b><span>'+money(old)+'</span><small> · '+prev.length+' '+esc(GA.T('expRows'))+'</small></div><div class="box"><b>'+esc(GA.T('expChange'))+'</b><span class="'+(d>0?'diff-pos':d<0?'diff-neg':'')+'">'+formatDiff(d)+'</span></div></div>';}
+function previousRows(k){var s=currentState(),p=GA.shiftPeriod(s.key,s.type,-1),arr=k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[]);return arr.filter(function(r){return GA.inPeriod(r.date,p,s.type);});}
+function sourceLabel(k){return GA.T(SRC_META[k]?SRC_META[k].label:k);}function sourceCards(){return['repair','purchase','general'].map(function(k){var r=rowsFor(k);return card(sourceLabel(k),money(sumRows(r)),r.length+' '+GA.T('expRows'));}).join('');}
+function totalsTable(){return'<div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('expSource'))+'</th><th>'+esc(GA.T('expRecords'))+'</th><th>'+esc(GA.T('expTotal'))+'</th></tr></thead><tbody>'+['repair','purchase','general'].map(function(k){var n=rowsFor(k);return'<tr><td>'+SRC_META[k].icon+' '+esc(sourceLabel(k))+'</td><td class="n">'+n.length+'</td><td class="n">'+money(sumRows(n))+'</td></tr>';}).join('')+'<tr><th>'+esc(GA.T('expTotalAll'))+'</th><th class="n">'+rowsFor('summary').length+'</th><th class="n">'+money(sumRows(rowsFor('summary')))+'</th></tr><tr><td>'+esc(GA.T('expLegacyTotal'))+'</td><td class="n">'+rowsFor('legacy').length+'</td><td class="n">'+money(sumRows(rowsFor('legacy')))+'</td></tr></tbody></table></div>';}
+function categoryBars(rows){var by={};rows.forEach(function(r){var k=text(r.categoryLabel||r.category||'Other');by[k]=(by[k]||0)+value(r);});var keys=Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,12),max=keys.length?by[keys[0]]:1;if(!keys.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';return'<div class="exp-bars">'+keys.map(function(k){return'<div class="exp-bar-row"><span>'+esc(k)+'</span><div class="exp-bar"><i style="width:'+Math.round(by[k]/max*100)+'%"></i></div><em>'+money(by[k])+'</em></div>';}).join('')+'</div>';}
+function trendHtml(rows){var s=currentState(),seen={};rows.forEach(function(r){var k=GA.periodKey(r.date,s.type);if(k)seen[k]=1;});var keys=Object.keys(seen).sort().reverse().slice(0,12).reverse();if(!keys.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';return'<div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('period'))+'</th><th>'+esc(GA.T('expRecords'))+'</th><th>'+esc(GA.T('expTotal'))+'</th></tr></thead><tbody>'+keys.map(function(k){var rs=rows.filter(function(r){return GA.periodKey(r.date,s.type)===k;});return'<tr><td>'+esc(GA.periodLabel(k,s.type))+'</td><td class="n">'+rs.length+'</td><td class="n">'+money(sumRows(rs))+'</td></tr>';}).join('')+'</tbody></table></div>';}
+function detailTable(rows){if(!rows.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';var slice=rows.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date));});return'<div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('date'))+'</th><th>'+esc(GA.T('expSheet'))+'</th><th>'+esc(GA.T('expItem'))+'</th><th>'+esc(GA.T('expSpec'))+'</th><th>'+esc(GA.T('expQty'))+'</th><th>'+esc(GA.T('expUnit'))+'</th><th>'+esc(GA.T('expPrice'))+'</th><th>'+esc(GA.T('expTotal'))+'</th><th>'+esc(GA.T('expSupplier'))+'</th><th>'+esc(GA.T('expPurpose'))+'</th></tr></thead><tbody>'+slice.map(function(r){return'<tr><td>'+esc(r.date||'—')+'</td><td>'+esc(r.sourceSheet||r.categoryLabel||'—')+'</td><td><b>'+esc(r.item)+'</b></td><td>'+esc(r.spec||'—')+'</td><td class="n">'+(r.qty||'—')+'</td><td>'+esc(r.unit||'—')+'</td><td class="n">'+money(r.price)+'</td><td class="n"><b>'+money(value(r))+'</b></td><td>'+esc(r.supplier||'—')+'</td><td>'+esc(r.purpose||'—')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+function actionBar(){return'<div class="exp-actions"><button class="ga-btn primary" onclick="expImport()">📥 '+esc(GA.T('expImport'))+'</button><button class="ga-btn" onclick="expExport()">📤 '+esc(GA.T('expExportCurrent'))+'</button><button class="ga-btn" onclick="expExportAll()">📊 '+esc(GA.T('expExportAll'))+'</button><button class="ga-btn" onclick="render()">↻ '+esc(GA.T('expRefresh'))+'</button></div><div class="exp-note">'+esc(GA.T('expImportHint'))+' · '+esc(GA.T('expCloudData'))+'</div>';}
+function renderSummary(){var rows=allSourceRows().filter(inCurrent),prev=previousRows('summary'),legacy=rowsFor('legacy');document.getElementById('exp-view').innerHTML=actionBar()+'<div class="exp-sec"><div class="exp-sec-t">📊 '+esc(GA.T('expSummary'))+'<span class="sp">'+esc(GA.periodLabel(currentState().key,currentState().type))+'</span></div><div class="exp-grid">'+card(GA.T('expTotalAll'),money(sumRows(rows)),rows.length+' '+GA.T('expRows'))+card(GA.T('expLegacyTotal'),money(sumRows(legacy)),legacy.length+' '+GA.T('expRows'))+sourceCards()+'</div></div><div class="exp-sec"><div class="exp-sec-t">↔️ '+esc(GA.T('expCompare'))+'</div>'+compareHtml(rows,prev)+'</div><div class="exp-sec"><div class="exp-sec-t">➕ '+esc(GA.T('expBySource'))+'</div>'+totalsTable()+'</div><div class="exp-sec"><div class="exp-sec-t">🏆 '+esc(GA.T('expTop'))+'</div>'+categoryBars(rows)+'</div><div class="exp-sec"><div class="exp-sec-t">📈 '+esc(GA.T('expPeriodTrend'))+'</div>'+trendHtml(allSourceRows())+'</div>';}
+function renderSource(k){var rows=rowsFor(k),prev=previousRows(k),q=window.expQuery||'',filtered=rows.filter(function(r){return!q||[r.item,r.spec,r.supplier,r.purpose,r.sourceSheet].join(' ').toLowerCase().indexOf(q.toLowerCase())>=0;});document.getElementById('exp-view').innerHTML=actionBar()+'<div class="exp-sec"><div class="exp-sec-t">'+SRC_META[k].icon+' '+esc(sourceLabel(k))+'<span class="sp">'+rows.length+' '+esc(GA.T('expRows'))+'</span></div><div class="exp-tools"><input id="exp-q" value="'+esc(q)+'" placeholder="🔎 '+esc(GA.T('search'))+'"><button class="ga-btn" onclick="window.expQuery=\'\';render()">'+esc(GA.T('reset'))+'</button></div><div class="exp-grid">'+card(GA.T('expAmount'),money(sumRows(rows)),rows.length+' '+GA.T('expRows'))+card(GA.T('expCurrent'),money(sumRows(rows)),GA.periodLabel(currentState().key,currentState().type))+card(GA.T('expPrevious'),money(sumRows(prev)),GA.T('expPrev'))+card(GA.T('expChange'),formatDiff(sumRows(rows)-sumRows(prev)),GA.T('expCompare'))+'</div></div><div class="exp-sec"><div class="exp-sec-t">↔️ '+esc(GA.T('expCompare'))+'</div>'+compareHtml(rows,prev)+'</div><div class="exp-sec"><div class="exp-sec-t">📁 '+esc(GA.T('expTop'))+'</div>'+categoryBars(rows)+'</div><div class="exp-sec"><div class="exp-sec-t">📈 '+esc(GA.T('expPeriodTrend'))+'</div>'+trendHtml(EXP3[k])+'</div><div class="exp-sec"><div class="exp-sec-t">🧾 '+esc(GA.T('expRecords'))+'</div>'+detailTable(filtered)+'</div>';var inp=document.getElementById('exp-q');if(inp)inp.oninput=function(){window.expQuery=this.value;renderSource(k);};}
+function legacyCategoryOptions(){return Object.keys(CATMETA).map(function(k){return'<option value="'+esc(k)+'">'+esc((CATMETA[k]&&CATMETA[k].label)||k)+'</option>';}).join('');}
+function renderLegacy(){var rows=rowsFor('legacy');document.getElementById('exp-view').innerHTML=actionBar()+'<div class="exp-sec"><div class="exp-sec-t">🗂️ '+esc(GA.T('expLegacy'))+'<span class="sp">'+rows.length+' '+esc(GA.T('expRows'))+' · '+money(sumRows(rows))+'</span></div>'+detailTable(rows)+'</div><div class="exp-sec"><div class="exp-sec-t">➕ '+esc(GA.T('expManual'))+'</div><div class="exp-form"><div><label>'+esc(GA.T('date'))+'</label><input id="a-date" type="date" value="'+GA.ymd(new Date())+'"></div><div><label>'+esc(GA.T('expCategory'))+'</label><select id="a-cat">'+legacyCategoryOptions()+'</select></div><div><label>'+esc(GA.T('expItem'))+'</label><input id="a-item"></div><div><label>'+esc(GA.T('expDepartment'))+'</label><input id="a-dept"></div><div><label>'+esc(GA.T('expSupplier'))+'</label><input id="a-sup"></div><div><label>'+esc(GA.T('expInspector'))+'</label><input id="a-inspector"></div><div><label>'+esc(GA.T('expQty'))+'</label><input id="a-qty" type="number" step="0.01"></div><div><label>'+esc(GA.T('expEstimate'))+'</label><input id="a-est" type="number" step="0.01"></div><div><label>'+esc(GA.T('expActual'))+'</label><input id="a-amt" type="number" step="0.01"></div><div style="grid-column:1/-1"><label>'+esc(GA.T('expRemark'))+'</label><input id="a-note"></div></div><button class="ga-btn primary" onclick="addManual()">➕ '+esc(GA.T('expSave'))+'</button></div><div class="exp-sec"><div class="exp-sec-t">💰 '+esc(GA.T('expBudget'))+'</div><div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('expCategory'))+'</th><th>'+esc(GA.T('expBudget'))+'</th><th>'+esc(GA.T('expActual'))+'</th></tr></thead><tbody>'+Object.keys(CATMETA).map(function(k){var sp=sumRows(txns.filter(function(r){return r.category===k;}));return'<tr><td>'+esc(CATMETA[k].label||k)+'</td><td class="n"><input data-budget="'+esc(k)+'" type="number" value="'+(budgets[k]||'')+'" style="width:90px"></td><td class="n">'+money(sp)+'</td></tr>';}).join('')+'</tbody></table></div><button class="ga-btn" onclick="saveBudgetInputs()">💾 '+esc(GA.T('save'))+'</button></div>';}
+function render(){var note=document.getElementById('exp-source-note');if(note)note.textContent=GA.T('expImportHint');document.querySelectorAll('.exp-tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-p')===activeTab);});if(activeTab==='summary')renderSummary();else if(activeTab==='legacy')renderLegacy();else renderSource(activeTab);}
+function expTab(k){activeTab=k;window.expQuery='';render();}
+function addManual(){var cat=document.getElementById('a-cat').value,a=num(document.getElementById('a-amt').value),e=num(document.getElementById('a-est').value),q=num(document.getElementById('a-qty').value);if(!a&&!e){GA.toast('Please enter amount','err');return;}var r={date:document.getElementById('a-date').value,item:document.getElementById('a-item').value,category:cat,dept:document.getElementById('a-dept').value,supplier:document.getElementById('a-sup').value,inspector:document.getElementById('a-inspector').value,qty:q,estAmount:e||a,amount:a||e,purpose:document.getElementById('a-note').value,sourceModule:'manual',status:'approved'};GA.stamp(r,{source:'online',prefix:'exp'});r._fp=GA.fingerprint(['legacy',r.date,r.item,r.amount,r.supplier]);txns.push(r);saveTxns();GA.toast('➕ OK');render();}
+function saveBudgetInputs(){document.querySelectorAll('[data-budget]').forEach(function(e){var v=num(e.value);if(v)budgets[e.getAttribute('data-budget')]=v;else delete budgets[e.getAttribute('data-budget')];});saveBudgets();GA.toast('💾 '+GA.T('save')+' OK');}
+function expExport(){var k=activeTab==='summary'?'summary':activeTab==='legacy'?'legacy':activeTab,rows=k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[]),s=currentState();rows=rows.filter(function(r){return GA.inPeriod(r.date,s.key,s.type);});writeXlsx(rows,'AC_GA_EXP_'+k+'_'+GA.ymd(new Date())+'.xlsx');}
+function expExportAll(){writeXlsx(allRows(),'AC_GA_EXP_integrated_'+GA.ymd(new Date())+'.xlsx');}
+function writeXlsx(rows,name){if(!rows.length){GA.toast(GA.T('expNoData'),'err');return;}var aoa=[['Source','Date','Sheet','Item','Spec','Qty','Unit','Unit Price','Amount','Supplier','Purpose','Category','Source File']].concat(rows.map(function(r){return[r._source||'legacy',r.date||'',r.sourceSheet||'',r.item||'',r.spec||'',r.qty||'',r.unit||'',r.price||r.unitPrice||'',value(r),r.supplier||'',r.purpose||'',r.categoryLabel||r.category||'',r.sourceFile||''];}));var ws=XLSX.utils.aoa_to_sheet(aoa),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expense');XLSX.writeFile(wb,name);}
+function expUpload(){var payload={schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};GA.cloud.upload('expense',payload).then(function(){GA.toast('☁️ '+GA.T('cloudUp'));}).catch(function(e){GA.toast(e.message,'err');});}
+function expDownload(){GA.cloud.download('expense').then(function(r){var d=r.data;if(!d){GA.toast('☁️ '+GA.T('noData'));return;}GA.confirm('以雲端資料覆蓋目前費用資料？').then(function(ok){if(!ok)return;if(Array.isArray(d.txns))txns=d.txns;if(d.cats)CATMETA=d.cats;if(d.budgets)budgets=d.budgets;if(d.exp3){['repair','purchase','general'].forEach(function(k){if(Array.isArray(d.exp3[k]))EXP3[k]=d.exp3[k];});}saveTxns();saveCats();saveBudgets();saveExp3();GA.toast('📥 '+GA.T('cloudDown'));render();});}).catch(function(e){GA.toast(e.message,'err');});}
+function expTelegram(){GA.telegram.open({module:'expense',canApprove:false,scopes:[{v:'all',zh:'三類整合',en:'All three sources',km:'ប្រភពទាំងបី'},{v:'repair',zh:'其他維修',en:'Other Repair',km:'ជួសជុលផ្សេងៗ'},{v:'purchase',zh:'採購記錄',en:'Purchasing',km:'ការទិញ'},{v:'general',zh:'一般費用',en:'General Expense',km:'ចំណាយទូទៅ'},{v:'legacy',zh:'手動／歷史',en:'Manual / Historical',km:'ដោយដៃ / ប្រវត្តិ'}],periods:function(){return allRows().map(function(r){return r.date;});},summary:function(s){var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]),rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);}),total=sumRows(rows),by={};rows.forEach(function(r){var k=r.categoryLabel||r.category||'Other';by[k]=(by[k]||0)+value(r);});var out=[{zh:'總額',en:'Total',v:money(total)},{zh:'明細筆數',en:'Records',v:rows.length}];Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,10).forEach(function(k){out.push({zh:k,en:k,v:money(by[k])});});out.push('-');out.push({zh:'資料來源',en:'Source',v:sourceLabel(s.scope==='all'?'general':s.scope)});return GA.telegram.buildSummary({icon:'💰',titleZh:'費用摘要',titleEn:'Expense Summary',lang:s.lang,period:GA.periodLabel(s.period,s.ptype),rows:out,footer:'🕐 '+GA.ymd(new Date())});}});}
+function expDataPanel(){GA.dataPanel({module:'expense',count:function(){return allRows().length;},data:function(){return{schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};},restore:function(obj,mode){if(mode==='replace'){if(Array.isArray(obj.txns))txns=obj.txns;if(obj.cats)CATMETA=obj.cats;if(obj.budgets)budgets=obj.budgets;if(obj.exp3){['repair','purchase','general'].forEach(function(k){EXP3[k]=Array.isArray(obj.exp3[k])?obj.exp3[k]:[];});}}else{var seen={};allRows().forEach(function(r){if(r._fp)seen[r._fp]=1;});(obj.txns||[]).forEach(function(r){if(!r._fp||!seen[r._fp]){txns.push(r);if(r._fp)seen[r._fp]=1;}});if(obj.exp3){['repair','purchase','general'].forEach(function(k){(obj.exp3[k]||[]).forEach(function(r){if(!r._fp||!seen[r._fp]){EXP3[k].push(r);if(r._fp)seen[r._fp]=1;}});});}if(obj.cats)Object.keys(obj.cats).forEach(function(k){if(!CATMETA[k])CATMETA[k]=obj.cats[k];});if(obj.budgets)Object.keys(obj.budgets).forEach(function(k){if(!budgets[k])budgets[k]=obj.budgets[k];});}saveTxns();saveCats();saveBudgets();saveExp3();},clear:function(){txns=[];EXP3={repair:[],purchase:[],general:[]};saveTxns();saveExp3();},exportXlsx:expExportAll,onChange:function(){render();}});}
+(function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){importFiles(this.files);});})();
+loadData();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.0',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
+(function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
+pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){render();}});GA.on('lang',function(){render();});render();
 </script>
 </body>
 </html>
