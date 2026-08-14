@@ -1274,10 +1274,26 @@ let poHistoryData = [];
 
 async function loadPOHistory() {
   try {
-    const resp = await fetch(`${GAS_URL}?action=getHistory&year=${YEAR}`);
-    const json = await resp.json();
+    const [resp, recvResp] = await Promise.all([
+      fetch(`${GAS_URL}?action=getHistory&year=${YEAR}`),
+      fetch(`${GAS_URL}?action=monthlyPoApproved&year=${YEAR}`)
+    ]);
+    const json = await resp.json(), recvJson = await recvResp.json();
     if (json.ok) {
       poHistoryData = json.data || [];
+      const recvMap = {};
+      (recvJson.data || []).forEach(po => { recvMap[po.poId || po.poNumber] = po; });
+      poHistoryData.forEach(po => {
+        const state = recvMap[po.poId || po.poNumber];
+        if (!state) return;
+        const byName = {};
+        (state.items || []).forEach(it => { byName[String(it.name || '').trim().toLowerCase()] = it; });
+        po.items = (po.items || []).map(it => {
+          const s = byName[String(it.item || it.itemName || it.name || '').trim().toLowerCase()];
+          return Object.assign({}, it, { receivedQty: s ? s.receivedQty : 0, remainingQty: s ? s.remainingQty : GA.num(it.qty) });
+        });
+        po.receivingSummary = { received: po.items.reduce((n, it) => n + GA.num(it.receivedQty), 0), remaining: po.items.reduce((n, it) => n + GA.num(it.remainingQty), 0) };
+      });
       renderPOHistory();
     }
   } catch(e) { console.warn("loadPOHistory error:", e); }
@@ -1306,7 +1322,7 @@ function renderPOHistory() {
     return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text)">${po.poNumber||"(no#)"}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${MO2[po.month]||""} ${po.year} · ${po.applicant||""} · ${po.items.length} 項</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${MO2[po.month]||""} ${po.year} · ${po.applicant||""} · ${po.items.length} 項${po.receivingSummary?` · 📦 已收 ${po.receivingSummary.received} / 剩餘 ${po.receivingSummary.remaining}`:""}</div>
       </div>
       <div style="font-size:12px;font-weight:700;color:${st.color}">${st.label}</div>
       ${canVoid ? `<button onclick="voidPO('${po.poId}','${po.poNumber||po.poId}')"
@@ -2681,6 +2697,8 @@ function procTelegram(){
     }
   });
 }
+/* 摘要／核可請求成功後自動保存目前採購狀態；避免還要再等一次手動上傳。 */
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{saveStateCloud();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
 function poHist_inPeriod(s){
   return (poHistoryData||[]).filter(po=>{
     const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');

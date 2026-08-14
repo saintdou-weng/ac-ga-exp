@@ -1199,6 +1199,9 @@ function mtTelegram(){
   });
 }
 
+/* 摘要／核可請求送出後，背景保留一份合併後雲端備份，不阻塞畫面。 */
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='maintenance'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{mtCloudUpload();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
+
 /* ── 初始化：URL 參數 ?form=po / ?form=repair 直接開對應分頁 ── */
 (function(){
   try{ GA.cloud.mount('#ga-cloud'); }catch(e){}

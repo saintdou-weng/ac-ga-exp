@@ -240,6 +240,7 @@ TG.open = function (opt) {
         text: el('tg-pv').textContent
       }).then(function (r) {
         done('✈️ ' + GA.T('tgSent') + ' · ' + ((r.data && r.data.sent) || 1) + ' group(s)', true);
+        if (opt.onSummarySent) opt.onSummarySent(r.data || r, st);
       }).catch(function (e) { done('❌ ' + e.message, false); });
 
     } else {
@@ -258,7 +259,7 @@ TG.open = function (opt) {
         var d = r.data || {};
         done('📋 ' + (d.updated ? (GA.lang === 'zh' ? '已更新原核可訊息' : 'Updated existing request')
                                 : (GA.lang === 'zh' ? '核可請求已送出' : 'Approval request sent')), true);
-        if (opt.onApprovalSent) opt.onApprovalSent(d);
+        if (opt.onApprovalSent) opt.onApprovalSent(d, st);
       }).catch(function (e) {
         done('❌ ' + (e.code === 'NO_PERM' ? GA.T('tgNoPerm') : e.message), false);
       });

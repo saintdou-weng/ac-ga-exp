@@ -11,9 +11,10 @@
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-smart-sync.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script src="shared/exp-seed.js"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -226,8 +227,65 @@ function expMsgText(zh,en,km,lang){if(lang==='zh')return zh;if(lang==='en')retur
 function expSourceText(k,lang){var m={repair:['其他維修','Other Repair','ជួសជុលផ្សេងៗ'],purchase:['採購記錄','Purchasing Record','កំណត់ត្រាទិញ'],general:['一般費用','General Expense','ចំណាយទូទៅ'],legacy:['手動／歷史','Manual / Historical','ដោយដៃ / ប្រវត្តិ']};var a=m[k]||[k,k,k];return expMsgText(a[0],a[1],a[2],lang);}
 function expDownload(){GA.cloud.download('expense').then(function(r){var d=r.data;if(!d){if(GA.cloud.set)GA.cloud.set('idle');GA.toast('☁️ '+GA.T('noData'));return;}GA.confirm('以雲端資料覆蓋目前費用資料？').then(function(ok){if(!ok){if(GA.cloud.set)GA.cloud.set('idle');return;}if(Array.isArray(d.txns))txns=d.txns;if(d.cats)CATMETA=d.cats;if(d.budgets)budgets=d.budgets;if(d.exp3){['repair','purchase','general'].forEach(function(k){if(Array.isArray(d.exp3[k]))EXP3[k]=d.exp3[k];});}saveTxns();saveCats();saveBudgets();saveExp3();GA.toast('📥 '+GA.T('cloudDown'));render();});}).catch(function(e){if(GA.cloud.set)GA.cloud.set('err',e.message);GA.toast('❌ '+e.message,'err');});}
 function expTelegram(){GA.telegram.open({module:'expense',canApprove:false,scopes:[{v:'all',zh:'三類整合',en:'All three sources',km:'ប្រភពទាំងបី'},{v:'repair',zh:'其他維修',en:'Other Repair',km:'ជួសជុលផ្សេងៗ'},{v:'purchase',zh:'採購記錄',en:'Purchasing',km:'ការទិញ'},{v:'general',zh:'一般費用',en:'General Expense',km:'ចំណាយទូទៅ'},{v:'legacy',zh:'手動／歷史',en:'Manual / Historical',km:'ដោយដៃ / ប្រវត្តិ'}],periods:function(type){return expPeriodKeys(type);},summary:function(s){var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]),rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);}),prevKey=GA.shiftPeriod(s.period,s.ptype,-1),prev=arr.filter(function(r){return GA.inPeriod(r.date,prevKey,s.ptype);}),total=sumRows(rows),old=sumRows(prev),by={};rows.forEach(function(r){var k=r.categoryLabel||r.category||'Other';by[k]=(by[k]||0)+value(r);});var out=[{zh:'總額',en:'Total',v:money(total)},{zh:'明細筆數',en:'Records',v:rows.length}];if(s.scope==='all'){['repair','purchase','general'].forEach(function(k){var sr=rows.filter(function(r){return r._source===k;});out.push({zh:expSourceText(k,'zh'),en:expSourceText(k,'en'),v:money(sumRows(sr))+' / '+sr.length+' '+expMsgText('筆','records','កំណត់ត្រា',s.lang)});});}else out.push({zh:'來源',en:'Source',v:expSourceText(s.scope,s.lang)});out.push({zh:'前期比較',en:'Previous period',v:money(old)+' → '+money(total)+' ('+formatDiff(total-old)+')'});Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,8).forEach(function(k){out.push({zh:k,en:k,v:money(by[k])});});var q=expQuality(rows,prev),warn=[];if(q.supplier)warn.push(expMsgText('缺供應商','Missing supplier','ខ្វះអ្នកផ្គត់ផ្គង់',s.lang)+' '+q.supplier);if(q.purpose)warn.push(expMsgText('缺用途／備註','Missing purpose / remark','ខ្វះគោលបំណង / ចំណាំ',s.lang)+' '+q.purpose);if(q.price)warn.push(expMsgText('缺單價','Missing unit price','ខ្វះតម្លៃឯកតា',s.lang)+' '+q.price);if(q.future)warn.push(expMsgText('未來日期','Future date','កាលបរិច្ឆេទនៅអនាគត',s.lang)+' '+q.future);if(q.zero)warn.push(expMsgText('零／負金額','Zero / negative amount','ចំនួនសូន្យ / អវិជ្ជមាន',s.lang)+' '+q.zero);if(q.duplicate)warn.push(expMsgText('疑似重複','Possible duplicates','អាចស្ទួន',s.lang)+' '+q.duplicate);if(q.changePct!==null&&(Math.abs(q.changePct)>=50||(!q.previous&&q.current)))warn.push(expMsgText('較前期變化','Change from previous period','ការប្រែប្រួលពីរយៈពេលមុន',s.lang)+' '+(q.changePct===null?'new':q.changePct+'%'));out.push('-');out.push({zh:'資料檢查',en:'Data check',v:warn.length?warn.join(' · '):expMsgText('目前未發現明顯異常','No obvious exception found','មិនឃើញកំហុសច្បាស់លាស់',s.lang)});out.push({zh:'Dashboard',en:'Dashboard',v:EXP_DASH_URL});return GA.telegram.buildSummary({icon:'💰',titleZh:'費用摘要',titleEn:'Expense Summary',lang:s.lang,period:GA.periodLabel(s.period,s.ptype),rows:out,footer:'🔗 '+expMsgText('開啟費用 Dashboard','Open Expense Dashboard','បើក Dashboard ចំណាយ',s.lang)+'：'+EXP_DASH_URL+'\n🕐 '+GA.ymd(new Date())});}});}
+/* HRA Pay 同款智慧同步：以月份分桶，只上傳變更，並保留雲端已有月份。 */
+var EXP_SMART_TOOL='expense', EXP_SMART_PENDING='ac_ga_exp_smart_pending_v1';
+function expSyncRows(){
+  var out=[{_syncId:'meta:expense',_syncBucket:'meta',kind:'meta'}];
+  (txns||[]).forEach(function(r,i){var id=r.recordId||r.id||r._fp||('legacy-'+i);out.push({_syncId:'legacy:'+id,_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':legacy',_syncPeriod:r.date||'',kind:'txn',row:r});});
+  ['repair','purchase','general'].forEach(function(k){(EXP3[k]||[]).forEach(function(r,i){var id=r.recordId||r.id||r._fp||((r.date||'')+'-'+i);out.push({_syncId:k+':'+id,_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':'+k,_syncPeriod:r.date||'',kind:'source',source:k,row:r});});});
+  return out;
+}
+function expSyncMeta(){return {schema:3,cats:CATMETA||{},budgets:budgets||{},periods:expPeriodKeys('month'),updatedAt:new Date().toISOString()};}
+function expApplySync(rows,meta){
+  var next={txns:[],repair:[],purchase:[],general:[]};
+  (rows||[]).forEach(function(x){if(!x||x.kind==='meta'||!x.row)return;if(x.kind==='txn')next.txns.push(x.row);else if(next[x.source])next[x.source].push(x.row);});
+  txns=next.txns; EXP3={repair:next.repair,purchase:next.purchase,general:next.general};
+  if(meta&&meta.cats)CATMETA=meta.cats;if(meta&&meta.budgets)budgets=meta.budgets;
+  saveTxns(true);saveExp3();saveCats();saveBudgets();
+  if(typeof render==='function'&&document.getElementById('exp-view'))render();
+}
+function expLegacyToSync(d){
+  d=d&&d.data&&typeof d.data==='object'?d.data:d||{};var rows=[];
+  (d.txns||[]).forEach(function(r,i){rows.push({_syncId:'legacy:'+(r.recordId||r.id||r._fp||i),_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':legacy',_syncPeriod:r.date||'',kind:'txn',row:r});});
+  var e=d.exp3||{};['repair','purchase','general'].forEach(function(k){(e[k]||[]).forEach(function(r,i){rows.push({_syncId:k+':'+(r.recordId||r.id||r._fp||i),_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':'+k,_syncPeriod:r.date||'',kind:'source',source:k,row:r});});});
+  return rows;
+}
+function expSyncStatus(msg,type){try{GA.cloud.mount('#ga-cloud');GA.cloud.set(type||'sync',msg||'');}catch(e){} }
+function expCloudUpload(opts){
+  opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url){return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));}
+  expSyncStatus(opts.silent?'背景同步中…':'智慧同步中…','sync');
+  return GASmartSync.push({url:url,tool:EXP_SMART_TOOL,records:expSyncRows(),meta:expSyncMeta(),legacyToRecords:expLegacyToSync,autoMerge:true,onStatus:expSyncStatus,summary:{records:allRows().length,periods:expPeriodKeys('month').length}}).then(function(r){
+    try{GA.saveCfg({sync_expense:new Date().toISOString()});}catch(e){}
+    expSyncStatus(r&&r.skipped?'雲端已是最新':'上傳完成｜雲端資料已保留','up');
+    if(!opts.silent)GA.toast(r&&r.skipped?'☁️ 已是最新':'☁️ 已上傳並保留雲端歷史','success');
+    return r;
+  }).catch(function(e){expSyncStatus(e.message,'err');if(!opts.silent)GA.toast('❌ 上傳失敗：'+e.message,'err');throw e;});
+}
+function expCloudDownload(opts){
+  opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));
+  expSyncStatus('智慧下載中…','sync');
+  return GASmartSync.pull({url:url,tool:EXP_SMART_TOOL,localRecords:expSyncRows(),legacyToRecords:expLegacyToSync,apply:expApplySync,onStatus:expSyncStatus}).then(function(r){
+    if(r&&r.noCloud){expSyncStatus('雲端尚無費用資料','idle');if(!opts.silent)GA.toast('☁️ 雲端尚無費用資料','warning');return r;}
+    expSyncStatus('下載完成｜保留本機與雲端資料','down');if(!opts.silent)GA.toast('📥 已同步雲端資料（本機資料保留）','success');return r;
+  }).catch(function(e){expSyncStatus(e.message,'err');if(!opts.silent)GA.toast('❌ 下載失敗：'+e.message,'err');throw e;});
+}
+function scheduleExpenseAutoCloudSync(reason){
+  try{localStorage.setItem(EXP_SMART_PENDING,JSON.stringify({reason:reason||'change',at:new Date().toISOString()}));}catch(e){}
+  clearTimeout(window._expSmartTimer);window._expSmartTimer=setTimeout(function(){expCloudUpload({silent:true}).then(function(){try{localStorage.removeItem(EXP_SMART_PENDING);}catch(e){}}).catch(function(){});},1200);
+}
+function expUpload(){return expCloudUpload({silent:false});}
+function expDownload(){return expCloudDownload({silent:false});}
+var _expImportFilesLatest=importFiles;
+function importFiles(files){var r=_expImportFilesLatest(files);scheduleExpenseAutoCloudSync('import');return r;}
+var _expAddManualLatest=addManual;
+function addManual(){var r=_expAddManualLatest();scheduleExpenseAutoCloudSync('manual');return r;}
+var _expSaveBudgetLatest=saveBudgetInputs;
+function saveBudgetInputs(){var r=_expSaveBudgetLatest();scheduleExpenseAutoCloudSync('budget');return r;}
+/* 不依賴每個模組重複改 modal：費用的摘要／核可成功後都自動排程背景同步。 */
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){importFiles(this.files);});})();
 loadData();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.0',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
+try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},700);}catch(e){}
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
 pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){render();}});GA.on('lang',function(){render();});render();
 </script>
