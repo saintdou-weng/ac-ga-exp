@@ -114,8 +114,8 @@ VRT.parseOtherExpenses = function (rows, meta) {
    同一分頁可能左右並排多區塊（Factory / Expat staff house）→ 各自產生記錄。 */
 VRT.parseExpenseCategorySheet = function (rows, meta) {
   var out = [];
-  var sheetName = (meta && meta.sheetName) || '';
-  var catKey = sheetName.trim().toLowerCase().replace(/\s+/g,'_');
+  var sheetName = ((meta && meta.sheetName) || '').trim();
+  var catKey = sheetName.toLowerCase().replace(/\s+/g,'_');
 
   // 找表頭列（含 Amount 或 Consum 字樣）
   var hi = -1;

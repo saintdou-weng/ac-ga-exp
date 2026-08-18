@@ -1,4 +1,32 @@
 
+## v3.2-record-edit-receiving-expense — 2026-08-17（核可記錄編輯、PO 全收與費用細分）
+
+- 維修／臨時 PO 記錄查詢統一相容 `Approved / Pending / Rejected` 與中文狀態；下載補回單價、總額、報告連結，並可編輯後寫回原始 Sheet。
+- Receiving 的 Monthly PO 收貨增加逐列「全收」及「全部全收並儲存」，收貨日期、數量、檢查人仍可修改，儲存後更新已收／剩餘量並保留照片發送與雲端同步。
+- General Expense 解析電費、水費等類別的 Factory／Staff House 等區域，畫面與 Telegram 摘要增加細項金額、用量、前期比較及異常提示；既有三來源、摘要、Dashboard 與智慧同步保留。
+
+## v3.1-expense-receiving-sync — 2026-08-14（智慧同步與批次收貨）
+
+- AC EXP 改用 HRA Pay 同款 Drive manifest／分桶同步：只上傳變更月份，雲端既有月份保留；摘要／核可送出成功後背景自動同步，失敗會留待下次開頁重試。
+- 舊版 `EXPENSE_DB` KV 備份仍可讀取，第一次智慧同步會合併遷移，不覆蓋本機既有費用資料。
+- Receiving 新增「月度 PO 收貨」分頁：列出已核可 PO 的核可量、已收量、剩餘量，可逐列調整日期／數量或一鍵套用；採購中心歷史也顯示已收／剩餘，供下月採購參考。
+- Receiving 收貨改為多列批次輸入，可從 PO 拉入品項、補新增品項，保留檢查人欄位，並可一次選多張照片發到 Telegram；收貨儲存／摘要後背景保存雲端。
+- 新增 `monthlyPoApproved`、`recvPhotoBatch` 與智慧同步 GAS endpoints；`initPlatformV2()` 會建立 Drive 智慧同步資料夾。
+
+## v3.0-expense-fix2 — 2026-08-13（費用摘要期間、Dashboard 與資料檢查）
+
+- Telegram 費用摘要的期間清單依模式產生：日／週／月／年不再互相混入；月只顯示月份，年只顯示年份。
+- 費用摘要補上來源分項、前期比較、分類排行、重複／缺欄位／未來日期／零負金額與大幅變化檢查，並在底部保留 Dashboard 可點擊連結。
+- GAS 端即使 Dashboard 統計資料暫時讀取失敗，也仍會附上可點擊的平台 Dashboard 連結；避免摘要發出後底下空白。
+- 費用下載在沒有雲端資料時不再誤顯示 Download OK；Chart.js 警告來源已補齊，避免頁首出現不相關的載入失敗提示。
+
+## v2.3-fix11 — 2026-08-12（維修／臨採金額與核可報告）
+
+- 維修與臨時 PO 表單新增數量、預估單價、逐列總額與整張預估總額；金額同步寫入 GAS Sheet、查詢、歷史與 Telegram 核可內容。
+- 所有 Telegram 摘要／核可結果的 Dashboard 改成明確的可點擊「開啟 Dashboard / Open Dashboard」連結。
+- 月採購 PO 核可保留原有 CSV 附件，並增加正式 Google Sheet 報告的 Excel、PDF、線上檢視連結；維修／臨採核可後也會附相同連結，並另外把 Excel 報告以 Telegram 文件附件送到群組。
+- 舊版既有 Temp_PO／Repair_Records 資料仍可核可並產生報告；沒有單價的舊資料會保留原本的預估金額。
+
 ## v2.3-fix10 — 2026-08-10（核可 Dashboard 與維修／臨採雲端工具列）
 
 - 維修／臨採核可結果統一重新組合 Dashboard，並附平台網址；避免核可後訊息只剩狀態與核可人。
@@ -251,3 +279,9 @@
 - 維修、燃油、費用、收貨新增 `inspector`（檢查人）欄位。
 - 新增/編輯表單、列表、Excel 匯出及 Telegram 日／週／月／年摘要均顯示檢查人；未填會明確標示。
 - 維修 GAS 試算表將檢查人追加在最後一欄，兼容既有 16 欄資料，不影響狀態與核可欄位。
+## v3.0-expense3 — 2026-08-13（三份費用原始表重新分流）
+
+- Expense 改為「整合總覽＋其他維修費用＋採購記錄＋一般費用」三來源分頁；另保留手動／歷史、預算與資料管理。
+- 三個來源分頁共用日／週／月／年期間控制、前一期比較、分類排行、期間趨勢、明細與加總。
+- 依實際原始檔格式匯入：`VRT other repair- expenses 2026 New2.xlsx`、`VRT Purchasing Record 2026(2).xlsb`、`VRT General Expense 2026(5).xlsb`；圖表、TTL 合計列與重複摘要不當作明細。
+- 雲端上傳／下載、Excel 匯入／匯出、Telegram 可選來源摘要與既有手動資料一起保存；GAS Dashboard 與費用摘要同步計入三個新來源。
