@@ -433,12 +433,12 @@ SI.openModal = function (opt) {
       '</div>' +
       '<div class="ga-modal-b" id="si-body">' +
         '<div class="ga-dz" id="si-dz">' +
-          '<input type="file" id="si-file" multiple accept=".xlsx,.xls,.xlsm,.csv">' +
+          '<input type="file" id="si-file" multiple accept=".xlsx,.xlsb,.xls,.xlsm,.csv">' +
           '<div class="ga-dz-i">📄</div>' +
           '<div class="ga-dz-t">' +
-            (GA.lang === 'zh' ? '拖放或點選：可一次選多個檔案<br><small>xlsx / xls / xlsm / csv — 不必先分成 PO、維修、燃油、費用</small>'
-             : GA.lang === 'km' ? 'អូសទម្លាក់ ឬចុចដើម្បីជ្រើសរើសឯកសារច្រើន<br><small>xlsx / xls / xlsm / csv</small>'
-             : 'Drag & drop or click — select multiple files at once<br><small>xlsx / xls / xlsm / csv — no need to split by type first</small>') +
+            (GA.lang === 'zh' ? '拖放或點選：可一次選多個檔案<br><small>xlsx / xlsb / xls / xlsm / csv — 不必先分成 PO、維修、燃油、費用</small>'
+             : GA.lang === 'km' ? 'អូសទម្លាក់ ឬចុចដើម្បីជ្រើសរើសឯកសារច្រើន<br><small>xlsx / xlsb / xls / xlsm / csv</small>'
+             : 'Drag & drop or click — select multiple files at once<br><small>xlsx / xlsb / xls / xlsm / csv — no need to split by type first</small>') +
           '</div>' +
         '</div>' +
         '<div id="si-result"></div>' +

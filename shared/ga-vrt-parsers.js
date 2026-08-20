@@ -22,7 +22,7 @@
       · 左右並排兩台堆高機（#1 在 B~I 欄、#2 在 K~N 欄）
       · 月份只寫在該月第一列，後續列留空需向下填滿
 
-   ⚠️ .xlsb 注意：SheetJS 社群版對 xlsb 支援有限，若讀不到請先另存為 .xlsx
+   .xlsb 已依 VRT General Expense 2026 實檔驗證；分類頁會依實際格式分流。
    ════════════════════════════════════════════════════════════════ */
 (function (global) {
 'use strict';
@@ -36,9 +36,41 @@ function monthNum(v){
 function n(v){ return GA.num(v); }
 function txt(v){ return String(v===null||v===undefined?'':v).trim(); }
 /* 這些檔案的日期多為 Excel serial（數字），統一轉 YYYY-MM-DD */
-function d(v){ return GA.excelDate(v); }
+function d(v){
+  var s = txt(v), m = s.match(/^(\d{1,2})-(\d{1,2})--(20\d{2})$/);
+  if (m) return m[3] + '-' + String(+m[2]).padStart(2,'0') + '-' + String(+m[1]).padStart(2,'0');
+  return GA.excelDate(v);
+}
+
+function hn(v){
+  return txt(v).toLowerCase().replace(/[\s_\-\.\/()（）'’`,:：\n]/g,'');
+}
+function firstHead(head, re){
+  for (var i = 0; i < head.length; i++) if (re.test(head[i])) return i;
+  return -1;
+}
+function numericHead(rows, hi, cols){
+  var best = -1, bestScore = -1;
+  (cols || []).forEach(function (c) {
+    var score = 0;
+    for (var r = hi + 1; r < Math.min(rows.length, hi + 40); r++) {
+      var v = (rows[r] || [])[c];
+      if (typeof v === 'number' && isFinite(v)) score++;
+    }
+    if (score > bestScore) { bestScore = score; best = c; }
+  });
+  return best;
+}
+function expenseYear(rows){
+  for (var i = 0; i < Math.min(10, rows.length); i++) {
+    var line = (rows[i] || []).map(txt).join(' '), m = line.match(/(20\d{2})/);
+    if (m) return +m[1];
+  }
+  return new Date().getFullYear();
+}
 
 var VRT = GA.vrtParsers = {};
+global.VRT = VRT; // Expense 舊介面使用 window.VRT；保留相容入口，確保專用解析器真的被呼叫。
 /* 被跳過的列（負數、缺資料等），匯入後可查：GA.vrtParsers.skipped */
 VRT.skipped = [];
 VRT.resetSkipped = function () { VRT.skipped = []; };
@@ -176,6 +208,8 @@ VRT.parseExpenseCategorySheet = function (rows, meta) {
     if (monCol >= 0) break;
   }
   if (monCol < 0) monCol = 1;
+  var newCols = [];
+  head.forEach(function (h, idx) { if (/^new/.test(h)) newCols.push(idx); });
 
   var year = 0;
   for (var y = 0; y <= hi; y++) {
@@ -185,13 +219,19 @@ VRT.parseExpenseCategorySheet = function (rows, meta) {
   }
   if (!year) year = new Date().getFullYear();
 
-  var curMon = 0;
+  var curMon = 0, curMonthHasReading = true;
   for (var i2 = hi+1; i2 < rows.length; i2++) {
     var r2b = rows[i2] || [];
     var label = txt(r2b[monCol]);
     var mo = monthNum(label);
-    if (mo) curMon = mo;
+    if (mo) {
+      curMon = mo;
+      // Electric / Water 後續月份預先留有公式與固定 0.25 等模板值；
+      // 只有填入 New meter reading 的月份才視為真實資料。
+      curMonthHasReading = !/electric|water/i.test(sheetName) || !newCols.length || newCols.some(function (c0) { return n(r2b[c0]) > 0; });
+    }
     if (!curMon) continue;
+    if (!curMonthHasReading) continue;
     if (/^(g\.?ttl|ttl|total)/i.test(label)) continue;   // 跳過合計列
 
     amtCols.forEach(function (ac) {
@@ -235,6 +275,120 @@ VRT.parseExpenseCategorySheet = function (rows, meta) {
     });
   }
   return out;
+};
+
+/* 一般費用逐筆明細：Purchase date / Item / Q'ty / Unit Price / TTL amount。
+   同一份 General Expense 內大多數分類（Cleaning、Stationery、Gasoline…）
+   都是這種格式，不能用月份寬表解析。 */
+VRT.parseExpenseDetailSheet = function (rows, meta) {
+  var out = [], hi = -1, sheetName = txt((meta && (meta.sheetName || meta.sheet)) || 'General Expense');
+  for (var i = 0; i < Math.min(15, rows.length); i++) {
+    var hh = (rows[i] || []).map(hn), dc0 = firstHead(hh, /date|receiveddate|purchasedate|printdate|daterefill/);
+    var ic0 = firstHead(hh, /^(item|description|desc|descitem|name|part)$/);
+    if (ic0 < 0) ic0 = firstHead(hh, /^brand$/);
+    var ac0 = firstHead(hh, /ttlamount|totalamount|^amount|amountusd/);
+    if (dc0 >= 0 && ic0 >= 0 && ac0 >= 0) { hi = i; break; }
+  }
+  if (hi < 0) return out;
+
+  var head = (rows[hi] || []).map(hn);
+  var dc = firstHead(head, /date|receiveddate|purchasedate|printdate|daterefill/);
+  var ic = firstHead(head, /^(item|description|desc|descitem|name|part)$/);
+  if (ic < 0) ic = firstHead(head, /^brand$/);
+  var bc = firstHead(head, /^brand$/), sc = firstHead(head, /^spec|size/);
+  var qc = firstHead(head, /^qty$|quantity/), supc = firstHead(head, /supplier|vendor/);
+  var rc = firstHead(head, /purpose|remarks?|notes?|location/);
+  var ac = firstHead(head, /ttlamount|totalamount|^amount|amountusd/);
+  var priceCols = [], unitCols = [];
+  head.forEach(function (h, idx) {
+    if (/^unitprice|^up|priceusd/.test(h)) priceCols.push(idx);
+    if (/^unit$/.test(h)) unitCols.push(idx);
+  });
+  var pc = numericHead(rows, hi, priceCols);
+  var uc = unitCols.length ? unitCols[0] : -1;
+  // Gas 分頁有兩個都叫 Unit Price 的表頭：前一欄實際是 Unit（drum），後一欄才是單價。
+  if (uc < 0 && priceCols.length > 1) {
+    priceCols.forEach(function (c) { if (c !== pc && uc < 0) uc = c; });
+  }
+  var sourceYear = expenseYear(rows);
+
+  for (var rix = hi + 1; rix < rows.length; rix++) {
+    var r = rows[rix] || [], date = d(r[dc]), item = txt(r[ic]);
+    if (!date || !item || /^(ttl|g\.?ttl|total|date|item|description)$/i.test(item)) continue;
+    var qty = qc >= 0 ? n(r[qc]) : 0, price = pc >= 0 ? n(r[pc]) : 0;
+    var amount = ac >= 0 ? n(r[ac]) : 0;
+    if (!amount && qty && price) amount = qty * price;
+    if (!(amount > 0)) continue;
+    var brand = bc >= 0 && bc !== ic ? txt(r[bc]) : '', spec = sc >= 0 ? txt(r[sc]) : '';
+    var specParts = []; if (brand) specParts.push(brand); if (spec && spec !== brand) specParts.push(spec);
+    var warn = '', dy = +(String(date).slice(0,4) || 0);
+    if (sourceYear >= 2020 && dy && dy !== sourceYear) warn = '日期年份與本表年份不同 / Date year differs from source year';
+    out.push({
+      date: date, category: sheetName.toLowerCase().replace(/\s+/g,'_'), categoryLabel: sheetName,
+      item: item, brand: brand, spec: specParts.join(' · '), qty: qty || 1,
+      unit: uc >= 0 ? txt(r[uc]) : '', price: price, amount: Math.round(amount * 100) / 100,
+      estAmount: Math.round(amount * 100) / 100, supplier: supc >= 0 ? txt(r[supc]) : '',
+      purpose: rc >= 0 ? txt(r[rc]) : '', currency: 'USD', sourceModule: 'excel',
+      _warn: warn, _row: rix + 1
+    });
+  }
+  return out;
+};
+
+/* 簡單月份表：Clinic 一欄金額；Security 則拆成 Factory / Staff House，
+   不再只匯入總額而失去區域明細。 */
+VRT.parseExpenseSimpleMonthly = function (rows, meta) {
+  var out = [], hi = -1, sheetName = txt((meta && (meta.sheetName || meta.sheet)) || 'General Expense');
+  for (var i = 0; i < Math.min(12, rows.length); i++) {
+    var h0 = (rows[i] || []).map(hn);
+    if (firstHead(h0, /^month$/) >= 0) { hi = i; break; }
+  }
+  if (hi < 0) return out;
+  var head = (rows[hi] || []).map(hn), mc = firstHead(head, /^month$/);
+  var tc = firstHead(head, /^total$|ttlamount|totalamount|^amount/);
+  var rc = firstHead(head, /remarks?|notes?|purpose/), year = expenseYear(rows);
+  var sub = rows[hi + 1] || [], valueCols = [];
+  if (tc > mc + 1) {
+    for (var c = mc + 1; c < tc; c++) if (txt(sub[c])) valueCols.push(c);
+  }
+  if (!valueCols.length) {
+    for (var c2 = mc + 1; c2 < (rows[hi] || []).length; c2++) {
+      if (c2 === rc || c2 === tc) continue;
+      if (txt((rows[hi] || [])[c2])) { valueCols.push(c2); break; }
+    }
+  }
+  if (!valueCols.length && tc >= 0) valueCols.push(tc);
+  if (!valueCols.length) return out;
+
+  for (var rix = hi + 1; rix < rows.length; rix++) {
+    var r = rows[rix] || [], mo = monthNum(r[mc]); if (!mo) continue;
+    valueCols.forEach(function (c3) {
+      var amount = n(r[c3]); if (!(amount > 0)) return;
+      var label = txt(sub[c3]) || txt((rows[hi] || [])[c3]) || sheetName;
+      out.push({
+        date: year + '-' + String(mo).padStart(2,'0') + '-01',
+        category: sheetName.toLowerCase().replace(/\s+/g,'_'), categoryLabel: sheetName,
+        item: label, qty: 1, price: amount, amount: Math.round(amount * 100) / 100,
+        estAmount: Math.round(amount * 100) / 100, purpose: rc >= 0 ? txt(r[rc]) : '',
+        currency: 'USD', sourceModule: 'excel', _row: rix + 1
+      });
+    });
+  }
+  return out;
+};
+
+/* General Expense 單一入口：依每張工作表的真實結構選解析器。 */
+VRT.parseExpenseSheet = function (rows, meta) {
+  rows = rows || []; meta = meta || {};
+  var sn = txt(meta.sheetName || meta.sheet), low = sn.toLowerCase();
+  if (/^chart|supplier list|stop supply|staff house break down/.test(low)) return [];
+  var fileYear = +(String(meta.fileName || meta.file || '').match(/20\d{2}/) || [0])[0];
+  var sheetYear = expenseYear(rows);
+  // 2026 活頁簿仍保留 Jan/Feb/Mar 2020 舊頁及 Electric/Water 2024 舊頁；避免混入本年。
+  if (fileYear && sheetYear && sheetYear < fileYear && (monthNum(sn) || /^(electric|water)\s*$/.test(low))) return [];
+  var detail = VRT.parseExpenseDetailSheet(rows, meta); if (detail.length) return detail;
+  var monthly = VRT.parseExpenseSimpleMonthly(rows, meta); if (monthly.length) return monthly;
+  return VRT.parseExpenseCategorySheet(rows, meta);
 };
 
 /* ══════════ 4. 堆高機維修 Forklift ══════════
@@ -422,9 +576,7 @@ reg('expense', function (ctx) {
   if (known.indexOf(low.trim()) >= 0) return 1;
   return 0;
 }, function (ctx) {
-  var sn = String(ctx.sheetName||'').trim();
-  if (monthNum(sn)) return VRT.parseExpenseMonthSheet(ctx.rows, ctx);
-  return VRT.parseExpenseCategorySheet(ctx.rows, ctx);
+  return VRT.parseExpenseSheet(ctx.rows, ctx);
 });
 
 })(window);
