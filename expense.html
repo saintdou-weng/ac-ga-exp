@@ -9,15 +9,15 @@
 <title>AC-GA-EXP · Expense Center 費用中心</title>
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260821" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260821" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
-<link rel="stylesheet" href="shared/ga.css?v=3.4-20260821" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.4-20260821'">
-<script src="shared/ga-core.js?v=3.4-20260821"></script>
-<script src="shared/ga-data.js?v=3.4-20260821"></script>
-<script src="shared/ga-import.js?v=3.4-20260821"></script>
-<script src="shared/ga-telegram.js?v=3.4-20260821"></script>
-<script src="shared/ga-smart-sync.js?v=3.4-20260821"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.4-20260821" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.4-20260821'"></script>
-<script src="shared/exp-seed.js?v=3.4-20260821"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.4-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.4-20260821"></scr'+'ipt>');}</script>
+<link rel="stylesheet" href="shared/ga.css?v=3.5-20260821" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.5-20260821'">
+<script src="shared/ga-core.js?v=3.5-20260821"></script>
+<script src="shared/ga-data.js?v=3.5-20260821"></script>
+<script src="shared/ga-import.js?v=3.5-20260821"></script>
+<script src="shared/ga-telegram.js?v=3.5-20260821"></script>
+<script src="shared/ga-smart-sync.js?v=3.5-20260821"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.5-20260821" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.5-20260821'"></script>
+<script src="shared/exp-seed.js?v=3.5-20260821"></script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.5-20260821"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.5-20260821"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -60,7 +60,7 @@
 <input id="exp-file" class="exp-file" type="file" multiple accept=".xlsx,.xlsb,.xls">
 
 <script>
-/* AC-GA-EXP Expense Center v3.4
+/* AC-GA-EXP Expense Center v3.5
    三份來源檔案採各自正規化，不把寬表、明細表及圖表摘要混在一起。 */
 GA.addDict({
   zh:{expSummary:'整合總覽',expRepair:'其他維修費用',expPurchase:'採購記錄',expGeneral:'一般費用',expLegacy:'手動／歷史',
@@ -123,13 +123,38 @@ function inCurrent(r){var s=currentState();return GA.inPeriod(r.date,s.key,s.typ
 function rowsFor(k){return (k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[])).filter(inCurrent);}
 function value(r){return amt(r);}
 
+/* 舊版雲端資料有時把來源存成「月份／分類物件」，新版則是逐筆陣列。
+   匯入、下載、智慧同步及 localStorage 都統一先攤平成逐筆資料。 */
+function expRowsFromAny(v){
+  if(Array.isArray(v))return v.slice();
+  if(!v||typeof v!=='object')return [];
+  var out=[];
+  Object.keys(v).forEach(function(k){
+    var p=v[k];
+    if(Array.isArray(p))out=out.concat(p);
+    else if(p&&typeof p==='object'){
+      var looksLikeRow=p.date||p.item||p.description||p.desc||p.amount!==undefined||p.total!==undefined||p.qty!==undefined||p.quantity!==undefined;
+      out=out.concat(looksLikeRow?[p]:expRowsFromAny(p));
+    }
+  });
+  return out;
+}
+function expRowsForBucket(v,src){
+  return expRowsFromAny(v).map(function(r){return normalise(r,src,{file:r.sourceFile||'stored-data',sheet:r.sourceSheet||r.categoryLabel||src,row:r.sourceRow||r._row||0});}).filter(function(r){return r.date&&r.item;});
+}
+function expSourceBuckets(v){
+  if(v&&v.exp3&&typeof v.exp3==='object')v=v.exp3;
+  v=v&&typeof v==='object'?v:{};
+  return {repair:expRowsForBucket(v.repair,'repair'),purchase:expRowsForBucket(v.purchase,'purchase'),general:expRowsForBucket(v.general,'general')};
+}
+
 function loadData(){
   try{CATMETA=JSON.parse(localStorage.getItem(LS_CAT))||null;}catch(e){CATMETA=null;}
   if(!CATMETA)CATMETA=JSON.parse(JSON.stringify((window.EXP_SEED&&EXP_SEED.categories)||{}));
   try{var t=JSON.parse(localStorage.getItem(LS_TXN));if(Array.isArray(t)&&t.length)txns=t;}catch(e){}
   if(!txns.length&&window.EXP_SEED){txns=EXP_SEED.transactions.map(function(r){var x=Object.assign({},r);x.amount=num(x.amount);x.estAmount=num(x.estAmount||x.amount);x.sourceModule=x.sourceModule||'seed';x.status=x.status||'approved';GA.stamp(x,{source:'seed',prefix:'exp'});x._fp=GA.fingerprint([x.date,x.category,x.item,x.amount]);return x;});saveTxns(true);}
   try{budgets=JSON.parse(localStorage.getItem(LS_BGT))||{};}catch(e){budgets={};}
-  try{var x=JSON.parse(localStorage.getItem(LS_EXP3));if(x&&typeof x==='object'){['repair','purchase','general'].forEach(function(k){if(Array.isArray(x[k]))EXP3[k]=x[k];});}}catch(e){}
+  try{var x=JSON.parse(localStorage.getItem(LS_EXP3));if(x&&typeof x==='object'){var restored=expSourceBuckets(x);if(restored.repair.length||restored.purchase.length||restored.general.length){EXP3=restored;saveExp3();}}}catch(e){}
 }
 function saveTxns(silent){try{localStorage.setItem(LS_TXN,JSON.stringify(txns));}catch(e){if(!silent)GA.toast('Local save failed','err');}}
 function saveExp3(){try{localStorage.setItem(LS_EXP3,JSON.stringify(EXP3));return true;}catch(e){GA.toast(GA.T('expNotStored'),'err');return false;}}
@@ -157,7 +182,7 @@ function parseMonthlyRows(rows,src,meta){
   for(var i=hi+1;i<rows.length;i++){var r=rows[i]||[],m=monthNo(r[mc]);if(!m)continue;var a=ac>=0?num(r[ac]):0;if(!a){for(var j2=mc+1;j2<r.length;j2++){var n=num(r[j2]);if(n){a=n;break;}}}if(!a)continue;var item=(typeof r[1]==='string'&&text(r[1]))?text(r[1]):meta.sheet;out.push(normalise({date:year+'-'+String(m).padStart(2,'0')+'-01',item:item,amount:a,price:a,qty:1,purpose:text(r[r.length-1])},src,{file:meta.file,sheet:meta.sheet,row:i+1}));}return out;
 }
 function parseWorkbook(wb,src,fileName){
-  var out=[];if(!wb||!wb.SheetNames)return out;if(src==='general'&&(!GA.vrtParsers||typeof GA.vrtParsers.parseExpenseSheet!=='function'))throw new Error('General Expense parser v3.4 not loaded');wb.SheetNames.forEach(function(sheet){var sn=text(sheet),sl=sn.toLowerCase();if(/chart|supplier list|stop supply|staff house break down/.test(sl))return;var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:''}),meta={file:fileName,fileName:fileName,sheet:sn,sheetName:sn};
+  var out=[];if(!wb||!wb.SheetNames)return out;if(src==='general'&&(!GA.vrtParsers||typeof GA.vrtParsers.parseExpenseSheet!=='function'))throw new Error('General Expense parser v3.5 not loaded');wb.SheetNames.forEach(function(sheet){var sn=text(sheet),sl=sn.toLowerCase();if(/chart|supplier list|stop supply|staff house break down/.test(sl))return;var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:''}),meta={file:fileName,fileName:fileName,sheet:sn,sheetName:sn};
     if(src==='purchase'){if(/^purchase/.test(sl))out=out.concat((GA.vrtParsers&&GA.vrtParsers.parsePurchase?GA.vrtParsers.parsePurchase(rows,meta):parseDetailRows(rows,src,meta)).map(function(r){return normalise(r,src,meta);}));return;}
     if(src==='repair'){out=out.concat(parseDetailRows(rows,src,meta));return;}
     if(src==='general'&&GA.vrtParsers&&GA.vrtParsers.parseExpenseSheet){out=out.concat(GA.vrtParsers.parseExpenseSheet(rows,meta).map(function(r){return normalise(r,src,meta);}));return;}
@@ -264,11 +289,11 @@ function writeXlsx(rows,name){if(!rows.length){GA.toast(GA.T('expNoData'),'err')
 function expUpload(){var payload={schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};GA.cloud.upload('expense',payload).then(function(){GA.toast('☁️ '+GA.T('cloudUp'));}).catch(function(e){GA.toast(e.message,'err');});}
 function expDownload(){GA.cloud.download('expense').then(function(r){var d=r.data;if(!d){GA.toast('☁️ '+GA.T('noData'));return;}GA.confirm('以雲端資料覆蓋目前費用資料？').then(function(ok){if(!ok)return;if(Array.isArray(d.txns))txns=d.txns;if(d.cats)CATMETA=d.cats;if(d.budgets)budgets=d.budgets;if(d.exp3){['repair','purchase','general'].forEach(function(k){if(Array.isArray(d.exp3[k]))EXP3[k]=d.exp3[k];});}saveTxns();saveCats();saveBudgets();saveExp3();GA.toast('📥 '+GA.T('cloudDown'));render();});}).catch(function(e){GA.toast(e.message,'err');});}
 function expTelegram(){GA.telegram.open({module:'expense',canApprove:false,scopes:[{v:'all',zh:'三類整合',en:'All three sources',km:'ប្រភពទាំងបី'},{v:'repair',zh:'其他維修',en:'Other Repair',km:'ជួសជុលផ្សេងៗ'},{v:'purchase',zh:'採購記錄',en:'Purchasing',km:'ការទិញ'},{v:'general',zh:'一般費用',en:'General Expense',km:'ចំណាយទូទៅ'},{v:'legacy',zh:'手動／歷史',en:'Manual / Historical',km:'ដោយដៃ / ប្រវត្តិ'}],periods:function(){return allRows().map(function(r){return r.date;});},summary:function(s){var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]),rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);}),total=sumRows(rows),by={};rows.forEach(function(r){var k=r.categoryLabel||r.category||'Other';by[k]=(by[k]||0)+value(r);});var out=[{zh:'總額',en:'Total',v:money(total)},{zh:'明細筆數',en:'Records',v:rows.length}];Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,10).forEach(function(k){out.push({zh:k,en:k,v:money(by[k])});});out.push('-');out.push({zh:'資料來源',en:'Source',v:sourceLabel(s.scope==='all'?'general':s.scope)});return GA.telegram.buildSummary({icon:'💰',titleZh:'費用摘要',titleEn:'Expense Summary',lang:s.lang,period:GA.periodLabel(s.period,s.ptype),rows:out,footer:'🕐 '+GA.ymd(new Date())});}});}
-function expDataPanel(){GA.dataPanel({module:'expense',count:function(){return allRows().length;},data:function(){return{schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};},restore:function(obj,mode){if(mode==='replace'){if(Array.isArray(obj.txns))txns=obj.txns;if(obj.cats)CATMETA=obj.cats;if(obj.budgets)budgets=obj.budgets;if(obj.exp3){['repair','purchase','general'].forEach(function(k){EXP3[k]=Array.isArray(obj.exp3[k])?obj.exp3[k]:[];});}}else{var seen={};allRows().forEach(function(r){if(r._fp)seen[r._fp]=1;});(obj.txns||[]).forEach(function(r){if(!r._fp||!seen[r._fp]){txns.push(r);if(r._fp)seen[r._fp]=1;}});if(obj.exp3){['repair','purchase','general'].forEach(function(k){(obj.exp3[k]||[]).forEach(function(r){if(!r._fp||!seen[r._fp]){EXP3[k].push(r);if(r._fp)seen[r._fp]=1;}});});}if(obj.cats)Object.keys(obj.cats).forEach(function(k){if(!CATMETA[k])CATMETA[k]=obj.cats[k];});if(obj.budgets)Object.keys(obj.budgets).forEach(function(k){if(!budgets[k])budgets[k]=obj.budgets[k];});}saveTxns();saveCats();saveBudgets();saveExp3();},clear:function(){txns=[];EXP3={repair:[],purchase:[],general:[]};saveTxns();saveExp3();},exportXlsx:expExportAll,onChange:function(){render();}});}
+function expDataPanel(){GA.dataPanel({module:'expense',count:function(){return allRows().length;},data:function(){return{schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};},restore:function(obj,mode){if(mode==='replace'){if(Array.isArray(obj.txns))txns=obj.txns;if(obj.cats)CATMETA=obj.cats;if(obj.budgets)budgets=obj.budgets;if(obj.exp3)EXP3=expSourceBuckets(obj.exp3);}else{var seen={};allRows().forEach(function(r){if(r._fp)seen[r._fp]=1;});(obj.txns||[]).forEach(function(r){if(!r._fp||!seen[r._fp]){txns.push(r);if(r._fp)seen[r._fp]=1;}});if(obj.exp3){['repair','purchase','general'].forEach(function(k){expRowsForBucket(obj.exp3[k],k).forEach(function(r){if(!r._fp||!seen[r._fp]){EXP3[k].push(r);if(r._fp)seen[r._fp]=1;}});});}if(obj.cats)Object.keys(obj.cats).forEach(function(k){if(!CATMETA[k])CATMETA[k]=obj.cats[k];});if(obj.budgets)Object.keys(obj.budgets).forEach(function(k){if(!budgets[k])budgets[k]=obj.budgets[k];});}saveTxns();saveCats();saveBudgets();saveExp3();},clear:function(){txns=[];EXP3={repair:[],purchase:[],general:[]};saveTxns();saveExp3();},exportXlsx:expExportAll,onChange:function(){render();}});}
 /* 最終覆寫：這些函式必須位於舊版定義之後，避免舊摘要重新接管。 */
 function expMsgText(zh,en,km,lang){if(lang==='zh')return zh;if(lang==='en')return en;if(lang==='km')return km;return zh+' / '+en;}
 function expSourceText(k,lang){var m={repair:['其他維修','Other Repair','ជួសជុលផ្សេងៗ'],purchase:['採購記錄','Purchasing Record','កំណត់ត្រាទិញ'],general:['一般費用','General Expense','ចំណាយទូទៅ'],legacy:['手動／歷史','Manual / Historical','ដោយដៃ / ប្រវត្តិ']};var a=m[k]||[k,k,k];return expMsgText(a[0],a[1],a[2],lang);}
-function expDownload(){GA.cloud.download('expense').then(function(r){var d=r.data;if(!d){if(GA.cloud.set)GA.cloud.set('idle');GA.toast('☁️ '+GA.T('noData'));return;}GA.confirm('以雲端資料覆蓋目前費用資料？').then(function(ok){if(!ok){if(GA.cloud.set)GA.cloud.set('idle');return;}if(Array.isArray(d.txns))txns=d.txns;if(d.cats)CATMETA=d.cats;if(d.budgets)budgets=d.budgets;if(d.exp3){['repair','purchase','general'].forEach(function(k){if(Array.isArray(d.exp3[k]))EXP3[k]=d.exp3[k];});}saveTxns();saveCats();saveBudgets();saveExp3();GA.toast('📥 '+GA.T('cloudDown'));render();});}).catch(function(e){if(GA.cloud.set)GA.cloud.set('err',e.message);GA.toast('❌ '+e.message,'err');});}
+function expDownload(){GA.cloud.download('expense').then(function(r){var d=r.data;if(!d){if(GA.cloud.set)GA.cloud.set('idle');GA.toast('☁️ '+GA.T('noData'));return;}GA.confirm('以雲端資料覆蓋目前費用資料？').then(function(ok){if(!ok){if(GA.cloud.set)GA.cloud.set('idle');return;}if(Array.isArray(d.txns))txns=d.txns;if(d.cats)CATMETA=d.cats;if(d.budgets)budgets=d.budgets;if(d.exp3)EXP3=expSourceBuckets(d.exp3);saveTxns();saveCats();saveBudgets();saveExp3();GA.toast('📥 '+GA.T('cloudDown'));render();});}).catch(function(e){if(GA.cloud.set)GA.cloud.set('err',e.message);GA.toast('❌ '+e.message,'err');});}
 function expDetailBase(r){var c=lower(r.categoryLabel||r.category||r.sourceSheet||'');if(c.indexOf('electric')>=0)return{zh:'⚡ 電費',en:'⚡ Electricity',km:'⚡ អគ្គិសនី',key:'electric'};if(c.indexOf('water')>=0)return{zh:'🚰 水費',en:'🚰 Water',km:'🚰 ទឹក',key:'water'};if(c.indexOf('security')>=0)return{zh:'🛡️ 保全',en:'🛡️ Security',km:'🛡️ សន្តិសុខ',key:'security'};if(c.indexOf('gasoline')>=0||c==='gas')return{zh:'⛽ 燃料／瓦斯',en:'⛽ Fuel / Gas',km:'⛽ ឥន្ធនៈ / ហ្គាស',key:'fuel'};return{zh:text(r.categoryLabel||r.category||r.sourceSheet||r._source||'其他'),en:text(r.categoryLabel||r.category||r.sourceSheet||r._source||'Other'),km:text(r.categoryLabel||r.category||r.sourceSheet||r._source||'ផ្សេងៗ'),key:c||'other'};}
 function expDetailLabel(r,lang){var b=expDetailBase(r),part=text(r.item||r.dept||'');var raw=text(r.categoryLabel||r.sourceSheet||'');if(part&&lower(part)!==lower(raw)&&lower(part)!==b.key&&part!=='—')return expMsgText(b.zh,b.en,b.km,lang)+' · '+part;return expMsgText(b.zh,b.en,b.km,lang);}
 function expDetailKey(r){var b=expDetailBase(r),part=lower(r.item||r.dept||r.sourceSheet||'');return String(r._source||'')+'|'+b.key+'|'+part;}
@@ -299,7 +324,7 @@ function expApplySync(rows,meta){
 function expLegacyToSync(d){
   d=d&&d.data&&typeof d.data==='object'?d.data:d||{};var rows=[];
   (d.txns||[]).forEach(function(r,i){rows.push({_syncId:'legacy:'+(r.recordId||r.id||r._fp||i),_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':legacy',_syncPeriod:r.date||'',kind:'txn',row:r});});
-  var e=d.exp3||{};['repair','purchase','general'].forEach(function(k){(e[k]||[]).forEach(function(r,i){rows.push({_syncId:k+':'+(r.recordId||r.id||r._fp||i),_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':'+k,_syncPeriod:r.date||'',kind:'source',source:k,row:r});});});
+  var e=d.exp3||{};['repair','purchase','general'].forEach(function(k){expRowsForBucket(e[k],k).forEach(function(r,i){rows.push({_syncId:k+':'+(r.recordId||r.id||r._fp||i),_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown')+':'+k,_syncPeriod:r.date||'',kind:'source',source:k,row:r});});});
   return rows;
 }
 function expSyncStatus(msg,type){try{GA.cloud.mount('#ga-cloud');GA.cloud.set(type||'sync',msg||'');}catch(e){} }
@@ -336,7 +361,7 @@ function saveBudgetInputs(){var r=_expSaveBudgetLatest();scheduleExpenseAutoClou
 /* 不依賴每個模組重複改 modal：費用的摘要／核可成功後都自動排程背景同步。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){importFiles(this.files);});})();
-loadData();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.4',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
+loadData();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.5',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
 try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},700);}catch(e){}
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
 pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){render();}});GA.on('lang',function(){render();});render();

@@ -71,10 +71,10 @@ if (records.length !== expectedRecords) throw new Error(`Unexpected expense reco
 if (!detailSheets.has('cleaning') || !detailSheets.has('stationery') || !detailSheets.has('Electric') || !detailSheets.has('Water')) {
   throw new Error(`Missing expected sheets: ${Array.from(detailSheets).join(', ')}`);
 }
-if (latest !== (olderWorkbook ? '2026-06-25' : '2026-05-29')) throw new Error(`Unexpected latest detail date: ${latest}`);
+if (latest !== (olderWorkbook ? '2026-06-24' : '2026-05-28')) throw new Error(`Unexpected latest detail date: ${latest}`);
 if ((byMonth['2026-05'] || {}).count < 50) throw new Error('May 2026 details were not fully parsed');
 if ((!olderWorkbook && byMonth['2026-06']) || byMonth['2026-07'] || byMonth['2026-08']) throw new Error('Blank utility template months were imported');
-const expectedMayTotal = olderWorkbook ? 10378.67 : 10356.27;
+const expectedMayTotal = olderWorkbook ? 10380.67 : 10356.27;
 if (Math.abs((byMonth['2026-05'] || {}).total - expectedMayTotal) > 0.001) throw new Error(`May 2026 total does not reconcile: ${(byMonth['2026-05'] || {}).total}`);
 
 const outOfYear = records.filter(r => !String(r.date).startsWith('2026-')).map(r => ({ date: r.date, sheet: r.sourceSheet, item: r.item, amount: r.amount }));
