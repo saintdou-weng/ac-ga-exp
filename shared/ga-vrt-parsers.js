@@ -71,7 +71,7 @@ function expenseYear(rows){
 
 var VRT = GA.vrtParsers = {};
 global.VRT = VRT; // Expense 舊介面使用 window.VRT；保留相容入口，確保專用解析器真的被呼叫。
-VRT.version = '3.5';
+VRT.version = '3.6';
 /* 被跳過的列（負數、缺資料等），匯入後可查：GA.vrtParsers.skipped */
 VRT.skipped = [];
 VRT.resetSkipped = function () { VRT.skipped = []; };
