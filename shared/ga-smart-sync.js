@@ -1,91 +1,960 @@
-/* AC-GA-EXP Smart Incremental Sync
- * 以期間／雜湊分桶上傳，保留雲端歷史；摘要或核可後可直接排程同步。
- * 與 AC-HRA-PAY 的同步原則一致：先比對 manifest，再只上傳變更桶。
+/* AC HRA Portal Smart Sync v1.7
+ * Bucket-level incremental sync for the HRA Portal.
+ *
+ * The existing attendance page has its own date-shard protocol and keeps using
+ * that protocol.  This helper is for the other Portal modules: onboarding,
+ * contract, maternity, manpower, welfare, certificate and calendar.
+ * It never deletes a cloud-only bucket during a normal push.  A first push
+ * against a legacy snapshot performs a one-time merge, then creates the smart
+ * manifest.  Later pushes and pulls exchange only changed buckets.
  */
 (function (g) {
   'use strict';
-  if (g.GASmartSync) return;
-  var PREFIX = 'ac_ga_smart_sync_v1_';
-  function txt(v) { return String(v === null || v === undefined ? '' : v); }
-  function enc(v) { return encodeURIComponent(txt(v)); }
+  if (g.HRASmartSync) { if (!g.GASmartSync) g.GASmartSync = g.HRASmartSync; return; }
+
+  var VERSION = '1.7';
+  var STATE_PREFIX = 'ac_hra_smart_sync_v2_';
+  var FULL_CACHE_DB = 'AC_HRA_FullCloudCache_v1', FULL_CACHE_STORE = 'snapshots';
+  var nativeFetch = g.fetch ? g.fetch.bind(g) : null;
+
   function now() { return new Date().toISOString(); }
+  function enc(v) { return encodeURIComponent(String(v == null ? '' : v)); }
+  function text(v) { return String(v == null ? '' : v); }
+  function callStatus(fn, value, type) { try { if (fn) fn(value, type || 'busy'); } catch (_) {} }
+  /* Mobile Chrome/WebViews and a few proxy layers cache the GET response from
+     an Apps Script Web App.  AC GASCheck always adds a cache-buster to its
+     cloud GETs; Portal must do the same or a phone can keep receiving the old
+     empty manifest/bucket while a desktop already sees the new data. */
+  function noCache(url) {
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + '_t=' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  /* The four portal pages have used a few tool ids over their lifetime.  A
+     phone may therefore be talking to a deployment that stores the same
+     portal under an older id.  Keep local state keyed by the page's id, but
+     try the canonical and legacy network ids automatically. */
+  var TOOL_ALIASES = {
+    welfare_suggestion:'welfare', welfare_suggestions:'welfare',
+    certificate:'certificate_visa', visa:'certificate_visa',
+    hr_complete:'manpower', join:'onboarding', resign:'onboarding'
+  };
+  function canonicalTool(v) {
+    var raw = text(v).trim().toLowerCase().replace(/\s+/g, '_');
+    return TOOL_ALIASES[raw] || raw || 'tool';
+  }
+  function toolCandidates(v) {
+    var raw = text(v).trim().toLowerCase().replace(/\s+/g, '_'), c = canonicalTool(raw), out = [];
+    function add(x) { if (x && out.indexOf(x) < 0) out.push(x); }
+    add(c); add(raw);
+    Object.keys(TOOL_ALIASES).forEach(function (k) { if (TOOL_ALIASES[k] === c) add(k); });
+    return out.length ? out : ['tool'];
+  }
+
   function stable(v) {
     if (v === null || v === undefined) return 'null';
-    if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'string') return JSON.stringify(v);
+    if (typeof v === 'number' || typeof v === 'boolean') return JSON.stringify(v);
+    if (typeof v === 'string') return JSON.stringify(v);
     if (Array.isArray(v)) return '[' + v.map(stable).join(',') + ']';
-    if (typeof v === 'object') return '{' + Object.keys(v).sort().filter(function (k) {
-      return !/^_smart/.test(k) && !/^(updatedAt|createdAt|savedAt|timestamp|cloudUpdatedAt)$/.test(k);
-    }).map(function (k) { return JSON.stringify(k) + ':' + stable(v[k]); }).join(',') + '}';
-    return JSON.stringify(txt(v));
+    if (typeof v === 'object') {
+      return '{' + Object.keys(v).sort().filter(function (k) {
+        return !/^_smart/.test(k) && !/^(updatedAt|createdAt|savedAt|timestamp|cloudUpdatedAt|lastCloudUpdatedAt)$/.test(k);
+      }).map(function (k) { return JSON.stringify(k) + ':' + stable(v[k]); }).join(',') + '}';
+    }
+    return JSON.stringify(text(v));
   }
-  function fnv(s) { var h = 2166136261 >>> 0; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return ('00000000' + (h >>> 0).toString(16)).slice(-8); }
-  function hash(s) {
+  function fnv(str) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+  }
+  function hash(str) {
     try {
-      if (g.crypto && g.crypto.subtle && g.TextEncoder) return g.crypto.subtle.digest('SHA-256', new g.TextEncoder().encode(s)).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join('').slice(0, 24); });
-    } catch (e) {}
-    return Promise.resolve(fnv(s) + '_' + s.length.toString(36));
+      if (g.crypto && g.crypto.subtle && g.TextEncoder) {
+        return g.crypto.subtle.digest('SHA-256', new g.TextEncoder().encode(str)).then(function (b) {
+          return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join('').slice(0, 24);
+        });
+      }
+    } catch (_) {}
+    return Promise.resolve(fnv(str) + '_' + str.length.toString(36));
   }
-  function dateOf(r) {
-    if (!r || typeof r !== 'object') return '';
-    var keys = ['_syncPeriod', 'period', 'periodKey', 'date', 'recordDate', 'timestamp', 'createdAt', 'updatedAt'];
-    for (var i = 0; i < keys.length; i++) { var v = txt(r[keys[i]]), m = v.match(/(20\d{2})[-\/.](\d{1,2})(?:[-\/.](\d{1,2}))?/); if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + (m[3] ? '-' + ('0' + m[3]).slice(-2) : ''); }
+  function normDate(v) {
+    if (!v) return '';
+    var s = text(v).trim(), m = s.match(/(20\d{2})[-\/.](\d{1,2})(?:[-\/.](\d{1,2}))?/);
+    if (m) return m[1] + '-' + ('0' + (+m[2])).slice(-2) + (m[3] ? '-' + ('0' + (+m[3])).slice(-2) : '');
+    m = s.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2})/);
+    return m ? m[3] + '-' + ('0' + (+m[1])).slice(-2) + '-' + ('0' + (+m[2])).slice(-2) : '';
+  }
+  var DATE_FIELDS = ['date','recordDate','reportDate','effectiveDate','startDate','endDate','joinDate','resignDate','settleDate','expiry','contractEnd','probEnd','period','payMonth','month','snapshotDate','updatedAt'];
+  var KEY_FIELDS = ['id','uuid','recordId','employeeId','empId','factoryId','idNo','key','_k','sourceKey','file','number','lineNo','line','section','dept','department','position','type','kind'];
+  function recordDate(r) {
+    for (var i = 0; i < DATE_FIELDS.length; i++) { var d = normDate(r && r[DATE_FIELDS[i]]); if (d) return d; }
     return '';
   }
-  function keyOf(r) {
+  function semanticKey(r) {
     if (!r || typeof r !== 'object') return stable(r);
-    for (var i = 0, a = ['_syncId', '_k', 'recordId', 'id', 'uuid']; i < a.length; i++) if (r[a[i]] !== undefined && r[a[i]] !== null && r[a[i]] !== '') return a[i] + ':' + txt(r[a[i]]);
-    var d = dateOf(r), p = []; ['kind', 'type', 'source', 'itemId', 'itemName', 'category', 'name', 'poId', 'poNumber'].forEach(function (k) { if (r[k] !== undefined && r[k] !== '') p.push(k + '=' + txt(r[k])); });
-    if (d) p.unshift('date=' + d); return p.length ? p.join('|') : stable(r);
+    // AC-GA-EXP wraps every Expense/Receiving row with a stable business id.
+    // Honour it before HRA's generic keys so editing a row updates that row
+    // instead of creating a second copy during merge.
+    if (r._syncId !== undefined && r._syncId !== null && r._syncId !== '') {
+      return '_syncId:' + text(r._syncId);
+    }
+    for (var i = 0; i < ['_k','id','uuid','recordId','employeeId','empId','factoryId','idNo'].length; i++) {
+      var k = ['_k','id','uuid','recordId','employeeId','empId','factoryId','idNo'][i];
+      if (r[k] !== undefined && r[k] !== null && r[k] !== '') return k + ':' + text(r[k]) + '|' + text(r._kind || r.kind || '');
+    }
+    var parts = [];
+    KEY_FIELDS.forEach(function (k) { if (r[k] !== undefined && r[k] !== null && r[k] !== '') parts.push(k + '=' + text(r[k])); });
+    return parts.length ? parts.join('|') : stable(r);
   }
-  function bucketOf(r) { if (r && r._syncBucket) return txt(r._syncBucket); var d = dateOf(r); return d ? 'm:' + d.slice(0, 7) : 'h:' + fnv(keyOf(r)).slice(0, 6); }
-  function stamp(r) { var n = new Date(r && (r.updatedAt || r.createdAt || r.timestamp || r.date)).getTime(); return isNaN(n) ? 0 : n; }
-  function newer(a, b) { var aa = stamp(a), bb = stamp(b); return aa !== bb ? (aa > bb ? a : b) : (stable(a).length >= stable(b).length ? a : b); }
-  function merge(a, b, custom) {
-    if (typeof custom === 'function') return custom(a || [], b || []);
-    var map = {}, order = []; (a || []).concat(b || []).forEach(function (r) { var k = keyOf(r); if (!Object.prototype.hasOwnProperty.call(map, k)) order.push(k); map[k] = map[k] ? newer(map[k], r) : r; });
+  function bucketKey(r) {
+    // GA pages already assign month/source/catalog buckets.  Preserving this
+    // key is what makes upload/download truly incremental by changed month.
+    if (r && r._syncBucket) return text(r._syncBucket);
+    if (r && (r.kind === 'snapshot' || r.kind === 'calendarSnapshot')) return 's:snapshot';
+    var d = recordDate(r); if (d) return 'm:' + d.slice(0, 7);
+    return 'h:' + ('0' + (parseInt(fnv(semanticKey(r)), 16) % 32).toString(16)).slice(-2);
+  }
+  function newer(a, b) {
+    function stamp(x) {
+      for (var i = 0; i < ['updatedAt','savedAt','modifiedAt','createdAt','timestamp','date','effectiveDate'].length; i++) {
+        var d = x && x[['updatedAt','savedAt','modifiedAt','createdAt','timestamp','date','effectiveDate'][i]];
+        if (d) { var n = new Date(d).getTime(); if (!isNaN(n)) return n; }
+      }
+      return 0;
+    }
+    var aa = stamp(a), bb = stamp(b); if (aa !== bb) return aa > bb ? a : b;
+    return stable(a).length >= stable(b).length ? a : b;
+  }
+  function mergeRows(a, b) {
+    var map = {}, order = [];
+    (a || []).concat(b || []).forEach(function (r) {
+      var k = semanticKey(r);
+      if (!Object.prototype.hasOwnProperty.call(map, k)) order.push(k);
+      map[k] = map[k] ? newer(map[k], r) : r;
+    });
     return order.map(function (k) { return map[k]; });
   }
-  function buckets(rows) {
-    var g0 = {}; (rows || []).forEach(function (r) { var k = bucketOf(r); (g0[k] || (g0[k] = [])).push(r); });
-    var out = {}, jobs = Object.keys(g0).sort().map(function (k) { var rs = g0[k].slice().sort(function (a, b) { return keyOf(a).localeCompare(keyOf(b)); }); return hash(stable(rs)).then(function (h) { out[k] = { key: k, records: rs, count: rs.length, hash: h }; }); });
+  function sortRows(rows) {
+    return (rows || []).slice().sort(function (a, b) {
+      var ka = semanticKey(a), kb = semanticKey(b);
+      return ka < kb ? -1 : ka > kb ? 1 : stable(a) < stable(b) ? -1 : 1;
+    });
+  }
+  function buildBuckets(records) {
+    var groups = {};
+    (records || []).forEach(function (r) { var k = bucketKey(r); (groups[k] || (groups[k] = [])).push(r); });
+    var keys = Object.keys(groups).sort(), out = {}, jobs = keys.map(function (k) {
+      var rows = sortRows(groups[k]);
+      return hash(stable(rows)).then(function (h) { out[k] = { key:k, records:rows, count:rows.length, hash:h }; });
+    });
     return Promise.all(jobs).then(function () { return out; });
   }
-  function readState(tool) { try { return JSON.parse(localStorage.getItem(PREFIX + tool) || 'null'); } catch (e) { return null; } }
-  function writeState(tool, v) { try { localStorage.setItem(PREFIX + tool, JSON.stringify(v)); } catch (e) {} }
-  function status(fn, msg, type) { try { if (fn) fn(msg, type || 'busy'); } catch (e) {} }
-  function fetchJson(url, opts) { if (!g.fetch) return Promise.reject(new Error('Browser fetch unavailable')); return g.fetch(url, opts || {}).then(function (r) { return r.text().then(function (raw) { var j; try { j = JSON.parse(raw); } catch (e) { throw new Error('Cloud returned non-JSON: ' + raw.slice(0, 120)); } if (!r.ok || (j && j.ok === false)) throw new Error((j && (j.error || j.msg)) || ('HTTP ' + r.status)); return j; }); }); }
-  function dataOf(j) { return j && j.data !== undefined ? j.data : j; }
-  function getManifest(url, tool) { return fetchJson(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=gaSmartManifest&tool=' + enc(tool)).then(dataOf); }
-  function post(url, body) { return fetchJson(url, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }).then(dataOf); }
-  function legacyRows(url, tool, opts) { return fetchJson(url + '?action=pull&tool=' + enc(tool)).then(function (j) { var d = dataOf(j) || {}; var rs = typeof opts.legacyToRecords === 'function' ? opts.legacyToRecords(d) : ((d.data || d).records || []); return { records: Array.isArray(rs) ? rs : [], meta: d.data || d || {} }; }); }
-  function push(opts) {
-    opts = opts || {}; var url = txt(opts.url).trim(), tool = txt(opts.tool).trim(); if (!url || !tool) return Promise.reject(new Error('GAS URL/tool missing')); status(opts.onStatus, '智慧同步：比對雲端差異…', 'busy');
-    return getManifest(url, tool).then(function (remote) {
-      remote = remote || {};
-      if (!remote.exists && remote.legacy) return legacyRows(url, tool, opts).then(function (old) { return smartPush(opts, merge(opts.records, old.records, opts.mergeRecords), remote, opts.onStatus, true); });
-      return smartPush(opts, opts.records || [], remote, opts.onStatus, false).then(function (r) {
-        if (!r || !r.needsPull || opts.autoMerge === false) return r;
-        return pull({ url: url, tool: tool, localRecords: opts.records || [], legacyToRecords: opts.legacyToRecords, mergeRecords: opts.mergeRecords, apply: opts.apply, onStatus: opts.onStatus }).then(function (p) { if (!p || !p.ok) return p; return getManifest(url, tool).then(function (fresh) { return smartPush(Object.assign({}, opts, { records: p.records }), p.records, fresh || {}, opts.onStatus, false); }); });
+  function readState(tool) {
+    try { return JSON.parse(localStorage.getItem(STATE_PREFIX + tool) || 'null'); } catch (_) { return null; }
+  }
+  function writeState(tool, v) { try { localStorage.setItem(STATE_PREFIX + tool, JSON.stringify(v)); } catch (_) {} }
+  /* Sewing keeps the complete downloaded dataset in IndexedDB.  Do the same
+     for the four snapshot portals: mobile localStorage is too small for
+     photos/rosters and a WebView may be destroyed between two chunk reads. */
+  function openFullCache() {
+    return new Promise(function (resolve, reject) {
+      if (!g.indexedDB) { reject(new Error('IndexedDB unavailable')); return; }
+      var q = indexedDB.open(FULL_CACHE_DB, 1);
+      q.onupgradeneeded = function () { if (!q.result.objectStoreNames.contains(FULL_CACHE_STORE)) q.result.createObjectStore(FULL_CACHE_STORE); };
+      q.onsuccess = function () { resolve(q.result); };
+      q.onerror = function () { reject(q.error || new Error('IndexedDB open failed')); };
+    });
+  }
+  function fullCachePut(tool, value) {
+    return openFullCache().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(FULL_CACHE_STORE, 'readwrite');
+        tx.objectStore(FULL_CACHE_STORE).put(value, canonicalTool(tool));
+        tx.oncomplete = function () { db.close(); resolve(value); };
+        tx.onerror = function () { db.close(); reject(tx.error || new Error('IndexedDB save failed')); };
+      });
+    }).catch(function () { return value; });
+  }
+  function fullCacheGet(tool) {
+    return openFullCache().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var q = db.transaction(FULL_CACHE_STORE, 'readonly').objectStore(FULL_CACHE_STORE).get(canonicalTool(tool));
+        q.onsuccess = function () { db.close(); resolve(q.result || null); };
+        q.onerror = function () { db.close(); reject(q.error || new Error('IndexedDB read failed')); };
+      });
+    }).catch(function () { return null; });
+  }
+  function jsonFetch(url, opts) {
+    if (!nativeFetch) return Promise.reject(new Error('Browser fetch unavailable'));
+    var request = Object.assign({ cache:'no-store' }, opts || {});
+    return nativeFetch(url, request).then(function (r) {
+      return r.text().then(function (raw) {
+        var j; try { j = JSON.parse(raw); } catch (_) { throw new Error('Cloud returned non-JSON: ' + raw.slice(0, 100)); }
+        if (!r.ok || (j && j.ok === false)) throw new Error((j && j.error) || ('HTTP ' + r.status));
+        return j;
       });
     });
   }
-  function smartPush(opts, records, remote, onStatus, migrated) {
-    var tool = opts.tool, remoteH = remote.hashes || {}, previous = readState(tool) || {}, oldH = migrated ? {} : (previous.hashes || {});
-    return Promise.all([buckets(records), hash(stable(opts.meta || {}))]).then(function (parts) {
-      var local = parts[0], metaHash = parts[1], changed = [], remoteChanged = [], keys = {}; Object.keys(local).concat(Object.keys(remoteH)).forEach(function (k) { keys[k] = 1; });
-      Object.keys(keys).forEach(function (k) { var lh = local[k] && local[k].hash || '', rh = remoteH[k] || '', bh = oldH[k] || ''; if (lh && rh && lh === rh) return; if (!bh) { if (lh && !rh) changed.push(k); else if (!lh && rh) remoteChanged.push(k); else if (lh && rh && lh !== rh) remoteChanged.push(k); return; } var lc = lh !== bh, rc = rh !== bh; if (lc && !rc) changed.push(k); else if (!lc && rc) remoteChanged.push(k); else if (lc && rc && lh !== rh) remoteChanged.push(k); });
-      if (!migrated && remoteChanged.length) { status(onStatus, '雲端有新資料，先自動下載合併', 'warn'); return { ok: false, needsPull: true, remoteChanged: remoteChanged }; }
-      var uploadId = 'ga_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8), chain = Promise.resolve(), sent = 0;
-      changed.forEach(function (k, i) { chain = chain.then(function () { var b = local[k]; status(onStatus, '上傳變更 ' + (i + 1) + '/' + changed.length + ' · ' + k, 'busy'); return post(opts.url, { action: 'gaSmartBucket', tool: tool, uploadId: uploadId, bucket: k, hash: b.hash, count: b.count, records: b.records }).then(function () { sent += b.count; }); }); });
-      return chain.then(function () { var hashes = {}, counts = {}; Object.keys(local).forEach(function (k) { hashes[k] = local[k].hash; counts[k] = local[k].count; }); Object.keys(remoteH).forEach(function (k) { if (!hashes[k]) { hashes[k] = remoteH[k]; counts[k] = Number((remote.counts || {})[k]) || 0; } }); var meta = Object.assign({}, opts.meta || {}, { _smartMetaHash: metaHash }); if (!changed.length && metaHash === (remote.metaHash || '') && !migrated) { writeState(tool, { hashes: remoteH, counts: remote.counts || {}, metaHash: remote.metaHash || '', updatedAt: now() }); status(onStatus, '雲端已是最新，不需重傳', 'ok'); return { ok: true, skipped: true, unchanged: records.length }; } return post(opts.url, { action: 'gaSmartCommit', tool: tool, uploadId: uploadId, hashes: hashes, counts: counts, recordCount: Object.keys(counts).reduce(function (n, k) { return n + (Number(counts[k]) || 0); }, 0), meta: meta, summary: opts.summary || {} }).then(function (d) { writeState(tool, { hashes: hashes, counts: counts, metaHash: metaHash, updatedAt: d && d.timestamp || now() }); status(onStatus, '完成｜上傳 ' + sent + '｜保留雲端歷史', 'ok'); return { ok: true, uploaded: sent, timestamp: d && d.timestamp || now() }; }); });
+  function dataOf(j) { return (j && j.data !== undefined) ? j.data : j; }
+  /* Older deployments use the generic response "Unsupported smart sync tool"
+     instead of exposing smartManifest/smartBucket/smartCommit.  Treat all
+     known forms as one compatibility signal so a phone can fall back to the
+     safe merge endpoint without making the user retry a large upload. */
+  function isUnsupportedSmartError(err) {
+    var s = text(err && err.message || err);
+    return /unsupported\s+smart\s+(sync\s+)?tool/i.test(s) ||
+      /smart\s+sync.*(unsupported|not supported|not implemented)/i.test(s) ||
+      /unknown action\s*:\s*smart(manifest|bucket|commit)/i.test(s) ||
+      /smart(manifest|bucket|commit).*(unsupported|not found|not implemented)/i.test(s) ||
+      /unknown\s+(tool|portal)\b/i.test(s) || /tool\s+(id\s+)?not\s+found/i.test(s);
+  }
+  function isUnsupportedSmartManifestError(err) { return isUnsupportedSmartError(err); }
+  /* Older HRA pages did not all save a flat records[] array.  Welfare and
+     Certificate saved section arrays, while early Manpower saved reqs/recruit
+     plus joins/resigns.  Normalize those shapes before the compatibility
+     migration; otherwise a first phone download can see zero rows and then
+     accidentally create an empty smart manifest over the old snapshot. */
+  function legacyArray(v) { return Array.isArray(v) ? v : []; }
+  function legacyNorm(v) { return text(v).trim().toUpperCase().replace(/[\s_\-–—\/]+/g, ''); }
+  function legacyRowKey(tool, section, row, index) {
+    row = row || {};
+    var c = canonicalTool(tool), eid = text(row.employeeId || row.empId || row.idNo || ''), date = text(row.date || row.period || row.joinDate || row.resignDate || row.expiryDate || row.dueDate || '');
+    if (c === 'welfare') {
+      var wk = '';
+      if (section === 'members' || section === 'unionDues') wk = [row.period || '', eid || row.id || row.name || ''].join('|');
+      else if (section === 'movements') wk = [row.action || '', row.date || '', eid || row.name || ''].join('|');
+      else if (section === 'suggestions') wk = row.sourceKey || [row.date || row.period || '', row.number || '', row.department || '', row.grievance || '', row.id || ''].join('|');
+      else if (section === 'summaries') wk = String(row.period || row.id || '');
+      else wk = String(row.id || row.file || row.sourceFile || stable(row));
+      return 'welfare|' + section + '|' + wk;
+    }
+    if (c === 'certificate_visa') {
+      var s = legacyNorm;
+      if (section === 'certificates') return ['certificate', s(row.category || ''), s(row.name || '')].join('|');
+      if (section === 'people') {
+        var pass = s(row.passport), name = s(row.nameEn || row.nameKh || row.nickname || row.name), dob = s(row.dob);
+        return ['person', s(eid) || pass || (name + '|' + dob)].join('|');
+      }
+      if (section === 'requests') {
+        var items = legacyArray(row.items).map(function (i) { return s(i && (i.id || i.employeeId || i.passport || i.name || i.title)); }).sort().join(',');
+        return ['request', s(row.number) || (s(row.title) + '|' + s(row.type) + '|' + s(row.dueDate) + '|' + items)].join('|');
+      }
+      if (section === 'imports') return ['import', s(row.file || row.sourceFile || row.summary || row.id)].join('|');
+      return ['certificate_visa', section, s(row.id || row.number || row.name || stable(row))].join('|');
+    }
+    if (c === 'manpower') {
+      var mpKind = section === 'reqs' || section === 'plans' ? 'plan' : section === 'recruit' || section === 'candidates' ? 'candidate' : section === 'joins' ? 'join' : section === 'resigns' ? 'resign' : section === 'daily' ? 'daily' : '';
+      if (mpKind === 'plan') return row._k || ['P', date.slice(0, 7), row.dept || '', row.section || '', row.position || row.title || ''].join('|');
+      if (mpKind === 'candidate') return row._k || ['C', date.slice(0, 10), row.name || '', row.phone || row.empId || index].join('|');
+      if (mpKind === 'join') return row._k || ['J', eid || row.name || index, date.slice(0, 10)].join('|');
+      if (mpKind === 'resign') return row._k || ['R', eid || row.name || index, date.slice(0, 10)].join('|');
+      return row._k || [c, section, eid || row.id || row.name || index, date].join('|');
+    }
+    return row._k || [c, section, eid || row.id || row.number || row.name || index, date].join('|');
+  }
+  function legacyWrapRows(tool, section, values) {
+    return legacyArray(values).map(function (row, index) {
+      var x = Object.assign({}, row || {}), c = canonicalTool(tool);
+      if (!x._k) x._k = legacyRowKey(tool, section, x, index);
+      if (c === 'welfare') x._hraSection = section;
+      if (c === 'certificate_visa') x._hraSection = section;
+      if (c === 'manpower') {
+        var k = section === 'reqs' || section === 'plans' ? 'plan' : section === 'recruit' || section === 'candidates' ? 'candidate' : section === 'joins' ? 'join' : section === 'resigns' ? 'resign' : section === 'daily' ? 'daily' : '';
+        if (k) x._kind = x._kind || k;
+      }
+      if (c === 'maternity') {
+        /* The first Maternity versions saved one complete state object
+           instead of a flat records[] list.  Give every recovered section a
+           stable type so the page can restore amounts and headcounts. */
+        var mt = section === 'employees' || section === 'pregnant' || section === 'maternity' ? (x.type || x.status || (section === 'maternity' ? 'maternity' : 'pregnant'))
+          : ['nursing','nursingFees','nursingFee','nursingRecords','nurFees'].indexOf(section) >= 0 ? 'nursing'
+          : ['healthFees','healthFee','healthFeeRecords','healthCheckFees','healthCheckPay','healthRecords','health_fee'].indexOf(section) >= 0 ? 'health_fee'
+          : ['medicalPurchase','medicalPurchases','medical','medicalRecords','medicinePurchases','purchaseOrders'].indexOf(section) >= 0 ? 'medical_purchase'
+          : section === 'clinic' || section === 'clinics' || section === 'clinicRecords'
+            ? (x.type || (x.visitCount !== undefined || x.medicalFee !== undefined || x.departmentCounts !== undefined ? 'clinic_summary' : 'clinic_visit'))
+          : section === 'salaryRecords' || section === 'salary' ? 'salary'
+          : x.type || '';
+        if (mt) x.type = mt;
+      }
+      return x;
     });
   }
-  function pull(opts) {
-    opts = opts || {}; var url = txt(opts.url).trim(), tool = txt(opts.tool).trim(); if (!url || !tool) return Promise.reject(new Error('GAS URL/tool missing')); status(opts.onStatus, '智慧下載：比對雲端差異…', 'busy');
+  function legacyRecordsFor(tool, payload) {
+    var p = payload || {};
+    if (p.data && typeof p.data === 'object' && !Array.isArray(p.data) && !Array.isArray(p.records)) p = p.data;
+    var direct = p.records || (p.idbStore && p.idbStore.records) || (p.idbData && (p.idbData.records || p.idbData.po_lines));
+    var c = canonicalTool(tool), out = [], sections;
+    if (c === 'welfare') sections = ['members','movements','unionDues','suggestions','summaries','imports'];
+    else if (c === 'certificate_visa') sections = ['certificates','people','requests','imports'];
+    else if (c === 'manpower') sections = ['reqs','recruit','plans','candidates','joins','resigns','daily'];
+    else if (c === 'maternity') sections = ['employees','pregnant','maternity','nursing','nursingFees','nursingFee','nursingRecords','nurFees','healthFees','healthFee','healthFeeRecords','healthCheckFees','healthCheckPay','healthRecords','health_fee','medicalPurchase','medicalPurchases','medical','medicalRecords','medicinePurchases','purchaseOrders','clinic','clinics','clinicRecords','salaryRecords','salary'];
+    else return Array.isArray(direct) ? direct : [];
+    /* Some legacy snapshots contain both records[] (usually the registry)
+       and named fee/roster arrays.  Returning records[] immediately discards
+       all amounts.  Preserve the flat rows and append every named section. */
+    if (Array.isArray(direct)) out = direct.slice();
+    sections.forEach(function (section) { out = out.concat(legacyWrapRows(tool, section, p[section])); });
+    if ((c === 'welfare' || c === 'certificate_visa') && p.settings && typeof p.settings === 'object') {
+      out.push({ _hraSection:'settings', _k:c + '|settings', payload:p.settings });
+    }
+    if (c === 'maternity' && p.lsKeys && typeof p.lsKeys === 'object') {
+      function parsedKey(k, fallback) { try { var v = p.lsKeys[k]; return typeof v === 'string' ? JSON.parse(v) : (v || fallback); } catch (_) { return fallback; } }
+      var matState = parsedKey('vrt_maternity_v1', {});
+      out = out.concat(legacyWrapRows(tool, 'employees', matState.employees));
+      out = out.concat(legacyWrapRows(tool, 'salaryRecords', matState.salaryRecords));
+      out = out.concat(legacyWrapRows(tool, 'nursing', parsedKey('vrt_nursing_fees_v2', [])));
+      out = out.concat(legacyWrapRows(tool, 'healthFees', parsedKey('vrt_health_fees_v1', [])));
+      out = out.concat(legacyWrapRows(tool, 'medicalPurchase', parsedKey('ac_hra_maternity_medical_purchase_v1', [])));
+      out = out.concat(legacyWrapRows(tool, 'clinic', parsedKey('ac_hra_maternity_clinic_v1', [])));
+    }
+    /* Some exports wrap the old state in payload/state instead of data.  A
+       wrapper may coexist with records[], so append it instead of consulting
+       it only when the outer shell is empty. */
+    var nested = p.payload || p.state;
+    if (nested && typeof nested === 'object' && nested !== p) out = out.concat(legacyRecordsFor(tool, nested));
+    if (c === 'maternity') {
+      var mm = {}, mo = [];
+      out.forEach(function (r, index) {
+        r = r || {};
+        var t = text(r.type || r.status || '').toLowerCase(), id = text(r.employeeId || r.empId || r.idNo || r.cardId || r.factoryId || ''),
+          period = text(r.period || r.payMonth || r.month || r.date || r.leaveStart || r.applyDate || ''), key;
+        if (t === 'health_fee' || t === 'health') key = 'HF|' + (id || r.name || index) + '|' + period.slice(0, 7);
+        else if (t === 'nursing') key = 'N|' + (id || r.name || index) + '|' + period.slice(0, 7);
+        else if (t === 'medical_purchase' || t === 'medical') key = 'MED|' + period.slice(0, 7) + '|' + text(r.item || r.productName || r.name || r.rowNo || index);
+        else if (t.indexOf('clinic') === 0) key = 'CLINIC|' + t + '|' + period + '|' + (id || r.name || r.diagnosis || r.rowNo || index);
+        else if (t === 'salary') key = 'SAL|' + (id || r.name || index) + '|' + period.slice(0, 7);
+        else key = 'E|' + (id || r.name || r.id || index);
+        if (!mm[key]) { mm[key] = Object.assign({}, r); mo.push(key); }
+        else Object.keys(r).forEach(function (k) { if (r[k] !== undefined && r[k] !== null && r[k] !== '') mm[key][k] = r[k]; });
+      });
+      return mo.map(function (k) { return mm[k]; });
+    }
+    return mergeRows([], out);
+  }
+  /* AC-GA-EXP keeps its legacy Expense and Receiving snapshots in their
+     original module-specific shapes.  Keep the HRA generic normalizer, but
+     let each page provide its already-tested converter for the one-time
+     migration and recovery paths. */
+  function recordsFor(opts, tool, payload) {
+    if (opts && typeof opts.legacyToRecords === 'function') {
+      try {
+        var custom = opts.legacyToRecords(payload || {});
+        if (Array.isArray(custom)) return custom;
+      } catch (_) {}
+    }
+    return legacyRecordsFor(tool, payload);
+  }
+  function getManifest(url, tool) {
+    var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=smartManifest&tool=' + enc(tool));
+    function fallback(reason) {
+      return { exists:false, legacy:true, compatibilityFallback:true,
+        reason:text(reason || 'smartManifest unsupported') };
+    }
+    function validManifest(d) { return d && (d.exists !== undefined || d.hashes || d.version); }
+    function tryPostManifest(reason) {
+      /* A few mobile WebViews/proxies mishandle GET query actions.  The v31
+         GAS accepts the same manifest request through POST; if the deployed
+         endpoint is older, fall back to the legacy protocol. */
+      return post(url, { action:'smartManifest', tool:tool }).then(function (j) {
+        var d = dataOf(j) || {};
+        return validManifest(d) ? d : fallback(reason);
+      }).catch(function () { return fallback(reason); });
+    }
+    return jsonFetch(endpoint).then(function (j) {
+      var d = dataOf(j) || {};
+      /* Some older GAS deployments return a generic heartbeat object instead
+         of an error for an unknown GET action.  Treat that exactly like the
+         explicit error case below, then use the legacy merge protocol. */
+      if (d.exists === undefined && !d.hashes && !d.version) return tryPostManifest('smartManifest unsupported');
+      return d;
+    }).catch(function (err) {
+      /* Mobile WebViews sometimes return a non-JSON redirect/login page for
+         a GET action without using the server's explicit "unsupported"
+         wording.  POST is the same endpoint but is much more reliable on
+         phones, so try it for every GET failure before giving up. */
+      return tryPostManifest(err.message || err).then(function (d) {
+        if (d && d.compatibilityFallback && !isUnsupportedSmartManifestError(err)) {
+          d.reason = text(err.message || err);
+        }
+        return d;
+      });
+    });
+  }
+  function legacyPull(url, tool, onStatus, forceLegacy, opts) {
+    var candidates = toolCandidates(tool);
+    function compatError(err) { return isUnsupportedSmartError(err); }
+    function metaRequest(candidate) {
+      var getUrl = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=pull&meta=1&tool=' + enc(candidate) + (forceLegacy ? '&legacy=1' : ''));
+      return jsonFetch(getUrl).catch(function (err) {
+        /* Some deployed Web Apps and mobile WebViews accept legacy actions
+           only through POST.  Preserve the original error only if POST also
+           fails, so the caller still sees the useful server response. */
+        return post(url, { action:'pull', meta:1, tool:candidate, legacy:!!forceLegacy }).catch(function (postErr) {
+          throw postErr || err;
+        });
+      });
+    }
+    function chunkRequest(candidate, idx, meta) {
+      var getUrl = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=pull&tool=' + enc(candidate) + '&chunk=' + idx + (meta.uploadId ? '&uploadId=' + enc(meta.uploadId) : '') + (forceLegacy ? '&legacy=1' : ''));
+      return jsonFetch(getUrl).catch(function (err) {
+        return post(url, { action:'pull', tool:candidate, chunk:idx, uploadId:meta.uploadId || '', legacy:!!forceLegacy }).catch(function (postErr) {
+          throw postErr || err;
+        });
+      });
+    }
+    function one(candidate) {
+      return metaRequest(candidate).then(function (j) {
+        var env = dataOf(j) || {}, meta = env.meta || {}, records = [];
+        if (env.chunked && meta) {
+          var n = Number(meta.totalChunks) || 0, chain = Promise.resolve();
+          for (var i = 0; i < n; i++) (function (idx) {
+            chain = chain.then(function () {
+              callStatus(onStatus, '首次基準拉取 ' + (idx + 1) + '/' + n, 'busy');
+              return chunkRequest(candidate, idx, meta).then(function (cj) {
+                var cd = dataOf(cj) || {}; records = records.concat(recordsFor(opts, candidate, cd));
+              });
+            });
+          })(i);
+          return chain.then(function () { return { records:records, meta:meta, tool:candidate }; });
+        }
+        var p = env.data || env; records = recordsFor(opts, candidate, p);
+        return { records:Array.isArray(records) ? records : [], meta:p || {}, tool:candidate };
+      });
+    }
+    function tryCandidate(idx, last) {
+      if (idx >= candidates.length) throw (last || new Error('Legacy cloud download failed'));
+      return one(candidates[idx]).catch(function (err) {
+        if (compatError(err) && idx + 1 < candidates.length) {
+          callStatus(onStatus, '切換相容雲端識別碼：' + candidates[idx + 1], 'warn');
+          return tryCandidate(idx + 1, err);
+        }
+        throw err;
+      });
+    }
+    return tryCandidate(0, null);
+  }
+  function post(url, body) {
+    return jsonFetch(url, { method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) }).then(dataOf);
+  }
+  function smartBucketRead(url, tool, bucket, remoteIndex, expectedCount, onStatus) {
+    var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=smartBucket&tool=' + enc(tool) + '&bucket=' + enc(bucket));
+    var fallback = function (reason) {
+      /* Read by the bucket's stable name first.  The old fallback used the
+         index of the local+remote union; when a phone had one local-only
+         bucket that index no longer matched the server manifest and a valid
+         download returned the wrong (often empty) chunk. */
+      callStatus(onStatus, '手機相容下載：POST 精準讀取 ' + bucket, 'warn');
+      return post(url, { action:'smartBucket', read:true, tool:tool, bucket:bucket }).then(function (d) {
+        var exact = dataOf(d) || {}, exactRows = Array.isArray(exact.records) ? exact.records : [];
+        if (Number(expectedCount) > 0 && !exactRows.length) throw new Error('Empty POST smart bucket response');
+        return exact;
+      }).catch(function (postReadErr) {
+        /* Pre-v39 GAS has no POST read mode.  Its legacy pull endpoint exposes
+           smart buckets by *remote manifest* index, never by union index. */
+        if (Number(remoteIndex) < 0) throw (postReadErr || reason);
+        return post(url, { action:'pull', tool:tool, chunk:Number(remoteIndex) }).then(function (d) {
+          return dataOf(d) || {};
+        }).catch(function (postErr) {
+          throw postErr || postReadErr || reason;
+        });
+      });
+    };
+    return jsonFetch(endpoint).then(function (j) {
+      var d = dataOf(j) || {}, rows = Array.isArray(d.records) ? d.records : [];
+      /* A proxy can return a valid empty JSON shell while dropping the actual
+         body.  The manifest count lets us distinguish that from a real empty
+         bucket. */
+      if (Number(expectedCount) > 0 && !rows.length) return fallback(new Error('Empty smart bucket response'));
+      return d;
+    }).catch(function (err) {
+      return fallback(err);
+    });
+  }
+
+  /* GASCHECK-compatible full pull.  This is deliberately POST-first: mobile
+     WebViews are more reliable with text/plain POST than with a redirected
+     Apps Script GET, and the GAS pull endpoint already knows how to expose
+     both legacy JSON and the current smart buckets by chunk index.  It is a
+     recovery path only; normal downloads still use manifest/bucket deltas. */
+  function directPull(url, tool, onStatus, opts) {
+    var candidates = toolCandidates(tool);
+    function getMeta(candidate) {
+      return post(url, { action:'pull', tool:candidate, meta:1 }).catch(function (err) {
+        var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=pull&meta=1&tool=' + enc(candidate));
+        return jsonFetch(endpoint).catch(function () { throw err; });
+      });
+    }
+    function getChunk(candidate, idx, meta) {
+      return post(url, { action:'pull', tool:candidate, chunk:Number(idx), uploadId:meta && meta.uploadId || '' }).catch(function (err) {
+        var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=pull&tool=' + enc(candidate) + '&chunk=' + Number(idx) + (meta && meta.uploadId ? '&uploadId=' + enc(meta.uploadId) : ''));
+        return jsonFetch(endpoint).catch(function () { throw err; });
+      });
+    }
+    function rowsFrom(value, candidate) {
+      var p = dataOf(value) || {};
+      if (Array.isArray(p)) return p;
+      return recordsFor(opts, candidate, p);
+    }
+    function one(candidate) {
+      return getMeta(candidate).then(function (j) {
+        var env = dataOf(j) || {}, meta = env.meta || {}, total = Number(meta.totalChunks || env.totalChunks || 0), rows = [];
+        if ((env.chunked || total) && total > 0) {
+          var chain = Promise.resolve();
+          for (var i = 0; i < total; i++) (function (idx) {
+            chain = chain.then(function () {
+              callStatus(onStatus, '手機相容下載 ' + (idx + 1) + '/' + total, 'busy');
+              return getChunk(candidate, idx, meta).then(function (cj) {
+                rows = rows.concat(rowsFrom(cj, candidate));
+              });
+            });
+          })(i);
+          return chain.then(function () {
+            return { records:rows, meta:meta, tool:candidate, direct:true,
+              remoteRecordCount:Math.max(Number(meta.recordCount) || 0, rows.length) };
+          });
+        }
+        var payload = env.data !== undefined ? env.data : env;
+        rows = rowsFrom(payload, candidate);
+        return { records:Array.isArray(rows) ? rows : [], meta:payload || {}, tool:candidate, direct:true,
+          remoteRecordCount:Math.max(Number(payload && payload.recordCount) || 0, rows.length) };
+      });
+    }
+    /* Never stop at the first syntactically valid empty response.  Older GAS
+       deployments did not canonicalise tool ids, so for example `welfare`
+       can be empty while `welfare_suggestion` contains the real dataset.
+       Read every compatible id, merge the non-empty results and keep the
+       largest server count.  This is the main desktop-vs-phone zero-row fix. */
+    var found = [], errors = [], chain = Promise.resolve();
+    candidates.forEach(function (candidate, idx) {
+      chain = chain.then(function () {
+        callStatus(onStatus, '完整下載來源 ' + (idx + 1) + '/' + candidates.length + ' · ' + candidate, 'busy');
+        return one(candidate).then(function (r) { found.push(r); }).catch(function (err) { errors.push(err); });
+      });
+    });
+    return chain.then(function () {
+      var useful = found.filter(function (r) { return (r.records || []).length || Number(r.remoteRecordCount) > 0; });
+      if (!useful.length) {
+        if (!found.length && errors.length) throw errors[errors.length - 1];
+        return found[0] || { records:[], meta:{}, tool:canonicalTool(tool), direct:true, remoteRecordCount:0 };
+      }
+      var rows = [], best = useful[0];
+      useful.forEach(function (r) {
+        rows = mergeRows(rows, r.records || []);
+        if (Number(r.remoteRecordCount) > Number(best.remoteRecordCount)) best = r;
+      });
+      return Object.assign({}, best, { records:sortRows(rows), direct:true,
+        sourceTools:useful.map(function (r) { return r.tool; }),
+        remoteRecordCount:Math.max.apply(Math, useful.map(function (r) { return Number(r.remoteRecordCount) || (r.records || []).length; }).concat([rows.length])) });
+    });
+  }
+
+  function pullReliable(opts) {
+    opts = opts || {};
+    var tool = opts.tool, isRecoveryTool = ['welfare','certificate_visa','manpower','maternity'].indexOf(canonicalTool(tool)) >= 0;
+    if (!isRecoveryTool) return pull(opts);
+
+    /* v1.6 used a complete POST pull before every manual download.  That
+       repaired old mobile snapshots, but also downloaded the whole portal on
+       every tap.  v1.7 treats the IndexedDB snapshot as Sewing does: it is the
+       local baseline, then the manifest downloads only changed buckets.  A
+       complete pull is now strictly a migration/recovery fallback. */
+    return fullCacheGet(tool).then(function (cached) {
+      var cachedRows = cached && Array.isArray(cached.records) ? cached.records : [];
+      var pageRows = Array.isArray(opts.localRecords) ? opts.localRecords : [];
+      var baseline = sortRows(mergeSnapshots(opts, cachedRows, pageRows));
+      var incrementalOpts = Object.assign({}, opts, { localRecords:baseline });
+
+      function saveResult(result, fallbackReason) {
+        if (!result || result.cancelled) return result;
+        var rows = Array.isArray(result.records) ? result.records : baseline;
+        var meta = result.meta || (cached && cached.meta) || {};
+        return fullCachePut(tool, { records:rows, meta:meta,
+          sourceTools:result.sourceTools || (cached && cached.sourceTools) || [canonicalTool(tool)],
+          savedAt:now() }).then(function () {
+            if (fallbackReason) result.fallbackReason = text(fallbackReason);
+            result.records = rows;
+            result.remoteRecordCount = Math.max(Number(result.remoteRecordCount) || 0, rows.length);
+            return result;
+          });
+      }
+      function useDirect(reason, base) {
+        callStatus(opts.onStatus, '增量下載無法完成，執行一次完整修復…', 'warn');
+        return directPull(text(opts.url).trim(), tool, opts.onStatus, opts).then(function (direct) {
+          var remoteRows = direct && Array.isArray(direct.records) ? direct.records : [];
+          if (!remoteRows.length && baseline.length) {
+            callStatus(opts.onStatus, '雲端回應為空，保留手機已下載資料', 'warn');
+            return saveResult(Object.assign({}, base || direct || {}, { ok:true, cached:true,
+              noCloud:false, records:baseline, remoteRecords:[], downloaded:0 }), reason);
+          }
+          var merged = sortRows(mergeSnapshots(opts, baseline, remoteRows));
+          callStatus(opts.onStatus, '完成｜修復下載 ' + remoteRows.length.toLocaleString() + ' 筆，已建立新基準', 'warn');
+          return saveResult(Object.assign({}, base || {}, direct || {}, { ok:true, noCloud:false,
+            records:merged, remoteRecords:remoteRows, downloaded:remoteRows.length,
+            directFallback:true }), reason);
+        });
+      }
+
+      return pull(incrementalOpts).then(function (result) {
+        if (!result || result.cancelled) return result;
+        var rows = Array.isArray(result.records) ? result.records : [];
+        var remoteCount = Number(result.remoteRecordCount) || 0;
+        if (!rows.length && remoteCount > 0) return useDirect('empty-incremental-response', result);
+        return saveResult(result, '');
+      }).catch(function (err) {
+        return useDirect(err && (err.message || err), null).catch(function () {
+          if (baseline.length) {
+            callStatus(opts.onStatus, '網路下載失敗，使用上次快取', 'warn');
+            return { ok:true, noCloud:false, records:baseline, remoteRecords:[],
+              meta:(cached && cached.meta) || {}, downloaded:0, cached:true,
+              remoteRecordCount:baseline.length };
+          }
+          throw err;
+        });
+      });
+    });
+  }
+  function conflictConfirm(tool, buckets, opts) {
+    if (opts && opts.autoConfirmConflicts) return true;
+    if (!buckets.length || typeof g.confirm !== 'function') return true;
+    return g.confirm('雲端與本機同時有變更：' + buckets.join(', ') + '\n\n先合併較新的欄位並保留雙方資料？');
+  }
+  function mergeSnapshots(opts, localRows, remoteRows) {
+    if (typeof opts.mergeRecords === 'function') return opts.mergeRecords(localRows, remoteRows);
+    return mergeRows(localRows, remoteRows);
+  }
+
+  function compatibilityPull(opts, localRows, status, reason) {
+    return legacyPull(text(opts.url).trim(), opts.tool, status, false, opts).then(function (legacy) {
+      var merged = mergeSnapshots(opts, localRows, legacy.records || []);
+      var applied = opts.apply ? Promise.resolve(opts.apply(merged, legacy.meta || {})) : Promise.resolve();
+      return applied.then(function () {
+        callStatus(status, '完成｜舊版 GAS 相容下載與合併｜保留雙方資料', 'warn');
+        return { ok:true, records:merged, remoteRecords:legacy.records || [],
+          meta:legacy.meta || {}, migrated:false, compatibilityFallback:true,
+          downloaded:(legacy.records || []).length,
+          remoteRecordCount:Number(legacy.meta && legacy.meta.recordCount) || (legacy.records || []).length,
+          fallbackReason:text(reason || '') };
+      });
+    });
+  }
+
+  /* Compatibility path for a GAS Web App that has not yet been redeployed
+     with smartManifest/smartBucket/smartCommit.  The old push endpoint still
+     merges by business key and never deletes cloud-only rows, so it is safe to
+     use while the user is moving from the old deployment to the new one. */
+  function legacyPush(opts, records, status) {
+    /* Keep the page's original id on the legacy endpoint.  Current GAS
+       canonicalizes it server-side; older GAS deployments may have stored
+       welfare_suggestion/certificate under that exact filename. */
+    var url = text(opts.url).trim(), tool = text(opts.tool).trim() || canonicalTool(opts.tool), rows = sortRows(records || []);
+    var size = Number(opts.legacyChunkSize) || 120;
+    var total = Math.max(1, Math.ceil(rows.length / size));
+    var syncId = 'compat_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    var summary = opts.summary || {};
+    var meta = opts.meta || {};
+    var decisions = opts.decisions || meta.decisions || null;
+    var sent = 0, chain = Promise.resolve(), lastResult = null;
+    for (var i = 0; i < total; i++) (function (idx) {
+      chain = chain.then(function () {
+        var slice = rows.slice(idx * size, (idx + 1) * size);
+        var body = {
+          action:'push', tool:tool, records:slice, recordCount:rows.length,
+          totalChunks:total, chunk:idx, syncId:syncId, mode:'merge',
+          summary:summary, coverage:meta.coverage || opts.coverage || {},
+          updatedAt:now(), version:'compat-1.0'
+        };
+        if (decisions) body.decisions = decisions;
+        if (opts.importLog) body.importLog = opts.importLog;
+        callStatus(status, '相容同步：上傳 ' + (idx + 1) + '/' + total, 'busy');
+        var sender = function (p) { return post(url, p); };
+        var request = idx === total - 1 && g.HRACloudGuard && g.HRACloudGuard.push
+          ? g.HRACloudGuard.push(body, sender, opts.lang || 'zh') : sender(body);
+        return request.then(function (d) {
+          lastResult = d || {};
+          if (lastResult && lastResult.cancelled) return lastResult;
+          if (lastResult && lastResult.ok === false) throw new Error(lastResult.error || 'Legacy cloud upload failed');
+          sent += slice.length;
+          return lastResult;
+        });
+      });
+    })(i);
+    return chain.then(function () {
+      if (lastResult && lastResult.cancelled) return lastResult;
+      var out = Object.assign({}, lastResult || {}, { ok:true, compatibilityFallback:true,
+        fallback:'legacy', recordCount:rows.length, uploaded:sent,
+        unchanged:0, changedBuckets:0, timestamp:now() });
+      callStatus(status, '完成｜舊版 GAS 相容合併｜上傳 ' + sent.toLocaleString() + '｜保留雲端資料', 'warn');
+      return out;
+    });
+  }
+
+  function smartPushWithFallback(opts, records, remote, status, migrated) {
+    return smartPush(opts, records, remote, status, migrated).catch(function (err) {
+      if (!isUnsupportedSmartError(err)) throw err;
+      callStatus(status, '智慧同步工具未部署，改用相容合併上傳…', 'warn');
+      return legacyPush(opts, records, status);
+    });
+  }
+
+  function push(opts) {
+    opts = opts || {};
+    var url = text(opts.url).trim(), tool = opts.tool, records = sortRows(opts.records || []), cacheRows = records, status = opts.onStatus;
+    if (!url) return Promise.reject(new Error('GAS URL missing'));
+    callStatus(status, '智慧同步：比對雲端差異…', 'busy');
     return getManifest(url, tool).then(function (remote) {
-      remote = remote || {}; if (!remote.exists) { if (remote.legacy) return legacyRows(url, tool, opts).then(function (old) { var merged = merge(opts.localRecords || [], old.records, opts.mergeRecords); return Promise.resolve(opts.apply ? opts.apply(merged, old.meta) : null).then(function () { return { ok: true, records: merged, downloaded: old.records.length, migrated: true }; }); }); status(opts.onStatus, '雲端尚無資料', 'warn'); return { ok: false, noCloud: true, records: opts.localRecords || [] }; }
-      return buckets(opts.localRecords || []).then(function (local) { var rh = remote.hashes || {}, out = {}, downloaded = 0, unchanged = 0, keys = {}; Object.keys(rh).concat(Object.keys(local)).forEach(function (k) { keys[k] = 1; }); var chain = Promise.resolve(); Object.keys(keys).sort().forEach(function (k) { chain = chain.then(function () { var lb = local[k], h = rh[k] || ''; if (lb && h && lb.hash === h) { out[k] = lb.records; unchanged += lb.count; return; } if (lb && !h) { out[k] = lb.records; return; } if (!h) return; status(opts.onStatus, '下載變更 · ' + k, 'busy'); return fetchJson(url + '?action=gaSmartBucket&tool=' + enc(tool) + '&bucket=' + enc(k)).then(function (j) { var d = dataOf(j) || {}; var rs = Array.isArray(d.records) ? d.records : []; downloaded += rs.length; out[k] = lb ? merge(lb.records, rs, opts.mergeRecords) : rs; }); }); }); return chain.then(function () { var rows = Object.keys(out).reduce(function (a, k) { return a.concat(out[k] || []); }, []); return Promise.resolve(opts.apply ? opts.apply(rows, remote.meta || {}) : null).then(function () { writeState(tool, { hashes: rh, counts: remote.counts || {}, metaHash: remote.metaHash || '', updatedAt: now() }); status(opts.onStatus, '完成｜下載 ' + downloaded + '｜未變 ' + unchanged, 'ok'); return { ok: true, records: rows, downloaded: downloaded, unchanged: unchanged, meta: remote.meta || {} }; }); }); });
+      remote = remote || {};
+      if (remote.compatibilityFallback) {
+        return legacyPush(opts, records, status);
+      }
+      if (remote.exists && remote.intentionalEmpty && records.length) {
+        var emptyState = readState(tool) || {}, emptyHashes = emptyState.hashes || {};
+        if (!Object.keys(emptyHashes).length) {
+          callStatus(status, '雲端資料已明確刪除；請先下載套用刪除，再決定是否重新上傳', 'warn');
+          return { ok:false, needsPull:true, intentionalEmpty:true, recordCount:records.length };
+        }
+      }
+      if (!remote.exists && remote.legacy) {
+        /* Legacy data is merged once before the smart manifest is created. */
+        callStatus(status, '首次升級：合併既有雲端資料…', 'busy');
+        return legacyPull(url, tool, status, false, opts).then(function (legacy) {
+          var merged = mergeSnapshots(opts, records, legacy.records || []);
+          cacheRows = sortRows(merged);
+          return smartPushWithFallback(opts, merged, remote, status, true);
+        });
+      }
+      /* A v34 phone may already have committed an empty smart manifest while
+         the legacy section snapshot still contains the real data.  Recover
+         that baseline before any upload as well; otherwise the first upload
+         from an empty phone could hide the older cloud rows. */
+      if (remote.exists && !remote.intentionalEmpty && !Number(remote.recordCount) && ['welfare','certificate_visa','manpower','maternity'].indexOf(canonicalTool(tool)) >= 0) {
+        return legacyPull(url, tool, status, true, opts).then(function (legacy) {
+          var oldRows = legacy.records || [];
+          if (!oldRows.length) return smartPushWithFallback(opts, records, remote, status, false);
+          var merged = mergeSnapshots(opts, records, oldRows);
+          cacheRows = sortRows(merged);
+          return smartPushWithFallback(opts, merged, remote, status, true);
+        }).catch(function () { return smartPushWithFallback(opts, records, remote, status, false); });
+      }
+      return smartPushWithFallback(opts, records, remote, status, false).then(function (result) {
+        /* A summary/approval may be the first action on a device that has no
+           local sync baseline.  Pull and merge the remote changed buckets
+           automatically, then commit the union; only a real conflict asks
+           the user for confirmation inside pull(). */
+        if (!result || !result.needsPull || opts.autoMerge === false) return result;
+        return pull({ url:url, tool:tool, localRecords:records, mergeRecords:opts.mergeRecords, onStatus:status }).then(function (p) {
+          if (!p || p.cancelled || !p.ok) return p;
+          cacheRows = sortRows(p.records || records);
+          return getManifest(url, tool).then(function (fresh) { return smartPushWithFallback(Object.assign({}, opts, { records:p.records }), p.records, fresh || {}, status, false); });
+        });
+      });
+    }).catch(function (err) {
+      if (!isUnsupportedSmartError(err)) throw err;
+      callStatus(status, '智慧同步工具未部署，改用相容合併上傳…', 'warn');
+      return legacyPush(opts, records, status);
+    }).then(function (result) {
+      /* Keep the complete mobile baseline in step with a successful push.
+         Without this, deleting a row updates the manifest but leaves the old
+         IndexedDB snapshot behind; the next download merges that stale row
+         back into the page.  Updating the cache also makes the next tap a
+         true zero-transfer comparison. */
+      var cacheTool = ['welfare','certificate_visa','manpower','maternity'].indexOf(canonicalTool(tool)) >= 0;
+      if (!cacheTool || !result || result.ok === false || result.cancelled || result.needsPull) return result;
+      return fullCachePut(tool, { records:cacheRows, meta:opts.meta || {},
+        sourceTools:[canonicalTool(tool)], savedAt:now() }).then(function () { return result; });
     });
   }
-  g.GASmartSync = { version: '1.0', push: push, pull: pull, merge: merge, keyOf: keyOf, bucketOf: bucketOf };
+  function smartPush(opts, records, remote, status, migrated) {
+    var tool = opts.tool, url = text(opts.url).trim();
+    return Promise.all([buildBuckets(records), hash(stable(opts.meta || {}))]).then(function (parts) {
+      var local = parts[0], metaHash = parts[1], last = readState(tool) || {}, lastH = last.hashes || {}, remoteH = remote.hashes || {}, remoteMetaHash = remote.metaHash || '', changed = [], deleted = [], conflicts = [], remoteChanged = [];
+      if (migrated) { remoteH = {}; lastH = {}; remoteMetaHash = ''; }
+      var keys = {}; Object.keys(local).concat(Object.keys(remoteH)).forEach(function (k) { keys[k] = true; });
+      Object.keys(keys).forEach(function (k) {
+        var lh = local[k] && local[k].hash || '', rh = remoteH[k] || '', bh = lastH[k] || '';
+        if (lh && rh && lh === rh) return;
+        if (!bh) {
+          if (lh && !rh) { changed.push(k); return; }
+          if (!lh && rh) { remoteChanged.push(k); return; }
+          if (lh && rh && lh !== rh) { conflicts.push(k); return; }
+        }
+        /* The bucket existed in the last successful baseline, is unchanged in
+           cloud, and is now absent locally: this is an intentional local
+           deletion.  Only that three-way-safe case may remove cloud data. */
+        if (opts.allowDeletes && !lh && rh && bh && rh === bh) { deleted.push(k); return; }
+        var lc = lh !== bh, rc = rh !== bh;
+        if (lc && !rc) { if (lh) changed.push(k); }
+        else if (!lc && rc) remoteChanged.push(k);
+        else if (lc && rc && lh !== rh) conflicts.push(k);
+      });
+      if (!migrated && (remoteChanged.length || conflicts.length)) {
+        var msg = '雲端有新變更 ' + remoteChanged.length + ' 區，衝突 ' + conflicts.length + ' 區；先下載合併';
+        callStatus(status, msg, 'warn');
+        return { ok:false, needsPull:true, remoteChanged:remoteChanged, conflicts:conflicts, recordCount:records.length };
+      }
+      var uploadId = 'hra_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8), sent = 0;
+      var chain = Promise.resolve();
+      changed.forEach(function (k, idx) {
+        chain = chain.then(function () {
+          var b = local[k];
+          callStatus(status, '上傳變更 ' + (idx + 1) + '/' + changed.length + ' · ' + k, 'busy');
+          return post(url, { action:'smartBucket', tool:tool, uploadId:uploadId, bucket:k, hash:b.hash, count:b.count, records:b.records }).then(function () { sent += b.count; });
+        });
+      });
+      return chain.then(function () {
+        var hashes = {}, counts = {}; Object.keys(local).forEach(function (k) { hashes[k] = local[k].hash; counts[k] = local[k].count; });
+        /* Remote-only buckets are intentionally retained. They are merged on the next pull. */
+        Object.keys(remoteH).forEach(function (k) { if (!hashes[k] && deleted.indexOf(k) < 0) { hashes[k] = remoteH[k]; counts[k] = Number((remote.counts || {})[k]) || 0; } });
+        var recordCount = Object.keys(counts).reduce(function (n, k) { return n + (Number(counts[k]) || 0); }, 0);
+        var meta = Object.assign({}, opts.meta || {}, { _smartMetaHash:metaHash });
+        var metaChanged = metaHash !== remoteMetaHash || migrated || changed.length || deleted.length;
+        if (!metaChanged && !changed.length && !deleted.length) {
+          writeState(tool, { hashes:remoteH, counts:remote.counts || {}, metaHash:remoteMetaHash, updatedAt:now() });
+          callStatus(status, '雲端已是最新，沒有需要上傳的變更', 'ok');
+          return { ok:true, skipped:true, unchanged:records.length, migrated:false };
+        }
+        return post(url, { action:'smartCommit', tool:tool, uploadId:uploadId, hashes:hashes, counts:counts, recordCount:recordCount, meta:meta, summary:opts.summary || {} }).then(function (d) {
+          var out = { ok:true, recordCount:recordCount, uploaded:sent, unchanged:Math.max(0, records.length - sent), changedBuckets:changed.length, removedBuckets:deleted.length, migrated:!!migrated, timestamp:(d && (d.timestamp || d.updatedAt)) || now() };
+          writeState(tool, { hashes:hashes, counts:counts, metaHash:metaHash, updatedAt:out.timestamp });
+          callStatus(status, '完成｜本機 ' + records.length.toLocaleString() + '｜上傳 ' + sent.toLocaleString() + (deleted.length ? '｜刪除 ' + deleted.length + ' 區' : '') + '｜其餘不重複傳輸', 'ok');
+          return out;
+        });
+      });
+    });
+  }
+
+  function pull(opts) {
+    opts = opts || {};
+    var url = text(opts.url).trim(), tool = opts.tool, localRows = sortRows(opts.localRecords || []), status = opts.onStatus;
+    if (!url) return Promise.reject(new Error('GAS URL missing'));
+    callStatus(status, '智慧拉取：比對雲端差異…', 'busy');
+    return getManifest(url, tool).then(function (remote) {
+      remote = remote || {};
+      if (!remote.exists && remote.legacy) {
+        return legacyPull(url, tool, status, false, opts).then(function (legacy) {
+          var merged = mergeSnapshots(opts, localRows, legacy.records || []);
+          var applied = opts.apply ? Promise.resolve(opts.apply(merged, legacy.meta || {})) : Promise.resolve();
+          return applied.then(function () {
+            if (remote.compatibilityFallback) {
+              callStatus(status, '完成｜舊版 GAS 相容下載與合併', 'warn');
+              return { ok:true, records:merged, remoteRecords:legacy.records || [],
+                meta:legacy.meta || {}, migrated:false, compatibilityFallback:true,
+                downloaded:(legacy.records || []).length,
+                remoteRecordCount:Number(legacy.meta && legacy.meta.recordCount) || (legacy.records || []).length };
+            }
+            /* Match Prod: turn the old full snapshot into a smart manifest
+               during this one-time baseline pull, without user setup work. */
+            return smartPushWithFallback(opts, merged, remote, status, true).then(function (migrated) {
+              return { ok:true, records:merged, remoteRecords:legacy.records || [], meta:legacy.meta || {}, migrated:true, downloaded:(legacy.records || []).length,
+                remoteRecordCount:Number(legacy.meta && legacy.meta.recordCount) || (legacy.records || []).length, pushResult:migrated };
+            });
+          });
+        });
+      }
+      if (!remote.exists) { callStatus(status, '雲端尚無資料', 'warn'); return { ok:false, noCloud:true, records:localRows, meta:{} }; }
+      /* If an earlier phone created an empty smart manifest before it could
+         understand the old section-based snapshot, read the legacy file once
+         with the smart pointer bypassed, then rebuild the manifest from the
+         recovered rows.  This is the key repair for Welfare/Certificate and
+         early Manpower data that otherwise appears empty forever. */
+      var legacyRecoveryTool = ['welfare','certificate_visa','manpower','maternity'].indexOf(canonicalTool(tool)) >= 0;
+      var continueSmartPull = function () { return buildBuckets(localRows).then(function (local) {
+        var last = readState(tool) || {}, lastH = last.hashes || {}, remoteH = remote.hashes || {}, out = {}, remoteRows = [], downloaded = 0, unchanged = 0, pending = 0, removed = 0, conflictKeys = [], keys = {};
+        Object.keys(remoteH).concat(Object.keys(local)).forEach(function (k) { keys[k] = true; });
+        var list = Object.keys(keys).sort(), remoteOrder = Object.keys(remoteH).sort(), chain = Promise.resolve();
+        list.forEach(function (k, idx) {
+          chain = chain.then(function () {
+            var lb = local[k], rh = remoteH[k] || '', bh = lastH[k] || '';
+            if (lb && rh && lb.hash === rh) { out[k] = lb.records; unchanged += lb.count; return; }
+            if (lb && !rh) {
+              /* The bucket existed in the last downloaded manifest and the
+                 phone did not modify it: its absence in the new manifest is
+                 a confirmed cloud deletion.  Do not resurrect it locally.
+                 A locally changed/de-novo bucket is retained for upload. */
+              if (bh && lb.hash === bh) { removed += lb.count; return; }
+              if (bh && lb.hash !== bh) conflictKeys.push(k);
+              out[k] = lb.records; pending += lb.count; return;
+            }
+            var localChanged = !!(lb && bh && lb.hash !== bh);
+            var remoteChanged = !!(rh && bh && rh !== bh);
+            if (localChanged && !remoteChanged) {
+              /* Only the phone changed: keep it and avoid downloading the
+                 unchanged cloud copy. */
+              out[k] = lb.records; pending += lb.count; return;
+            }
+            if (lb && localChanged && remoteChanged && lb.hash !== rh) conflictKeys.push(k);
+            if (!rh) return;
+            callStatus(status, '下載變更 ' + (idx + 1) + '/' + list.length + ' · ' + k, 'busy');
+            return smartBucketRead(url, tool, k, remoteOrder.indexOf(k), Number((remote.counts || {})[k]) || 0, status).then(function (bj) {
+              var bd = dataOf(bj) || {}, rows = bd.records || [];
+              remoteRows = remoteRows.concat(rows);
+              downloaded += rows.length;
+              /* When the cloud alone changed, its complete bucket is the new
+                 source of truth.  Merging by semantic key here could keep an
+                 equal-length stale local value.  True two-sided conflicts
+                 still use the page-specific merge after confirmation. */
+              out[k] = (lb && localChanged && remoteChanged && lb.hash !== rh)
+                ? mergeSnapshots(opts, lb.records, rows) : rows;
+            });
+          });
+        });
+        return chain.then(function () {
+          if (conflictKeys.length && !conflictConfirm(tool, conflictKeys, opts)) return { ok:false, cancelled:true, conflicts:conflictKeys, records:localRows, meta:remote.meta || {} };
+          var merged = sortRows(Object.keys(out).reduce(function (a, k) { return a.concat(out[k] || []); }, []));
+          /* Last-resort recovery for a phone/proxy that returned empty smart
+             buckets.  The POST legacy pull understands the same smart
+             manifest and reads the chunks by index, so this does not require
+             a new file format or any user action. */
+          var recover = Number(remote.recordCount) > 0 && !merged.length && !localRows.length
+            ? legacyPull(url, tool, status, legacyRecoveryTool, opts).then(function (legacy) {
+                var recovered = legacy.records || [];
+                if (recovered.length) {
+                  remoteRows = recovered;
+                  downloaded = recovered.length;
+                  return sortRows(recovered);
+                }
+                return merged;
+              }).catch(function () { return merged; })
+            : Promise.resolve(merged);
+          return recover.then(function (finalRows) {
+            if (opts.apply) return Promise.resolve(opts.apply(finalRows, remote.meta || {})).then(function () { return finishPull(finalRows); });
+            return finishPull(finalRows);
+          });
+          function finishPull(finalRows) {
+            writeState(tool, { hashes:remoteH, counts:remote.counts || {}, metaHash:remote.metaHash || '', updatedAt:now() });
+            callStatus(status, '完成｜下載 ' + downloaded.toLocaleString() + '｜未變 ' + unchanged.toLocaleString() + (removed ? '｜套用雲端刪除 ' + removed : '') + (pending ? '｜本機待上傳 ' + pending : ''), conflictKeys.length ? 'warn' : 'ok');
+            var manifestCount = Number(remote.recordCount) || Object.keys(remote.counts || {}).reduce(function (n, k) { return n + (Number(remote.counts[k]) || 0); }, 0);
+            return { ok:true, records:finalRows, remoteRecords:remoteRows, meta:remote.meta || {}, downloaded:downloaded, unchanged:unchanged, removed:removed, pendingUpload:pending, conflicts:conflictKeys,
+              remoteRecordCount:Math.max(manifestCount, remoteRows.length) };
+          }
+        });
+      }); };
+      if (!Number(remote.recordCount) && !remote.intentionalEmpty && legacyRecoveryTool) {
+        return legacyPull(url, tool, status, true, opts).then(function (legacy) {
+          var legacyRows = legacy.records || [];
+          if (!legacyRows.length) return continueSmartPull();
+          var merged = sortRows(mergeSnapshots(opts, localRows, legacyRows));
+          var applied = opts.apply ? Promise.resolve(opts.apply(merged, legacy.meta || {})) : Promise.resolve();
+          return applied.then(function () {
+            return smartPushWithFallback(opts, merged, remote, status, true).then(function (migrated) {
+              return { ok:true, records:merged, remoteRecords:legacyRows, meta:legacy.meta || {}, migrated:true,
+                downloaded:legacyRows.length, remoteRecordCount:Number(legacy.meta && legacy.meta.recordCount) || legacyRows.length,
+                pushResult:migrated, recoveredLegacy:true };
+            });
+          });
+        }).catch(function () { return continueSmartPull(); });
+      }
+      return continueSmartPull();
+    }).catch(function (err) {
+      if (!isUnsupportedSmartError(err)) throw err;
+      callStatus(status, '智慧同步工具未部署，改用相容合併下載…', 'warn');
+      return compatibilityPull(opts, localRows, status, err.message || err);
+    });
+  }
+
+  g.HRASmartSync = { version:VERSION, push:push, pull:pull, pullReliable:pullReliable, pullDirect:directPull,
+    fullCacheGet:fullCacheGet, fullCachePut:fullCachePut,
+    buildBuckets:buildBuckets, mergeRows:mergeRows, semanticKey:semanticKey, keyOf:semanticKey, bucketKey:bucketKey, stable:stable };
+  /* Keep AC-GA-EXP's existing public name so all earlier pages and saved
+     bookmarks continue to work while using the HRA Portal sync engine. */
+  g.GASmartSync = g.HRASmartSync;
 })(window);
