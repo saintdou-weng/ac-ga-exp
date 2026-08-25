@@ -21,10 +21,12 @@ for (const asset of requiredAssets) {
 
 const XLSX = require('../shared/xlsx.full.min.js');
 if (XLSX.version !== '0.18.5') throw new Error(`Unexpected bundled SheetJS version: ${XLSX.version}`);
-if (!/General Expense parser v3\.6 not loaded/.test(html)) throw new Error('Missing explicit General Expense parser check');
+if (!/General Expense parser v3\.10 not loaded/.test(html)) throw new Error('Missing explicit General Expense parser check');
 if (!/diagnosticText/.test(html) || !/exp-import-status/.test(html)) throw new Error('Missing persistent import diagnostics');
 if (!/recognizedRows/.test(html) || !/pc\.set\('month',period\)/.test(html)) throw new Error('Import does not open the latest recognised month');
-if (!/version:'v3\.6'/.test(html)) throw new Error('Expense page version was not updated');
+if (!/version:'v3\.10'/.test(html)) throw new Error('Expense page version was not updated');
+if (!/ga-vrt-parsers\.js\?v=3\.10-20260825/.test(html)) throw new Error('General Expense parser cache key was not updated');
+if (!/accept="\.xlsx,\.xlsb,\.xlsm,\.xls"/.test(html)) throw new Error('Expense file picker does not accept XLSX/XLSB/XLSM/XLS');
 if (!/function expRowsFromAny/.test(html) || !/function expSourceBuckets/.test(html)) throw new Error('Missing legacy expense-shape normalizer');
 
-console.log(JSON.stringify({ localAssets: requiredAssets.length, xlsxVersion: XLSX.version, pageVersion: 'v3.6' }));
+console.log(JSON.stringify({ localAssets: requiredAssets.length, xlsxVersion: XLSX.version, pageVersion: 'v3.10' }));
