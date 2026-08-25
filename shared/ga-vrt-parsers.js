@@ -1,10 +1,10 @@
 /* ════════════════════════════════════════════════════════════════════
-   AC-GA-EXP · shared/ga-vrt-parsers.js   v1.1
+   AC-GA-EXP · shared/ga-vrt-parsers.js   v1.0
    VRT 真實 Excel 格式專用解析器
    ─────────────────────────────────────────────────────────────────
    針對 Paul 實際在用的檔案格式，這些格式通用解析器讀不到：
 
-   1. VRT General Expense 2026.xlsx / VRT_General_Expense_2026.xlsb
+   1. VRT_General_Expense_2026.xlsb
       · 「月份分頁(Jan/Feb/Mar)」+「類別分頁(Electric/Water/Security...)」
       · 類別分頁為寬表：一列一個月，欄位 Old/New/Consum/Unit price/Amount
       · 同一分頁左右並排多區塊（Factory / Expat staff house）
@@ -22,13 +22,11 @@
       · 左右並排兩台堆高機（#1 在 B~I 欄、#2 在 K~N 欄）
       · 月份只寫在該月第一列，後續列留空需向下填滿
 
-   .xlsx 與 .xlsb 均已依 VRT General Expense 2026 實檔驗證；分類頁會依實際格式分流。
+   .xlsb 已依 VRT General Expense 2026 實檔驗證；分類頁會依實際格式分流。
    ════════════════════════════════════════════════════════════════ */
 (function (global) {
 'use strict';
 var GA = global.GA; if (!GA) { console.error('ga-vrt-parsers.js 需先載入 ga-core.js'); return; }
-
-var EXPENSE_PARSER_VERSION = '3.10';
 
 var MONTHS = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
 function monthNum(v){
@@ -71,7 +69,7 @@ function expenseYear(rows){
   return new Date().getFullYear();
 }
 
-var VRT = GA.vrtParsers = { version: EXPENSE_PARSER_VERSION };
+var VRT = GA.vrtParsers = {};
 global.VRT = VRT; // Expense 舊介面使用 window.VRT；保留相容入口，確保專用解析器真的被呼叫。
 VRT.version = '3.6';
 /* 被跳過的列（負數、缺資料等），匯入後可查：GA.vrtParsers.skipped */

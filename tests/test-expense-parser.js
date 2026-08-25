@@ -66,7 +66,6 @@ for (const month of Object.keys(byMonth).sort()) byMonth[month].total = Math.rou
 const detailSheets = new Set(records.map(r => r.sourceSheet));
 const latest = records.map(r => r.date).filter(Boolean).sort().pop();
 const olderWorkbook = /2026\s*\([125]\)\.xlsb$/i.test(workbookPath);
-const convertedXlsx = /VRT General Expense 2026\.xlsx$/i.test(workbookPath);
 const expectedRecords = olderWorkbook ? 572 : 486;
 if (records.length !== expectedRecords) throw new Error(`Unexpected expense record count: ${records.length}`);
 if (!detailSheets.has('cleaning') || !detailSheets.has('stationery') || !detailSheets.has('Electric') || !detailSheets.has('Water')) {
@@ -77,16 +76,6 @@ if ((byMonth['2026-05'] || {}).count < 50) throw new Error('May 2026 details wer
 if ((!olderWorkbook && byMonth['2026-06']) || byMonth['2026-07'] || byMonth['2026-08']) throw new Error('Blank utility template months were imported');
 const expectedMayTotal = olderWorkbook ? 10378.67 : 10356.27;
 if (Math.abs((byMonth['2026-05'] || {}).total - expectedMayTotal) > 0.001) throw new Error(`May 2026 total does not reconcile: ${(byMonth['2026-05'] || {}).total}`);
-
-if (convertedXlsx) {
-  const currentYear = records.filter(r => String(r.date).startsWith('2026-'));
-  const currentYearTotal = Math.round(currentYear.reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100;
-  if (currentYear.length !== 481) throw new Error(`Converted XLSX 2026 record count changed: ${currentYear.length}`);
-  if (Math.abs(currentYearTotal - 51159.90) > 0.001) throw new Error(`Converted XLSX 2026 total changed: ${currentYearTotal}`);
-  if ((byMonth['2023-05'] || {}).count !== 5 || Math.abs((byMonth['2023-05'] || {}).total - 205) > 0.001) {
-    throw new Error('Converted XLSX historical 2023 rows were not preserved');
-  }
-}
 
 const outOfYear = records.filter(r => !String(r.date).startsWith('2026-')).map(r => ({ date: r.date, sheet: r.sourceSheet, item: r.item, amount: r.amount }));
 const warnings = records.filter(r => r._warn).length;
