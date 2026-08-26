@@ -182,10 +182,10 @@
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -876,7 +876,7 @@ async function submitRepair(){
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${T('submitting')}`;
   if(photos.length>0){document.getElementById('prog-wrap').style.display='block';document.getElementById('prog-fill').style.width='40%';}
 
-  const payload={action:'repairSubmit',timestamp:currentTs,applicantName:name,department:dept,repairNo:getV('rep-no'),inspector:getV('rep-inspector'),remarks:getV('rep-remark'),items,photos,tgUid:params.get('uid')||''};
+  const payload={action:'repairSubmit',timestamp:currentTs,applicantName:name,department:dept,repairNo:getV('rep-no'),inspector:getV('rep-inspector'),remarks:getV('rep-remark'),items,photos,lang:lang,tgUid:params.get('uid')||''};
   try{
     const d=await postGAS(payload);
     if(d.ok){
@@ -914,7 +914,7 @@ async function submitTempPo(){
 
   const btn=document.getElementById('po-submit-btn');
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${T('submitting')}`;
-  const payload={action:'tempSubmit',timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),inspector:getV('po-inspector'),remarks:getV('po-remark'),items,tgUid:params.get('uid')||''};
+  const payload={action:'tempSubmit',timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),inspector:getV('po-inspector'),remarks:getV('po-remark'),items,lang:lang,tgUid:params.get('uid')||''};
   try{
     const d=await postGAS(payload);
     if(d.ok){
@@ -1256,19 +1256,19 @@ function mtTelegram(){
       // 緊急（維修在第 9 欄）
       let urgent=0; if(isRep) urgent=rows.filter(r=>/urgent|critical|緊急/.test(String(r[9]||''))).length;
       return GA.telegram.buildSummary({
-        icon:isRep?'🔧':'🛒', titleZh:isRep?'維修摘要':'臨採摘要', titleEn:isRep?'Repair Summary':'Temp PO Summary',
-        lang:st.lang, period:GA.periodLabel(st.period,st.ptype),
+        icon:isRep?'🔧':'🛒', titleZh:isRep?'維修摘要':'臨採摘要', titleEn:isRep?'Repair Summary':'Temp PO Summary', titleKm:isRep?'សង្ខេបការជួសជុល':'សង្ខេបការទិញបន្ទាន់',
+        lang:st.lang, period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),
         rows:[
-          {zh:'總筆數',en:'Total',v:rows.length},
-          {zh:'✅ 已核可',en:'Approved',v:app},
-          {zh:'⏳ 待審',en:'Pending',v:pend},
-          {zh:'❌ 已退件',en:'Rejected',v:rej},
-          {zh:'💵 預估總額',en:'Estimated Total',v:GA.money(estimatedTotal,2)}
-        ].concat(isRep?[{zh:'🚨 緊急',en:'Urgent',v:urgent}]:[])
+          {zh:'總筆數',en:'Total',km:'សរុបកំណត់ត្រា',v:rows.length},
+          {zh:'✅ 已核可',en:'Approved',km:'បានអនុម័ត',v:app},
+          {zh:'⏳ 待審',en:'Pending',km:'រង់ចាំ',v:pend},
+          {zh:'❌ 已退件',en:'Rejected',km:'បានបដិសេធ',v:rej},
+          {zh:'💵 預估總額',en:'Estimated Total',km:'សរុបប៉ាន់ស្មាន',v:GA.money(estimatedTotal,2)}
+        ].concat(isRep?[{zh:'🚨 緊急',en:'Urgent',km:'បន្ទាន់',v:urgent}]:[])
          .concat(top.length?['-']:[])
-         .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,v:n})))
-         .concat(inspectors.length?['-']:[{zh:'🔎 檢查人',en:'Inspector',v:0}])
-         .concat(inspectors.map(([n,c])=>({zh:'🔎 '+(n==='—'?'未填':n),en:'🔎 '+(n==='—'?'Not entered':n),v:c}))),
+         .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,km:'ផ្នែក·'+d,v:n})))
+         .concat(inspectors.length?['-']:[{zh:'🔎 檢查人',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ',v:0}])
+         .concat(inspectors.map(([n,c])=>({zh:'🔎 '+(n==='—'?'未填':n),en:'🔎 '+(n==='—'?'Not entered':n),km:'🔎 '+(n==='—'?'មិនបានបំពេញ':n),v:c}))),
         footer:'🕐 '+GA.ymd(new Date())+(rows.length?'':'（'+(lang==='zh'?'請先查詢':'query first')+'）')
       });
     }

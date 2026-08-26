@@ -97,10 +97,10 @@ tr:hover td{background:#f5f8f6}
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1052,18 +1052,19 @@ const topDrv={};recs.filter(r=>r.cat==='driver').forEach(r=>{topDrv[r.driver]=(t
 const topName=Object.entries(topDrv).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
 const byInspector={};recs.forEach(r=>{const n=String(r.inspector||'').trim()||'-';byInspector[n]=(byInspector[n]||0)+1});
 const inspectorText=Object.entries(byInspector).sort((a,b)=>b[1]-a[1]).map(([n,c])=>`${n}: ${c}`).join(' · ')||'-';
-const txt=`\u{1F4CA} VRT DIESEL REPORT \u2014 ${latest||'ALL'}
-\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
-
-\u{1F697} DRIVER DIESEL: ${drvL.toLocaleString()}L (${recs.filter(r=>r.cat==='driver').length} recs)
-   Top: ${topName}
-\u{1F3D7}\uFE0F FORKLIFT: ${forkL.toLocaleString()}L (${recs.filter(r=>r.cat==='forklift').length} recs)
-\u26A1 GENERATOR: ${genL.toLocaleString()}L (${recs.filter(r=>r.cat==='generator').length} recs)
-
-🔎 INSPECTOR: ${inspectorText}
-
-\u{1F4E6} TOTAL: ${(drvL+forkL+genL).toLocaleString()}L
-\u2705 Please verify.`;
+const L=lang||'en';
+const F=(zh,en,km)=>L==='zh'?zh:L==='km'?km:en;
+const driverCount=recs.filter(r=>r.cat==='driver').length, forkCount=recs.filter(r=>r.cat==='forklift').length, genCount=recs.filter(r=>r.cat==='generator').length;
+const txt=`📊 ${F('VRT 柴油報告','VRT DIESEL REPORT','របាយការណ៍ម៉ាស៊ូត VRT')}
+━━━━━━━━━━━━━━━━━━
+├ 📅 ${F('期間','Period','រយៈពេល')}: ${latest||'ALL'}
+├ 🚗 ${F('司機柴油','Driver Diesel','ម៉ាស៊ូតអ្នកបើកបរ')}: ${drvL.toLocaleString()}L / ${driverCount} ${F('筆','recs','កំណត់ត្រា')}
+├ 🏆 ${F('最高司機','Top Driver','អ្នកបើកបរខ្ពស់បំផុត')}: ${topName}
+├ 🏗️ ${F('叉車','Forklift','ឡានស្ទូច')}: ${forkL.toLocaleString()}L / ${forkCount} ${F('筆','recs','កំណត់ត្រា')}
+├ ⚡ ${F('發電機','Generator','ម៉ាស៊ីនភ្លើង')}: ${genL.toLocaleString()}L / ${genCount} ${F('筆','recs','កំណត់ត្រា')}
+├ 🔎 ${F('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')}: ${inspectorText}
+├ 📦 ${F('合計','Total','សរុប')}: ${(drvL+forkL+genL).toLocaleString()}L
+└ ✅ ${F('請確認','Please verify','សូមពិនិត្យ')}`;
 document.getElementById('sumBox').textContent=txt;
 }
 function copySummary(){navigator.clipboard.writeText(document.getElementById('sumBox').textContent).then(()=>toast(T('copy')+'!'));} 
@@ -1072,7 +1073,7 @@ const token=document.getElementById('tgToken').value.trim();const chatId=documen
 if(!token||!chatId){toast(T('setTelegram'),'err');return}
 genSummary();const text=document.getElementById('sumBox').textContent;
 /* v2：一律經 GAS 轉發，Token 不落地瀏覽器 */
-try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'ALL',lang:'both',chatId:chatId||'',text});toast('✈️ '+((r.data&&r.data.sent)||1)+' group(s)')}catch(e){toast(e.message,'err')}
+try{const r=await GA.gasPost('tgSummary',{module:'fuel',ptype:'month',period:'ALL',lang:(lang||'en'),chatId:chatId||'',text});toast('✈️ '+((r.data&&r.data.sent)||1)+' group(s)')}catch(e){toast(e.message,'err')}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1102,28 +1103,28 @@ function fuelSummaryText(s){
   const out=[];
 
   if(scope==='all'||scope==='driver'){
-    out.push({zh:'🚗 司機',en:'Driver',v:drvL.toLocaleString()+'L / '+drv.length+' recs'});
+    out.push({zh:'🚗 司機',en:'Driver',km:'អ្នកបើកបរ',v:drvL.toLocaleString()+'L / '+drv.length+' '+GA.telegram.langText('筆','recs','កំណត់ត្រា',s.lang)});
   }
   if(scope==='all'||scope==='forklift'){
-    out.push({zh:'🏗️ 叉車',en:'Forklift',v:forkL.toLocaleString()+'L / '+fork.length+' recs'});
+    out.push({zh:'🏗️ 叉車',en:'Forklift',km:'ឡានស្ទូច',v:forkL.toLocaleString()+'L / '+fork.length+' '+GA.telegram.langText('筆','recs','កំណត់ត្រា',s.lang)});
   }
   if(scope==='all'||scope==='generator'){
-    out.push({zh:'⚡ 發電機',en:'Generator',v:genL.toLocaleString()+'L / '+gen.length+' recs'});
+    out.push({zh:'⚡ 發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង',v:genL.toLocaleString()+'L / '+gen.length+' '+GA.telegram.langText('筆','recs','កំណត់ត្រា',s.lang)});
   }
   if(scope==='all'){
     out.push('-');
-    out.push({zh:'合計',en:'Total',v:(drvL+forkL+genL).toLocaleString()+'L'});
-    out.push({zh:'司機里程',en:'Driver KM',v:totKM.toLocaleString()+' km'});
+    out.push({zh:'合計',en:'Total',km:'សរុប',v:(drvL+forkL+genL).toLocaleString()+'L'});
+    out.push({zh:'司機里程',en:'Driver KM',km:'គីឡូម៉ែត្រអ្នកបើកបរ',v:totKM.toLocaleString()+' km'});
     out.push('-');
-    out.push({zh:'油耗 L/100km',en:'L/100km',v:GA.fmtRatio(GA.ratio(drvL*100,totKM),'',2)});
-    out.push({zh:'效率 km/L',en:'km/L',v:GA.fmtRatio(GA.ratio(totKM,drvL),'',2)});
-    out.push({zh:'叉車 L/hr',en:'Forklift L/hr',v:GA.fmtRatio(GA.ratio(forkL,forkHr),'',2)});
-    out.push({zh:'發電機 L/hr',en:'Generator L/hr',v:GA.fmtRatio(GA.ratio(genL,genHr),'',2)});
+    out.push({zh:'油耗 L/100km',en:'L/100km',km:'ស៊ីប្រេង L/100km',v:GA.fmtRatio(GA.ratio(drvL*100,totKM),'',2)});
+    out.push({zh:'效率 km/L',en:'km/L',km:'ប្រសិទ្ធភាព km/L',v:GA.fmtRatio(GA.ratio(totKM,drvL),'',2)});
+    out.push({zh:'叉車 L/hr',en:'Forklift L/hr',km:'ឡានស្ទូច L/hr',v:GA.fmtRatio(GA.ratio(forkL,forkHr),'',2)});
+    out.push({zh:'發電機 L/hr',en:'Generator L/hr',km:'ម៉ាស៊ីនភ្លើង L/hr',v:GA.fmtRatio(GA.ratio(genL,genHr),'',2)});
   }
 
   out.push('-');
-  out.push({zh:'🔎 檢查人',en:'Inspector',v:inspectorList.length});
-  inspectorList.forEach(([n,c])=>out.push({zh:'  '+(n==='—'?'未填':n),en:'  '+(n==='—'?'Not entered':n),v:c+' 筆 / '+c+' recs'}));
+  out.push({zh:'🔎 檢查人',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ',v:inspectorList.length});
+  inspectorList.forEach(([n,c])=>out.push({zh:'  '+(n==='—'?'未填':n),en:'  '+(n==='—'?'Not entered':n),km:'  '+(n==='—'?'មិនបានបំពេញ':n),v:c+' '+GA.telegram.langText('筆','recs','កំណត់ត្រា',s.lang)}));
 
   /* 明細：誰開多少 km、發電機哪幾天用多少 */
   if(scope==='all'||scope==='driver'){
@@ -1136,9 +1137,9 @@ function fuelSummaryText(s){
     const list=Object.entries(byDrv).sort((a,b)=>b[1].km-a[1].km).slice(0,10);
     if(list.length){
       out.push('-');
-      out.push({zh:'🚗 各車明細',en:'Per vehicle',v:list.length+' 台'});
+      out.push({zh:'🚗 各車明細',en:'Per vehicle',km:'លម្អិតតាមរថយន្ត',v:list.length+' '+GA.telegram.langText('台','vehicles','គ្រឿង',s.lang)});
       list.forEach(([k,v])=>out.push({
-        zh:'  '+k, en:'  '+k,
+        zh:'  '+k, en:'  '+k, km:'  '+k,
         v:v.km.toLocaleString()+'km / '+v.L.toLocaleString()+'L · '+GA.fmtRatio(GA.ratio(v.km,v.L),'km/L',1)
       }));
     }
@@ -1153,9 +1154,9 @@ function fuelSummaryText(s){
     const days=Object.entries(byDay).sort((a,b)=>a[0]<b[0]?1:-1).slice(0,12);
     if(days.length){
       out.push('-');
-      out.push({zh:'⚡ 發電機每日',en:'Generator daily',v:days.length+' 天'});
+      out.push({zh:'⚡ 發電機每日',en:'Generator daily',km:'ម៉ាស៊ីនភ្លើងប្រចាំថ្ងៃ',v:days.length+' '+GA.telegram.langText('天','days','ថ្ងៃ',s.lang)});
       days.forEach(([d,v])=>out.push({
-        zh:'  '+d, en:'  '+d,
+        zh:'  '+d, en:'  '+d, km:'  '+d,
         v:v.L.toLocaleString()+'L'+(v.hr?' / '+v.hr+'hr':'')
       }));
     }
@@ -1170,9 +1171,9 @@ function fuelSummaryText(s){
     const fl=Object.entries(byF).sort((a,b)=>b[1].L-a[1].L).slice(0,8);
     if(fl.length){
       out.push('-');
-      out.push({zh:'🏗️ 各叉車',en:'Per forklift',v:fl.length+' 台'});
+      out.push({zh:'🏗️ 各叉車',en:'Per forklift',km:'តាមឡានស្ទូច',v:fl.length+' '+GA.telegram.langText('台','forklifts','គ្រឿង',s.lang)});
       fl.forEach(([k,v])=>out.push({
-        zh:'  '+k, en:'  '+k,
+        zh:'  '+k, en:'  '+k, km:'  '+k,
         v:v.L.toLocaleString()+'L'+(v.hr?' / '+v.hr+'hr':'')
       }));
     }
@@ -1182,8 +1183,8 @@ function fuelSummaryText(s){
   const warn=(typeof GA.futureWarnText==='function') ? GA.futureWarnText(rows,'date',s.lang==='en'?'en':(s.lang==='km'?'km':'zh')) : '';
 
   return GA.telegram.buildSummary({
-    icon:'🛢️', titleZh:'柴油摘要', titleEn:'Diesel Summary',
-    lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
+    icon:'🛢️', titleZh:'柴油摘要', titleEn:'Diesel Summary', titleKm:'សង្ខេបម៉ាស៊ូត',
+    lang:s.lang, period:GA.telegram.periodLabel(s.period,s.ptype,s.lang),
     rows:out,
     footer:(warn?warn+'\n':'')+'🕐 '+GA.ymd(new Date())
   });

@@ -346,10 +346,10 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -2176,7 +2176,7 @@ async function doSubmit(){
       id:i.id,name:i.name,cn:i.cn||i.name,cat:i.cat||"",
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
-    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items};
+    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang};
     await fetch(GAS_URL+"?action=submit&data="+encodeURIComponent(JSON.stringify(payload)));
   }catch(e){console.warn("submit error",e);}
 }
@@ -2679,21 +2679,21 @@ function procTelegram(){
       const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
       const low=lowStockCount();
       return GA.telegram.buildSummary({
-        icon:'📋', titleZh:'採購摘要', titleEn:'Procurement Summary',
-        lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
+        icon:'📋', titleZh:'採購摘要', titleEn:'Procurement Summary', titleKm:'សង្ខេបការទិញ',
+        lang:s.lang, period:GA.telegram.periodLabel(s.period,s.ptype,s.lang),
         rows:[
-          {zh:'採購單數',en:'PO Count',v:rows.length},
-          {zh:'待審',en:'Pending',v:(byStatus.submitted||0)+(byStatus.verified||0)},
-          {zh:'已核可',en:'Approved',v:byStatus.approved||0},
-          {zh:'品項數',en:'Items',v:items},
-          {zh:'低庫存',en:'Low Stock',v:low}
+          {zh:'採購單數',en:'PO Count',km:'ចំនួន PO',v:rows.length},
+          {zh:'待審',en:'Pending',km:'រង់ចាំពិនិត្យ',v:(byStatus.submitted||0)+(byStatus.verified||0)},
+          {zh:'已核可',en:'Approved',km:'បានអនុម័ត',v:byStatus.approved||0},
+          {zh:'品項數',en:'Items',km:'ចំនួនមុខទំនិញ',v:items},
+          {zh:'低庫存',en:'Low Stock',km:'ស្តុកទាប',v:low}
         ],
         footer:'🕐 '+GA.ymd(new Date())
       });
     },
     approvalItems:function(s){
       // 只送目前草稿/待送的 PO 品項（走原有核可順序）
-      return ordItems().map(i=>({ item:i.name, qty:(ords[i.id]||{}).qty, dept:'GA', recordId:i.id }));
+      return ordItems().map(i=>({ item:i.name, itemZh:i.cn||i.name, qty:(ords[i.id]||{}).qty, unit:getUnit(i.id), dept:'GA', category:(i.catKey||i.cat||''), note:(ords[i.id]||{}).note||'', recordId:i.id }));
     }
   });
 }

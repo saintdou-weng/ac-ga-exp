@@ -215,11 +215,11 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js"></script>
+<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1475,14 +1475,14 @@ function sendTelegram(){
       const byInspector={}; scoped.forEach(r=>{const n=String(r.inspector||'').trim()||'—';byInspector[n]=(byInspector[n]||0)+1;});
       const inspectorList=Object.entries(byInspector).sort((a,b)=>b[1]-a[1]);
       const rows=[];
-      if(scope!=='issue'){ rows.push({zh:'📥 收貨筆數',en:'Receive recs',v:recv.length});
-        rows.push({zh:'收貨數量',en:'Receive qty',v:recvQ.toLocaleString()}); }
-      if(scope!=='receive'){ rows.push({zh:'📤 領用筆數',en:'Issue recs',v:issue.length});
-        rows.push({zh:'領用數量',en:'Issue qty',v:issueQ.toLocaleString()}); }
+      if(scope!=='issue'){ rows.push({zh:'📥 收貨筆數',en:'Receive recs',km:'កំណត់ត្រាទទួល',v:recv.length});
+        rows.push({zh:'收貨數量',en:'Receive qty',km:'បរិមាណទទួល',v:recvQ.toLocaleString()}); }
+      if(scope!=='receive'){ rows.push({zh:'📤 領用筆數',en:'Issue recs',km:'កំណត់ត្រាចេញ',v:issue.length});
+        rows.push({zh:'領用數量',en:'Issue qty',km:'បរិមាណចេញ',v:issueQ.toLocaleString()}); }
 
       rows.push('-');
-      rows.push({zh:'🔎 檢查人',en:'Inspector',v:inspectorList.length});
-      inspectorList.forEach(([n,c])=>rows.push({zh:'  '+(n==='—'?'未填':n),en:'  '+(n==='—'?'Not entered':n),v:c+' 筆 / '+c+' recs'}));
+      rows.push({zh:'🔎 檢查人',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ',v:inspectorList.length});
+      inspectorList.forEach(([n,c])=>rows.push({zh:'  '+(n==='—'?'未填':n),en:'  '+(n==='—'?'Not entered':n),km:'  '+(n==='—'?'មិនបានបំពេញ':n),v:c+' '+GA.telegram.langText('筆','recs','កំណត់ត្រា',st.lang)}));
 
       /* 部門明細（全部列出，不只前三） */
       if(scope!=='receive'){
@@ -1490,8 +1490,8 @@ function sendTelegram(){
         const dl=Object.entries(dept).sort((a,b)=>b[1]-a[1]);
         if(dl.length){
           rows.push('-');
-          rows.push({zh:'🏭 各部門領用',en:'Issue by dept',v:dl.length+' 部門'});
-          dl.forEach(([d,q])=>rows.push({zh:'  '+d,en:'  '+d,v:q.toLocaleString()}));
+          rows.push({zh:'🏭 各部門領用',en:'Issue by dept',km:'ចេញតាមផ្នែក',v:dl.length+' '+GA.telegram.langText('部門','depts','ផ្នែក',st.lang)});
+          dl.forEach(([d,q])=>rows.push({zh:'  '+d,en:'  '+d,km:'  '+d,v:q.toLocaleString()}));
         }
       }
       /* 品項明細 Top */
@@ -1500,8 +1500,8 @@ function sendTelegram(){
         const il=Object.entries(it).sort((a,b)=>b[1]-a[1]).slice(0,12);
         if(il.length){
           rows.push('-');
-          rows.push({zh:'📦 領用品項 Top',en:'Top issued items',v:il.length});
-          il.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,v:q.toLocaleString()}));
+          rows.push({zh:'📦 領用品項 Top',en:'Top issued items',km:'មុខទំនិញចេញ Top',v:il.length});
+          il.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,km:'  '+k,v:q.toLocaleString()}));
         }
       }
       if(scope!=='issue'){
@@ -1509,21 +1509,21 @@ function sendTelegram(){
         const rl=Object.entries(rv).sort((a,b)=>b[1]-a[1]).slice(0,10);
         if(rl.length){
           rows.push('-');
-          rows.push({zh:'📥 收貨品項 Top',en:'Top received',v:rl.length});
-          rl.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,v:q.toLocaleString()}));
+          rows.push({zh:'📥 收貨品項 Top',en:'Top received',km:'មុខទំនិញទទួល Top',v:rl.length});
+          rl.forEach(([k,q])=>rows.push({zh:'  '+k,en:'  '+k,km:'  '+k,v:q.toLocaleString()}));
         }
       }
       /* 低庫存明細（全部列，超過 15 才截斷） */
       rows.push('-');
-      rows.push({zh:'⚠️ 低庫存品項',en:'Low stock items',v:low.length});
-      low.slice(0,15).forEach(x=>rows.push({zh:'  '+x.name,en:'  '+x.name,
+      rows.push({zh:'⚠️ 低庫存品項',en:'Low stock items',km:'មុខទំនិញស្តុកទាប',v:low.length});
+      low.slice(0,15).forEach(x=>rows.push({zh:'  '+x.name,en:'  '+x.name,km:'  '+x.name,
         v:'stock '+GA.num(x.stock)+' / min '+GA.num(x.minStock||settings.lowThreshold||5)}));
-      if(low.length>15) rows.push({zh:'  …',en:'  …',v:'+'+(low.length-15)});
+      if(low.length>15) rows.push({zh:'  …',en:'  …',km:'  …',v:'+'+(low.length-15)});
 
       const warn=(typeof GA.futureWarnText==='function') ? GA.futureWarnText(P,'date',st.lang==='en'?'en':(st.lang==='km'?'km':'zh')) : '';
       return GA.telegram.buildSummary({
-        icon:'📦', titleZh:'收貨報告摘要', titleEn:'Receiving Summary',
-        lang:st.lang, period:GA.periodLabel(st.period,st.ptype), rows:rows,
+        icon:'📦', titleZh:'收貨報告摘要', titleEn:'Receiving Summary', titleKm:'សង្ខេបការទទួល និងចេញ',
+        lang:st.lang, period:GA.telegram.periodLabel(st.period,st.ptype,st.lang), rows:rows,
         footer:(warn?warn+'\n':'')+'🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())
       });
     }
@@ -1714,7 +1714,65 @@ function scheduleReceivingAutoUpload(reason){clearTimeout(window._recvSyncTimer)
 function cloudUpload(){return recvCloudPush({silent:false});}
 function cloudDownload(){return recvCloudPull({silent:false});}
 /* Receiving 摘要：每一筆列出收／發數量、當時單價與總價，並保留 dashboard footer。 */
-function sendTelegram(){try{GA.setLang(lang);}catch(e){}GA.telegram.open({module:'receiving',canApprove:false,scopes:[{v:'both',zh:'收發全部',en:'Recv+Issue',km:'ទាំងអស់'},{v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},{v:'issue',zh:'領用',en:'Issue',km:'ចេញ'}],periods:function(type){return [...new Set(records.map(function(r){return GA.periodKey(r.date,type);})).values()];},summary:function(st){var P=records.filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype);}),scope=st.scope||'both',recv=P.filter(function(r){return r.type==='receive';}),issue=P.filter(function(r){return r.type==='issue';}),recvQ=recv.reduce(function(a,r){return a+GA.num(r.qty);},0),issueQ=issue.reduce(function(a,r){return a+GA.num(r.qty);},0),recvAmt=recv.reduce(function(a,r){return a+recvRecordCost(r).amount;},0),issueAmt=issue.reduce(function(a,r){return a+recvRecordCost(r).amount;},0),rows=[];if(scope!=='issue'){rows.push({zh:'📥 收貨筆數／數量',en:'Receive records / qty',v:recv.length+' / '+recvQ});rows.push({zh:'收貨總價',en:'Receive total',v:recvAmt.toFixed(2)});}if(scope!=='receive'){rows.push({zh:'📤 領用筆數／數量',en:'Issue records / qty',v:issue.length+' / '+issueQ});rows.push({zh:'領用參考總價',en:'Issue reference total',v:issueAmt.toFixed(2)});}var groups={};P.filter(function(r){return scope==='both'||r.type===scope;}).forEach(function(r){var c=recvRecordCost(r),k=(r.type==='receive'?'📥 ':'📤 ')+(r.itemName||'—'),g=groups[k]||(groups[k]={qty:0,amount:0,unit:c.unitPrice,dept:{}});g.qty+=GA.num(r.qty);g.amount+=c.amount;if(r.type==='issue')g.dept[r.dept||'未填部門']=(g.dept[r.dept||'未填部門']||0)+GA.num(r.qty);});rows.push('-');rows.push({zh:'📦 完整物品收發／單價／總價',en:'Complete item movement / unit / total',v:Object.keys(groups).length});Object.keys(groups).sort().forEach(function(k){var g=groups[k],d=Object.keys(g.dept).map(function(x){return x+' '+g.dept[x];}).join(' · ');rows.push({zh:k,en:k,v:'qty '+g.qty+' · unit '+g.unit.toFixed(2)+' · total '+g.amount.toFixed(2)+(d?' · '+d:'')});});var low=items.filter(function(x){return GA.num(x.stock)<GA.num(x.minStock||settings.lowThreshold||5);});rows.push('-');rows.push({zh:'⚠️ 低庫存／資料檢查',en:'Low stock / data check',v:low.length?low.map(function(x){return x.name+' '+x.stock;}).join(' · '):'OK'});return GA.telegram.buildSummary({icon:'📦',titleZh:'收貨報告摘要',titleEn:'Receiving Summary',lang:st.lang,period:GA.periodLabel(st.period,st.ptype),rows:rows,footer:'🔗 Dashboard：'+(location.origin+location.pathname)+'\n🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())});}});}
+function sendTelegram(){
+  try{GA.setLang(lang);}catch(e){}
+  GA.telegram.open({
+    module:'receiving',canApprove:false,
+    scopes:[
+      {v:'both',zh:'收發全部',en:'Recv+Issue',km:'ទាំងអស់'},
+      {v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},
+      {v:'issue',zh:'領用',en:'Issue',km:'ចេញ'}
+    ],
+    periods:function(type){return [...new Set(records.map(function(r){return GA.periodKey(r.date,type);})).values()];},
+    summary:function(st){
+      var P=records.filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype);}),scope=st.scope||'both',
+          recv=P.filter(function(r){return r.type==='receive';}),issue=P.filter(function(r){return r.type==='issue';}),
+          recvQ=recv.reduce(function(a,r){return a+GA.num(r.qty);},0),issueQ=issue.reduce(function(a,r){return a+GA.num(r.qty);},0),
+          recvAmt=recv.reduce(function(a,r){return a+recvRecordCost(r).amount;},0),issueAmt=issue.reduce(function(a,r){return a+recvRecordCost(r).amount;},0),rows=[];
+      if(scope!=='issue'){
+        rows.push({zh:'📥 收貨筆數／數量',en:'Receive records / qty',km:'កំណត់ត្រាទទួល / បរិមាណ',v:recv.length+' / '+recvQ});
+        rows.push({zh:'💵 收貨總價',en:'Receive total',km:'សរុបតម្លៃទទួល',v:recvAmt.toFixed(2)});
+      }
+      if(scope!=='receive'){
+        rows.push({zh:'📤 領用筆數／數量',en:'Issue records / qty',km:'កំណត់ត្រាចេញ / បរិមាណ',v:issue.length+' / '+issueQ});
+        rows.push({zh:'💵 領用參考總價',en:'Issue reference total',km:'តម្លៃយោងសរុបចេញ',v:issueAmt.toFixed(2)});
+      }
+      var groups={};
+      P.filter(function(r){return scope==='both'||r.type===scope;}).forEach(function(r){
+        var c=recvRecordCost(r),typeKey=r.type==='receive'?'receive':'issue',key=typeKey+'|'+(r.itemName||'—'),
+            g=groups[key]||(groups[key]={type:typeKey,name:r.itemName||'—',qty:0,amount:0,unit:c.unitPrice,dept:{}});
+        g.qty+=GA.num(r.qty);g.amount+=c.amount;
+        if(r.type==='issue'){
+          var dep=String(r.dept||'').trim()||'__EMPTY__';
+          g.dept[dep]=(g.dept[dep]||0)+GA.num(r.qty);
+        }
+      });
+      rows.push('-');
+      rows.push({zh:'📦 完整物品收發明細',en:'Complete item movement details',km:'លម្អិតចលនាទំនិញពេញលេញ',v:Object.keys(groups).length});
+      Object.keys(groups).sort().forEach(function(key){
+        var g=groups[key],icon=g.type==='receive'?'📥':'📤',typeZh=g.type==='receive'?'收貨':'領用',typeEn=g.type==='receive'?'Receive':'Issue',typeKm=g.type==='receive'?'ទទួល':'ចេញ';
+        rows.push('-');
+        rows.push({zh:icon+' '+typeZh+'品項',en:icon+' '+typeEn+' item',km:icon+' '+typeKm+' ទំនិញ',v:g.name});
+        rows.push({zh:'數量',en:'Qty',km:'បរិមាណ',v:g.qty});
+        rows.push({zh:'單價',en:'Unit price',km:'តម្លៃឯកតា',v:g.unit.toFixed(2)});
+        rows.push({zh:'總價',en:'Line total',km:'សរុប',v:g.amount.toFixed(2)});
+        var deps=Object.keys(g.dept).map(function(x){
+          var name=x==='__EMPTY__'?GA.telegram.langText('未填部門','Department not entered','មិនបានបំពេញផ្នែក',st.lang):x;
+          return name+' '+g.dept[x];
+        }).join(' · ');
+        if(deps) rows.push({zh:'部門／數量',en:'Dept / qty',km:'ផ្នែក / បរិមាណ',v:deps});
+      });
+      var low=items.filter(function(x){return GA.num(x.stock)<GA.num(x.minStock||settings.lowThreshold||5);});
+      rows.push('-');
+      rows.push({zh:'⚠️ 低庫存／資料檢查',en:'Low stock / data check',km:'ស្តុកទាប / ពិនិត្យទិន្នន័យ',v:low.length?low.map(function(x){return x.name+' '+x.stock;}).join(' · '):'OK'});
+      return GA.telegram.buildSummary({
+        icon:'📦',titleZh:'收貨報告摘要',titleEn:'Receiving Summary',titleKm:'សង្ខេបរបាយការណ៍ទទួលទំនិញ',
+        lang:st.lang,period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),rows:rows,
+        footer:'🔗 Dashboard: '+(location.origin+location.pathname)+'\n🏭 '+(settings.factory||'VRT')+' · 🕐 '+GA.ymd(new Date())
+      });
+    }
+  });
+}
 function recvLedgerSummary(itemId){var rs=recvLedgerRecords(itemId),months={},item=recvItemById(itemId),running=GA.num(item&&item.openingStock),allIn=0,allOut=0,inAmt=0,outAmt=0,dept={};rs.forEach(function(r){var k=String(r.date).slice(0,7),g=months[k]||(months[k]={month:k,opening:running,received:0,issued:0,receivedAmount:0,issuedAmount:0,closing:running,departments:{}}),q=GA.num(r.qty),c=recvRecordCost(r);if(r.type==='issue'){g.issued+=q;g.issuedAmount+=c.amount;outAmt+=c.amount;allOut+=q;var d=String(r.dept||'未填部門').trim()||'未填部門';g.departments[d]=(g.departments[d]||0)+q;dept[d]=(dept[d]||0)+q;}else{g.received+=q;g.receivedAmount+=c.amount;inAmt+=c.amount;allIn+=q;}running+=r.type==='issue'?-q:q;g.closing=running;});return{records:rs,months:Object.keys(months).sort().reverse().map(function(k){return months[k];}),allIn:allIn,allOut:allOut,inAmt:inAmt,outAmt:outAmt,calculated:running,departments:dept};}
 function recvLedgerHtml(item){if(!item)return '<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),ev=recvItemEvidenceFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=P.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=P.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+' / '+m.receivedAmount.toFixed(2)+'</td><td class="num out">-'+m.issued+' / '+m.issuedAmount.toFixed(2)+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join(''),details=s.records.slice().reverse().map(function(r){var c=recvRecordCost(r),out=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+(out?'📤 ':'📥 ')+(out?recvI('發出','Issue','ចេញ'):recvI('收貨','Receive','ទទួល'))+'</td><td class="num">'+GA.num(r.qty)+'</td><td class="num">'+c.unitPrice.toFixed(2)+'</td><td class="num">'+c.amount.toFixed(2)+'</td><td>'+recvEsc(out?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+'</td></tr>';}).join('');return '<div class="recv-ledger-head"><div>'+recvRenderPhoto(ev)+' <b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:11px;color:var(--text3)">'+recvI('目前版本生效','Current version','កំណែបច្ចុប្បន្ន')+' '+recvEsc(v.effectiveFrom)+' · '+recvI('單價','Unit price','តម្លៃឯកតា')+' '+GA.num(v.unitPrice).toFixed(2)+'</div></div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('本期收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('本期發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史收貨金額','Received amount','ចំនួនទឹកប្រាក់ទទួល')+'</small><b>'+s.inAmt.toFixed(2)+'</b></div><div><small>'+recvI('歷史發出金額','Issued reference','តម្លៃចេញយោង')+'</small><b>'+s.outAmt.toFixed(2)+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><h4>📅 '+recvI('每月進出、單價與結存','Monthly movement, price and balance','ចលនា តម្លៃ និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th>'+recvI('期初','Opening','ដើម')+'</th><th>'+recvI('收貨 數量／金額','Received qty / amount','ទទួល បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('發出 數量／金額','Issued qty / amount','ចេញ បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('給到部門／數量','Departments / qty','ផ្នែក / បរិមាណ')+'</th><th>'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div><h4>🧾 '+recvI('完整物品收發流水帳','Complete item movement ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('單價','Unit price','តម្លៃឯកតា')+'</th><th>'+recvI('總價','Line total','សរុប')+'</th><th>'+recvI('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</th><th>'+recvI('領用人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(details||'<tr><td colspan="10">—</td></tr>')+'</tbody></table></div>'+recvVersionHistoryHtml(item);}
 var _recvLoadLocalLatest=loadLocal;loadLocal=function(){_recvLoadLocalLatest();recvMigrateCatalog();};

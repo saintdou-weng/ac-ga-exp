@@ -24,7 +24,7 @@ if (XLSX.version !== '0.18.5') throw new Error(`Unexpected bundled SheetJS versi
 if (!/General Expense parser v3\.6 not loaded/.test(html)) throw new Error('Missing explicit General Expense parser check');
 if (!/diagnosticText/.test(html) || !/exp-import-status/.test(html)) throw new Error('Missing persistent import diagnostics');
 if (!/recognizedRows/.test(html) || !/pc\.set\('month',period\)/.test(html)) throw new Error('Import does not open the latest recognised month');
-if (!/version:'v3\.6'/.test(html)) throw new Error('Expense page version was not updated');
+if (!/version:'v3\.9\.3'/.test(html)) throw new Error('Expense page version was not updated');
 if (!/function expRowsFromAny/.test(html) || !/function expSourceBuckets/.test(html)) throw new Error('Missing legacy expense-shape normalizer');
 
-console.log(JSON.stringify({ localAssets: requiredAssets.length, xlsxVersion: XLSX.version, pageVersion: 'v3.6' }));
+console.log(JSON.stringify({ localAssets: requiredAssets.length, xlsxVersion: XLSX.version, pageVersion: 'v3.9.3' }));

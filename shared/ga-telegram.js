@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   AC-GA-EXP Platform · shared/ga-telegram.js   v2.0
+   AC-GA-EXP Platform · shared/ga-telegram.js   v3.9.3
    Telegram：摘要 Summary 與 核可 Approval 完全分離
    ─────────────────────────────────────────────────────────────────
    摘要 Summary：
@@ -120,7 +120,9 @@ TG.open = function (opt) {
             '<select id="tg-lang">' +
               '<option value="zh">繁體中文</option>' +
               '<option value="en">English</option>' +
+              '<option value="km">ខ្មែរ</option>' +
               '<option value="both" selected>' + GA.T('tgBoth') + ' 中／EN</option>' +
+              '<option value="all3">中 / EN / ខ្មែរ</option>' +
             '</select></div>' +
           '<div class="ga-fld"><label>' + GA.T('tgGroup') + '</label>' +
             '<select id="tg-group"><option value="">' + GA.T('tgLoadGroup') + '</option></select></div>' +
@@ -199,20 +201,11 @@ TG.open = function (opt) {
     try {
       if (st.mode === 'approval') {
         var items = opt.approvalItems ? (opt.approvalItems(st) || []) : [];
-        var amt = items.reduce(function (a, r) { return a + GA.num(r.amount || r.estPrice || 0); }, 0);
-        pv.textContent =
-          '📋 ' + (GA.lang === 'zh' ? '核可請求' : 'Approval Request') + '\n' +
-          '━━━━━━━━━━━━━━━\n' +
-          (GA.lang === 'zh' ? '期間：' : 'Period: ') + GA.periodLabel(st.period, st.ptype) + '\n' +
-          (GA.lang === 'zh' ? '筆數：' : 'Items: ') + items.length + '\n' +
-          (amt ? (GA.lang === 'zh' ? '總額：' : 'Total: ') + GA.money(amt) + '\n' : '') +
-          '━━━━━━━━━━━━━━━\n' +
-          items.slice(0, 8).map(function (r, i) {
-            return (i + 1) + '. ' + (r.item || r.itemName || r.category || '-') +
-                   (r.qty ? ' × ' + r.qty : '') + (r.dept ? ' | ' + r.dept : '');
-          }).join('\n') +
-          (items.length > 8 ? '\n… +' + (items.length - 8) : '') +
-          '\n\n' + (GA.lang === 'zh' ? '（群組將顯示核可／退回按鈕）' : '(Approve/Return buttons will appear in group)');
+        pv.textContent = TG.buildApprovalPreview({
+          lang: st.lang,
+          period: TG.periodLabel(st.period, st.ptype, st.lang),
+          items: items
+        });
         el('tg-send').disabled = !items.length;
       } else {
         pv.textContent = opt.summary ? opt.summary(st) : '(no preview)';
@@ -274,23 +267,95 @@ TG.open = function (opt) {
 
 /* ═══════════ 摘要文字產生器（各模組共用骨架）═══════════
    lang: 'zh' | 'en' | 'both'                                   */
+TG.langText = function (zh, en, km, lang) {
+  var L = lang || 'both';
+  zh = zh == null ? '' : String(zh);
+  en = en == null ? '' : String(en);
+  km = km == null ? '' : String(km);
+  if (L === 'zh') return zh;
+  if (L === 'en') return en || zh;
+  if (L === 'km') return km || en || zh;
+  if (L === 'all3') return [zh, en, km || en].filter(Boolean).join(' / ');
+  return [zh, en].filter(Boolean).join(' / ');
+};
+
+TG.periodLabel = function (key, type, lang) {
+  var L = lang || 'both';
+  if (!key) return '—';
+  if (key === 'ALL') return TG.langText('全部','All','ទាំងអស់',L);
+  if (type === 'day') {
+    var d = GA.parseYMD(key); if (!d) return key;
+    var enW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    var zhW = ['日','一','二','三','四','五','六'][d.getDay()];
+    var kmW = ['អាទិត្យ','ចន្ទ','អង្គារ','ពុធ','ព្រហស្បតិ៍','សុក្រ','សៅរ៍'][d.getDay()];
+    return key + ' ' + TG.langText('週'+zhW,enW,kmW,L);
+  }
+  if (type === 'week') {
+    var m = String(key).match(/^(\d{4})-W(\d+)$/); if (!m) return key;
+    var r = GA.weekRange(key), n = +m[2];
+    var w = TG.langText('第'+n+'週','W'+n,'សប្ដាហ៍ '+n,L);
+    return m[1] + ' ' + w + (r ? ' (' + r.start + ' ~ ' + r.end + ')' : '');
+  }
+  if (type === 'month') {
+    var mm = String(key).match(/^(\d{4})-(\d{2})$/); if (!mm) return key;
+    var EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return TG.langText(mm[1]+'年'+(+mm[2])+'月',EN[+mm[2]-1]+' '+mm[1],mm[1]+' ខែ'+(+mm[2]),L);
+  }
+  if (type === 'year') return TG.langText(key+'年',key,'ឆ្នាំ '+key,L);
+  return key;
+};
+
+/* 欄位式摘要：保留各模組原本 rows 內容，只統一 Telegram 排版。
+   '-' 代表區段分隔，不改資料統計與既有篩選邏輯。 */
 TG.buildSummary = function (o) {
   var L = o.lang || 'both';
   var line = '━━━━━━━━━━━━━━━━';
-  function t(zh, en) {
-    if (L === 'zh') return zh;
-    if (L === 'en') return en;
-    return zh + ' ' + en;
-  }
+  var sep = '────────────';
+  function t(zh, en, km) { return TG.langText(zh, en, km, L); }
   var out = [];
-  out.push((o.icon || '📊') + ' ' + t(o.titleZh || '', o.titleEn || ''));
-  if (o.period) out.push(t('期間', 'Period') + '：' + o.period);
+  out.push((o.icon || '📊') + ' ' + t(o.titleZh || '', o.titleEn || '', o.titleKm || ''));
+  if (o.period) out.push('📅 ' + t('期間', 'Period', 'រយៈពេល') + ': ' + o.period);
+  if (o.scope) out.push('🧾 ' + t('範圍', 'Scope', 'វិសាលភាព') + ': ' + o.scope);
   out.push(line);
   (o.rows || []).forEach(function (r) {
-    if (r === '-') { out.push(line); return; }
-    out.push(t(r.zh, r.en) + '：' + r.v);
+    if (r === '-') { out.push(sep); return; }
+    if (!r) return;
+    var label = t(r.zh, r.en, r.km);
+    var val = r.v == null || r.v === '' ? '—' : r.v;
+    var branch = r.last ? '└' : '├';
+    out.push(branch + ' ' + label + ': ' + val);
   });
   if (o.footer) { out.push(line); out.push(o.footer); }
+  return out.join('\n');
+};
+
+/* 核可預覽同樣欄位式；只改呈現，不改 approvalItems / 權限 / 按鈕流程。 */
+TG.buildApprovalPreview = function (o) {
+  var L = o.lang || 'both';
+  function t(zh, en, km) { return TG.langText(zh, en, km, L); }
+  var items = o.items || [];
+  var amt = items.reduce(function (a, r) { return a + GA.num(r.amount || r.lineTotal || r.estPrice || 0); }, 0);
+  var out = [
+    '📋 ' + t('核可請求', 'Approval Request', 'សំណើអនុម័ត'),
+    '━━━━━━━━━━━━━━━━',
+    '├ 📅 ' + t('期間', 'Period', 'រយៈពេល') + ': ' + (o.period || '—'),
+    '├ 📦 ' + t('筆數', 'Items', 'ចំនួន') + ': ' + items.length,
+    '└ 💵 ' + t('總額', 'Total', 'សរុប') + ': ' + (amt ? GA.money(amt) : '—'),
+    '━━━━━━━━━━━━━━━━'
+  ];
+  items.slice(0, 8).forEach(function (r, i) {
+    out.push('📌 #' + (i + 1) + ' ' + (r.item || r.itemName || r.category || '—'));
+    if (r.spec || r.brandSpec || r.size) out.push('├ ' + t('規格', 'Spec', 'លក្ខណៈ') + ': ' + [r.spec || r.brandSpec || '', r.size || ''].filter(Boolean).join(' / '));
+    out.push('├ ' + t('數量', 'Qty', 'បរិមាណ') + ': ' + (r.qty || '—') + (r.unit ? ' ' + r.unit : ''));
+    if (r.dept) out.push('├ ' + t('部門', 'Dept', 'ផ្នែក') + ': ' + r.dept);
+    if (r.purpose || r.note) out.push('├ ' + t('用途/備註', 'Purpose / Note', 'គោលបំណង / កំណត់ចំណាំ') + ': ' + (r.purpose || r.note));
+    if (r.supplier) out.push('├ ' + t('供應商', 'Supplier', 'អ្នកផ្គត់ផ្គង់') + ': ' + r.supplier);
+    if (r.amount || r.lineTotal || r.estPrice) out.push('└ ' + t('金額', 'Amount', 'ចំនួនទឹកប្រាក់') + ': ' + GA.money(r.amount || r.lineTotal || r.estPrice));
+    else out.push('└ ' + t('狀態', 'Status', 'ស្ថានភាព') + ': ' + t('待核可', 'Pending approval', 'រង់ចាំអនុម័ត'));
+    out.push('────────────');
+  });
+  if (items.length > 8) out.push('… +' + (items.length - 8) + ' ' + t('筆（送出時仍依原流程處理全部資料）', 'more (all items are still submitted)', 'បន្ថែម (ទិន្នន័យទាំងអស់នៅតែត្រូវបានដាក់ស្នើ)'));
+  out.push(t('群組將顯示核可／退回按鈕', 'Approve / Return buttons will appear in the group', 'ប៊ូតុង អនុម័ត / ត្រឡប់ នឹងបង្ហាញក្នុងក្រុម'));
   return out.join('\n');
 };
 
