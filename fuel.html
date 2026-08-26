@@ -98,9 +98,10 @@ tr:hover td{background:#f5f8f6}
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -755,7 +756,7 @@ const fresh=pendingImport.filter(r=>{
   existing.add(key);return true;
 });
 const skipped=pendingImport.length-fresh.length;
-DB=DB.concat(fresh);save();updateHeader();updateDBCard();
+fresh.forEach(r=>{if(!r.createdAt)r.createdAt=new Date().toISOString();r.updatedAt=r.updatedAt||r.createdAt;});DB=DB.concat(fresh);save();scheduleFuelAutoSync('import');updateHeader();updateDBCard();
 toast(`${T('imported')} ${fresh.length} ${T('records')}`+(skipped?` (${skipped} ${T('duplicateSkipped')})`:''));
 pendingImport=null;document.getElementById('importPreview').classList.add('hidden');
 }
@@ -814,7 +815,7 @@ document.getElementById('formModal').classList.add('open');
 function closeForm(){document.getElementById('formModal').classList.remove('open');editId=null}
 function saveRec(){
 const cat=document.getElementById('formBody').dataset.cat;
-const d={id:editId||crypto.randomUUID(),cat,date:document.getElementById('f_date').value,liters:cleanNum(document.getElementById('f_liters').value),inspector:document.getElementById('f_inspector')?.value.trim()||'',remarks:document.getElementById('f_remarks')?.value||''};
+const _oldFuel=editId?DB.find(r=>r.id===editId):null;const d={id:editId||crypto.randomUUID(),cat,date:document.getElementById('f_date').value,liters:cleanNum(document.getElementById('f_liters').value),inspector:document.getElementById('f_inspector')?.value.trim()||'',remarks:document.getElementById('f_remarks')?.value||'',createdAt:(_oldFuel&&_oldFuel.createdAt)||new Date().toISOString(),updatedAt:new Date().toISOString()};
 if(cat==='driver'){d.driver=document.getElementById('f_driver').value.trim();d.plate=document.getElementById('f_plate').value.trim();d.km=cleanNum(document.getElementById('f_km').value);d.from='';d.to=''}
 else if(cat==='forklift'){d.dept=document.getElementById('f_dept').value.trim();d.forklift=document.getElementById('f_forklift').value.trim();d.startKM=cleanNum(document.getElementById('f_startKM').value);d.arriveKM=cleanNum(document.getElementById('f_arriveKM').value);d.totalKM=d.arriveKM-d.startKM}
 else{d.machine=document.getElementById('f_machine').value.trim();d.kw=cleanNum(document.getElementById('f_kw').value);d.hours=document.getElementById('f_hours').value.trim()}
@@ -829,7 +830,7 @@ function clearAll(){if(!confirm(T('confirmClear')))return;DB=[];save();updateHea
 //  BACKUP / EXPORT
 // ═══════════════════════════════════════════════════════════
 function backupJSON(){const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`vrt_diesel_backup_${localYMD()}.json`;a.click();toast(T('exported'))}
-function restoreJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d)){toast(T('invalid'),'err');return}DB=d;save();updateHeader();updateDBCard();toast(`${T('imported')} ${d.length}`)}catch{toast(T('error'),'err')}};r.readAsText(f);e.target.value=''}
+function restoreJSON(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d)){toast(T('invalid'),'err');return}DB=d;DB.forEach(x=>{if(!x.updatedAt)x.updatedAt=new Date().toISOString();});save();scheduleFuelAutoSync('restore');updateHeader();updateDBCard();toast(`${T('imported')} ${d.length}`)}catch{toast(T('error'),'err')}};r.readAsText(f);e.target.value=''}
 function exportAllExcel(){
 const wb=XLSX.utils.book_new();
 const drv=DB.filter(r=>r.cat==='driver');const fork=DB.filter(r=>r.cat==='forklift');const gen=DB.filter(r=>r.cat==='generator');
@@ -1032,7 +1033,7 @@ let count=0;
 (data.driver?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'driver',date:parseExcelDate(r[0]),driver:r[1],plate:r[2],km:cleanNum(r[3]),liters:cleanNum(r[4]),from:r[5]||'',to:r[6]||'',remarks:r[7]||'',inspector:r[8]||''});count++});
 (data.forklift?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'forklift',date:parseExcelDate(r[0]),dept:r[1],forklift:r[2],liters:cleanNum(r[3]),startKM:cleanNum(r[4]),arriveKM:cleanNum(r[5]),totalKM:cleanNum(r[6]),remarks:r[7]||'',inspector:r[8]||''});count++});
 (data.generator?.rows||[]).forEach(r=>{DB.push({id:crypto.randomUUID(),cat:'generator',date:parseExcelDate(r[5]||''),kw:0,liters:cleanNum(r[2]),machine:'',hours:'',remarks:r[8]||'',inspector:r[9]||''});count++});
-save();updateHeader();updateDBCard();
+save();scheduleFuelAutoSync('import');updateHeader();updateDBCard();
 document.getElementById('gasStatus').textContent=`✅ ${T('synced')} ${count} ${T('records')}`;document.getElementById('gasStatus').className='al al-ok';
 toast(`${T('imported')} ${count}`);
 }catch(e){document.getElementById('gasStatus').textContent='❌ '+e.message;document.getElementById('gasStatus').className='al al-w';toast(e.message,'err')}
@@ -1201,7 +1202,8 @@ function fuelTelegram(){
       {v:'generator',zh:'發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង'}
     ],
     periods:fuelPeriods,
-    summary:fuelSummaryText
+    summary:fuelSummaryText,
+    onSummarySent:function(){scheduleFuelAutoSync('telegram-summary');}
   });
 }
 
@@ -1223,13 +1225,26 @@ function fuelDataPanel(){
     },
     clear:()=>{ DB=[]; save(); },
     exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast('本模組匯出：請用各分頁的匯出鈕','err'); } },
-    onChange:()=>{ render(); }
+    onChange:()=>{ render(); scheduleFuelAutoSync('restore'); }
   });
 }
 
 // ═══════════════════════════════════════════════════════════
+// HRA PAY v3.9.5 style auto sync controller integration
+function fuelSyncKey(r){return String((r&&r.id)||GA.fingerprint([r&&r.cat,r&&r.date,r&&(r.plate||r.driver||r.forklift||r.machine),r&&r.liters,r&&(r.km||r.totalKM||r.hours)]));}
+function fuelStamp(r){var v=r&&(r.updatedAt||r.createdAt);var n=v?new Date(v).getTime():0;return isNaN(n)?0:n;}
+function fuelMergeRecords(localRows,cloudRows){var map={},order=[];(localRows||[]).forEach(function(r){var k=fuelSyncKey(r);if(!map[k])order.push(k);map[k]=r;});(cloudRows||[]).forEach(function(r){var k=fuelSyncKey(r),old=map[k];if(!old){map[k]=r;order.push(k);return;}var os=fuelStamp(old),cs=fuelStamp(r);if(cs>os)map[k]=r;else if(!os&&!cs){map[k]=Object.assign({},r,old);}});return order.map(function(k){return map[k];});}
+async function fuelCloudUploadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}try{GA.cloud.mount('#ga-cloud');GA.cloud.set('sync');}catch(e){}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('uploading')+'...';st.className='al al-i';}try{const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'dieselSave',data:DB,ts:Date.now()}),headers:{'Content-Type':'text/plain;charset=utf-8'}}),d=await res.json();if(!d.ok)throw new Error(d.error||'save failed');if(st&&!opts.silent){st.textContent=`✅ 已上傳 ${DB.length} 筆 (${d.chunks||0} chunks)`;st.className='al al-ok';}if(!opts.silent)toast('☁️ '+T('synced'));try{GA.cloud.set('up',DB.length+' recs');GA.saveCfg({sync_fuel:new Date().toISOString()});}catch(e){}return true;}catch(e){if(st&&!opts.silent){st.textContent='❌ '+e.message;st.className='al al-w';}if(!opts.silent)toast(e.message,'err');try{GA.cloud.set('err',e.message);}catch(x){}return false;}}
+async function fuelCloudDownloadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('downloading')+'...';st.className='al al-i';}try{const res=await fetch(url+'?action=dieselLoad&_t='+Date.now()),d=await res.json();if(!d.ok)throw new Error(d.error||'load failed');if(!(d.data&&Array.isArray(d.data))){if(st&&!opts.silent){st.textContent='☁️ '+T('noCloud');st.className='al al-i';}return false;}var before=DB.length;DB=fuelMergeRecords(DB,d.data);save();updateHeader();updateDBCard();if(st&&!opts.silent){st.textContent=`✅ 已合併 ${DB.length} 筆 (${d.ts||''})`;st.className='al al-ok';}if(!opts.silent)toast('📥 '+(lang==='zh'?'雲端資料已安全合併':lang==='km'?'បានបញ្ចូលទិន្នន័យ Cloud ដោយសុវត្ថិភាព':'Cloud data safely merged'));try{GA.cloud.set('down',DB.length+' recs');}catch(e){}return true;}catch(e){if(st&&!opts.silent){st.textContent='❌ '+e.message;st.className='al al-w';}if(!opts.silent)toast(e.message,'err');return false;}}
+cloudUpload=fuelCloudUploadSafe;cloudDownload=fuelCloudDownloadSafe;
+function scheduleFuelAutoSync(reason){if(window.GAAutoSync){GAAutoSync.schedule('fuel',reason||'change',{},900);return;}clearTimeout(window._fuelAutoTimer);window._fuelAutoTimer=setTimeout(function(){fuelCloudUploadSafe({silent:true}).catch(function(){});},900);}
+var _fuelSaveRec=saveRec;saveRec=function(){var r=_fuelSaveRec.apply(this,arguments);scheduleFuelAutoSync('change');return r;};
+var _fuelDeleteRec=deleteRec;deleteRec=function(){var before=DB.length,r=_fuelDeleteRec.apply(this,arguments);if(DB.length!==before)scheduleFuelAutoSync('delete');return r;};
+var _fuelDeleteFiltered=deleteFiltered;deleteFiltered=function(){var before=DB.length,r=_fuelDeleteFiltered.apply(this,arguments);if(DB.length!==before)scheduleFuelAutoSync('batch-delete');return r;};
+var _fuelClearAll=clearAll;clearAll=function(){var before=DB.length,r=_fuelClearAll.apply(this,arguments);if(before&&DB.length===0)scheduleFuelAutoSync('file-delete');return r;};
 try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
 init();
+if(window.GAAutoSync)GAAutoSync.install({key:'fuel',pull:fuelCloudDownloadSafe,push:fuelCloudUploadSafe,canSync:function(){return !!document.getElementById('gasUrl').value.trim();},startDelay:450,anchor:'#ga-cloud'});
 </script>
 </body>
 </html>

@@ -347,9 +347,10 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -677,44 +678,86 @@ const _SESSION = _params.get("session") || (GA.cfg().session || "");
 const _UID     = _params.get("uid") || "";
 
 let _saveTimer = null;
-async function saveStateCloud(){
-  try{
-    const compactOrds={};
-    Object.entries(ords).forEach(([k,v])=>{if(v&&(v.qty>0||v.note))compactOrds[k]=v;});
-    const data={ords:compactOrds,poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog};
-    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveState",data})});
-  }catch(e){console.warn("Cloud save failed:",e);}
+const PROC_LOCAL_KEY='ga_po_state';
+function procCompactOrds(src){
+  const out={}; Object.entries(src||{}).forEach(([k,v])=>{if(v&&(Number(v.qty)>0||String(v.note||'').trim()))out[k]=v;}); return out;
 }
-function saveState(){
-  clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(saveStateCloud,1500);
+function procStateSnapshot(updatedAt){
+  return {ords:procCompactOrds(ords),poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog,updatedAt:updatedAt||new Date().toISOString()};
 }
-async function loadStateCloud(){
+function procSaveLocal(data){try{localStorage.setItem(PROC_LOCAL_KEY,JSON.stringify(data||procStateSnapshot()));return true;}catch(e){console.warn('Local state save failed:',e);return false;}}
+function procReadLocal(){try{return JSON.parse(localStorage.getItem(PROC_LOCAL_KEY)||'null')}catch(e){return null}}
+function procRecordKey(r){return String((r&&r.id)||[(r&&r.date)||'',(r&&r.type)||'',(r&&r.itemId)||'',(r&&r.qty)||'',(r&&r.dept)||'',(r&&r.requester)||''].join('|'));}
+function procMergeArray(localRows,cloudRows){
+  const m=new Map(); (cloudRows||[]).forEach(r=>m.set(procRecordKey(r),r)); (localRows||[]).forEach(r=>m.set(procRecordKey(r),r)); return Array.from(m.values());
+}
+function procMergeState(localState,cloudState,preferLocal){
+  localState=localState||{}; cloudState=cloudState||{};
+  const winner=preferLocal?localState:cloudState, other=preferLocal?cloudState:localState;
+  const customMap=new Map(); (other.customItems||[]).forEach(i=>customMap.set(String(i.id||i.name),i)); (winner.customItems||[]).forEach(i=>customMap.set(String(i.id||i.name),i));
+  return {
+    ords:Object.assign({},other.ords||{},winner.ords||{}),
+    poStatus:winner.poStatus!=null?winner.poStatus:(other.poStatus||'draft'),
+    sigs:winner.sigs||other.sigs||{applicant:null,verifier:null,approver:null},
+    curMonth:winner.curMonth!=null?winner.curMonth:(other.curMonth!=null?other.curMonth:new Date().getMonth()),
+    itemSettings:Object.assign({},other.itemSettings||{},winner.itemSettings||{}),
+    poNumber:winner.poNumber!=null?winner.poNumber:(other.poNumber||null),
+    hiddenItems:Array.from(new Set([...(other.hiddenItems||[]),...(winner.hiddenItems||[])])),
+    customItems:Array.from(customMap.values()),
+    recvLog:procMergeArray(localState.recvLog,cloudState.recvLog),
+    updatedAt:(preferLocal?localState.updatedAt:cloudState.updatedAt)||new Date().toISOString()
+  };
+}
+function procApplyState(s,replace){
+  if(!s)return false;
+  if(s.customItems) customItems=s.customItems;
+  if(replace){
+    ords={}; Object.values(CATS).forEach(c=>c.items.forEach(i=>{ords[i.id]={qty:0,note:''};}));
+    (customItems||[]).forEach(i=>{if(!ords[i.id])ords[i.id]={qty:0,note:''};});
+  }
+  if(s.ords) Object.entries(s.ords).forEach(([k,v])=>{ords[k]=v;});
+  if(s.poStatus!=null) poStatus=s.poStatus;
+  if(s.sigs) sigs=s.sigs;
+  if(s.curMonth!=null) curMonth=s.curMonth;
+  if(s.itemSettings) itemSettings=s.itemSettings;
+  if(s.poNumber!==undefined) poNumber=s.poNumber;
+  if(s.hiddenItems) hiddenItems=s.hiddenItems;
+  if(s.recvLog) recvLog=s.recvLog;
+  (customItems||[]).forEach(i=>{if(!ords[i.id])ords[i.id]={qty:0,note:''};if(!itemSettings[i.id])itemSettings[i.id]={unit:i.unit||'pcs',safetyStock:5,monthly:i.monthly!==false};});
+  return true;
+}
+async function saveStateCloud(opts){
+  opts=opts||{};
   try{
-    const resp=await fetch(`${GAS_URL}?action=getState`);
+    const local=procReadLocal(); const data=local||procStateSnapshot();
+    const resp=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveState',data})});
+    const txt=await resp.text(); let json=null; try{json=txt?JSON.parse(txt):null}catch(_){json=null}
+    if(!resp.ok||(json&&json.ok===false))throw new Error((json&&json.error)||('HTTP '+resp.status));
+    procSaveLocal(data); return true;
+  }catch(e){if(!opts.silent)console.warn('Cloud save failed:',e);return false;}
+}
+function saveState(reason){
+  const data=procStateSnapshot(); procSaveLocal(data);
+  if(window.GAAutoSync){GAAutoSync.schedule('procurement',reason||'change',{},1500);return;}
+  clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>saveStateCloud({silent:true}),1500);
+}
+async function loadStateCloud(opts){
+  opts=opts||{};
+  try{
+    const resp=await fetch(`${GAS_URL}?action=getState&_=${Date.now()}`,{cache:'no-store'});
     const json=await resp.json();
-    if(json.ok&&json.data){
-      const s=json.data;
-      if(s.ords){ Object.entries(s.ords).forEach(([k,v])=>{ords[k]=v;}); }
-      if(s.poStatus) poStatus=s.poStatus;
-      if(s.sigs) sigs=s.sigs;
-      if(s.curMonth!=null) curMonth=s.curMonth;
-      if(s.itemSettings) itemSettings=s.itemSettings;
-      if(s.poNumber) poNumber=s.poNumber;
-      if(s.hiddenItems) hiddenItems=s.hiddenItems;
-      if(s.recvLog) recvLog=s.recvLog;
-      if(s.customItems){
-        customItems=s.customItems;
-        customItems.forEach(i=>{
-          if(!ords[i.id]) ords[i.id]={qty:0,note:""};
-          if(!itemSettings[i.id]) itemSettings[i.id]={unit:i.unit||"pcs",safetyStock:5};
-        });
-      }
+    if(!resp.ok||!json.ok)throw new Error(json.error||('HTTP '+resp.status));
+    if(json.data){
+      const cloud=json.data, local=procReadLocal();
+      const pending=!!(window.GAAutoSync&&GAAutoSync.pending('procurement'));
+      const lt=Date.parse(local&&local.updatedAt||0)||0, ct=Date.parse(cloud&&cloud.updatedAt||0)||0;
+      if(!local){procApplyState(cloud,true);procSaveLocal(cloud);}
+      else if(pending||lt>ct){const merged=procMergeState(local,cloud,true);procApplyState(merged,true);procSaveLocal(merged);}
+      else{const merged=procMergeState(local,cloud,false);procApplyState(merged,true);procSaveLocal(merged);}
       return true;
     }
-  }catch(e){console.warn("Cloud load failed:",e);}
-  return false;
+    return true;
+  }catch(e){if(!opts.silent)console.warn('Cloud load failed:',e);return false;}
 }
 
 async function loadInvCloud(year){
@@ -885,11 +928,9 @@ function initOrds(){
 }
 initOrds();
 
-// ── PERSIST STATE via localStorage ──
-const LS_KEY="ga_po_state";
-
-// saveState & loadState replaced by cloud versions above
-function loadState(){ return false; } // stub - cloud handles loading
+// ── PERSIST STATE via localStorage + HRA-PAY style auto sync ──
+const LS_KEY=PROC_LOCAL_KEY;
+function loadState(){ const s=procReadLocal(); if(!s)return false; procApplyState(s,true); return true; }
 
 function clearPOState(){
   // Only clear the PO order (not inventory/settings)
@@ -1091,8 +1132,14 @@ function initLogin(){
 function enterApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
+  loadState(); // local-first: 先顯示本機最近資料，再與雲端 reconciliation
   showCloudLoading();
-  loadStateCloud().then(()=>{ hideCloudLoading(); bootApp(); });
+  loadStateCloud({silent:true}).then(()=>{
+    hideCloudLoading(); bootApp();
+    if(window.GAAutoSync){
+      GAAutoSync.install({key:'procurement',pull:loadStateCloud,push:saveStateCloud,canSync:()=>!!GAS_URL,startDelay:450,anchor:'#ga-cloud'});
+    }
+  });
 }
 function onUserPick(){
   const u=USERS.find(x=>x.id===document.getElementById("lu").value);
@@ -1143,7 +1190,7 @@ function hideCloudLoading(){
 }
 
 function bootApp(){
-  // State already loaded from cloud before bootApp is called
+  // State loaded local-first then reconciled with cloud before bootApp
   ensureMonthlyFlags(); // back-fill 每月/非每月 flags for items loaded from cloud
 
   const ms=document.getElementById("msel");
@@ -2169,7 +2216,7 @@ async function doSubmit(){
   if(totalN()===0||poStatus!=="draft")return;
   poStatus="submitted";
   sigs.applicant={name:cu.name,date:new Date().toLocaleDateString()};
-  saveState();
+  saveState('submit-review');
   render(); openMod();
   try{
     const items=ordItems().map(i=>({
@@ -2184,7 +2231,7 @@ function doVerify(ok){
   if(cu.role!=="verifier"||poStatus!=="submitted")return;
   if(ok){poStatus="verified";sigs.verifier={name:cu.name,date:new Date().toLocaleDateString()};}
   else poStatus="rejected";
-  saveState();
+  saveState('review');
   render(); renderModalBody();
 }
 function doApprove(ok){
@@ -2204,7 +2251,7 @@ function doApprove(ok){
       r.close=Math.max(0,r.open+r.purchase-r.used);
     });
   } else poStatus="rejected";
-  saveState();
+  saveState('approval');
   render(); renderModalBody();
 }
 function resetAll(){
@@ -2590,15 +2637,17 @@ GA.addDict({
     kPO:'ចំនួន PO',kPend:'រង់ចាំ',kAppr:'អនុម័ត',kItems:'ធាតុ',kLow:'ស្តុកតិច',kQty:'បរិមាណសរុប' }
 });
 
-function procCloudUp(){
+async function procCloudUp(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  saveStateCloud().then(()=>{ GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態'); })
-    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); });
+  const ok=await saveStateCloud({silent:false});
+  if(ok){GA.cloud.set('up');GA.toast('☁️ 已上傳採購狀態');}
+  else{GA.cloud.set('err','upload');GA.toast('上傳失敗，已保留待同步狀態','err');}
 }
-function procCloudDown(){
+async function procCloudDown(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  loadStateCloud().then(()=>{ GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態'); })
-    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); });
+  const ok=await loadStateCloud({silent:false});
+  if(ok){GA.cloud.set('down');render();GA.toast('📥 已安全合併雲端採購狀態');}
+  else{GA.cloud.set('err','download');GA.toast('下載失敗','err');}
 }
 
 /* 智慧匯入：PO / 收貨 / 庫存。核可流程不變：
@@ -2629,7 +2678,7 @@ function procImport(){
         }
       }
       GA.toast('📥 '+(msg.join('，')||'無資料匯入'));
-      saveState(); render();
+      saveState('import'); render();
     }
   });
 }
@@ -2697,8 +2746,8 @@ function procTelegram(){
     }
   });
 }
-/* 摘要／核可請求成功後自動保存目前採購狀態；避免還要再等一次手動上傳。 */
-(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{saveStateCloud();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
+/* 摘要／核可請求成功後比照 HRA PAY 立即排入雲端同步（<=60ms）。 */
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(reason){if(window.GAAutoSync)GAAutoSync.schedule('procurement',reason,{},60);else setTimeout(function(){try{saveStateCloud({silent:true});}catch(e){}},60);}opt.onSummarySent=function(d,s){bg('telegram-summary');if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg('telegram-approval');if(oa)oa(d,s);};}return open.call(this,opt);};})();
 function poHist_inPeriod(s){
   return (poHistoryData||[]).filter(po=>{
     const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');

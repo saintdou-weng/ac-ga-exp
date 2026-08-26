@@ -217,9 +217,10 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1710,7 +1711,7 @@ function recvApplySync(rows,meta){var ni=[],nr=[];(rows||[]).forEach(function(x)
 function recvSyncStatus(msg,type){try{GA.cloud.mount('#ga-cloud');GA.cloud.set(type||'sync',msg||'');}catch(e){}}
 function recvCloudPull(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧下載：比對雲端差異…','sync');return GASmartSync.pull({url:url,tool:RECV_SMART_TOOL,localRecords:recvSyncRows(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,apply:recvApplySync,onStatus:recvSyncStatus}).then(function(r){recvSyncStatus(r&&r.noCloud?'雲端尚無 Receiving 資料':'下載完成｜本機與雲端資料已保留','down');if(!opts.silent)toast(r&&r.noCloud?recvI('雲端尚無資料','No cloud data','មិនមានទិន្នន័យ Cloud'):recvI('已同步雲端資料，舊資料保留','Cloud synced; existing data preserved','បានធ្វើសមកាលកម្ម Cloud; ទិន្នន័យចាស់នៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('下載失敗：'+e.message,'Download failed: '+e.message,'បរាជ័យទាញយក៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
 function recvCloudPush(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧同步：比對雲端差異…','sync');var makeCfg=function(){return{url:url,tool:RECV_SMART_TOOL,records:recvSyncRows(),meta:recvSyncMeta(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,autoMerge:false,onStatus:recvSyncStatus,summary:{items:items.length,records:records.length}};};return GASmartSync.push(makeCfg()).then(function(r){if(r&&r.needsPull&&!opts.silent){return recvCloudPull({silent:false}).then(function(){return GASmartSync.push(makeCfg());});}if(r&&r.needsPull&&opts.silent){recvSyncStatus('雲端有新資料，等待手動確認','warn');return r;}try{GA.saveCfg({sync_recv:new Date().toISOString()});}catch(e){}recvSyncStatus(r&&r.skipped?'雲端已是最新，不需重傳':'上傳完成｜只上傳變更並保留歷史','up');if(!opts.silent)toast(r&&r.skipped?recvI('雲端已是最新','Cloud is already up to date','Cloud មានទិន្នន័យថ្មីរួចហើយ'):recvI('已上傳變更並保留舊資料','Changes uploaded; history preserved','បានផ្ទុកការផ្លាស់ប្តូរ; ប្រវត្តិនៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('上傳失敗：'+e.message,'Upload failed: '+e.message,'បរាជ័យផ្ទុកឡើង៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
-function scheduleReceivingAutoUpload(reason){clearTimeout(window._recvSyncTimer);window._recvSyncTimer=setTimeout(function(){recvCloudPush({silent:true}).catch(function(){});},1100);}
+function scheduleReceivingAutoUpload(reason){if(window.GAAutoSync){GAAutoSync.schedule('receiving',reason||'change',{},1100);return;}clearTimeout(window._recvSyncTimer);window._recvSyncTimer=setTimeout(function(){recvCloudPush({silent:true}).catch(function(){});},1100);}
 function cloudUpload(){return recvCloudPush({silent:false});}
 function cloudDownload(){return recvCloudPull({silent:false});}
 /* Receiving 摘要：每一筆列出收／發數量、當時單價與總價，並保留 dashboard footer。 */
@@ -1790,6 +1791,7 @@ try{
   if(lastSync) GA.cloud.set('idle', GA.T('lastSync')+' '+lastSync);
   setLang(GA.lang || lang);
 }catch(e){}
+if(window.GAAutoSync)GAAutoSync.install({key:'receiving',pull:recvCloudPull,push:recvCloudPush,canSync:function(){return !!(GA.gasUrl&&GA.gasUrl());},startDelay:450,anchor:'#ga-cloud'});
 
 </script>
 </body>

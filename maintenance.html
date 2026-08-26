@@ -183,9 +183,10 @@
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1001,10 +1002,11 @@ function mtMergeRows(localRows,cloudRows){
   });
   return out;
 }
-async function mtCloudUpload(){
+async function mtCloudUpload(opts){
+  opts=opts||{};
   const p=mtCloudPayload();
   const draftCount=(p.drafts.repair||[]).length+(p.drafts.temppo||[]).length;
-  if(!p.rep.length&&!p.po.length&&!draftCount){showToast(T('noData'));return;}
+  if(!p.rep.length&&!p.po.length&&!draftCount){if(!opts.silent)showToast(T('noData'));return false;}
   try{
     GA.cloud.mount('#ga-cloud');
     // 先讀取現有雲端備份，再合併後上傳，避免查詢條件較窄時把完整備份覆蓋掉。
@@ -1022,22 +1024,26 @@ async function mtCloudUpload(){
       });
     }
     await GA.cloud.upload('maintenance',p);
-    showToast(lang==='zh'?'☁️ 維修／臨採資料已上傳雲端':lang==='km'?'☁️ ទិន្នន័យជួសជុល／ទិញបន្ទាន់បានផ្ទុកឡើង':'☁️ Maintenance / Temp PO cloud backup saved');
-  }catch(e){showToast((T('netErr')||'Network error')+' '+(e.message||''));}
+    if(!opts.silent)showToast(lang==='zh'?'☁️ 維修／臨採資料已上傳雲端':lang==='km'?'☁️ ទិន្នន័យជួសជុល／ទិញបន្ទាន់បានផ្ទុកឡើង':'☁️ Maintenance / Temp PO cloud backup saved');
+    try{GA.saveCfg({sync_maintenance:new Date().toISOString()});GA.cloud.set('up');}catch(e){}
+    return true;
+  }catch(e){if(!opts.silent)showToast((T('netErr')||'Network error')+' '+(e.message||''));try{GA.cloud.set('err',e.message||'');}catch(x){}return false;}
 }
-async function mtCloudDownload(){
+async function mtCloudDownload(opts){
+  opts=opts||{};
   try{
     GA.cloud.mount('#ga-cloud');
     const r=await GA.cloud.download('maintenance');
     const d=r.data||r;
-    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){showToast(lang==='zh'?'☁️ 雲端尚無維修／臨採備份':'No maintenance cloud backup yet');return;}
+    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){if(!opts.silent)showToast(lang==='zh'?'☁️ 雲端尚無維修／臨採備份':'No maintenance cloud backup yet');return false;}
     currentData.rep=mtMergeRows(currentData.rep,d.rep);
     currentData.po=mtMergeRows(currentData.po,d.po);
     if(d.drafts){try{localStorage.setItem('mt_import_draft',JSON.stringify(d.drafts));}catch(e){}}
     const sys=mtCurrentSys();
     renderFiltered(sys);
-    showToast(lang==='zh'?'📥 維修／臨採資料已下載（已合併）':lang==='km'?'📥 ទិន្នន័យបានទាញយក និងបញ្ចូលរួម':'📥 Maintenance / Temp PO data downloaded and merged');
-  }catch(e){showToast((T('netErr')||'Network error')+' '+(e.message||''));}
+    if(!opts.silent)showToast(lang==='zh'?'📥 維修／臨採資料已下載（已合併）':lang==='km'?'📥 ទិន្នន័យបានទាញយក និងបញ្ចូលរួម':'📥 Maintenance / Temp PO data downloaded and merged');
+    try{GA.cloud.set('down');}catch(e){}return true;
+  }catch(e){if(!opts.silent)showToast((T('netErr')||'Network error')+' '+(e.message||''));return false;}
 }
 /* 依目前期間過濾並重繪列表、統計、圖表 */
 function renderFiltered(sys){
@@ -1096,7 +1102,7 @@ async function mtSaveEdit(){
     const idx=(currentData[sys]||[]).findIndex(r=>Number(r[21])===rowNumber);
     if(idx>=0&&Array.isArray(d.row))currentData[sys][idx]=d.row;
     mtCloseEdit();renderFiltered(sys);showToast('✅ 記錄已更新，雲端備份排程中 / Record updated');
-    setTimeout(function(){try{mtCloudUpload();}catch(e){}},300);
+    scheduleMaintenanceAutoSync('change');
   }catch(e){showToast('❌ '+(e.message||'Save failed'));}
   btn.disabled=false;btn.textContent='💾 儲存 Save';
 }
@@ -1227,6 +1233,7 @@ function mtImport(){
         cur.repair=(cur.repair||[]).concat(rep); cur.temppo=(cur.temppo||[]).concat(tpo);
         localStorage.setItem(key,JSON.stringify(cur));
       }catch(e){}
+      scheduleMaintenanceAutoSync('import');
     }
   });
 }
@@ -1276,11 +1283,14 @@ function mtTelegram(){
 }
 
 /* 摘要／核可請求送出後，背景保留一份合併後雲端備份，不阻塞畫面。 */
-(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='maintenance'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{mtCloudUpload();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='maintenance'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(reason){scheduleMaintenanceAutoSync(reason||'telegram-summary');}opt.onSummarySent=function(d,s){bg('telegram-summary');if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg('telegram-approval');if(oa)oa(d,s);};}return open.call(this,opt);};})();
+
+function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.schedule('maintenance',reason||'change',{},900);return;}clearTimeout(window._mtAutoTimer);window._mtAutoTimer=setTimeout(function(){try{mtCloudUpload({silent:true});}catch(e){}},900);}
 
 /* ── 初始化：URL 參數 ?form=po / ?form=repair 直接開對應分頁 ── */
 (function(){
   try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
+  if(window.GAAutoSync)GAAutoSync.install({key:'maintenance',pull:mtCloudDownload,push:mtCloudUpload,canSync:function(){return !!GAS_URL;},startDelay:450,anchor:'#ga-cloud'});
   const f=(params.get('form')||'').toLowerCase();
   if(f==='po'||f==='temp')switchTab('po');
   else if(f==='repair'||f==='rep')switchTab('rep');

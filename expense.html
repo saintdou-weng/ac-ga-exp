@@ -15,9 +15,10 @@
 <script src="shared/ga-import.js?v=3.6-20260824"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.6-20260824" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.6-20260824'"></script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -485,6 +486,7 @@ function expCloudDownload(opts){
   }).catch(function(e){expSyncStatus(e.message,'err');if(!opts.silent)GA.toast('❌ 下載失敗：'+e.message,'err');throw e;});
 }
 function scheduleExpenseAutoCloudSync(reason){
+  if(window.GAAutoSync){GAAutoSync.schedule('expense',reason||'change',{},1200);return;}
   try{localStorage.setItem(EXP_SMART_PENDING,JSON.stringify({reason:reason||'change',at:new Date().toISOString()}));}catch(e){}
   clearTimeout(window._expSmartTimer);window._expSmartTimer=setTimeout(function(){expCloudUpload({silent:true}).then(function(){try{localStorage.removeItem(EXP_SMART_PENDING);}catch(e){}}).catch(function(){});},1200);
 }
@@ -494,7 +496,7 @@ function expDownload(){return expCloudDownload({silent:false});}
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){doExpenseImport(this.files);});})();
 loadData();ensureExpenseModel();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.9.3',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
-try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},700);}catch(e){}
+if(window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownload,push:expCloudUpload,canSync:function(){return !!(GA.gasUrl&&GA.gasUrl());},startDelay:450,anchor:'#ga-cloud'});}else{try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},700);}catch(e){}}
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
 pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){render();}});GA.on('lang',function(){render();});render();
 </script>
