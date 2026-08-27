@@ -62,8 +62,20 @@ function numericHead(rows, hi, cols){
   return best;
 }
 function expenseYear(rows){
-  for (var i = 0; i < Math.min(10, rows.length); i++) {
-    var line = (rows[i] || []).map(txt).join(' '), m = line.match(/(20\d{2})/);
+  /* Prefer an explicit standalone year cell (e.g. 2026) over years embedded
+     in notes such as "from Mar,2021 start use ground water".  The older
+     logic saw 2021 first and incorrectly discarded the whole Water sheet. */
+  for (var i = 0; i < Math.min(12, rows.length); i++) {
+    var r = rows[i] || [];
+    for (var c = 0; c < r.length; c++) {
+      var v = r[c];
+      if (typeof v === 'number' && isFinite(v) && v >= 2000 && v <= 2099 && Math.floor(v) === v) return v;
+      var sv = txt(v);
+      if (/^20\d{2}$/.test(sv)) return +sv;
+    }
+  }
+  for (var j = 0; j < Math.min(12, rows.length); j++) {
+    var line = (rows[j] || []).map(txt).join(' '), m = line.match(/(?:^|\s)(20\d{2})(?:\s|$)/);
     if (m) return +m[1];
   }
   return new Date().getFullYear();
@@ -71,7 +83,7 @@ function expenseYear(rows){
 
 var VRT = GA.vrtParsers = {};
 global.VRT = VRT; // Expense 舊介面使用 window.VRT；保留相容入口，確保專用解析器真的被呼叫。
-VRT.version = '3.6';
+VRT.version = '3.7';
 /* 被跳過的列（負數、缺資料等），匯入後可查：GA.vrtParsers.skipped */
 VRT.skipped = [];
 VRT.resetSkipped = function () { VRT.skipped = []; };
@@ -142,6 +154,140 @@ VRT.parseOtherExpenses = function (rows, meta) {
   return out;
 };
 
+
+/* Electric / Water 專用解析器。
+   VRT 原表的真正工廠費用不是左側「Factory and owner」毛額，而是
+   中間的「Factory (deduct from owner consumption)」淨額；Staff house
+   則多以多列費率 + TTL 小計表示。舊通用解析器會：
+   1) 把標題內的 consumption 誤認成表頭；
+   2) Water 標題中的「from Mar,2021」誤認成本表年份；
+   3) 即使讀到，也容易抓到 gross/owner share 而不是 factory net。
+   此函式固定輸出每月、每區域一筆，避免重複與雙重加總。 */
+function utilityKind(sheetName){
+  var s = String(sheetName || '').toLowerCase().replace(/[\s._\-]+/g,'');
+  if (/^electric(ity)?$/.test(s)) return 'electric';
+  if (/^water$/.test(s)) return 'water';
+  return '';
+}
+function utilityHeaderRow(rows){
+  for (var i = 0; i < Math.min(10, rows.length); i++) {
+    var cs = (rows[i] || []).map(function(v){ return txt(v).toLowerCase().replace(/\s|\n/g,''); });
+    var score = 0;
+    if (cs.some(function(x){return /^old/.test(x);} )) score++;
+    if (cs.some(function(x){return /^new/.test(x);} )) score++;
+    if (cs.some(function(x){return /^consum/.test(x);} )) score++;
+    if (cs.some(function(x){return /^unitprice/.test(x);} )) score++;
+    if (cs.some(function(x){return /^amount/.test(x);} )) score += 2;
+    if (score >= 4) return i;
+  }
+  return -1;
+}
+function utilityCellNorm(v){ return txt(v).toLowerCase().replace(/\s+/g,' '); }
+function utilityBlockRange(titles, idx, maxCol){
+  return { start: titles[idx].col, end: (titles[idx+1] ? titles[idx+1].col : maxCol) - 1 };
+}
+function utilityAmountCol(head, sub, rg, preferSub){
+  var c, h;
+  if (preferSub) for (c = rg.start; c <= rg.end; c++) if (/amount/.test(utilityCellNorm(sub[c]))) return c;
+  for (c = rg.start; c <= rg.end; c++) {
+    h = utilityCellNorm(head[c]);
+    if (/^amount/.test(h) && /\$/.test(h)) return c;
+  }
+  for (c = rg.start; c <= rg.end; c++) {
+    h = utilityCellNorm(head[c]);
+    if (!/^amount/.test(h)) continue;
+    if (/riel|\(r\)/.test(h) || /riel/.test(utilityCellNorm(sub[c]))) {
+      for (var d0 = c+1; d0 <= Math.min(rg.end,c+3); d0++) if (/^\$$/.test(utilityCellNorm(sub[d0]))) return d0;
+    } else return c;
+  }
+  for (c = rg.start; c <= rg.end; c++) if (/^\$$/.test(utilityCellNorm(sub[c]))) return c;
+  return -1;
+}
+function utilityConsumptionCol(head, sub, rg, preferSub){
+  var c;
+  if (preferSub) for (c = rg.start; c <= rg.end; c++) if (/^consum/.test(utilityCellNorm(sub[c]))) return c;
+  for (c = rg.start; c <= rg.end; c++) if (/^consum/.test(utilityCellNorm(head[c]))) return c;
+  return -1;
+}
+function utilityAreaName(raw){
+  var s = utilityCellNorm(raw);
+  if (/factory/.test(s)) return 'Factory';
+  if (/expat/.test(s) && /staff house|dorm|housing/.test(s)) return 'Expat staff house';
+  if (/local/.test(s) && /staff house|dorm|housing/.test(s)) return 'Local staff house';
+  return txt(raw) || 'Utility';
+}
+VRT.parseUtilityExpenseSheet = function(rows, meta){
+  rows = rows || []; meta = meta || {};
+  var sheetName = txt(meta.sheetName || meta.sheet), kind = utilityKind(sheetName), out = [];
+  if (!kind) return out;
+  var hi = utilityHeaderRow(rows); if (hi < 0) return out;
+  var titleRow = rows[hi-1] || [], head = rows[hi] || [], sub = rows[hi+1] || [];
+  var maxCol = Math.max(titleRow.length,head.length,sub.length), titles = [];
+  titleRow.forEach(function(v,c){ var t=txt(v); if(t) titles.push({col:c,name:t}); });
+  if (!titles.length) return out;
+  var year = expenseYear(rows), monCol = -1;
+  for (var r0 = hi+1; r0 < Math.min(rows.length,hi+24) && monCol < 0; r0++) {
+    for (var c0=0;c0<4;c0++) if (monthNum((rows[r0]||[])[c0])) { monCol=c0; break; }
+  }
+  if (monCol < 0) monCol = 0;
+  var months=[];
+  for (var r1=hi+1;r1<rows.length;r1++){ var mm=monthNum((rows[r1]||[])[monCol]); if(mm) months.push({month:mm,start:r1}); }
+  months.forEach(function(m,i){m.end=(months[i+1]?months[i+1].start:rows.length)-1;});
+
+  function pushArea(title, rg, preferSub, isStaff){
+    var ac=utilityAmountCol(head,sub,rg,preferSub), cc=utilityConsumptionCol(head,sub,rg,preferSub);
+    if(ac<0)return;
+    months.forEach(function(m){
+      var chosen=null, r, row, a, hasTTL, c;
+      if(isStaff){
+        for(r=m.start;r<=m.end;r++){
+          row=rows[r]||[];hasTTL=false;
+          for(c=rg.start;c<=rg.end;c++) if(/^(ttl|total)$/i.test(txt(row[c]))){hasTTL=true;break;}
+          if(hasTTL && n(row[ac])>0){chosen={row:r,amount:n(row[ac])};break;}
+        }
+      }
+      if(!chosen && !isStaff){
+        for(r=m.start;r<=m.end;r++){a=n((rows[r]||[])[ac]);if(a>0)chosen={row:r,amount:a};}
+      }
+      if(!chosen && isStaff){
+        var sum=0,last=-1;
+        for(r=m.start;r<=m.end;r++){a=n((rows[r]||[])[ac]);if(a>0){sum+=a;last=r;}}
+        if(sum>0)chosen={row:last,amount:sum};
+      }
+      if(!chosen || !(chosen.amount>0))return; // blank/future template months stay out
+      var cons=cc>=0?n((rows[chosen.row]||[])[cc]):0;
+      if(!cons && cc>=0)cons=n((rows[m.start]||[])[cc]);
+      var area=utilityAreaName(title.name);
+      out.push({
+        date:year+'-'+String(m.month).padStart(2,'0')+'-01',
+        category:kind,categoryLabel:kind==='electric'?'Electricity':'Water',
+        item:area,dept:area,amount:Math.round(chosen.amount*10000)/10000,
+        estAmount:Math.round(chosen.amount*10000)/10000,qty:1,price:0,
+        consumption:cons,consUnit:kind==='electric'?'KW':'m3',currency:'USD',
+        purpose:txt(title.name),sourceModule:'excel',_row:chosen.row+1,_utilityNet:true
+      });
+    });
+  }
+
+  /* Factory: prefer the explicit post-owner-deduction block. */
+  var factories=[];
+  titles.forEach(function(t,idx){
+    var z=utilityCellNorm(t.name); if(!/factory/.test(z))return;
+    var score=0;if(/deduct|exclude|less/.test(z))score+=100;if(/^factory$/.test(z))score+=80;if(/and owner|owner/.test(z))score-=30;
+    factories.push({title:t,idx:idx,score:score});
+  });
+  factories.sort(function(a,b){return b.score-a.score;});
+  if(factories.length){var f=factories[0];pushArea(f.title,utilityBlockRange(titles,f.idx,maxCol),true,false);}
+
+  /* Staff-house blocks: use TTL monthly amount where available. */
+  titles.forEach(function(t,idx){
+    var z=utilityCellNorm(t.name);
+    if(!/staff house|dorm|housing/.test(z) || /monthly/.test(z))return;
+    pushArea(t,utilityBlockRange(titles,idx,maxCol),false,true);
+  });
+  return out;
+};
+
 /* ══════════ 3. 費用類別分頁（Electric / Water / Security ...）══════════
    寬表：一列一個月。自動找出 Amount 欄，向左找 Consum/Unit price。
    同一分頁可能左右並排多區塊（Factory / Expat staff house）→ 各自產生記錄。 */
@@ -150,11 +296,13 @@ VRT.parseExpenseCategorySheet = function (rows, meta) {
   var sheetName = ((meta && meta.sheetName) || '').trim();
   var catKey = sheetName.toLowerCase().replace(/\s+/g,'_');
 
-  // 找表頭列（含 Amount 或 Consum 字樣）
-  var hi = -1;
-  for (var i = 0; i < Math.min(8, rows.length); i++) {
-    var joined = (rows[i]||[]).map(function(c){return txt(c).toLowerCase();}).join('|');
-    if (/amount|consum|unit\s*price/.test(joined)) { hi = i; break; }
+  // 找真正表頭列；不能只因標題文字含 consumption 就誤判。
+  var hi = utilityHeaderRow(rows);
+  if (hi < 0) {
+    for (var i = 0; i < Math.min(8, rows.length); i++) {
+      var joined = (rows[i]||[]).map(function(c){return txt(c).toLowerCase();}).join('|');
+      if (/amount/.test(joined) && /consum|unit\s*price|old|new/.test(joined)) { hi = i; break; }
+    }
   }
   if (hi < 0) return out;
 
@@ -384,9 +532,10 @@ VRT.parseExpenseSheet = function (rows, meta) {
   var sn = txt(meta.sheetName || meta.sheet), low = sn.toLowerCase();
   if (/^chart|supplier list|stop supply|staff house break down/.test(low)) return [];
   var fileYear = +(String(meta.fileName || meta.file || '').match(/20\d{2}/) || [0])[0];
-  var sheetYear = expenseYear(rows);
-  // 2026 活頁簿仍保留 Jan/Feb/Mar 2020 舊頁及 Electric/Water 2024 舊頁；避免混入本年。
-  if (fileYear && sheetYear && sheetYear < fileYear && (monthNum(sn) || /^(electric|water)\s*$/.test(low))) return [];
+  var sheetYear = expenseYear(rows), uk = utilityKind(sn);
+  // 活頁簿可能保留舊年份分頁；年份判斷已優先採 standalone year，避免 Water 備註中的 2021 誤殺整張表。
+  if (fileYear && sheetYear && sheetYear < fileYear && (monthNum(sn) || uk)) return [];
+  if (uk) { var util = VRT.parseUtilityExpenseSheet(rows, meta); if (util.length) return util; }
   var detail = VRT.parseExpenseDetailSheet(rows, meta); if (detail.length) return detail;
   var monthly = VRT.parseExpenseSimpleMonthly(rows, meta); if (monthly.length) return monthly;
   return VRT.parseExpenseCategorySheet(rows, meta);
