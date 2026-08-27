@@ -15,10 +15,10 @@
 <script src="shared/ga-import.js?v=3.6-20260824"></script>
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.6-20260824" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.6-20260824'"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.7-20260828"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.7-20260828" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.7-20260828'"></script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.7-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.7-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -82,7 +82,7 @@
 <input id="exp-file" class="exp-file" type="file" multiple accept=".xlsx,.xlsb,.xls">
 
 <script>
-/* AC-GA-EXP Expense Center v3.9.3
+/* AC-GA-EXP Expense Center v3.9.7
    三份來源檔案採各自正規化，不把寬表、明細表及圖表摘要混在一起。 */
 GA.addDict({
   zh:{expSummary:'整合總覽',expRepair:'其他維修費用',expPurchase:'採購記錄',expGeneral:'一般費用',expLegacy:'手動／歷史',
@@ -112,7 +112,8 @@ GA.addDict({
 });
 
 var EXP3={repair:[],purchase:[],general:[]}, CATMETA={}, txns=[], budgets={}, activeTab='summary', pc;
-var LS_EXP3='ac_ga_exp_source_v3', LS_TXN='ac_ga_exp_txns_v2', LS_CAT='ac_ga_exp_cats_v2', LS_BGT='vrt26b';
+var LS_EXP3='ac_ga_exp_source_v3', LS_TXN='ac_ga_exp_txns_v2', LS_CAT='ac_ga_exp_cats_v2', LS_BGT='vrt26b', LS_UI='ac_ga_exp_ui_v1', LS_LOCAL_TS='ac_ga_exp_local_saved_at';
+var EXP_HAD_SAVED_UI=false;
 var EXP_IMPORT_STATUS={kind:'',message:''};
 var SRC_META={
   repair:{key:'repair',icon:'🔧',label:'expRepair',file:/other|repair|maintain|fix|維修/i},
@@ -170,7 +171,33 @@ function expSourceBuckets(v){
   return {repair:expRowsForBucket(v.repair,'repair'),purchase:expRowsForBucket(v.purchase,'purchase'),general:expRowsForBucket(v.general,'general')};
 }
 
+function loadExpenseUI(){
+  try{var u=JSON.parse(localStorage.getItem(LS_UI)||'null');if(u&&typeof u==='object'){EXP_HAD_SAVED_UI=true;return u;}}catch(e){}
+  return {};
+}
+function saveExpenseUI(){
+  try{var st=pc&&pc.state?pc.state():null;localStorage.setItem(LS_UI,JSON.stringify({tab:activeTab,type:st&&st.type||'month',key:st&&st.key||'',at:Date.now()}));}catch(e){}
+}
+function markExpenseLocalSaved(){try{localStorage.setItem(LS_LOCAL_TS,new Date().toISOString());}catch(e){}}
+function expenseLocalSavedLabel(){
+  var ts='';try{ts=localStorage.getItem(LS_LOCAL_TS)||'';}catch(e){}
+  var tm='';if(ts){try{tm=new Date(ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){}}
+  return expMsgText('📱 本機已保存 '+allRows().length+' 筆'+(tm?' · '+tm:''),'📱 Local saved '+allRows().length+' records'+(tm?' · '+tm:''),'📱 បានរក្សាទុកក្នុងឧបករណ៍ '+allRows().length+' កំណត់ត្រា'+(tm?' · '+tm:''),GA.lang);
+}
+function restoreExpenseUI(){
+  var u=loadExpenseUI();
+  if(u.tab&&/^(summary|repair|purchase|general|legacy)$/.test(u.tab))activeTab=u.tab;
+  if(pc&&u.type&&u.key){pc.set(u.type,u.key);return;}
+  /* First visit on a phone: if current month is empty but local cache already
+     contains historical data, open the latest available month automatically.
+     This avoids the false impression that the data disappeared and must be downloaded again. */
+  if(pc&&allSourceRows().length){
+    var latest=expenseLatestPeriod();
+    if(latest)pc.set('month',latest);
+  }
+}
 function loadData(){
+  var ui0=loadExpenseUI();if(ui0.tab&&/^(summary|repair|purchase|general|legacy)$/.test(ui0.tab))activeTab=ui0.tab;
   try{CATMETA=JSON.parse(localStorage.getItem(LS_CAT))||null;}catch(e){CATMETA=null;}
   if(!CATMETA)CATMETA=JSON.parse(JSON.stringify((window.EXP_SEED&&EXP_SEED.categories)||{}));
   try{var t=JSON.parse(localStorage.getItem(LS_TXN));if(Array.isArray(t)&&t.length)txns=t;}catch(e){}
@@ -178,8 +205,8 @@ function loadData(){
   try{budgets=JSON.parse(localStorage.getItem(LS_BGT))||{};}catch(e){budgets={};}
   try{var x=JSON.parse(localStorage.getItem(LS_EXP3));if(x&&typeof x==='object'){var restored=expSourceBuckets(x);if(restored.repair.length||restored.purchase.length||restored.general.length){EXP3=restored;saveExp3();}}}catch(e){}
 }
-function saveTxns(silent){try{localStorage.setItem(LS_TXN,JSON.stringify(txns));}catch(e){if(!silent)GA.toast('Local save failed','err');}}
-function saveExp3(){try{localStorage.setItem(LS_EXP3,JSON.stringify(EXP3));return true;}catch(e){GA.toast(GA.T('expNotStored'),'err');return false;}}
+function saveTxns(silent){try{localStorage.setItem(LS_TXN,JSON.stringify(txns));markExpenseLocalSaved();}catch(e){if(!silent)GA.toast('Local save failed','err');}}
+function saveExp3(){try{localStorage.setItem(LS_EXP3,JSON.stringify(EXP3));markExpenseLocalSaved();return true;}catch(e){GA.toast(GA.T('expNotStored'),'err');return false;}}
 function saveCats(){try{localStorage.setItem(LS_CAT,JSON.stringify(CATMETA));}catch(e){}}
 function saveBudgets(){try{localStorage.setItem(LS_BGT,JSON.stringify(budgets));}catch(e){}}
 
@@ -204,7 +231,7 @@ function parseMonthlyRows(rows,src,meta){
   for(var i=hi+1;i<rows.length;i++){var r=rows[i]||[],m=monthNo(r[mc]);if(!m)continue;var a=ac>=0?num(r[ac]):0;if(!a){for(var j2=mc+1;j2<r.length;j2++){var n=num(r[j2]);if(n){a=n;break;}}}if(!a)continue;var item=(typeof r[1]==='string'&&text(r[1]))?text(r[1]):meta.sheet;out.push(normalise({date:year+'-'+String(m).padStart(2,'0')+'-01',item:item,amount:a,price:a,qty:1,purpose:text(r[r.length-1])},src,{file:meta.file,sheet:meta.sheet,row:i+1}));}return out;
 }
 function parseWorkbook(wb,src,fileName){
-  var out=[];if(!wb||!wb.SheetNames)return out;if(src==='general'&&(!GA.vrtParsers||typeof GA.vrtParsers.parseExpenseSheet!=='function'))throw new Error('General Expense parser v3.6 not loaded');wb.SheetNames.forEach(function(sheet){var sn=text(sheet),sl=sn.toLowerCase();if(/chart|supplier list|stop supply|staff house break down/.test(sl))return;var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:''}),meta={file:fileName,fileName:fileName,sheet:sn,sheetName:sn};
+  var out=[];if(!wb||!wb.SheetNames)return out;if(src==='general'&&(!GA.vrtParsers||typeof GA.vrtParsers.parseExpenseSheet!=='function'))throw new Error('General Expense parser v3.7 not loaded');wb.SheetNames.forEach(function(sheet){var sn=text(sheet),sl=sn.toLowerCase();if(/chart|supplier list|stop supply|staff house break down/.test(sl))return;var rows=XLSX.utils.sheet_to_json(wb.Sheets[sheet],{header:1,raw:true,defval:''}),meta={file:fileName,fileName:fileName,sheet:sn,sheetName:sn};
     if(src==='purchase'){if(/^purchase/.test(sl))out=out.concat((GA.vrtParsers&&GA.vrtParsers.parsePurchase?GA.vrtParsers.parsePurchase(rows,meta):parseDetailRows(rows,src,meta)).map(function(r){return normalise(r,src,meta);}));return;}
     if(src==='repair'){out=out.concat(parseDetailRows(rows,src,meta));return;}
     if(src==='general'&&GA.vrtParsers&&GA.vrtParsers.parseExpenseSheet){out=out.concat(GA.vrtParsers.parseExpenseSheet(rows,meta).map(function(r){return normalise(r,src,meta);}));return;}
@@ -305,7 +332,7 @@ function doExpenseImport(files){
 function expTelegram(){GA.telegram.open({module:'expense',canApprove:false,scopes:[{v:'all',zh:'三類整合',en:'All three sources',km:'ប្រភពទាំងបី'},{v:'repair',zh:'其他維修',en:'Other Repair',km:'ជួសជុលផ្សេងៗ'},{v:'purchase',zh:'採購記錄',en:'Purchasing',km:'ការទិញ'},{v:'general',zh:'一般費用',en:'General Expense',km:'ចំណាយទូទៅ'},{v:'legacy',zh:'手動／歷史',en:'Manual / Historical',km:'ដោយដៃ / ប្រវត្តិ'}],periods:function(type){return expPeriodKeys(type);},summary:function(s){var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]),rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);}),prevKey=GA.shiftPeriod(s.period,s.ptype,-1),prev=arr.filter(function(r){return GA.inPeriod(r.date,prevKey,s.ptype);}),total=sumRows(rows),by={};rows.forEach(function(r){var k=r.categoryLabel||r.category||'Other';by[k]=(by[k]||0)+value(r);});var out=[{zh:'總額',en:'Total',v:money(total)},{zh:'明細筆數',en:'Records',v:rows.length}];if(s.scope==='all'){['repair','purchase','general'].forEach(function(k){var sr=rows.filter(function(r){return r._source===k;});out.push({zh:sourceLabel(k),en:sourceLabel(k),v:money(sumRows(sr))+' / '+sr.length+' 筆'});});}else out.push({zh:'來源',en:'Source',v:sourceLabel(s.scope)});out.push({zh:'前期比較',en:'Previous period',v:money(sumRows(prev))+' → '+money(total)+' ('+formatDiff(total-sumRows(prev))+')'});Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,8).forEach(function(k){out.push({zh:k,en:k,v:money(by[k])});});var q=expQuality(rows,prev),warn=[];if(q.supplier)warn.push('缺供應商 '+q.supplier);if(q.purpose)warn.push('缺用途／備註 '+q.purpose);if(q.price)warn.push('缺單價 '+q.price);if(q.future)warn.push('未來日期 '+q.future);if(q.zero)warn.push('零／負金額 '+q.zero);if(q.changePct!==null&&(Math.abs(q.changePct)>=50||(!q.previous&&q.current)))warn.push('較前期變化 '+(q.changePct===null?'new':q.changePct+'%'));out.push('-');out.push({zh:'資料檢查',en:'Data check',v:warn.length?warn.join(' · '):'OK'});out.push({zh:'Dashboard',en:'Dashboard',v:EXP_DASH_URL});return GA.telegram.buildSummary({icon:'💰',titleZh:'費用摘要',titleEn:'Expense Summary',lang:s.lang,period:GA.periodLabel(s.period,s.ptype),rows:out,footer:'🔗 '+GA.T('expDashboard')+'：'+EXP_DASH_URL+'\n🕐 '+GA.ymd(new Date())});}});}
 function renderLegacy(){var rows=rowsFor('legacy');document.getElementById('exp-view').innerHTML=actionBar()+'<div class="exp-sec"><div class="exp-sec-t">🗂️ '+esc(GA.T('expLegacy'))+'<span class="sp">'+rows.length+' '+esc(GA.T('expRows'))+' · '+money(sumRows(rows))+'</span></div>'+detailTable(rows)+'</div><div class="exp-sec"><div class="exp-sec-t">➕ '+esc(GA.T('expManual'))+'</div><div class="exp-form"><div><label>'+esc(GA.T('date'))+'</label><input id="a-date" type="date" value="'+GA.ymd(new Date())+'"></div><div><label>'+esc(GA.T('expCategory'))+'</label><select id="a-cat">'+legacyCategoryOptions()+'</select></div><div><label>'+esc(GA.T('expItem'))+'</label><input id="a-item"></div><div><label>'+esc(GA.T('expDepartment'))+'</label><input id="a-dept"></div><div><label>'+esc(GA.T('expSupplier'))+'</label><input id="a-sup"></div><div><label>'+esc(GA.T('expInspector'))+'</label><input id="a-inspector"></div><div><label>'+esc(GA.T('expQty'))+'</label><input id="a-qty" type="number" step="0.01"></div><div><label>'+esc(GA.T('expEstimate'))+'</label><input id="a-est" type="number" step="0.01"></div><div><label>'+esc(GA.T('expActual'))+'</label><input id="a-amt" type="number" step="0.01"></div><div style="grid-column:1/-1"><label>'+esc(GA.T('expRemark'))+'</label><input id="a-note"></div></div><button class="ga-btn primary" onclick="addManual()">➕ '+esc(GA.T('expSave'))+'</button></div><div class="exp-sec"><div class="exp-sec-t">💰 '+esc(GA.T('expBudget'))+'</div><div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('expCategory'))+'</th><th>'+esc(GA.T('expBudget'))+'</th><th>'+esc(GA.T('expActual'))+'</th></tr></thead><tbody>'+Object.keys(CATMETA).map(function(k){var sp=sumRows(txns.filter(function(r){return r.category===k;}));return'<tr><td>'+esc(CATMETA[k].label||k)+'</td><td class="n"><input data-budget="'+esc(k)+'" type="number" value="'+(budgets[k]||'')+'" style="width:90px"></td><td class="n">'+money(sp)+'</td></tr>';}).join('')+'</tbody></table></div><button class="ga-btn" onclick="saveBudgetInputs()">💾 '+esc(GA.T('save'))+'</button></div>';}
 function render(){var note=document.getElementById('exp-source-note');if(note)note.textContent=GA.T('expImportHint');document.querySelectorAll('.exp-tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-p')===activeTab);});if(activeTab==='summary')renderSummary();else if(activeTab==='legacy')renderLegacy();else renderSource(activeTab);}
-function expTab(k){activeTab=k;window.expQuery='';render();}
+function expTab(k){activeTab=k;window.expQuery='';saveExpenseUI();render();}
 function addManual(){var cat=document.getElementById('a-cat').value,a=num(document.getElementById('a-amt').value),e=num(document.getElementById('a-est').value),q=num(document.getElementById('a-qty').value);if(!a&&!e){GA.toast('Please enter amount','err');return;}var r={date:document.getElementById('a-date').value,item:document.getElementById('a-item').value,category:cat,dept:document.getElementById('a-dept').value,supplier:document.getElementById('a-sup').value,inspector:document.getElementById('a-inspector').value,qty:q,estAmount:e||a,amount:a||e,purpose:document.getElementById('a-note').value,sourceModule:'manual',status:'approved'};GA.stamp(r,{source:'online',prefix:'exp'});r._fp=GA.fingerprint(['legacy',r.date,r.item,r.amount,r.supplier]);txns.push(r);saveTxns();scheduleExpenseAutoCloudSync('manual');GA.toast('➕ OK');render();}
 function saveBudgetInputs(){document.querySelectorAll('[data-budget]').forEach(function(e){var v=num(e.value);if(v)budgets[e.getAttribute('data-budget')]=v;else delete budgets[e.getAttribute('data-budget')];});saveBudgets();scheduleExpenseAutoCloudSync('budget');GA.toast('💾 '+GA.T('save')+' OK');}
 function expExport(){var k=activeTab==='summary'?'summary':activeTab==='legacy'?'legacy':activeTab,rows=k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[]),s=currentState();rows=rows.filter(function(r){return GA.inPeriod(r.date,s.key,s.type);});writeXlsx(rows,'AC_GA_EXP_'+k+'_'+GA.ymd(new Date())+'.xlsx');}
@@ -379,7 +406,7 @@ function openExpenseEdit(src,idEnc){var id=idEnc?decodeURIComponent(idEnc):'',f=
 function deleteExpenseRow(src,idEnc){var id=decodeURIComponent(idEnc),f=expenseFind(src,id);if(!f)return;if(!window.confirm(expMsgText('確定刪除此筆費用？','Delete this expense record?','លុបកំណត់ត្រាចំណាយនេះ?',GA.lang)))return;f.list.splice(f.index,1);if(src==='legacy')saveTxns();else saveExp3();scheduleExpenseAutoCloudSync('delete');GA.toast('🗑 '+expMsgText('已刪除','Deleted','បានលុប',GA.lang));render();}
 
 /* overwrite display helpers with compact, fully localised versions */
-actionBar=function(){var all=allSourceRows(),latest=expenseLatestPeriod(),hasCurrent=all.some(inCurrent),st=currentState(),src=(activeTab==='repair'||activeTab==='purchase'||activeTab==='general'||activeTab==='legacy')?activeTab:'general',hint='';if(all.length&&!hasCurrent)hint='<div class="exp-period-hint">⚠️ '+esc(expMsgText('目前期間沒有資料；已載入 '+all.length+' 筆，最新資料 '+(latest||'—')+'。','No data in the selected period; '+all.length+' records are loaded. Latest: '+(latest||'—')+'.','គ្មានទិន្នន័យក្នុងរយៈពេលដែលបានជ្រើស; បានផ្ទុក '+all.length+' កំណត់ត្រា។ ថ្មីបំផុត៖ '+(latest||'—')+'។',GA.lang))+' <button class="ga-btn" onclick="jumpExpenseLatest()">↗ '+esc(GA.T('expImportOpened'))+'</button></div>';return'<div class="exp-actions"><button class="ga-btn primary" onclick="expImport()">📥 '+esc(GA.T('expImport'))+'</button><button class="ga-btn" onclick="openExpenseAdd(\''+src+'\')">➕ '+esc(expMsgText('新增','Add','បន្ថែម',GA.lang))+'</button><button class="ga-btn" onclick="expExport()">📤 '+esc(GA.T('expExportCurrent'))+'</button><button class="ga-btn" onclick="expExportAll()">📊 '+esc(GA.T('expExportAll'))+'</button><button class="ga-btn" onclick="render()">↻ '+esc(GA.T('expRefresh'))+'</button></div><div class="exp-note">'+esc(GA.T('expImportHint'))+' · '+esc(GA.T('expCloudData'))+'</div>'+hint+expenseImportStatusHtml();};
+actionBar=function(){var all=allSourceRows(),latest=expenseLatestPeriod(),hasCurrent=all.some(inCurrent),st=currentState(),src=(activeTab==='repair'||activeTab==='purchase'||activeTab==='general'||activeTab==='legacy')?activeTab:'general',hint='';if(all.length&&!hasCurrent)hint='<div class="exp-period-hint">⚠️ '+esc(expMsgText('目前期間沒有資料；已載入 '+all.length+' 筆，最新資料 '+(latest||'—')+'。','No data in the selected period; '+all.length+' records are loaded. Latest: '+(latest||'—')+'.','គ្មានទិន្នន័យក្នុងរយៈពេលដែលបានជ្រើស; បានផ្ទុក '+all.length+' កំណត់ត្រា។ ថ្មីបំផុត៖ '+(latest||'—')+'។',GA.lang))+' <button class="ga-btn" onclick="jumpExpenseLatest()">↗ '+esc(GA.T('expImportOpened'))+'</button></div>';return'<div class="exp-actions"><button class="ga-btn primary" onclick="expImport()">📥 '+esc(GA.T('expImport'))+'</button><button class="ga-btn" onclick="openExpenseAdd(\''+src+'\')">➕ '+esc(expMsgText('新增','Add','បន្ថែម',GA.lang))+'</button><button class="ga-btn" onclick="expExport()">📤 '+esc(GA.T('expExportCurrent'))+'</button><button class="ga-btn" onclick="expExportAll()">📊 '+esc(GA.T('expExportAll'))+'</button><button class="ga-btn" onclick="render()">↻ '+esc(GA.T('expRefresh'))+'</button></div><div class="exp-note">'+esc(GA.T('expImportHint'))+' · '+esc(GA.T('expCloudData'))+'<br><b>'+esc(expenseLocalSavedLabel())+'</b></div>'+hint+expenseImportStatusHtml();};
 categoryBars=function(rows){var by={};(rows||[]).forEach(function(r){ensureExpenseCategory(r,r._source);var k=r.expenseCategory;by[k]=(by[k]||0)+value(r);});var keys=Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,12),max=keys.length?by[keys[0]]:1;if(!keys.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';return'<div class="exp-bars">'+keys.map(function(k){return'<div class="exp-bar-row"><span><b>'+esc(expenseCatLabel(k,GA.lang))+'</b></span><div class="exp-bar"><i style="width:'+Math.round(by[k]/max*100)+'%"></i></div><em>'+money(by[k])+'</em></div>';}).join('')+'</div>';};
 expQuality=function(rows,prev){var q={supplier:0,purpose:0,price:0,future:0,zero:0,duplicate:0,sourceWarn:0},fp={};(rows||[]).forEach(function(r){ensureExpenseCategory(r,r._source);if(!text(r.supplier))q.supplier++;if(!text(r.purpose))q.purpose++;if(value(r)>0&&!num(r.price))q.price++;if(typeof GA.isFuture==='function'&&GA.isFuture(r.date))q.future++;if(value(r)<=0)q.zero++;if(text(r._warn))q.sourceWarn++;var k=expenseLogicalDuplicateKey(r);if(k){if(fp[k])q.duplicate++;fp[k]=1;}});q.current=sumRows(rows||[]);q.previous=sumRows(prev||[]);q.change=q.current-q.previous;q.changePct=q.previous?Math.round(q.change/q.previous*100):null;return q;};
 expQualityHtml=function(rows,prev){var q=expQuality(rows,prev),items=[];if(!rows.length)items.push('⚠️ '+esc(GA.T('expNoRecords')));if(q.supplier)items.push('⚠️ '+esc(GA.T('expMissingSupplier'))+'：'+q.supplier);if(q.purpose)items.push('⚠️ '+esc(GA.T('expMissingPurpose'))+'：'+q.purpose);if(q.price)items.push('⚠️ '+esc(GA.T('expMissingPrice'))+'：'+q.price);if(q.future)items.push('⚠️ '+esc(GA.T('expFuture'))+'：'+q.future);if(q.zero)items.push('⚠️ '+esc(expMsgText('零／負金額','Zero / negative amount','ចំនួនសូន្យ / អវិជ្ជមាន',GA.lang))+'：'+q.zero);if(q.duplicate)items.push('⚠️ '+esc(expMsgText('同月疑似重複','Possible same-month duplicates','អាចស្ទួនក្នុងខែដូចគ្នា',GA.lang))+'：'+q.duplicate);if(q.sourceWarn)items.push('⚠️ '+esc(GA.T('expSourceWarn'))+'：'+q.sourceWarn);if(q.changePct!==null&&Math.abs(q.changePct)>=50)items.push('⚠️ '+esc(GA.T('expIncrease'))+'：'+formatDiff(q.change)+' ('+q.changePct+'%)');if(!items.length)items.push('✅ '+esc(GA.T('expNoIssue')));return'<div class="exp-analysis '+(items.some(function(x){return x.indexOf('⚠️')>=0;})?'has-warn':'')+'">'+items.map(function(x){return'<div>'+x+'</div>';}).join('')+'<small>'+esc(GA.T('expIssueNote'))+'</small></div>';};
@@ -458,6 +485,7 @@ function expApplySync(rows,meta){
   txns=next.txns; EXP3={repair:next.repair,purchase:next.purchase,general:next.general};
   if(meta&&meta.cats)CATMETA=meta.cats;if(meta&&meta.budgets)budgets=meta.budgets;
   saveTxns(true);saveExp3();saveCats();saveBudgets();
+  if(!EXP_HAD_SAVED_UI&&pc&&allSourceRows().length&&!allSourceRows().some(inCurrent)){var lp=expenseLatestPeriod();if(lp)pc.set('month',lp);EXP_HAD_SAVED_UI=true;}
   if(typeof render==='function'&&document.getElementById('exp-view'))render();
 }
 function expLegacyToSync(d){
@@ -495,10 +523,10 @@ function expDownload(){return expCloudDownload({silent:false});}
 /* 不依賴每個模組重複改 modal：費用的摘要／核可成功後都自動排程背景同步。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){doExpenseImport(this.files);});})();
-loadData();ensureExpenseModel();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.9.3',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
+loadData();ensureExpenseModel();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.9.7',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
 if(window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownload,push:expCloudUpload,canSync:function(){return !!(GA.gasUrl&&GA.gasUrl());},startDelay:450,anchor:'#ga-cloud'});}else{try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},700);}catch(e){}}
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
-pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){render();}});GA.on('lang',function(){render();});render();
+pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){saveExpenseUI();render();}});restoreExpenseUI();GA.on('lang',function(){render();});saveExpenseUI();render();
 </script>
 </body>
 </html>
