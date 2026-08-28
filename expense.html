@@ -16,45 +16,187 @@
 <script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
 <script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
 <script src="shared/ga-auto-sync.js?v=3.9.7-20260828"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.9.8-20260828" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.8-20260828'"></script>
-<script id="ga-exp-xlsb-utility-year-fix">
+<script src="shared/ga-vrt-parsers.js?v=3.9.9-20260828" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.9-20260828'"></script>
+<script id="ga-exp-xlsb-utility-inline-v399">
 (function(global){
 'use strict';
-var GA=global.GA, V=GA&&GA.vrtParsers;
-if(!V||!V.parseUtilityExpenseSheet||!V.parseExpenseSheet)return;
-var baseExpense=V.parseExpenseSheet, baseUtility=V.parseUtilityExpenseSheet;
+var GA=global.GA;
+if(!GA)return;
+var V=GA.vrtParsers=GA.vrtParsers||{};
+var baseExpense=typeof V.parseExpenseSheet==='function'?V.parseExpenseSheet:null;
+
 function txt(v){return String(v===null||v===undefined?'':v).trim();}
-function utilityKind(sn){var s=String(sn||'').toLowerCase().replace(/[\s._\-]+/g,'');return /^electric(ity)?$/.test(s)?'electric':(/^water$/.test(s)?'water':'');}
+function num(v){
+  if(GA&&typeof GA.num==='function')return GA.num(v);
+  var n=Number(String(v===null||v===undefined?'':v).replace(/,/g,''));
+  return isFinite(n)?n:0;
+}
+function cell(v){return txt(v).toLowerCase().replace(/\s+/g,' ');}
+function kindOf(sn){
+  var s=String(sn||'').toLowerCase().replace(/[\s._\-]+/g,'');
+  return /^electric(ity)?$/.test(s)?'electric':(/^water$/.test(s)?'water':'');
+}
+function monthNo(v){
+  var k=cell(v).slice(0,3),m={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  return m[k]||0;
+}
 function titleYear(rows){
   rows=rows||[];
-  for(var i=0;i<Math.min(5,rows.length);i++){
+  for(var i=0;i<Math.min(6,rows.length);i++){
     var r=rows[i]||[];
     for(var c=0;c<r.length;c++){
-      if(typeof r[c]!=='string')continue;
-      var m=txt(r[c]).match(/(?:^|[^0-9])(20\d{2})(?:[^0-9]|$)/);
+      var sv=txt(r[c]),m=sv.match(/(?:^|[^0-9])(20\d{2})(?:[^0-9]|$)/);
       if(m)return +m[1];
     }
   }
   return 0;
 }
-V.parseExpenseSheet=function(rows,meta){
+function fileYear(meta){
+  var m=String((meta&& (meta.fileName||meta.file))||'').match(/20\d{2}/);
+  return m?+m[0]:0;
+}
+function utilityHeaderRow(rows){
+  for(var i=0;i<Math.min(10,rows.length);i++){
+    var cs=(rows[i]||[]).map(function(v){return cell(v).replace(/\s/g,'');}),score=0;
+    if(cs.some(function(x){return /^old/.test(x);} ))score++;
+    if(cs.some(function(x){return /^new/.test(x);} ))score++;
+    if(cs.some(function(x){return /^consum/.test(x);} ))score++;
+    if(cs.some(function(x){return /^unitprice/.test(x);} ))score++;
+    if(cs.some(function(x){return /^amount/.test(x);} ))score+=2;
+    if(score>=4)return i;
+  }
+  return -1;
+}
+function titleRowIndex(rows,hi){
+  for(var r=Math.max(0,hi-3);r<hi;r++){
+    var z=(rows[r]||[]).map(cell).join('|');
+    if(/factory|staff house|dorm|housing/.test(z))return r;
+  }
+  return Math.max(0,hi-1);
+}
+function usdAmountCol(head,sub,rg){
+  var c,h;
+  for(c=rg.start;c<=rg.end;c++){
+    h=cell(head[c]);
+    if(/^amount/.test(h)&&/\$/.test(h))return c;
+  }
+  for(c=rg.start;c<=rg.end;c++){
+    h=cell(head[c]);
+    if(!/^amount/.test(h))continue;
+    if(/riel|\(r\)/.test(h)||/riel/.test(cell(sub[c]))){
+      for(var d=c+1;d<=Math.min(rg.end,c+3);d++)if(cell(sub[d])==='$')return d;
+    }else if(cell(sub[c])==='$')return c;
+  }
+  for(c=rg.start;c<=rg.end;c++)if(cell(sub[c])==='$')return c;
+  return -1;
+}
+function consumptionCol(head,rg){
+  for(var c=rg.start;c<=rg.end;c++)if(/^consum/.test(cell(head[c])))return c;
+  return -1;
+}
+function areaName(v){
+  var s=cell(v);
+  if(/factory/.test(s))return 'Factory';
+  if(/expat/.test(s))return 'Expat staff house';
+  if(/local/.test(s))return 'Local staff house';
+  return txt(v)||'Utility';
+}
+function isTTL(row,rg){
+  for(var c=rg.start;c<=rg.end;c++)if(/^(ttl|total)$/i.test(txt((row||[])[c])))return true;
+  return false;
+}
+function directUtility(rows,meta){
   rows=rows||[];meta=meta||{};
-  var sn=txt(meta.sheetName||meta.sheet),kind=utilityKind(sn);
-  if(!kind)return baseExpense.call(V,rows,meta);
-  var fy=+(String(meta.fileName||meta.file||'').match(/20\d{2}/)||[0])[0],ty=titleYear(rows);
-  // Workbook has both old sheets (e.g. Electric/Water 2024) and current sheets
-  // with trailing spaces (e.g. "Electric "/"Water " 2026). Keep current year only.
+  var sn=txt(meta.sheetName||meta.sheet),kind=kindOf(sn);
+  if(!kind)return [];
+  var fy=fileYear(meta),ty=titleYear(rows),year=ty||fy||new Date().getFullYear();
   if(fy&&ty&&ty<fy)return [];
-  var out=baseUtility.call(V,rows,meta)||[],y=ty||fy;
-  if(y)out.forEach(function(x){if(/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||'')))x.date=String(y)+String(x.date).slice(4);});
+  var hi=utilityHeaderRow(rows);
+  if(hi<0)return [];
+  var tri=titleRowIndex(rows,hi),titleRow=rows[tri]||[],head=rows[hi]||[],sub=rows[hi+1]||[];
+  var maxCol=Math.max(titleRow.length,head.length,sub.length),titles=[];
+  titleRow.forEach(function(v,c){
+    var z=cell(v);
+    if(/factory|staff house|dorm|housing/.test(z))titles.push({col:c,name:txt(v)});
+  });
+  if(!titles.length)return [];
+  titles.sort(function(a,b){return a.col-b.col;});
+  var blocks=titles.map(function(t,i){return {title:t,start:t.col,end:(titles[i+1]?titles[i+1].col:maxCol)-1};});
+  var monCol=-1;
+  for(var r0=hi+1;r0<Math.min(rows.length,hi+30)&&monCol<0;r0++){
+    for(var c0=0;c0<Math.min(5,(rows[r0]||[]).length);c0++){
+      if(monthNo((rows[r0]||[])[c0])){monCol=c0;break;}
+    }
+  }
+  if(monCol<0)return [];
+  var months=[];
+  for(var r1=hi+1;r1<rows.length;r1++){
+    var mm=monthNo((rows[r1]||[])[monCol]);
+    if(mm)months.push({month:mm,start:r1});
+  }
+  months.forEach(function(m,i){m.end=(months[i+1]?months[i+1].start:rows.length)-1;});
+  var out=[];
+  blocks.forEach(function(b){
+    var rg={start:b.start,end:b.end},ac=usdAmountCol(head,sub,rg),cc=consumptionCol(head,rg);
+    if(ac<0)return;
+    var area=areaName(b.title.name);
+    months.forEach(function(m){
+      var chosen=null,r,row,a;
+      for(r=m.start;r<=m.end;r++){
+        row=rows[r]||[];
+        if(isTTL(row,rg)){
+          a=num(row[ac]);
+          if(a>0){chosen={row:r,amount:a};break;}
+        }
+      }
+      if(!chosen){
+        a=num((rows[m.start]||[])[ac]);
+        if(a>0)chosen={row:m.start,amount:a};
+      }
+      if(!chosen){
+        for(r=m.start;r<=m.end;r++){
+          a=num((rows[r]||[])[ac]);
+          if(a>0)chosen={row:r,amount:a};
+        }
+      }
+      if(!chosen||!(chosen.amount>0))return;
+      var cons=cc>=0?num((rows[m.start]||[])[cc]):0;
+      if(!cons&&cc>=0)cons=num((rows[chosen.row]||[])[cc]);
+      out.push({
+        date:year+'-'+String(m.month).padStart(2,'0')+'-01',
+        category:kind,
+        categoryLabel:kind==='electric'?'Electricity':'Water',
+        item:area,
+        dept:area,
+        amount:Math.round(chosen.amount*10000)/10000,
+        estAmount:Math.round(chosen.amount*10000)/10000,
+        qty:1,
+        price:0,
+        consumption:cons,
+        consUnit:kind==='electric'?'KW':'m3',
+        currency:'USD',
+        purpose:area,
+        sourceModule:'excel',
+        _row:chosen.row+1,
+        _utilityNet:true,
+        _utilityInline:true
+      });
+    });
+  });
   return out;
+}
+V.parseUtilityExpenseSheet=directUtility;
+V.parseExpenseSheet=function(rows,meta){
+  var sn=txt((meta&& (meta.sheetName||meta.sheet))||'');
+  if(kindOf(sn))return directUtility(rows,meta);
+  return baseExpense?baseExpense.call(V,rows,meta):[];
 };
-V.utilityYearFix='3.9.8-xlsb';
+V.utilityInlineFix='3.9.9-self-contained';
+global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
-
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.7-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.8-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.7-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.9-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -118,7 +260,7 @@ V.utilityYearFix='3.9.8-xlsb';
 <input id="exp-file" class="exp-file" type="file" multiple accept=".xlsx,.xlsb,.xls">
 
 <script>
-/* AC-GA-EXP Expense Center v3.9.8
+/* AC-GA-EXP Expense Center v3.9.9
    三份來源檔案採各自正規化，不把寬表、明細表及圖表摘要混在一起。 */
 GA.addDict({
   zh:{expSummary:'整合總覽',expRepair:'其他維修費用',expPurchase:'採購記錄',expGeneral:'一般費用',expLegacy:'手動／歷史',
@@ -341,20 +483,49 @@ function renderSummary(){var rows=allSourceRows().filter(inCurrent),prev=previou
 function renderSource(k){var rows=rowsFor(k),prev=previousRows(k),q=window.expQuery||'',filtered=rows.filter(function(r){return!q||[r.item,r.spec,r.supplier,r.purpose,r.sourceSheet].join(' ').toLowerCase().indexOf(q.toLowerCase())>=0;});document.getElementById('exp-view').innerHTML=actionBar()+'<div class="exp-sec"><div class="exp-sec-t">'+SRC_META[k].icon+' '+esc(sourceLabel(k))+'<span class="sp">'+rows.length+' '+esc(GA.T('expRows'))+'</span></div><div class="exp-tools"><input id="exp-q" value="'+esc(q)+'" placeholder="🔎 '+esc(GA.T('search'))+'"><button class="ga-btn" onclick="window.expQuery=\'\';render()">'+esc(GA.T('reset'))+'</button></div><div class="exp-grid">'+card(GA.T('expAmount'),money(sumRows(rows)),rows.length+' '+GA.T('expRows'))+card(GA.T('expCurrent'),money(sumRows(rows)),GA.periodLabel(currentState().key,currentState().type))+card(GA.T('expPrevious'),money(sumRows(prev)),GA.T('expPrev'))+card(GA.T('expChange'),formatDiff(sumRows(rows)-sumRows(prev)),GA.T('expCompare'))+'</div></div><div class="exp-sec"><div class="exp-sec-t">↔️ '+esc(GA.T('expCompare'))+'</div>'+compareHtml(rows,prev)+'</div><div class="exp-sec"><div class="exp-sec-t">🔎 '+esc(GA.T('expAnalysis'))+'</div>'+expQualityHtml(rows,prev)+'</div><div class="exp-sec"><div class="exp-sec-t">📁 '+esc(GA.T('expTop'))+'</div>'+categoryBars(rows)+'</div><div class="exp-sec"><div class="exp-sec-t">📈 '+esc(GA.T('expPeriodTrend'))+'</div>'+trendHtml(EXP3[k])+'</div><div class="exp-sec"><div class="exp-sec-t">🧾 '+esc(GA.T('expRecords'))+'</div>'+detailTable(filtered)+'</div>';var inp=document.getElementById('exp-q');if(inp)inp.oninput=function(){window.expQuery=this.value;renderSource(k);};}
 /* 覆寫匯入統計：略過的資料會在下一次摘要前保留可追查數字。 */
 /* 單一路徑匯入：不要再用同名 function 包裝此函式；函式宣告提升會造成自我遞迴。 */
+
+function expenseUtilitySheetKey(v){
+  var s=text(v).toLowerCase().replace(/[\s._\-]+/g,'');
+  return /^electric(ity)?$/.test(s)?'electric':(/^water$/.test(s)?'water':'');
+}
+function purgeImportedUtilityRowsForFile(src,fileName){
+  if(src!=='general')return 0;
+  var fb=sourceFileBase(fileName),removed=0;
+  EXP3[src]=(EXP3[src]||[]).filter(function(r){
+    var sameFile=sourceFileBase(r.sourceFile||'')===fb;
+    var util=expenseUtilitySheetKey(r.sourceSheet||'');
+    if(sameFile&&util){removed++;return false;}
+    return true;
+  });
+  return removed;
+}
+function utilityImportDiagnostic(rows){
+  var u=(rows||[]).filter(function(r){return expenseUtilitySheetKey(r.sourceSheet||'');});
+  if(!u.length)return '';
+  var ef=u.filter(function(r){return expenseUtilitySheetKey(r.sourceSheet)==='electric'&&text(r.item)==='Factory';});
+  var wf=u.filter(function(r){return expenseUtilitySheetKey(r.sourceSheet)==='water'&&text(r.item)==='Factory';});
+  var latest=function(a){return a.slice().sort(function(x,y){return String(x.date).localeCompare(String(y.date));}).pop();};
+  var e=latest(ef),w=latest(wf),parts=[];
+  parts.push('⚡ Factory '+ef.length);
+  if(e)parts.push(String(e.date).slice(0,7)+' '+money(value(e)));
+  parts.push('🚰 Factory '+wf.length);
+  if(w)parts.push(String(w.date).slice(0,7)+' '+money(value(w)));
+  return parts.join(' · ');
+}
 function doExpenseImport(files){
   var list=Array.prototype.slice.call(files||[]);if(!list.length)return Promise.resolve({ok:false,added:0});
   var added={repair:0,purchase:0,general:0},updated={repair:0,purchase:0,general:0},skipped=0,recognized=0,recognizedRows=[],diagnostics=[],recognizedSources={},dupPending=[];
   var logicalSeen={};allRows().forEach(function(r){var k=expenseLogicalDuplicateKey(r);if(k)logicalSeen[k]=1;});
   setExpenseImportStatus('','⏳ '+GA.T('expImportReading')+'：'+list.map(function(f){return f.name;}).join(', '));render();
   return Promise.all(list.map(function(file){var src=classifyFile(file.name);return readWorkbook(file).then(function(wb){
-    skipped+=collapseSourceDuplicates(src);var rs=parseWorkbook(wb,src,file.name),idx={};recognized+=rs.length;recognizedRows=recognizedRows.concat(rs);if(rs.length)recognizedSources[src]=1;
-    diagnostics.push({file:file.name,sheets:(wb.SheetNames||[]).length,records:rs.length,source:src});
+    skipped+=collapseSourceDuplicates(src);var rs=parseWorkbook(wb,src,file.name),idx={};var utilityDiag=utilityImportDiagnostic(rs);if(src==='general'&&utilityDiag){skipped+=purgeImportedUtilityRowsForFile(src,file.name);}recognized+=rs.length;recognizedRows=recognizedRows.concat(rs);if(rs.length)recognizedSources[src]=1;
+    diagnostics.push({file:file.name,sheets:(wb.SheetNames||[]).length,records:rs.length,source:src,utility:utilityDiag});
     EXP3[src].forEach(function(x,i){var k=sourceIdentity(x,src,{file:x.sourceFile,sheet:x.sourceSheet,row:x.sourceRow});if(k)idx[k]=i;});
     rs.forEach(function(x){ensureExpenseCategory(x,src);var key=sourceIdentity(x,src,{file:x.sourceFile,sheet:x.sourceSheet,row:x.sourceRow}),pos=key!==''?idx[key]:undefined;if(pos!==undefined){var old=EXP3[src][pos];x.expenseCategory=old.expenseCategory||x.expenseCategory;if(sameImportedRow(old,x)){skipped++;EXP3_IMPORT_STATS[src].skipped++;return;}x.recordId=old.recordId||x.recordId;x.createdAt=old.createdAt||x.createdAt;x.updatedAt=new Date().toISOString();EXP3[src][pos]=x;updated[src]++;EXP3_IMPORT_STATS[src].updated++;return;}var dkey=expenseLogicalDuplicateKey(x);if(dkey&&logicalSeen[dkey]){dupPending.push({src:src,row:x,key:dkey});return;}EXP3[src].push(x);if(key)idx[key]=EXP3[src].length-1;if(dkey)logicalSeen[dkey]=1;added[src]++;EXP3_IMPORT_STATS[src].imported++;});
   });})).then(function(){
     if(dupPending.length){var keep=window.confirm(expMsgText('⚠️ 發現 '+dupPending.length+' 筆「同月／同分類／同項目／同金額」疑似重複資料。\n\n按「確定」仍然匯入；按「取消」略過這些疑似重複項目。','⚠️ '+dupPending.length+' possible duplicates found in the same month/category/item/amount.\n\nOK = import them; Cancel = skip them.','⚠️ រកឃើញទិន្នន័យអាចស្ទួន '+dupPending.length+' កំណត់ត្រា ក្នុងខែ/ប្រភេទ/មុខទំនិញ/ចំនួនដូចគ្នា។\n\nOK = នាំចូល; Cancel = រំលង។',GA.lang));dupPending.forEach(function(d){if(keep){EXP3[d.src].push(d.row);added[d.src]++;EXP3_IMPORT_STATS[d.src].imported++;logicalSeen[d.key]=1;}else{skipped++;EXP3_IMPORT_STATS[d.src].skipped++;}});}
     var total=added.repair+added.purchase+added.general,updatedTotal=updated.repair+updated.purchase+updated.general,changed=total+updatedTotal,stored=saveExp3();
-    var diagnosticText=diagnostics.map(function(d){return d.file+' · '+d.sheets+' '+GA.T('expSheets')+' · '+d.records+' '+GA.T('expRows');}).join(' | ');
+    var diagnosticText=diagnostics.map(function(d){return d.file+' · '+d.sheets+' '+GA.T('expSheets')+' · '+d.records+' '+GA.T('expRows')+(d.utility?' · '+d.utility:'');}).join(' | ');
     if(!recognized){var noRows='⚠️ '+GA.T('expImportNoRows')+' · '+diagnosticText;setExpenseImportStatus('err',noRows);GA.toast(noRows,'err');render();return{ok:false,added:0,updated:0,changed:0,skipped:0,diagnostics:diagnostics};}
     var sources=['repair','purchase','general'].filter(function(k){return recognizedSources[k];}),latest=recognizedRows.map(function(r){return String(r.date||'');}).filter(Boolean).sort().pop()||'';
     activeTab=sources.length===1?sources[0]:'summary';window.expQuery='';
