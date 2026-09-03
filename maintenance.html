@@ -1285,12 +1285,12 @@ function mtTelegram(){
 /* 摘要／核可請求送出後，背景保留一份合併後雲端備份，不阻塞畫面。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='maintenance'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(reason){scheduleMaintenanceAutoSync(reason||'telegram-summary');}opt.onSummarySent=function(d,s){bg('telegram-summary');if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg('telegram-approval');if(oa)oa(d,s);};}return open.call(this,opt);};})();
 
-function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.schedule('maintenance',reason||'change',{},900);return;}clearTimeout(window._mtAutoTimer);window._mtAutoTimer=setTimeout(function(){try{mtCloudUpload({silent:true});}catch(e){}},900);}
+function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.schedule('maintenance',reason||'change',{},250);return;}clearTimeout(window._mtAutoTimer);window._mtAutoTimer=setTimeout(function(){try{mtCloudUpload({silent:true});}catch(e){}},250);}
 
 /* ── 初始化：URL 參數 ?form=po / ?form=repair 直接開對應分頁 ── */
 (function(){
   try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
-  if(window.GAAutoSync)GAAutoSync.install({key:'maintenance',pull:mtCloudDownload,push:mtCloudUpload,canSync:function(){return !!GAS_URL;},startDelay:450,anchor:'#ga-cloud'});
+  if(window.GAAutoSync)GAAutoSync.install({key:'maintenance',pull:mtCloudDownload,push:mtCloudUpload,canSync:function(){return !!GAS_URL;},startDelay:120,anchor:'#ga-cloud'});else setTimeout(function(){mtCloudDownload({silent:true}).catch(function(){})},120);
   const f=(params.get('form')||'').toLowerCase();
   if(f==='po'||f==='temp')switchTab('po');
   else if(f==='repair'||f==='rep')switchTab('rep');

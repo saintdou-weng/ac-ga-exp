@@ -682,13 +682,17 @@ async function saveStateCloud(){
     const compactOrds={};
     Object.entries(ords).forEach(([k,v])=>{if(v&&(v.qty>0||v.note))compactOrds[k]=v;});
     const data={ords:compactOrds,poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog};
-    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    try{if(window.GA&&GA.cloud){GA.cloud.mount('#ga-cloud');GA.cloud.set('sync','Auto saving…')}}catch(_){ }
+    const resp=await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify({action:"saveState",data})});
-  }catch(e){console.warn("Cloud save failed:",e);}
+    let j={};try{j=await resp.json()}catch(_){ }if(!resp.ok||j.ok===false)throw new Error(j.error||j.message||('HTTP '+resp.status));
+    try{if(window.GA&&GA.cloud){GA.cloud.set('up','Auto saved');GA.saveCfg({sync_procurement:new Date().toISOString()})}}catch(_){ }
+    return true;
+  }catch(e){console.warn("Cloud save failed:",e);try{if(window.GA&&GA.cloud)GA.cloud.set('err',e.message||'Auto save failed')}catch(_){ }return false;}
 }
 function saveState(){
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(saveStateCloud,1500);
+  _saveTimer=setTimeout(saveStateCloud,250);
 }
 async function loadStateCloud(){
   try{
@@ -2600,6 +2604,12 @@ function procCloudDown(){
   loadStateCloud().then(()=>{ GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態'); })
     .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); });
 }
+/* v3.9.15: startup already pulls; resume/network also refresh automatically when no unsaved local change is queued. */
+let _procAutoPullAt=0;
+function procAutoPull(reason){if(_saveTimer)return;const now=Date.now();if(now-_procAutoPullAt<2500)return;_procAutoPullAt=now;loadStateCloud().then(()=>{try{GA.cloud.mount('#ga-cloud');GA.cloud.set('down','Auto '+(reason||'refresh'))}catch(_){ }render();}).catch(e=>{try{GA.cloud.set('err',e.message||'Auto refresh failed')}catch(_){ }});}
+window.addEventListener('online',()=>setTimeout(()=>procAutoPull('network'),120));
+window.addEventListener('focus',()=>setTimeout(()=>procAutoPull('focus'),120));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>procAutoPull('resume'),120)});
 
 /* 智慧匯入：PO / 收貨 / 庫存。核可流程不變：
    applicant 可「匯入並送核可」，其餘僅「匯入草稿」 */
