@@ -629,6 +629,7 @@ GA.on('lang', function(l){ if(l !== lang) setLang(l); });
 // =========== DATA ===========
 let items = []; // { id, no, name, category, brand, size, stock, minStock, remarks, ytdPurchased, ytdUsed, monthData:{} }
 let records = []; // { id, date, type:'receive'|'issue', itemId, itemName, qty, dept, requester, inspector, remarks }
+let inventoryImportMeta = {}; // Inventory Control Report mapping/source status
 let settings = { gasUrl:'', sheetId:'', tgToken:'', tgChat:'', factory:'Vantage River Textiles Co., Ltd.', dept:'GA/Admin', lowThreshold:5 };
 
 // Period state
@@ -664,7 +665,7 @@ function updatePeriodLabel(){ document.getElementById('period-label').textConten
 function loadLocal(){
   try {
     const d = JSON.parse(localStorage.getItem('vrt_receive_data')||'{}');
-    items = d.items||[]; records = d.records||[];
+    items = d.items||[]; records = d.records||[]; inventoryImportMeta = d.inventoryImportMeta||{};
     const s = JSON.parse(localStorage.getItem('vrt_receive_settings')||'{}');
     Object.assign(settings, s);
     /* v2：GAS URL 一律用平台設定中心（ac_ga_exp_config），本模組不再手填。
@@ -676,7 +677,7 @@ function loadLocal(){
   } catch(e){}
 }
 function saveLocal(){
-  localStorage.setItem('vrt_receive_data', JSON.stringify({items,records}));
+  localStorage.setItem('vrt_receive_data', JSON.stringify({items,records,inventoryImportMeta}));
   localStorage.setItem('vrt_receive_settings', JSON.stringify(settings));
 }
 function loadSettingsForm(){
@@ -706,168 +707,100 @@ let _id=1;
 function newId(){ return 'id_'+Date.now()+'_'+(++_id); }
 
 // =========== IMPORT EXCEL ===========
+function invNorm(v){var n=String(v||'').toLowerCase().replace(/[^a-z0-9]+/g,'');return n.replace(/correection/g,'correction').replace(/permenat|permenant/g,'permanent').replace(/hightlighter/g,'highlighter')}
+function invHints(v){var n=String(v||'').toLowerCase(),a=[];var re=/(aaa|aa|a4|a5|\d+(?:\.\d+)?\s*(?:mm|cm|ml|g|kg|a)|old|new)/g,m;while((m=re.exec(n)))a.push(invNorm(m[1]));return [...new Set(a.filter(Boolean))]}
+function invItemKey(name,size){return invNorm(name)+'|'+invNorm(size)}
+function invMatchItem(sheetName){var sn=invNorm(sheetName),best=null,bestScore=-1;items.forEach(function(x){var nn=invNorm(x.name),score=0;if(!nn)return;if(sn===nn)score+=100;else if(sn.indexOf(nn)>=0)score+=60;else if(nn.indexOf(sn)>=0)score+=40;else if(sn.slice(0,7)===nn.slice(0,7))score+=20;var hints=invHints((x.name||'')+' '+(x.size||''));hints.forEach(function(h){if(h&&sn.indexOf(h)>=0)score+=45;});if(score>bestScore){best=x;bestScore=score;}});return bestScore>=20?best:null}
 function triggerImport(){ document.getElementById('fileInput').click(); }
 function importExcel(input){
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      // cellDates:false → dates come as serial numbers, not JS Date objects
       const wb = XLSX.read(e.target.result, {type:'array', cellDates:false, raw:false});
-      let importedItems = 0, importedRecords = 0;
+      let importedItems = 0, importedIssue = 0, importedReceive = 0, parsedSheets = 0;
+      const importedItemIds = new Set();
 
-      // ── 1. Chart sheet → item master ──────────────────────────────
+      // 1) Chart = item master: Name / Category / Brand / Size.
       const chartSheet = wb.Sheets['Chart'];
       if(chartSheet){
-        // Row 0 = header (N. / Document Name / Remake / Brand / Size)
-        // Row 1+ = data
         const rows = XLSX.utils.sheet_to_json(chartSheet, {header:1, defval:''});
         rows.forEach((row, i)=>{
-          if(i===0) return; // skip header row
-          const no   = row[0];
-          const name = (row[1]||'').toString().trim();
-          const cat  = (row[2]||'').toString().trim();
-          const brand= (row[3]||'').toString().trim();
-          const size = (row[4]||'').toString().trim();
+          if(i===0) return;
+          const no=row[0], name=(row[1]||'').toString().trim(), cat=(row[2]||'').toString().trim(), brand=(row[3]||'').toString().trim(), size=(row[4]||'').toString().trim();
           if(!name) return;
-          const existing = items.find(x=>x.name.toLowerCase()===name.toLowerCase());
-          if(!existing){
-            items.push({ id:newId(), no:+no||i, name, category:cat||'Stationary',
-              brand, size, stock:0, minStock:5, remarks:'', ytdPurchased:0, ytdUsed:0 });
-            importedItems++;
-          }
+          const ik=invItemKey(name,size);let item=items.find(x=>x.inventoryKey===ik)||items.find(x=>invItemKey(x.name,x.size)===ik);
+          if(!item){ item={id:newId(),no:+no||i,name,category:cat||'Stationary',brand,size,stock:0,minStock:5,remarks:'',ytdPurchased:0,ytdUsed:0,inventoryKey:ik}; items.push(item); importedItems++; }
+          else { item.no=+no||item.no; item.name=name; item.category=cat||item.category||'Stationary'; item.brand=brand||item.brand||''; item.size=size||item.size||''; item.inventoryKey=ik; }
+          importedItemIds.add(String(item.id));
         });
       }
 
-      // ── Month header → column index map ───────────────────────────
-      // Actual headers in the file: Jan Feb Mar April May Jun July Aug Sep Oct Nov Dec
-      // Normalise to month index 0-11
-      const MONTH_MAP = {
-        'jan':0,'feb':1,'mar':2,'apr':3,'april':3,
-        'may':4,'jun':5,'june':5,'jul':6,'july':6,
-        'aug':7,'sep':8,'sept':8,'oct':9,'nov':10,'dec':11
-      };
+      // Re-import = rebuild only records produced by this Inventory Control importer.
+      // This also removes the legacy v3.9.x YTD purchase record that was incorrectly put on Jan-15.
+      records = records.filter(r=>{
+        const fromSameInventoryFile=String(r.sourceFile||'')===String(file.name||'')&&(r.sourceKind==='inventory_issue'||r.sourceKind==='inventory_purchase'||r.remarks==='Inventory Control');
+        if(fromSameInventoryFile) return false;
+        if(!importedItemIds.has(String(r.itemId))) return true;
+        return !(r.sourceKind==='inventory_issue'||r.sourceKind==='inventory_purchase'||r.remarks==='Imported'||r.remarks==='Inventory Control');
+      });
 
-      // ── 2. Item sheets → usage records ────────────────────────────
+      const MONTH_MAP={'jan':0,'feb':1,'mar':2,'apr':3,'april':3,'may':4,'jun':5,'june':5,'jul':6,'july':6,'aug':7,'sep':8,'sept':8,'oct':9,'nov':10,'dec':11};
+
+      // 2) Each item sheet = department monthly issues + monthly purchases + opening balance.
       wb.SheetNames.forEach(sheetName=>{
         if(sheetName==='Chart') return;
-        const ws = wb.Sheets[sheetName];
-        if(!ws) return;
-        // header:1 → array of arrays, defval:'' fills blanks
-        const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-        if(rows.length < 3) return;
+        const ws=wb.Sheets[sheetName]; if(!ws) return;
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); if(rows.length<3) return;
+        let headerRowIdx=-1;
+        for(let r=0;r<Math.min(rows.length,7);r++) if((rows[r][0]||'').toString().trim().toLowerCase()==='dept.'){headerRowIdx=r;break;}
+        if(headerRowIdx<0) return;
+        const colIdx=new Array(12).fill(-1); rows[headerRowIdx].forEach((h,ci)=>{const k=(h||'').toString().trim().toLowerCase();if(MONTH_MAP[k]!==undefined)colIdx[MONTH_MAP[k]]=ci;});
+        let year=2026,rawDate=rows[0]&&rows[0][0];
+        if(rawDate){ if(typeof rawDate==='number'){year=new Date(Math.round((rawDate-25569)*86400*1000)).getFullYear();if(year<2000||year>2100)year=2026;}else{const q=parseInt(rawDate);if(q>=2000&&q<=2100)year=q;} }
+        let item=invMatchItem(sheetName);
+        if(!item){item={id:newId(),no:items.length+1,name:sheetName.trim(),category:'Other',brand:'',size:'',stock:0,minStock:5,remarks:'Inventory sheet only',ytdPurchased:0,ytdUsed:0,inventoryKey:invItemKey(sheetName,'')};items.push(item);importedItems++;importedItemIds.add(String(item.id));}
 
-        // Structure (0-based):
-        //   row[0]  → [serial_date, "Monthly use - XXX", ...]
-        //   row[1]  → skip (blank row in some sheets, or merged)
-        //   row[2]  → ['Dept.', 'Jan', 'Feb', 'Mar', 'April', ... 'Dec', null, null]
-        //   row[3]  → TTL use
-        //   row[4]  → Average
-        //   row[5+] → dept data rows
-        //
-        // Find the header row: the row that starts with 'Dept.'
-        let headerRowIdx = -1;
-        for(let r=0; r<Math.min(rows.length,6); r++){
-          if((rows[r][0]||'').toString().trim().toLowerCase()==='dept.'){
-            headerRowIdx = r; break;
-          }
-        }
-        if(headerRowIdx === -1) return; // can't parse this sheet
-
-        // Build colIdx[0..11] = column index for each month
-        const headerRow = rows[headerRowIdx];
-        const colIdx = new Array(12).fill(-1); // colIdx[monthNum] = column
-        headerRow.forEach((h, ci)=>{
-          const key = (h||'').toString().trim().toLowerCase();
-          if(MONTH_MAP[key] !== undefined) colIdx[MONTH_MAP[key]] = ci;
-        });
-
-        // Extract year from row[0] col[0] (stored as Excel serial or text)
-        let year = 2026;
-        const rawDate = rows[0] && rows[0][0];
-        if(rawDate){
-          if(typeof rawDate === 'number'){
-            // Excel serial → JS date
-            year = new Date(Math.round((rawDate - 25569) * 86400 * 1000)).getFullYear();
-            if(year < 2000 || year > 2100) year = 2026;
-          } else {
-            const parsed = parseInt(rawDate);
-            if(parsed >= 2000 && parsed <= 2100) year = parsed;
-          }
-        }
-
-        // Match item: sheet name should equal or contain item name
-        const snL = sheetName.toLowerCase().trim();
-        let item = items.find(x=> x.name.toLowerCase().trim() === snL);
-        if(!item) item = items.find(x=> snL.includes(x.name.toLowerCase().trim().substring(0,8)));
-        if(!item) item = items.find(x=> x.name.toLowerCase().trim().includes(snL.substring(0,8)));
-
-        let ytdPurchased=0, ytdUsed=0, openBalance=0;
-
-        // Iterate data rows (after header row)
+        parsedSheets++;
+        const purchaseMonths=new Array(12).fill(0), ttlUseMonths=new Array(12).fill(0), issueMonths=new Array(12).fill(0);
+        let openBalance=0;
         rows.slice(headerRowIdx+1).forEach(row=>{
-          const dept = (row[0]||'').toString().trim();
-          if(!dept) return;
-          const dL = dept.toLowerCase();
-
+          const dept=(row[0]||'').toString().trim(); if(!dept)return; const dL=dept.toLowerCase();
           if(dL.startsWith('ttl use')){
-            // sum all month columns
-            colIdx.forEach((ci,mNum)=>{ if(ci>=0) ytdUsed += +row[ci]||0; });
-
+            colIdx.forEach((ci,m)=>{if(ci>=0)ttlUseMonths[m]=+row[ci]||0;});
           } else if(dL.includes('monthly purchase')||dL==='purchase'){
-            colIdx.forEach((ci,mNum)=>{ if(ci>=0) ytdPurchased += +row[ci]||0; });
-
+            colIdx.forEach((ci,m)=>{if(ci>=0)purchaseMonths[m]=+row[ci]||0;});
           } else if(dL.startsWith('balance')){
-            // Balance row: value is in col[1] (first data column)
-            openBalance = +row[1]||0;
-
-          } else if(!dL.startsWith('average') && !dL.startsWith('dept') && !dL.startsWith('ttl')){
-            // Regular dept row → issue records
-            if(!item) return;
-            colIdx.forEach((ci,mNum)=>{
-              if(ci < 0) return;
-              const qty = +row[ci]||0;
-              if(qty <= 0) return;
-              const dateStr = `${year}-${String(mNum+1).padStart(2,'0')}-15`;
-              const dup = records.find(r=>
-                r.type==='issue' && r.itemId===item.id &&
-                r.date===dateStr && r.dept===dept);
-              if(!dup){
-                records.push({ id:newId(), date:dateStr, type:'issue',
-                  itemId:item.id, itemName:item.name, qty, dept,
-                  requester:'', inspector:'', remarks:'Imported' });
-                importedRecords++;
-              }
+            openBalance=+row[1]||0;
+          } else if(!dL.startsWith('average')&&!dL.startsWith('dept')&&!dL.startsWith('ttl')){
+            colIdx.forEach((ci,m)=>{
+              if(ci<0)return; const qty=+row[ci]||0; if(qty<=0)return;
+              const dateStr=`${year}-${String(m+1).padStart(2,'0')}-15`;
+              records.push({id:newId(),date:dateStr,type:'issue',itemId:item.id,itemName:item.name,qty,dept,requester:'',inspector:'',remarks:'Inventory Control',sourceFile:file.name,sourceSheet:sheetName,sourceKind:'inventory_issue'});
+              issueMonths[m]+=qty; importedIssue++;
             });
           }
         });
-
-        // Also create a purchase record from ytdPurchased
-        if(item && ytdPurchased > 0){
-          const pDateStr = `${year}-01-15`;
-          const dup = records.find(r=>r.type==='receive'&&r.itemId===item.id&&r.date===pDateStr&&r.remarks==='Imported');
-          if(!dup){
-            records.push({ id:newId(), date:pDateStr, type:'receive',
-              itemId:item.id, itemName:item.name, qty:ytdPurchased,
-              dept:'GA/Admin', requester:'', inspector:'', remarks:'Imported' });
-          }
-          item.ytdPurchased = ytdPurchased;
-        }
-        if(item){
-          item.ytdUsed = ytdUsed;
-          item.stock = Math.max(0, openBalance + ytdPurchased - ytdUsed);
-        }
+        // Monthly purchase is now one Receive record per actual month, so D/W/M/Y is correct.
+        purchaseMonths.forEach((qty,m)=>{
+          if(!(qty>0))return;
+          const dateStr=`${year}-${String(m+1).padStart(2,'0')}-15`;
+          records.push({id:newId(),date:dateStr,type:'receive',itemId:item.id,itemName:item.name,qty,dept:'GA/Admin',requester:'',inspector:'',remarks:'Inventory Control',sourceFile:file.name,sourceSheet:sheetName,sourceKind:'inventory_purchase'});
+          importedReceive++;
+        });
+        const ytdPurchased=purchaseMonths.reduce((a,b)=>a+b,0);
+        const ytdUsed=ttlUseMonths.some(v=>v>0)?ttlUseMonths.reduce((a,b)=>a+b,0):issueMonths.reduce((a,b)=>a+b,0);
+        item.openingBalance=openBalance; item.openingStock=openBalance; item.ytdPurchased=ytdPurchased; item.ytdUsed=ytdUsed; item.stock=Math.max(0,openBalance+ytdPurchased-ytdUsed);
+        item.monthData={year,purchase:purchaseMonths,use:ttlUseMonths,departmentUse:issueMonths,opening:openBalance,sourceSheet:sheetName};
+        item.inventorySource={file:file.name,sheet:sheetName,updatedAt:new Date().toISOString()};
       });
 
-      saveLocal();
-      renderAll();
-      toast(`✅ Imported ${importedItems} items, ${importedRecords} issue records`, 'success');
+      inventoryImportMeta={file:file.name,importedAt:new Date().toISOString(),itemMasterCount:importedItemIds.size,itemSheets:parsedSheets,issueRecords:importedIssue,purchaseRecords:importedReceive,
+        mapping:{chart:'Item master: name/category/brand/size',department:'Department rows → Issue / Distribution by month',purchase:'Monthly purchase → Receive / Purchase by month',balance:'Balance 12/2025 → Opening stock',stock:'Opening + Purchase - TTL use → Current stock'}};
+      saveLocal(); renderAll(); scheduleReceivingAutoUpload('inventory-import');
+      toast(`✅ Inventory mapped: ${importedItemIds.size} items · ${importedReceive} monthly receipts · ${importedIssue} department issues`,'success');
       input.value='';
-    } catch(err){
-      console.error(err);
-      toast('Import error: '+err.message, 'error');
-      input.value='';
-    }
+    } catch(err){ console.error(err); toast('Import error: '+err.message,'error'); input.value=''; }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -880,8 +813,8 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(iRows), 'Items');
   
   // Records sheet
-  const rRows = [['Date','Type','Item','Qty','Dept','Requester','Inspector','Remarks']];
-  records.forEach(r=>rRows.push([r.date,r.type,r.itemName,r.qty,r.dept,r.requester,r.inspector||'',r.remarks]));
+  const rRows = [['Date','Type','Item','Qty','Dept','Requester','Inspector','Remarks','Source File','Source Sheet','Source Kind']];
+  records.forEach(r=>rRows.push([r.date,r.type,r.itemName,r.qty,r.dept,r.requester,r.inspector||'',r.remarks,r.sourceFile||'',r.sourceSheet||'',r.sourceKind||'']));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rRows), 'Records');
   
   XLSX.writeFile(wb, `VRT_Receive_Report_${localYMD()}.xlsx`);
@@ -1147,6 +1080,15 @@ function renderReceiveContent(){
   let html = `<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap">
     <button class="nav-btn success" onclick="showReceiveForm('${receiveTab==='balance'?'receive':receiveTab}')">➕ Add Record</button>
   </div>`;
+  if(inventoryImportMeta&&inventoryImportMeta.file){
+    html += `<div class="recv-po-note" style="line-height:1.65"><b>📚 ${recvI('Inventory 對應來源','Inventory mapping','ការផ្គូផ្គង Inventory')}</b> · ${recvEsc(inventoryImportMeta.file)}<br>`+
+      `├ Chart → ${recvI('品項主檔（名稱／分類／品牌／規格）','Item master (name/category/brand/size)','បញ្ជីមុខទំនិញ')}<br>`+
+      `├ ${recvI('各品項工作表的部門月份數','Department monthly rows on each item sheet','ទិន្នន័យប្រើប្រាស់តាមផ្នែកប្រចាំខែ')} → ${recvI('領用／發放 Issue','Issue / Distribution','ចេញ / ចែក')}<br>`+
+      `├ Monthly purchase → ${recvI('每月收貨 Receive','Monthly Receive','ទទួលប្រចាំខែ')}<br>`+
+      `├ Balance 12/2025 → ${recvI('期初庫存','Opening stock','ស្តុកដើមគ្រា')}<br>`+
+      `└ ${recvI('現庫存 = 期初 + 採購 - TTL use','Current stock = Opening + Purchase - TTL use','ស្តុកបច្ចុប្បន្ន = ដើមគ្រា + ទិញ - ប្រើ')}<br>`+
+      `<span style="color:var(--text3)">${inventoryImportMeta.itemMasterCount||0} items · ${inventoryImportMeta.purchaseRecords||0} receive rows · ${inventoryImportMeta.issueRecords||0} issue rows</span></div>`;
+  }
   
   // Filter records by period
   const periodRecords = getRecordsForPeriod();
@@ -1775,7 +1717,7 @@ function sendTelegram(){
   });
 }
 function recvLedgerSummary(itemId){var rs=recvLedgerRecords(itemId),months={},item=recvItemById(itemId),running=GA.num(item&&item.openingStock),allIn=0,allOut=0,inAmt=0,outAmt=0,dept={};rs.forEach(function(r){var k=String(r.date).slice(0,7),g=months[k]||(months[k]={month:k,opening:running,received:0,issued:0,receivedAmount:0,issuedAmount:0,closing:running,departments:{}}),q=GA.num(r.qty),c=recvRecordCost(r);if(r.type==='issue'){g.issued+=q;g.issuedAmount+=c.amount;outAmt+=c.amount;allOut+=q;var d=String(r.dept||'未填部門').trim()||'未填部門';g.departments[d]=(g.departments[d]||0)+q;dept[d]=(dept[d]||0)+q;}else{g.received+=q;g.receivedAmount+=c.amount;inAmt+=c.amount;allIn+=q;}running+=r.type==='issue'?-q:q;g.closing=running;});return{records:rs,months:Object.keys(months).sort().reverse().map(function(k){return months[k];}),allIn:allIn,allOut:allOut,inAmt:inAmt,outAmt:outAmt,calculated:running,departments:dept};}
-function recvLedgerHtml(item){if(!item)return '<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),ev=recvItemEvidenceFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=P.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=P.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+' / '+m.receivedAmount.toFixed(2)+'</td><td class="num out">-'+m.issued+' / '+m.issuedAmount.toFixed(2)+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join(''),details=s.records.slice().reverse().map(function(r){var c=recvRecordCost(r),out=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+(out?'📤 ':'📥 ')+(out?recvI('發出','Issue','ចេញ'):recvI('收貨','Receive','ទទួល'))+'</td><td class="num">'+GA.num(r.qty)+'</td><td class="num">'+c.unitPrice.toFixed(2)+'</td><td class="num">'+c.amount.toFixed(2)+'</td><td>'+recvEsc(out?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+'</td></tr>';}).join('');return '<div class="recv-ledger-head"><div>'+recvRenderPhoto(ev)+' <b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:11px;color:var(--text3)">'+recvI('目前版本生效','Current version','កំណែបច្ចុប្បន្ន')+' '+recvEsc(v.effectiveFrom)+' · '+recvI('單價','Unit price','តម្លៃឯកតា')+' '+GA.num(v.unitPrice).toFixed(2)+'</div></div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('本期收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('本期發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史收貨金額','Received amount','ចំនួនទឹកប្រាក់ទទួល')+'</small><b>'+s.inAmt.toFixed(2)+'</b></div><div><small>'+recvI('歷史發出金額','Issued reference','តម្លៃចេញយោង')+'</small><b>'+s.outAmt.toFixed(2)+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><h4>📅 '+recvI('每月進出、單價與結存','Monthly movement, price and balance','ចលនា តម្លៃ និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th>'+recvI('期初','Opening','ដើម')+'</th><th>'+recvI('收貨 數量／金額','Received qty / amount','ទទួល បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('發出 數量／金額','Issued qty / amount','ចេញ បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('給到部門／數量','Departments / qty','ផ្នែក / បរិមាណ')+'</th><th>'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div><h4>🧾 '+recvI('完整物品收發流水帳','Complete item movement ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('單價','Unit price','តម្លៃឯកតា')+'</th><th>'+recvI('總價','Line total','សរុប')+'</th><th>'+recvI('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</th><th>'+recvI('領用人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(details||'<tr><td colspan="10">—</td></tr>')+'</tbody></table></div>'+recvVersionHistoryHtml(item);}
+function recvLedgerHtml(item){if(!item)return '<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),ev=recvItemEvidenceFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=P.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=P.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+' / '+m.receivedAmount.toFixed(2)+'</td><td class="num out">-'+m.issued+' / '+m.issuedAmount.toFixed(2)+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join(''),details=s.records.slice().reverse().map(function(r){var c=recvRecordCost(r),out=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+(out?'📤 ':'📥 ')+(out?recvI('發出','Issue','ចេញ'):recvI('收貨','Receive','ទទួល'))+'</td><td class="num">'+GA.num(r.qty)+'</td><td class="num">'+c.unitPrice.toFixed(2)+'</td><td class="num">'+c.amount.toFixed(2)+'</td><td>'+recvEsc(out?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+(r.sourceSheet?'<div style="font-size:10px;color:var(--text3);margin-top:2px">📚 '+recvEsc(r.sourceSheet)+' · '+recvEsc(r.sourceKind||'Inventory')+'</div>':'')+'</td></tr>';}).join('');var invSrc=item.inventorySource?'<div style="font-size:10px;color:var(--text3);margin-top:3px">📚 '+recvI('來源對應','Mapped from','ប្រភព')+': '+recvEsc(item.inventorySource.file||'')+' → '+recvEsc(item.inventorySource.sheet||'')+'</div>':'';return '<div class="recv-ledger-head"><div>'+recvRenderPhoto(ev)+' <b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:11px;color:var(--text3)">'+recvI('目前版本生效','Current version','កំណែបច្ចុប្បន្ន')+' '+recvEsc(v.effectiveFrom)+' · '+recvI('單價','Unit price','តម្លៃឯកតា')+' '+GA.num(v.unitPrice).toFixed(2)+'</div>'+invSrc+'</div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('本期收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('本期發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史收貨金額','Received amount','ចំនួនទឹកប្រាក់ទទួល')+'</small><b>'+s.inAmt.toFixed(2)+'</b></div><div><small>'+recvI('歷史發出金額','Issued reference','តម្លៃចេញយោង')+'</small><b>'+s.outAmt.toFixed(2)+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><h4>📅 '+recvI('每月進出、單價與結存','Monthly movement, price and balance','ចលនា តម្លៃ និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th>'+recvI('期初','Opening','ដើម')+'</th><th>'+recvI('收貨 數量／金額','Received qty / amount','ទទួល បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('發出 數量／金額','Issued qty / amount','ចេញ បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('給到部門／數量','Departments / qty','ផ្នែក / បរិមាណ')+'</th><th>'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div><h4>🧾 '+recvI('完整物品收發流水帳','Complete item movement ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('單價','Unit price','តម្លៃឯកតា')+'</th><th>'+recvI('總價','Line total','សរុប')+'</th><th>'+recvI('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</th><th>'+recvI('領用人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(details||'<tr><td colspan="10">—</td></tr>')+'</tbody></table></div>'+recvVersionHistoryHtml(item);}
 var _recvLoadLocalLatest=loadLocal;loadLocal=function(){_recvLoadLocalLatest();recvMigrateCatalog();};
 setTimeout(recvBindItemFiles,0);
 
@@ -1793,6 +1735,590 @@ try{
 }catch(e){}
 if(window.GAAutoSync)GAAutoSync.install({key:'receiving',pull:recvCloudPull,push:recvCloudPush,canSync:function(){return !!(GA.gasUrl&&GA.gasUrl());},startDelay:450,anchor:'#ga-cloud'});
 
+</script>
+
+<style id="recv-v3912-css">
+/* v3.9.12 Receiving: mobile-first, explicit Receive vs Issue workflow */
+.recv-v3912-guide{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:8px 0 10px}.recv-v3912-guide button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 7px;text-align:left;font-weight:700}.recv-v3912-guide button b{display:block;font-size:13px}.recv-v3912-guide button small{display:block;color:var(--text3);font-size:10px;margin-top:3px;font-weight:500}.recv-v3912-guide button.on{border-color:#c47a3c;background:#fff8ef}.recv-v3912-rule,.recv-v3912-quality{border:1px solid #dbe3ef;background:#f8fafc;border-radius:10px;padding:9px 11px;margin:8px 0;font-size:11px;line-height:1.55}.recv-v3912-quality.ok{background:#f0fdf4;border-color:#bbf7d0}.recv-v3912-quality.warn{background:#fffbeb;border-color:#fde68a}.recv-edit-list{display:grid;gap:9px;margin:10px 0}.recv-edit-card{background:#fff;border:1px solid #dbe3ef;border-radius:10px;padding:10px}.recv-edit-card .head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}.recv-edit-card .grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:7px}.recv-edit-card label{font-size:10px;color:var(--text3);font-weight:700}.recv-edit-card select,.recv-edit-card input{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:7px;padding:8px;font:inherit;background:#fff}.recv-edit-card details{margin-top:7px;border-top:1px dashed #e2e8f0;padding-top:7px}.recv-edit-card summary{cursor:pointer;color:#475569;font-size:11px;font-weight:700}.recv-edit-card .adv{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}.recv-availability{font-size:10px;color:#64748b;margin-top:3px}.recv-mobile-balance{display:none}.recv-mobile-ledger{display:none}.recv-v3912-actions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0}.recv-v3912-actions .nav-btn{min-height:38px}.recv-item-master-note{font-size:11px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:8px 10px;margin-bottom:8px}
+@media(max-width:720px){
+  .tabs{display:grid!important;grid-template-columns:repeat(2,1fr)!important;overflow:visible!important;gap:5px!important}.tabs .tab{padding:8px 5px!important;text-align:center!important;font-size:12px!important}.recv-v3912-guide{grid-template-columns:1fr}.recv-v3912-guide button{display:flex;align-items:center;gap:8px}.recv-v3912-guide button b,.recv-v3912-guide button small{display:inline}.recv-edit-card .grid{grid-template-columns:1fr 1fr}.recv-edit-card .grid .itemfield{grid-column:1/-1}.recv-edit-card .adv{grid-template-columns:1fr}.recv-batch-table,.recv-po-table{display:none!important}.recv-desktop-ledger{display:none!important}.recv-mobile-ledger,.recv-mobile-balance{display:grid!important;gap:7px}.recv-month-card,.recv-balance-card{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:9px}.recv-month-card .top,.recv-balance-card .top{display:flex;justify-content:space-between;gap:8px;font-weight:800}.recv-month-card .nums,.recv-balance-card .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.recv-month-card .nums div,.recv-balance-card .nums div{background:#f8fafc;border-radius:7px;padding:6px;text-align:center}.recv-month-card small,.recv-balance-card small{display:block;color:#64748b;font-size:9px}.recv-month-card b,.recv-balance-card b{font-size:13px}.table-wrap{max-width:100%}.recv-ledger-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important}.recv-ledger-toolbar label{min-width:0}.recv-ledger-toolbar select{min-width:0!important;width:100%}.recv-ledger-kpis{grid-template-columns:repeat(2,1fr)!important}.recv-ledger-kpis>div:nth-child(n+5){display:none}.recv-po-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important}.recv-po-toolbar input{min-width:0;width:100%}#items-table th:nth-child(7),#items-table td:nth-child(7),#items-table th:nth-child(8),#items-table td:nth-child(8){display:none}.view-toggle{display:none!important}}
+</style>
+<script id="recv-v3912-js">
+(function(){
+  function L(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en}
+  function n(v){return GA.num(v)}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,' ')}
+  function monthOf(d){return String(d||'').slice(0,7)}
+  function ensureOpening(){var changed=false;(items||[]).forEach(function(it){if(it.openingStock==null){if(it.openingBalance!=null)it.openingStock=n(it.openingBalance);else{var rr=(records||[]).filter(function(r){return String(r.itemId)===String(it.id)}),ri=rr.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),ro=rr.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0);it.openingStock=n(it.stock)-ri+ro}changed=true}});(records||[]).forEach(function(r){if((r.sourceKind==='inventory_issue'||r.sourceKind==='inventory_purchase')&&!r.periodGranularity){r.periodGranularity='month';r.sourceMonth=monthOf(r.date);changed=true}});if(changed)try{saveLocal()}catch(e){}}
+  function qkey(r){return [r.type,r.itemId,r.date,n(r.qty).toFixed(4),norm(r.dept)].join('|')}
+  function quality(){ensureOpening();var seen={},dups=0,missingDept=0,mismatch=0;(records||[]).forEach(function(r){var k=qkey(r);if(seen[k])dups++;else seen[k]=1;if(r.type==='issue'&&!String(r.dept||'').trim())missingDept++});(items||[]).forEach(function(it){var rr=(records||[]).filter(function(r){return String(r.itemId)===String(it.id)}),calc=n(it.openingStock)+rr.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0)-rr.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0);if(Math.abs(calc-n(it.stock))>.0001)mismatch++});return{dups:dups,missingDept:missingDept,mismatch:mismatch}}
+  function qualityHtml(){var q=quality(),bad=q.dups+q.missingDept+q.mismatch;return '<div class="recv-v3912-quality '+(bad?'warn':'ok')+'">'+(bad?'⚠️ ':'✅ ')+L('資料檢查','Data check','ពិនិត្យទិន្នន័យ')+'：'+(q.dups?L('疑似重複 ','Possible duplicates ','អាចស្ទួន ')+q.dups+' · ':'')+(q.missingDept?L('發放缺部門 ','Issue missing dept ','ចេញខ្វះផ្នែក ')+q.missingDept+' · ':'')+(q.mismatch?L('帳本/結存差異 ','Ledger/balance mismatch ','បញ្ជី/សមតុល្យខុស ')+q.mismatch:'')+(!bad?'OK':'')+'</div>'}
+  function guideHtml(active){return '<div class="recv-v3912-guide"><button class="'+(active==='receive'?'on':'')+'" onclick="setReceiveTab(\'receive\')"><span>📥</span><span><b>'+L('1 收貨／採購','1 Receive','1 ទទួល')+'</b><small>'+L('實際日期＋品項＋數量','Date + item + qty','ថ្ងៃ + ទំនិញ + បរិមាណ')+'</small></span></button><button class="'+(active==='issue'?'on':'')+'" onclick="setReceiveTab(\'issue\')"><span>📤</span><span><b>'+L('2 發放／領用','2 Issue','2 ចេញ')+'</b><small>'+L('日期＋品項＋數量＋部門','Date + item + qty + dept','ថ្ងៃ + ទំនិញ + បរិមាណ + ផ្នែក')+'</small></span></button><button class="'+(active==='balance'?'on':'')+'" onclick="setReceiveTab(\'balance\')"><span>📦</span><span><b>'+L('3 結存核對','3 Balance','3 សមតុល្យ')+'</b><small>'+L('期初＋收貨－發放＝期末','Opening + in - out','ដើម + ទទួល - ចេញ')+'</small></span></button></div>'}
+  function ruleHtml(){return '<div class="recv-v3912-rule"><b>📅 '+L('更新規則','Update rule','ច្បាប់បច្ចុប្បន្នភាព')+'</b><br>'+L('線上／收發 Excel：用實際日期，日／週／月／年都可分析。Inventory Control 月表：只視為「月資料」，不會假裝成某一天；日／週畫面會排除月資料。','Online / movement Excel: use actual dates, so D/W/M/Y works. Inventory Control monthly sheets stay month-level; they are excluded from D/W views instead of pretending to occur on one day.','អនឡាញ / Excel ចលនា ប្រើថ្ងៃពិត។ Inventory Control ប្រចាំខែរក្សាជាទិន្នន័យខែ ហើយមិនរាប់ក្នុងទិដ្ឋភាពថ្ងៃ/សប្តាហ៍ទេ។')+'</div>'}
+  function actionsHtml(type){return '<div class="recv-v3912-actions"><button class="nav-btn success" onclick="'+(type==='receive'?'addReceiveBatchLine()':'addIssueBatchLine()')+'">➕ '+L('新增一列','Add line','បន្ថែមជួរ')+'</button><button class="nav-btn success" onclick="'+(type==='receive'?'saveReceiveBatchLines()':'saveIssueBatchLines()')+'">💾 '+L('儲存並同步','Save & sync','រក្សាទុក និង Sync')+'</button><button class="nav-btn" onclick="document.getElementById(\'fileInput\').click()">⬆ Excel</button><button class="nav-btn" onclick="recvDownloadMovementTemplate()">📄 '+L('Excel 範本','Excel template','គំរូ Excel')+'</button></div>'}
+  function itemOptions(sel){return receiveBatchItemOptions(sel)}
+  window.renderReceiveBatchTab=function(){recvLedgerCss();ensureOpening();var el=document.getElementById('receive-content');if(!_recvBatchLines.length)_recvBatchLines=[{date:localYMD(),type:'receive',itemId:items[0]&&items[0].id||'',poIndex:'',qty:1,dept:'',requester:'',inspector:'',remarks:''}];var item=recvItemById(_recvLedgerItemId)||recvItemById(_recvBatchLines[0].itemId)||items[0]||null;if(item)_recvLedgerItemId=item.id;var html=guideHtml('receive')+ruleHtml()+qualityHtml()+actionsHtml('receive')+'<div class="recv-edit-list">';_recvBatchLines.forEach(function(r,i){var it=recvItemById(r.itemId);html+='<div class="recv-edit-card"><div class="head"><b>📥 '+L('收貨','Receive','ទទួល')+' #'+(i+1)+'</b><button class="row-btn del" onclick="removeReceiveBatchLine('+i+')">🗑</button></div><div class="grid"><div class="itemfield"><label>'+L('品項','Item','ទំនិញ')+'</label><select onchange="recvBatchItemChange('+i+',this.value)">'+itemOptions(r.itemId)+'</select></div><div><label>'+L('日期','Date','ថ្ងៃ')+'</label><input type="date" value="'+recvEsc(r.date||localYMD())+'" onchange="recvBatchSet('+i+',\'date\',this.value)"></div><div><label>'+L('數量','Qty','បរិមាណ')+'</label><input type="number" min="1" value="'+n(r.qty||1)+'" onchange="recvBatchSet('+i+',\'qty\',this.value)"></div></div><details><summary>'+L('更多：PO／來源／經手／檢查／備註','More: PO / source / handler / inspector / note','បន្ថែម៖ PO / ប្រភព / អ្នកកាន់ / អ្នកត្រួតពិនិត្យ')+'</summary><div class="adv"><div><label>PO</label><select onchange="recvBatchPoChange('+i+',this.value)">'+receiveBatchPoOptions(r.poIndex)+'</select></div><div><label>'+L('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</label><input value="'+recvEsc(r.dept||'')+'" onchange="recvBatchSet('+i+',\'dept\',this.value)"></div><div><label>'+L('經手人','Handler','អ្នកកាន់')+'</label><input value="'+recvEsc(r.requester||'')+'" onchange="recvBatchSet('+i+',\'requester\',this.value)"></div><div><label>'+L('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</label><input value="'+recvEsc(r.inspector||'')+'" onchange="recvBatchSet('+i+',\'inspector\',this.value)"></div><div style="grid-column:1/-1"><label>'+L('備註','Remarks','កំណត់ចំណាំ')+'</label><input value="'+recvEsc(r.remarks||'')+'" onchange="recvBatchSet('+i+',\'remarks\',this.value)"></div></div></details></div>'});html+='</div>'+(item?'<div class="recv-ledger-html">'+recvLedgerHtml(item)+'</div>':'');el.innerHTML=html}
+  window.renderIssueBatchTab=function(){recvLedgerCss();ensureOpening();var el=document.getElementById('receive-content');if(!_recvIssueLines.length)_recvIssueLines=[{date:localYMD(),itemId:items[0]&&items[0].id||'',qty:1,dept:'',requester:'',inspector:'',remarks:''}];var item=recvItemById(_recvLedgerItemId)||recvItemById(_recvIssueLines[0].itemId)||items[0]||null;if(item)_recvLedgerItemId=item.id;var html=guideHtml('issue')+ruleHtml()+qualityHtml()+actionsHtml('issue')+'<div class="recv-edit-list">';_recvIssueLines.forEach(function(r,i){var it=recvItemById(r.itemId),av=it?n(it.stock):0;html+='<div class="recv-edit-card"><div class="head"><b>📤 '+L('發放／領用','Issue','ចេញ')+' #'+(i+1)+'</b><button class="row-btn del" onclick="removeIssueBatchLine('+i+')">🗑</button></div><div class="grid"><div class="itemfield"><label>'+L('品項','Item','ទំនិញ')+'</label><select onchange="setIssueBatch('+i+',\'itemId\',this.value)">'+itemOptions(r.itemId)+'</select><div class="recv-availability">'+L('目前可用','Available','មាន')+'：<b>'+av+'</b></div></div><div><label>'+L('日期','Date','ថ្ងៃ')+'</label><input type="date" value="'+recvEsc(r.date||localYMD())+'" onchange="setIssueBatch('+i+',\'date\',this.value)"></div><div><label>'+L('數量','Qty','បរិមាណ')+'</label><input type="number" min="1" max="'+av+'" value="'+n(r.qty||1)+'" onchange="setIssueBatch('+i+',\'qty\',this.value)"></div><div style="grid-column:1/-1"><label>'+L('發給部門（必填）','Department (required)','ផ្នែក (ត្រូវបំពេញ)')+'</label><input value="'+recvEsc(r.dept||'')+'" placeholder="HR / GA / Sewing..." onchange="setIssueBatch('+i+',\'dept\',this.value)"></div></div><details><summary>'+L('更多：領用人／檢查人／備註','More: receiver / inspector / note','បន្ថែម៖ អ្នកទទួល / អ្នកត្រួតពិនិត្យ')+'</summary><div class="adv"><div><label>'+L('領用人','Receiver','អ្នកទទួល')+'</label><input value="'+recvEsc(r.requester||'')+'" onchange="setIssueBatch('+i+',\'requester\',this.value)"></div><div><label>'+L('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</label><input value="'+recvEsc(r.inspector||'')+'" onchange="setIssueBatch('+i+',\'inspector\',this.value)"></div><div style="grid-column:1/-1"><label>'+L('備註','Remarks','កំណត់ចំណាំ')+'</label><input value="'+recvEsc(r.remarks||'')+'" onchange="setIssueBatch('+i+',\'remarks\',this.value)"></div></div></details></div>'});html+='</div>'+(item?'<div class="recv-ledger-html">'+recvLedgerHtml(item)+'</div>':'');el.innerHTML=html}
+  function dupExact(c){return(records||[]).filter(function(r){return qkey(r)===qkey(c)})}
+  function sameMonthReceipts(c){return(records||[]).filter(function(r){return r.type==='receive'&&String(r.itemId)===String(c.itemId)&&monthOf(r.date)===monthOf(c.date)})}
+  function confirmReceive(c){var ex=dupExact(c);if(ex.length)return confirm(L('⚠️ 完全相同的收貨已存在 '+ex.length+' 筆，仍要再新增嗎？','⚠️ An identical receipt already exists. Add again?','⚠️ មានការទទួលដូចគ្នារួចហើយ។ បន្ថែមម្ដងទៀត?'));var sm=sameMonthReceipts(c);if(sm.length)return confirm(L('⚠️ 此品項本月已有 '+sm.length+' 筆收貨（'+sm.map(function(x){return x.date+' ×'+x.qty}).join('、')+'）。確認這是另一批收貨？','⚠️ This item already has '+sm.length+' receipt(s) this month. Confirm this is another delivery?','⚠️ ទំនិញនេះមានការទទួលក្នុងខែនេះរួចហើយ។ បញ្ជាក់ថាជាការទទួលផ្សេង?'));return true}
+  window.saveReceiveBatchLines=function(){var valid=(_recvBatchLines||[]).filter(function(r){return r.itemId&&n(r.qty)>0&&r.date});if(!valid.length){toast(L('請填品項、日期、數量','Enter item, date and quantity','បំពេញទំនិញ ថ្ងៃ និងបរិមាណ'),'error');return}for(var i=0;i<valid.length;i++){var c=Object.assign({},valid[i],{type:'receive'});if(!confirmReceive(c))return}recvSaveReceiptLines(valid.map(function(x){return Object.assign({},x,{periodGranularity:'day'})}),'batch-receive');_recvBatchLines=[];renderAll();toast(L('✅ 收貨已儲存並排程同步','✅ Receipts saved and sync queued','✅ បានរក្សាទុក និង Sync'),'success')}
+  window.saveIssueBatchLines=function(){var valid=(_recvIssueLines||[]).filter(function(r){return r.itemId&&r.date&&n(r.qty)>0&&String(r.dept||'').trim()}),shadow={};if(!valid.length){toast(L('請填品項、日期、數量與部門','Fill item, date, quantity and department','បំពេញទំនិញ ថ្ងៃ បរិមាណ និងផ្នែក'),'error');return}for(var i=0;i<valid.length;i++){var it=recvItemById(valid[i].itemId),q=n(valid[i].qty),c=Object.assign({},valid[i],{type:'issue'});if(!it||q>n(it.stock)){toast(L('發放量不可超過目前結存','Issue qty cannot exceed stock','បរិមាណចេញមិនអាចលើសស្តុក'),'error');return}if(dupExact(c).length&&!confirm(L('⚠️ 相同日期／品項／部門／數量的發放已存在，仍要新增？','⚠️ Identical issue already exists. Add again?','⚠️ ការចេញដូចគ្នាមានរួចហើយ។ បន្ថែមទៀត?')))return;shadow[it.id]=(shadow[it.id]||0)+q;if(shadow[it.id]>n(it.stock)){toast(L('同批發放合計超過庫存','Batch issue exceeds stock','ការចេញសរុបលើសស្តុក'),'error');return}}valid.forEach(function(d){var it=recvItemById(d.itemId),r=recvAddRecord({date:d.date,type:'issue',itemId:it.id,itemName:it.name,qty:n(d.qty),dept:String(d.dept||'').trim(),requester:d.requester||'',inspector:d.inspector||'',remarks:d.remarks||'',periodGranularity:'day'});recvAdjustStock(it,'issue',r.qty)});saveLocal();scheduleReceivingAutoUpload('batch-issue');_recvIssueLines=[];renderAll();toast(L('✅ 發放已儲存並排程同步','✅ Issues saved and sync queued','✅ បានរក្សាទុក និង Sync'),'success')}
+  var oldGet=getRecordsForPeriod;window.getRecordsForPeriod=function(){ensureOpening();var key=_pkey();return(records||[]).filter(function(r){if(!r.date||!GA.inPeriod(r.date,key,periodMode))return false;if((periodMode==='day'||periodMode==='week')&&r.periodGranularity==='month')return false;return true})}
+  var oldLedger=recvLedgerHtml;window.recvLedgerHtml=function(item){ensureOpening();if(!item)return'<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id)}),pin=P.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),pout=P.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0),cards=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d]}).join(' · ')||'—';return'<div class="recv-month-card"><div class="top"><span>📅 '+recvEsc(m.month)+'</span><span>'+L('期末','Closing','ចុង')+' '+m.closing+'</span></div><div class="nums"><div><small>'+L('期初','Opening','ដើម')+'</small><b>'+m.opening+'</b></div><div><small>'+L('收貨','Received','ទទួល')+'</small><b class="in">+'+m.received+'</b></div><div><small>'+L('發放','Issued','ចេញ')+'</small><b class="out">-'+m.issued+'</b></div></div><div style="font-size:10px;color:#64748b;margin-top:6px">🏢 '+ds+'</div></div>'}).join('');var desktop=oldLedger(item);return '<div class="recv-ledger-head"><div><b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:10px;color:#64748b">'+L('目前結存','Current balance','សមតុល្យ')+' <b>'+n(item.stock)+'</b> · '+L('本期收','In','ទទួល')+' +'+pin+' · '+L('本期發','Out','ចេញ')+' -'+pout+'</div></div></div><div class="recv-mobile-ledger">'+(cards||'<div class="recv-empty">—</div>')+'</div><div class="recv-desktop-ledger">'+desktop+'</div>'}
+  function balanceHtml(){ensureOpening();var P=getRecordsForPeriod(),rows=items.map(function(it){var rr=(records||[]).filter(function(r){return String(r.itemId)===String(it.id)}),before=rr.filter(function(r){return r.date&&String(r.date)<String((periodMode==='month'?_pkey()+'-01':periodMode==='year'?_pkey()+'-01-01':GA.weekRange(_pkey())?GA.weekRange(_pkey()).start:_pkey()))}),br=before.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),bo=before.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0),op=n(it.openingStock)+br-bo,inc=P.filter(function(r){return String(r.itemId)===String(it.id)&&r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),out=P.filter(function(r){return String(r.itemId)===String(it.id)&&r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0);return{it:it,open:op,inc:inc,out:out,close:op+inc-out}}).filter(function(x){return x.open||x.inc||x.out||x.close});return guideHtml('balance')+ruleHtml()+qualityHtml()+'<div class="recv-mobile-balance">'+rows.map(function(x){return'<div class="recv-balance-card"><div class="top"><span>'+recvEsc(x.it.name)+'</span><span>'+recvEsc(x.it.category||'')+'</span></div><div class="nums"><div><small>'+L('期初','Opening','ដើម')+'</small><b>'+x.open+'</b></div><div><small>'+L('收貨／發放','In / Out','ទទួល / ចេញ')+'</small><b><span class="in">+'+x.inc+'</span> / <span class="out">-'+x.out+'</span></b></div><div><small>'+L('期末','Closing','ចុង')+'</small><b>'+x.close+'</b></div></div></div>'}).join('')+'</div><div class="recv-desktop-ledger"><div class="table-wrap"><table><thead><tr><th>'+L('品項','Item','ទំនិញ')+'</th><th>'+L('分類','Category','ប្រភេទ')+'</th><th>'+L('期初','Opening','ដើម')+'</th><th>+ '+L('收貨','Received','ទទួល')+'</th><th>- '+L('發放','Issued','ចេញ')+'</th><th>= '+L('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+rows.map(function(x){return'<tr><td><b>'+recvEsc(x.it.name)+'</b></td><td>'+recvEsc(x.it.category||'')+'</td><td>'+x.open+'</td><td class="in">+'+x.inc+'</td><td class="out">-'+x.out+'</td><td><b>'+x.close+'</b></td></tr>'}).join('')+'</tbody></table></div></div>'}
+  var oldDispatch=renderReceiveContent;window.renderReceiveContent=function(){if(receiveTab==='receive')return renderReceiveBatchTab();if(receiveTab==='issue')return renderIssueBatchTab();if(receiveTab==='balance'){document.getElementById('receive-content').innerHTML=balanceHtml();return}if(receiveTab==='po')return renderPoReceiveTab();return oldDispatch()}
+  var oldSaveItem=saveItem;window.saveItem=async function(){var id=document.getElementById('edit-id').value,name=norm(document.getElementById('f-name').value),size=norm(document.getElementById('f-size').value);if(!id){var ex=(items||[]).find(function(x){var v=recvItemVersionFor(x,recvCurrentMonth());return norm(x.name)===name&&norm(v.size||x.size)===size});if(ex){toast(L('⚠️ 同品名／規格已存在，已開啟原品項，避免重複。','⚠️ Same item/spec already exists. Opening existing item.','⚠️ ទំនិញ/លក្ខណៈដូចគ្នាមានរួចហើយ។'),'error');editItem(ex.id);return}}if(id){var it=recvItemById(id);if(it)document.getElementById('f-stock').value=n(it.stock)}else document.getElementById('f-stock').value=0;return oldSaveItem()}
+  function simplifyItemForm(){var fs=document.getElementById('f-stock');if(fs){var g=fs.closest('.form-group');if(g)g.style.display='none'}var page=document.getElementById('page-items');if(page&&!page.querySelector('.recv-item-master-note')){var nte=document.createElement('div');nte.className='recv-item-master-note';nte.innerHTML='📌 '+L('物品主檔只管理：品名、分類、品牌／規格、單價版本、最低庫存、照片。數量不要在這裡改；數量只從「收貨」增加、從「發放」扣除。','Item master only manages name, category, spec, price version, minimum stock and photos. Do not edit quantities here; quantities increase through Receive and decrease through Issue.','បញ្ជីទំនិញគ្រប់គ្រងតែឈ្មោះ ប្រភេទ លក្ខណៈ តម្លៃ ស្តុកអប្បបរមា និងរូបថត។ បរិមាណកែតាម Receive/Issue ប៉ុណ្ណោះ។');var st=page.querySelector('.section-title');if(st)st.insertAdjacentElement('afterend',nte)}}
+  window.recvDownloadMovementTemplate=function(){var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([['Date','Type','Item','Qty','Department','Receiver','Inspector','Remarks'],[localYMD(),'Receive','A4 Paper',10,'GA/Admin','','Phea','New delivery'],[localYMD(),'Issue','A4 Paper',2,'HR','Srey Oun','Phea','']]);XLSX.utils.book_append_sheet(wb,ws,'Movement');XLSX.writeFile(wb,'AC_GA_EXP_Receiving_Movement_Template.xlsx')}
+  var oldImport=importExcel;window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){oldImport(input);return}var h=Object.keys(rows[0]).map(norm),hasItem=h.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0}),hasQty=h.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0});if(!hasItem||!hasQty){oldImport(input);return}var newItems=0,added=0,skipped=0;rows.forEach(function(x){function get(keys){for(var k in x){var nk=norm(k);if(keys.some(function(q){return nk===q||nk.indexOf(q)>=0}))return x[k]}return''}var name=String(get(['item','name','品項','物品'])||'').trim(),qty=n(get(['qty','quantity','數量'])),date=dateNorm(get(['date','日期']))||localYMD(),typ=norm(get(['type','類型'])),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',dept=String(get(['department','dept','部門'])||'').trim(),requester=String(get(['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(['inspector','檢查人'])||'').trim(),remarks=String(get(['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}var it=(items||[]).find(function(i){return norm(i.name)===norm(name)});if(!it){it=recvEnsureItem(name,String(get(['category','分類'])||'Other'));newItems++}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel'};if(type==='issue'&&!dept){skipped++;return}if(dupExact(c).length){skipped++;return}if(type==='receive'&&sameMonthReceipts(c).length&&!confirmReceive(c)){skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var r=recvAddRecord(c);recvAdjustStock(it,type,qty);added++});saveLocal();filteredItems=[].concat(items);scheduleReceivingAutoUpload('movement-excel');renderAll();toast(L('✅ Excel 已更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(newItems?' · '+L('新品項 ','new items ','ទំនិញថ្មី ')+newItems:''),'success');input.value=''}).catch(function(){oldImport(input)})}
+  var oldSend=sendTelegram;window.sendTelegram=function(){try{GA.setLang(lang)}catch(e){}GA.telegram.open({module:'receiving',canApprove:false,scopes:[{v:'both',zh:'收發全部',en:'Receive + Issue',km:'ទាំងអស់'},{v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},{v:'issue',zh:'發放',en:'Issue',km:'ចេញ'}],periods:function(type){return Array.from(new Set((records||[]).map(function(r){return GA.periodKey(r.date,type)})))},summary:function(st){var P=(records||[]).filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype)&&(st.scope==='both'||r.type===st.scope)}),rows=[{zh:'總筆數',en:'Records',km:'កំណត់ត្រា',v:P.length}];P.slice(0,18).forEach(function(r,i){var c=recvRecordCost(r),it=recvItemById(r.itemId),typ=r.type==='receive'?'📥':'📤';rows.push('-');rows.push({zh:typ+' #'+(i+1)+' '+r.itemName,en:typ+' #'+(i+1)+' '+r.itemName,km:typ+' #'+(i+1)+' '+r.itemName,v:r.date});rows.push({zh:'數量／單價／總額',en:'Qty / Unit / Total',km:'បរិមាណ / តម្លៃ / សរុប',v:n(r.qty)+' / '+c.unitPrice.toFixed(2)+' / '+c.amount.toFixed(2)});rows.push({zh:r.type==='issue'?'部門／領用人':'來源／PO',en:r.type==='issue'?'Dept / Receiver':'Source / PO',km:'ផ្នែក / អ្នកទទួល',v:r.type==='issue'?((r.dept||'—')+' / '+(r.requester||'—')):((r.dept||'—')+' / '+(r.poNumber||'—'))});rows.push({zh:'檢查人／備註',en:'Inspector / Note',km:'អ្នកត្រួតពិនិត្យ / កំណត់ចំណាំ',v:(r.inspector||'—')+' / '+(r.remarks||'—')})});if(P.length>18)rows.push({zh:'其餘未列',en:'More not shown',km:'មិនបង្ហាញបន្ថែម',v:P.length-18});var q=quality();rows.push('-');rows.push({zh:'資料檢查',en:'Data check',km:'ពិនិត្យទិន្នន័យ',v:(q.dups||q.missingDept||q.mismatch)?('dup '+q.dups+' / dept '+q.missingDept+' / balance '+q.mismatch):'OK'});return GA.telegram.buildSummary({icon:'📦',titleZh:'收發摘要',titleEn:'Receiving / Issue Summary',titleKm:'សង្ខេបទទួល / ចេញ',lang:st.lang,period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),rows:rows})}})}
+  function init(){ensureOpening();simplifyItemForm();if(window.innerWidth<=720&&typeof setView==='function')try{setView('card')}catch(e){};if(document.getElementById('page-receive')&&document.getElementById('page-receive').classList.contains('active'))renderReceiveContent()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,180)});else setTimeout(init,180);
+})();
+</script>
+
+<style id="recv-v3913-css">
+/* v3.9.13 — one Item Master shared by Monthly PO + supplemental / Temp PO / Repair / Other */
+.recv-master-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.recv-src-tag{display:inline-flex;align-items:center;border-radius:999px;padding:2px 6px;font-size:9px;font-weight:800;line-height:1.4;border:1px solid #dbe3ef;background:#f8fafc;color:#475569}.recv-src-tag.monthly{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}.recv-src-tag.adhoc{background:#fff7ed;border-color:#fed7aa;color:#c2410c}.recv-src-tag.both{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}.recv-src-tag.archived{background:#f3f4f6;border-color:#d1d5db;color:#6b7280}.recv-source-help{font-size:10px;color:#64748b;margin-top:4px}.recv-v3913-source{display:grid;grid-template-columns:1fr 1fr;gap:7px}.recv-v3913-source label{font-size:10px;color:var(--text3);font-weight:700}.recv-v3913-source select,.recv-v3913-source input{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:7px;padding:8px;font:inherit;background:#fff}.recv-v3913-dup{border:1px solid #fde68a;background:#fffbeb;border-radius:9px;padding:8px 10px;font-size:11px;margin:7px 0}.recv-v3913-note{border:1px solid #cbd5e1;background:#f8fafc;border-radius:10px;padding:9px 11px;font-size:11px;line-height:1.55;margin:8px 0}.recv-v3913-note b{color:#0f172a}.recv-edit-card .sourcebar{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.recv-edit-card .sourcebar>div:last-child{min-width:0}.recv-edit-card .sourcebar input,.recv-edit-card .sourcebar select{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:7px;padding:8px;font:inherit;background:#fff}
+@media(max-width:720px){.recv-edit-card .sourcebar{grid-template-columns:1fr 1fr}.recv-v3913-source{grid-template-columns:1fr}.recv-src-tag{font-size:8px}.table-header #filter-master-type{max-width:120px}.recv-edit-card details .adv{grid-template-columns:1fr!important}}
+</style>
+<script id="recv-v3913-js">
+(function(){
+  'use strict';
+  var V='v3.9.13';
+  function L(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en}
+  function norm(v){return String(v||'').trim().toLowerCase().replace(/[^a-z0-9\u3400-\u9fff\u1780-\u17ff]+/g,'')}
+  function n(v){return GA.num(v)}
+  function activeItems(){return (items||[]).filter(function(x){return !x.archived})}
+  function sourceLabel(s){return s==='monthly_po'?L('月購','Monthly','ប្រចាំខែ'):s==='temp_po'?L('臨採','Temp PO','PO បន្ទាន់'):s==='repair'?L('維修','Repair','ជួសជុល'):s==='inventory'?L('月表','Monthly file','ឯកសារខែ'):L('其他','Other','ផ្សេង')}
+  function modeLabel(m){return m==='monthly'?L('固定月購','Monthly','ប្រចាំខែ'):m==='adhoc'?L('臨時／追加','Ad-hoc','បន្ថែម'):m==='both'?L('月購＋追加','Monthly + extra','ខែ + បន្ថែម'):L('待確認','Unclassified','មិនទាន់កំណត់')}
+  function sourceFromRecord(r){var s=String(r&&r.purchaseSource||'').toLowerCase();if(s)return s;if(r&&r.sourceKind==='inventory_purchase')return'monthly_po';var t=String((r&&r.remarks)||'')+' '+String((r&&r.poNumber)||'');if(/monthly\s*po|monthly\s*purchase/i.test(t))return'monthly_po';if(/temp\s*po|temporary/i.test(t))return'temp_po';if(/repair/i.test(t))return'repair';return r&&r.type==='receive'?'other':''}
+  function itemSources(it){var set={};(it.purchaseSources||[]).forEach(function(x){if(x)set[x]=1});if(it.inventorySource||(it.monthData&&Array.isArray(it.monthData.purchase)&&it.monthData.purchase.some(function(x){return n(x)>0})))set.monthly_po=1;(records||[]).forEach(function(r){if(String(r.itemId)!==String(it.id)||r.type!=='receive')return;var s=sourceFromRecord(r);if(s)set[s]=1});return Object.keys(set)}
+  function deriveMode(it){var ss=itemSources(it),decl=it.purchaseMode||'unknown',mon=decl==='monthly'||decl==='both'||ss.indexOf('monthly_po')>=0||ss.indexOf('inventory')>=0,ad=decl==='adhoc'||decl==='both'||ss.some(function(s){return s==='temp_po'||s==='repair'||s==='other'});return mon&&ad?'both':mon?'monthly':ad?'adhoc':'unknown'}
+  function markItemSource(it,s){if(!it||!s)return;var a=Array.isArray(it.purchaseSources)?it.purchaseSources.slice():[];if(a.indexOf(s)<0)a.push(s);it.purchaseSources=a;it.purchaseMode=deriveMode(it);it.updatedAt=new Date().toISOString()}
+  function migrateMeta(){var changed=false;(items||[]).forEach(function(it){var before=JSON.stringify([it.purchaseMode,it.purchaseSources,it.unit,it.archived]);var ss=itemSources(it);it.purchaseSources=ss;it.purchaseMode=deriveMode(it);if(it.unit==null)it.unit='';if(it.archived==null)it.archived=false;if(JSON.stringify([it.purchaseMode,it.purchaseSources,it.unit,it.archived])!==before)changed=true});if(changed){try{saveLocal()}catch(e){}}return changed}
+  function tagHtml(it){var m=deriveMode(it),ss=itemSources(it),h='<div class="recv-master-tags">';h+='<span class="recv-src-tag '+(m==='monthly'?'monthly':m==='adhoc'?'adhoc':m==='both'?'both':'')+'">'+modeLabel(m)+'</span>';ss.forEach(function(s){h+='<span class="recv-src-tag">'+sourceLabel(s)+'</span>'});if(it.archived)h+='<span class="recv-src-tag archived">'+L('停用','Archived','បិទ')+'</span>';return h+'</div>'}
+  function decorateMaster(){migrateMeta();var page=(filteredItems||[]).slice((currentPage-1)*pageSize,(currentPage-1)*pageSize+pageSize);if(currentView==='card'){var cards=document.querySelectorAll('#items-view-container>div>div');cards.forEach(function(card,i){var it=page[i];if(!it||card.querySelector('.recv-master-tags'))return;var name=card.querySelector('div[style*="font-weight:700"]');if(name)name.insertAdjacentHTML('afterend',tagHtml(it))})}else page.forEach(function(it){var tr=document.getElementById('row-'+it.id);if(!tr)return;var td=tr.children[1];if(td&&!td.querySelector('.recv-master-tags'))td.insertAdjacentHTML('beforeend',tagHtml(it))})}
+  function injectMasterFilter(){var h=document.querySelector('#page-items .table-header');if(!h||document.getElementById('filter-master-type'))return;var s=document.createElement('select');s.className='filter-sel';s.id='filter-master-type';s.innerHTML='<option value="">'+L('全部來源','All sourcing','ប្រភពទាំងអស់')+'</option><option value="monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc">'+L('臨時／追加','Ad-hoc','បន្ថែម')+'</option><option value="both">'+L('月購＋追加','Monthly + extra','ខែ + បន្ថែម')+'</option><option value="archived">'+L('已停用','Archived','បិទ')+'</option>';s.onchange=function(){filterItems()};h.appendChild(s)}
+  var prevRender=window.renderItemsTable;window.renderItemsTable=function(){migrateMeta();if(prevRender)prevRender();decorateMaster()}
+  var prevFilter=window.filterItems;window.filterItems=function(){migrateMeta();var q=(document.getElementById('search-items')||{}).value||'',cat=(document.getElementById('filter-cat')||{}).value||'',stock=(document.getElementById('filter-stock')||{}).value||'',mt=(document.getElementById('filter-master-type')||{}).value||'',th=settings.lowThreshold||5;q=q.toLowerCase();filteredItems=(items||[]).filter(function(x){var mode=deriveMode(x);if(mt==='archived'){if(!x.archived)return false}else if(x.archived)return false;if(mt&&mt!=='archived'&&mode!==mt)return false;if(q&&!String(x.name||'').toLowerCase().includes(q)&&!String(x.brand||'').toLowerCase().includes(q)&&!String(x.size||'').toLowerCase().includes(q))return false;if(cat&&x.category!==cat)return false;if(stock==='low'&&n(x.stock)>=th)return false;if(stock==='ok'&&n(x.stock)<th)return false;return true});sortItems();currentPage=1;renderItemsTable()}
+  function injectItemForm(){var grid=document.querySelector('#item-form .form-grid');if(!grid||document.getElementById('f-purchase-mode'))return;var brand=document.getElementById('f-brand'),group=brand&&brand.closest('.form-group');var g1=document.createElement('div');g1.className='form-group';g1.innerHTML='<label class="form-label">'+L('採購屬性','Purchase type','ប្រភេទទិញ')+'</label><select class="form-input" id="f-purchase-mode"><option value="unknown">'+L('待確認','Unclassified','មិនទាន់កំណត់')+'</option><option value="monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc">'+L('臨時／追加','Ad-hoc / extra','បន្ថែម')+'</option><option value="both">'+L('月購＋可追加','Monthly + extra','ខែ + បន្ថែម')+'</option></select><div class="recv-source-help">'+L('Item Master 只標記物品屬性；每月計畫數量仍留在 Monthly Purchase。','Item Master stores the item identity only; monthly planned quantity stays in Monthly Purchase.','Item Master រក្សាអត្តសញ្ញាណទំនិញ; បរិមាណផែនការប្រចាំខែនៅ Monthly Purchase។')+'</div>';var g2=document.createElement('div');g2.className='form-group';g2.innerHTML='<label class="form-label">'+L('計量單位','Unit','ឯកតា')+'</label><input class="form-input" id="f-unit" placeholder="pcs / box / roll / ream">';if(group){group.insertAdjacentElement('beforebegin',g1);group.insertAdjacentElement('beforebegin',g2)}else{grid.appendChild(g1);grid.appendChild(g2)}}
+  var prevAdd=window.showAddForm;window.showAddForm=function(){if(prevAdd)prevAdd();injectItemForm();var pm=document.getElementById('f-purchase-mode'),u=document.getElementById('f-unit');if(pm)pm.value=window._recvNewItemMode||'unknown';if(u)u.value='';window._recvNewItemMode=''}
+  var prevEdit=window.editItem;window.editItem=function(id){if(prevEdit)prevEdit(id);injectItemForm();var it=(items||[]).find(function(x){return String(x.id)===String(id)}),pm=document.getElementById('f-purchase-mode'),u=document.getElementById('f-unit');if(it&&pm)pm.value=deriveMode(it);if(it&&u)u.value=it.unit||''}
+  function exactDup(name,size,brand,unit,exclude){return(items||[]).find(function(x){if(String(x.id)===String(exclude))return false;var v=recvItemVersionFor(x,recvCurrentMonth());return norm(x.name)===norm(name)&&norm((v&&v.size)||x.size)===norm(size)&&norm((v&&v.brand)||x.brand)===norm(brand)&&norm(x.unit)===norm(unit)})}
+  function similarDup(name,size,exclude){return(items||[]).find(function(x){if(String(x.id)===String(exclude))return false;var v=recvItemVersionFor(x,recvCurrentMonth());return norm(x.name)===norm(name)&&norm((v&&v.size)||x.size)===norm(size)})}
+  window.saveItem=async function(){recvMigrateCatalog();injectItemForm();var id=document.getElementById('edit-id').value,name=document.getElementById('f-name').value.trim(),effective=recvMonth(document.getElementById('f-effective').value||recvCurrentMonth()),brand=document.getElementById('f-brand').value.trim(),size=document.getElementById('f-size').value.trim(),unit=(document.getElementById('f-unit')||{}).value||'',pm=(document.getElementById('f-purchase-mode')||{}).value||'unknown';if(!name){toast(L('請填物品名稱','Name required','ត្រូវបញ្ចូលឈ្មោះ'),'error');return}var ex=exactDup(name,size,brand,unit,id);if(ex){toast(L('⚠️ 完全相同的物品主檔已存在，已開啟原品項。','⚠️ The same master item already exists; opening it.','⚠️ ទំនិញដូចគ្នាមានរួចហើយ។'),'error');editItem(ex.id);return}var sim=similarDup(name,size,id);if(!id&&sim){var ok=confirm(L('⚠️ 疑似重複：'+sim.name+' / '+(((recvItemVersionFor(sim,recvCurrentMonth())||{}).brand)||sim.brand||'-')+'。\n按「取消」開啟既有品項；按「確定」才建立另一個品項。','⚠️ Possible duplicate: '+sim.name+'.\nCancel opens the existing item; OK creates a separate item.','⚠️ អាចស្ទួន៖ '+sim.name+'។ Cancel បើកទំនិញចាស់; OK បង្កើតថ្មី។'));if(!ok){editItem(sim.id);return}}
+    var data={name:name,category:document.getElementById('f-cat').value,brand:brand,size:size,unitPrice:n(document.getElementById('f-unit-price').value),stock:0,minStock:n(document.getElementById('f-min').value)||5,remarks:document.getElementById('f-remarks').value.trim()};var x=id?recvItemById(id):null;if(!x){x={id:newId(),no:items.length+1,name:name,category:data.category,stock:0,minStock:data.minStock,ytdPurchased:0,ytdUsed:0,monthData:{},versions:[],purchaseSources:[],purchaseMode:pm,unit:unit,archived:false};items.push(x)}var old=recvItemVersionFor(x,effective),next=Object.assign({},old,data,{effectiveFrom:effective,source:'manual',updatedAt:new Date().toISOString()}),changed=!recvSame(Object.assign({},old,{effectiveFrom:effective}),next)||_recvItemPendingFiles.length;if(id&&changed&&x.versions.some(function(v){return recvMonth(v.effectiveFrom)===effective})&&!confirm(L('此生效月份已有版本，要取代同月份版本嗎？舊月份版本仍保留。','This effective month already has a version. Replace it? Older versions remain.','ខែនេះមានកំណែរួចហើយ។ ជំនួសវាឬ?')))return;next.evidence=await recvUploadItemEvidence(_recvItemPendingFiles,x.id,effective,old.evidence||[]);x.name=data.name;x.category=data.category;x.minStock=data.minStock;x.unit=unit;x.purchaseMode=pm;x.archived=false;x.versions=(x.versions||[]).filter(function(v){return recvMonth(v.effectiveFrom)!==effective});x.versions.push(next);x.versions.sort(function(a,b){return recvMonth(a.effectiveFrom).localeCompare(recvMonth(b.effectiveFrom))});var cv=recvItemVersionFor(x,recvCurrentMonth());if(effective<=recvCurrentMonth()){x.brand=data.brand;x.size=data.size;x.unitPrice=data.unitPrice;x.remarks=data.remarks;x.evidence=next.evidence}else if(cv){x.brand=cv.brand||x.brand;x.size=cv.size||x.size;x.unitPrice=n(cv.unitPrice);x.remarks=cv.remarks||x.remarks;x.evidence=cv.evidence||x.evidence}_recvItemPendingFiles=[];migrateMeta();saveLocal();closeForm();filteredItems=activeItems();renderItemsTable();scheduleReceivingAutoUpload('item-master');toast(id?L('物品主檔已更新','Item master updated','បានធ្វើបច្ចុប្បន្នភាព'):L('物品已加入主檔','Item added to master','បានបន្ថែមទំនិញ'),'success')}
+  window.deleteItem=function(id){var it=(items||[]).find(function(x){return String(x.id)===String(id)});if(!it)return;var hist=(records||[]).filter(function(r){return String(r.itemId)===String(id)});if(hist.length||it.inventorySource||itemSources(it).length){if(!confirm(L('此品項已有收貨／發放／月購歷史，不能硬刪。要改為「停用」嗎？歷史帳會保留。','This item has transaction/monthly history and cannot be hard-deleted. Archive it instead? History will remain.','ទំនិញនេះមានប្រវត្តិ។ មិនអាចលុបបាន។ បិទវាជំនួស?')))return;it.archived=true;it.updatedAt=new Date().toISOString();saveLocal();scheduleReceivingAutoUpload('item-archive');filterItems();toast(L('已停用品項，歷史保留','Item archived; history kept','បានបិទទំនិញ; ប្រវត្តិនៅដដែល'),'success');return}if(!confirm(L('此品項沒有任何歷史，確定刪除？','No history exists. Delete this item?','គ្មានប្រវត្តិ។ លុបទំនិញ?')))return;items=items.filter(function(x){return String(x.id)!==String(id)});saveLocal();scheduleReceivingAutoUpload('item-delete');filterItems()}
+  function sourceOptions(sel){var a=[['monthly_po',L('Monthly Purchase／月購','Monthly Purchase','ទិញប្រចាំខែ')],['temp_po',L('Temp PO／臨採追加','Temp PO / extra','PO បន្ទាន់')],['repair',L('Repair／維修採購','Repair purchase','ទិញជួសជុល')],['other',L('Other／其他臨買','Other purchase','ទិញផ្សេង')]];return a.map(function(x){return'<option value="'+x[0]+'" '+(x[0]===sel?'selected':'')+'>'+x[1]+'</option>'}).join('')}
+  function selectableItemOptions(selected){return activeItems().map(function(x){return'<option value="'+recvEsc(x.id)+'" '+(String(x.id)===String(selected)?'selected':'')+'>'+recvEsc(x.name)+' · '+recvEsc(x.category||'')+' · '+modeLabel(deriveMode(x))+'</option>'}).join('')}
+  window.receiveBatchItemOptions=selectableItemOptions;
+  var prevLedgerOptions=window.recvLedgerItemOptions;window.recvLedgerItemOptions=function(){var list=activeItems().filter(function(x){return !_recvLedgerCategory||String(x.category||'Other')===_recvLedgerCategory});if(!list.length)return'<option value="">—</option>';if(!list.some(function(x){return String(x.id)===String(_recvLedgerItemId)}))_recvLedgerItemId=list[0].id;return list.map(function(x){return'<option value="'+recvEsc(x.id)+'" '+(String(x.id)===String(_recvLedgerItemId)?'selected':'')+'>'+recvEsc(x.name)+' · '+modeLabel(deriveMode(x))+'</option>'}).join('')}
+  window.recvBatchPoChange=function(i,v){var r=_recvBatchLines[i];if(!r)return;r.poIndex=v;if(v!==''&&_recvPoFlat[v]){var x=_recvPoFlat[v],spec=x.item.size||x.item.spec||'',brand=x.item.brand||'',unit=x.item.unit||'',it=resolveMaster(x.item.name,spec,brand,unit,true,'monthly_po');if(!it){toast(L('⚠️ 此 PO 品名對到多個主檔，請先在 Item Master 合併／確認規格。','⚠️ This PO item matches multiple master items. Resolve the item/spec first.','⚠️ PO នេះត្រូវនឹងទំនិញច្រើន។ សូមបញ្ជាក់ spec ជាមុន។'),'error');return}r.itemId=it.id;r.purchaseSource='monthly_po';r.sourceRef=x.po.poNumber||x.po.poId||'';r.poId=x.po.poId;r.poNumber=x.po.poNumber;r.poPeriod=x.po.period;r.poItemIndex=x.index;r.qty=Math.min(n(x.item.remainingQty),Math.max(1,n(r.qty)||1));markItemSource(it,'monthly_po')}renderReceiveBatchTab()}
+  function resolveMaster(name,spec,brand,unit,create,src){var nn=norm(name),ss=norm(spec),bb=norm(brand),uu=norm(unit),cands=activeItems().filter(function(x){return norm(x.name)===nn});if(!cands.length){if(!create)return null;var x=recvEnsureItem(name,'Other');x.size=spec||x.size||'';x.brand=brand||x.brand||'';x.unit=unit||x.unit||'';x.purchaseMode=src==='monthly_po'?'monthly':'adhoc';markItemSource(x,src||'other');return x}var exact=cands.find(function(x){var v=recvItemVersionFor(x,recvCurrentMonth());return (!ss||norm((v&&v.size)||x.size)===ss)&&(!bb||norm((v&&v.brand)||x.brand)===bb)&&(!uu||norm(x.unit)===uu)});if(exact)return exact;if(cands.length===1)return cands[0];return null}
+  window.addReceiveItemPrompt=function(){var first=_recvBatchLines&&_recvBatchLines[0],src=first&&first.purchaseSource||'other',name=prompt(L('輸入新品項名稱（會加入共用 Item Master）','Enter new item name (adds to shared Item Master)','បញ្ចូលឈ្មោះទំនិញថ្មី'));if(!name)return;var cands=activeItems().filter(function(x){return norm(x.name)===norm(name)});if(cands.length){toast(L('⚠️ 已有相同／相近品名，請先選既有品項或編輯規格。','⚠️ Same/similar item already exists. Use or edit the existing master item.','⚠️ មានឈ្មោះដូចគ្នា។ សូមប្រើទំនិញចាស់។'),'error');editItem(cands[0].id);return}var x=recvEnsureItem(name,'Other');x.purchaseMode=src==='monthly_po'?'monthly':'adhoc';markItemSource(x,src);saveLocal();window._recvNewItemMode=x.purchaseMode;editItem(x.id)}
+  window.renderReceiveBatchTab=function(){recvLedgerCss();migrateMeta();var el=document.getElementById('receive-content');var ai=activeItems();if(!_recvBatchLines.length)_recvBatchLines=[{date:localYMD(),type:'receive',itemId:ai[0]&&ai[0].id||'',poIndex:'',qty:1,purchaseSource:'other',sourceRef:'',dept:settings.dept||'',requester:'',inspector:'',remarks:''}];_recvBatchLines.forEach(function(r){if(!r.purchaseSource)r.purchaseSource=r.poNumber?'monthly_po':'other'});var item=recvItemById(_recvLedgerItemId)||recvItemById(_recvBatchLines[0].itemId)||ai[0]||null;if(item)_recvLedgerItemId=item.id;var html='<div class="recv-v3913-note"><b>📦 '+L('同一 Item Master','One shared Item Master','Item Master តែមួយ')+'</b><br>'+L('Monthly Purchase、臨採追加、維修與其他臨買都使用同一 Item ID；每月計畫數量仍留在 Monthly Purchase，不會混進主檔。','Monthly Purchase, supplemental Temp PO, Repair and Other purchases all use the same Item ID. Monthly planned quantities remain in Monthly Purchase and are not stored in the master.','ការទិញប្រចាំខែ និងការទិញបន្ថែមប្រើ Item ID ដូចគ្នា។')+'</div>'+guideHtml('receive')+ruleHtml()+qualityHtml()+actionsHtml('receive')+'<div class="recv-edit-list">';_recvBatchLines.forEach(function(r,i){var it=recvItemById(r.itemId);html+='<div class="recv-edit-card"><div class="head"><b>📥 '+L('收貨','Receive','ទទួល')+' #'+(i+1)+'</b><button class="row-btn del" onclick="removeReceiveBatchLine('+i+')">🗑</button></div><div class="grid"><div class="itemfield"><label>'+L('品項（共用主檔）','Item (shared master)','ទំនិញ')+'</label><select onchange="recvBatchItemChange('+i+',this.value)">'+selectableItemOptions(r.itemId)+'</select>'+(it?tagHtml(it):'')+'</div><div><label>'+L('日期','Date','ថ្ងៃ')+'</label><input type="date" value="'+recvEsc(r.date||localYMD())+'" onchange="recvBatchSet('+i+',\'date\',this.value)"></div><div><label>'+L('數量','Qty','បរិមាណ')+'</label><input type="number" min="1" value="'+n(r.qty||1)+'" onchange="recvBatchSet('+i+',\'qty\',this.value)"></div></div><div class="sourcebar"><div><label>'+L('採購來源','Purchase source','ប្រភពទិញ')+'</label><select onchange="recvBatchSet('+i+',\'purchaseSource\',this.value);renderReceiveBatchTab()">'+sourceOptions(r.purchaseSource)+'</select></div><div><label>'+L('PO／申請單號','PO / Request ref','PO / លេខយោង')+'</label><input value="'+recvEsc(r.sourceRef||r.poNumber||'')+'" placeholder="PO / Repair No." onchange="recvBatchSet('+i+',\'sourceRef\',this.value)"></div></div><details><summary>'+L('更多：Monthly PO 對帳／經手／檢查／備註','More: Monthly PO / handler / inspector / note','បន្ថែម')+'</summary><div class="adv"><div><label>Monthly PO</label><select onchange="recvBatchPoChange('+i+',this.value)">'+receiveBatchPoOptions(r.poIndex)+'</select></div><div><label>'+L('收貨部門','Receiving dept','ផ្នែកទទួល')+'</label><input value="'+recvEsc(r.dept||'')+'" onchange="recvBatchSet('+i+',\'dept\',this.value)"></div><div><label>'+L('經手人','Handler','អ្នកកាន់')+'</label><input value="'+recvEsc(r.requester||'')+'" onchange="recvBatchSet('+i+',\'requester\',this.value)"></div><div><label>'+L('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</label><input value="'+recvEsc(r.inspector||'')+'" onchange="recvBatchSet('+i+',\'inspector\',this.value)"></div><div style="grid-column:1/-1"><label>'+L('備註','Remarks','កំណត់ចំណាំ')+'</label><input value="'+recvEsc(r.remarks||'')+'" onchange="recvBatchSet('+i+',\'remarks\',this.value)"></div></div></details></div>'});html+='</div>'+(item?'<div class="recv-ledger-html">'+recvLedgerHtml(item)+'</div>':'');el.innerHTML=html}
+  window.addReceiveBatchLine=function(){var ai=activeItems();_recvBatchLines.push({date:(document.getElementById('recv-batch-date')||{}).value||localYMD(),type:'receive',itemId:ai[0]&&ai[0].id||'',poIndex:'',qty:1,purchaseSource:'other',sourceRef:'',dept:settings.dept||'',requester:'',inspector:'',remarks:''});renderReceiveBatchTab()}
+  window.saveReceiveBatchLines=function(){var valid=(_recvBatchLines||[]).filter(function(r){return r.itemId&&n(r.qty)>0&&r.date});if(!valid.length){toast(L('請填品項、日期、數量','Enter item, date and quantity','បំពេញទំនិញ ថ្ងៃ និងបរិមាណ'),'error');return}var todo=[];for(var i=0;i<valid.length;i++){var d=valid[i],it=recvItemById(d.itemId),src=d.purchaseSource||'other',c={date:d.date,type:'receive',itemId:d.itemId,itemName:it&&it.name||'',qty:n(d.qty),dept:d.dept||'',requester:d.requester||'',inspector:d.inspector||'',remarks:d.remarks||'',purchaseSource:src,sourceRef:d.sourceRef||d.poNumber||'',poId:d.poId||'',poNumber:d.poNumber||'',poPeriod:d.poPeriod||'',poItemIndex:d.poItemIndex,periodGranularity:'day'};var exact=(records||[]).filter(function(r){return r.type==='receive'&&String(r.itemId)===String(c.itemId)&&r.date===c.date&&n(r.qty)===n(c.qty)&&sourceFromRecord(r)===src});if(exact.length){toast(L('⚠️ 完全相同的收貨已存在：','⚠️ Identical receipt already exists: ','⚠️ ការទទួលដូចគ្នាមានរួច៖ ')+(it&&it.name||''),'error');return}var sm=(records||[]).filter(function(r){return r.type==='receive'&&String(r.itemId)===String(c.itemId)&&String(r.date||'').slice(0,7)===String(c.date).slice(0,7)});if(sm.length&&!confirm(L('⚠️ '+(it&&it.name||'')+' 本月已有 '+sm.length+' 筆收貨。\n若這是月購不足後的追加、分批到貨或不同來源，按「確定」新增。','⚠️ '+(it&&it.name||'')+' already has '+sm.length+' receipt(s) this month.\nIf this is a supplemental or separate delivery, press OK.','⚠️ មានការទទួលក្នុងខែនេះរួចហើយ។ បើជាការទិញបន្ថែម ចុច OK។')))return;todo.push(c)}todo.forEach(function(c){var it=recvItemById(c.itemId),r=recvAddRecord(c);recvAdjustStock(it,'receive',r.qty);markItemSource(it,c.purchaseSource)});migrateMeta();saveLocal();scheduleReceivingAutoUpload('batch-receive-v3913');_recvBatchLines=[];renderAll();toast(L('✅ 收貨已儲存；Item Master 與來源標記已同步','✅ Receipts saved; Item Master/source links updated','✅ បានរក្សាទុក និងភ្ជាប់ Item Master'),'success')}
+  window.savePoReceiveBatch=function(){var dateDefault=(document.getElementById('po-batch-date')||{}).value||localYMD(),inspector=(document.getElementById('po-batch-inspector')||{}).value||'',selected=[];_recvPoFlat.forEach(function(x,i){var c=document.getElementById('po-check-'+i),d=(document.getElementById('po-date-'+i)||{}).value||dateDefault,q=n((document.getElementById('po-qty-'+i)||{}).value);if(c&&c.checked&&q>0)selected.push({x:x,date:d,qty:q})});if(!selected.length){toast(L('請勾選要收貨的項目','Select at least one PO line','សូមជ្រើស PO'),'error');return}var bad=selected.find(function(s){return s.qty>n(s.x.item.remainingQty)});if(bad){toast(L('數量不可超過剩餘量','Quantity exceeds remaining PO quantity','បរិមាណលើសចំនួននៅសល់'),'error');return}var valid=[];for(var i=0;i<selected.length;i++){var s=selected[i],x=s.x,spec=x.item.size||x.item.spec||'',brand=x.item.brand||'',unit=x.item.unit||'',it=resolveMaster(x.item.name,spec,brand,unit,true,'monthly_po');if(!it){toast(L('⚠️ '+x.item.name+' 對到多個 Item Master，請先確認規格／合併重複品項。','⚠️ '+x.item.name+' matches multiple master items. Resolve the spec/duplicates first.','⚠️ '+x.item.name+' ត្រូវនឹងទំនិញច្រើន។'),'error');return}var c={date:s.date,type:'receive',itemId:it.id,itemName:it.name,qty:s.qty,dept:settings.dept||'GA/Admin',requester:'',inspector:inspector,remarks:'Monthly PO '+(x.po.poNumber||''),purchaseSource:'monthly_po',sourceRef:x.po.poNumber||x.po.poId||'',poId:x.po.poId,poNumber:x.po.poNumber,poPeriod:x.po.period,poItemIndex:x.index,periodGranularity:'day'};var exact=(records||[]).some(function(r){return r.type==='receive'&&String(r.itemId)===String(c.itemId)&&r.date===c.date&&n(r.qty)===n(c.qty)&&sourceFromRecord(r)==='monthly_po'&&String(r.poNumber||'')===String(c.poNumber||'')});if(exact){toast(L('⚠️ 相同 Monthly PO 收貨已存在：','⚠️ Identical Monthly PO receipt exists: ','⚠️ មានការទទួលដូចគ្នា៖ ')+it.name,'error');return}valid.push(c)}valid.forEach(function(c){var it=recvItemById(c.itemId),r=recvAddRecord(c);recvAdjustStock(it,'receive',r.qty);markItemSource(it,'monthly_po')});selected.forEach(function(s){s.x.item.receivedQty=n(s.x.item.receivedQty)+s.qty;s.x.item.remainingQty=Math.max(0,n(s.x.item.approvedQty)-s.x.item.receivedQty)});migrateMeta();saveLocal();scheduleReceivingAutoUpload('monthly-po-receive-v3913');renderPoReceiveTab();try{renderItemsTable()}catch(e){}toast(L('Monthly PO 收貨已保存並連到共用 Item Master','Monthly PO receipts saved and linked to the shared Item Master','បានរក្សាទុក និងភ្ជាប់ Item Master'),'success')}
+  var prevImport=window.importExcel;window.recvDownloadMovementTemplate=function(){var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([['Date','Type','Source','Order Ref','Item','Spec','Brand','Unit','Qty','Department','Receiver','Inspector','Remarks'],[localYMD(),'Receive','Monthly PO','PO-EXAMPLE','A4 Paper','','','ream',10,'GA/Admin','','Phea',''],[localYMD(),'Receive','Temp PO','TMP-EXAMPLE','A4 Paper','','','ream',5,'GA/Admin','','Phea','Supplemental purchase'],[localYMD(),'Issue','','','A4 Paper','','','ream',2,'HR','Srey Oun','Phea','']]);XLSX.utils.book_append_sheet(wb,ws,'Movement');XLSX.writeFile(wb,'AC_GA_EXP_Receiving_Movement_Template_v3.9.13.xlsx')}
+  function parseSource(v){var s=String(v||'').toLowerCase();if(/monthly|month|月購|ប្រចាំខែ/.test(s))return'monthly_po';if(/temp|temporary|臨採|追加|បន្ទាន់/.test(s))return'temp_po';if(/repair|維修|ជួសជុល/.test(s))return'repair';return'other'}
+  window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){prevImport(input);return}var keys=Object.keys(rows[0]).map(norm),movement=keys.some(function(x){return x==='type'||x.indexOf('類型')>=0})&&keys.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0})&&keys.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0});if(!movement){prevImport(input);setTimeout(function(){migrateMeta();filteredItems=activeItems();try{renderAll()}catch(e){};scheduleReceivingAutoUpload('inventory-master-link')},1500);return}function get(x,qs){for(var k in x){var nk=norm(k);if(qs.some(function(q){return nk===norm(q)||nk.indexOf(norm(q))>=0}))return x[k]}return''}var added=0,newItems=0,skipped=0,ambiguity=0;rows.forEach(function(x){var name=String(get(x,['item','name','品項','物品'])||'').trim(),qty=n(get(x,['qty','quantity','數量'])),date=dateNorm(get(x,['date','日期']))||localYMD(),typ=String(get(x,['type','類型'])||'').toLowerCase(),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',src=type==='receive'?parseSource(get(x,['source','來源','purchase source'])):'',ref=String(get(x,['order ref','po','request ref','單號','申請單'])||'').trim(),spec=String(get(x,['spec','size','規格'])||'').trim(),brand=String(get(x,['brand','品牌'])||'').trim(),unit=String(get(x,['unit','單位'])||'').trim(),dept=String(get(x,['department','dept','部門'])||'').trim(),requester=String(get(x,['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(x,['inspector','檢查人'])||'').trim(),remarks=String(get(x,['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}var it=resolveMaster(name,spec,brand,unit,false,src);if(!it){var same=activeItems().filter(function(y){return norm(y.name)===norm(name)});if(same.length>1){ambiguity++;skipped++;return}it=resolveMaster(name,spec,brand,unit,true,src);newItems++}if(type==='issue'&&!dept){skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,purchaseSource:src,sourceRef:ref,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel'};var exact=(records||[]).some(function(r){return r.type===c.type&&String(r.itemId)===String(c.itemId)&&r.date===c.date&&n(r.qty)===n(c.qty)&&norm(r.dept)===norm(c.dept)&&sourceFromRecord(r)===sourceFromRecord(c)});if(exact){skipped++;return}var rr=recvAddRecord(c);recvAdjustStock(it,type,qty);if(type==='receive')markItemSource(it,src);added++});migrateMeta();saveLocal();filteredItems=activeItems();scheduleReceivingAutoUpload('movement-excel-v3913');renderAll();toast(L('✅ Excel 更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(newItems?' · '+L('新品項 ','new master items ','ទំនិញថ្មី ')+newItems:'')+(ambiguity?' · '+L('需人工確認重複 ','ambiguous duplicates ','ត្រូវពិនិត្យស្ទួន ')+ambiguity:''),'success');input.value=''}).catch(function(e){console.error(e);prevImport(input)})}
+  var prevSend=window.sendTelegram;window.sendTelegram=function(){try{GA.setLang(lang)}catch(e){}GA.telegram.open({module:'receiving',canApprove:false,scopes:[{v:'both',zh:'收發全部',en:'Receive + Issue',km:'ទាំងអស់'},{v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},{v:'issue',zh:'發放',en:'Issue',km:'ចេញ'}],periods:function(type){return Array.from(new Set((records||[]).map(function(r){return GA.periodKey(r.date,type)})))},summary:function(st){var P=(records||[]).filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype)&&(st.scope==='both'||r.type===st.scope)}),rows=[{zh:'總筆數',en:'Records',km:'កំណត់ត្រា',v:P.length}];P.slice(0,18).forEach(function(r,i){var c=recvRecordCost(r),typ=r.type==='receive'?'📥':'📤';rows.push('-');rows.push({zh:typ+' #'+(i+1)+' '+r.itemName,en:typ+' #'+(i+1)+' '+r.itemName,km:typ+' #'+(i+1)+' '+r.itemName,v:r.date});rows.push({zh:'數量／單價／總額',en:'Qty / Unit / Total',km:'បរិមាណ / តម្លៃ / សរុប',v:n(r.qty)+' / '+c.unitPrice.toFixed(2)+' / '+c.amount.toFixed(2)});if(r.type==='receive')rows.push({zh:'採購來源／單號',en:'Purchase source / Ref',km:'ប្រភព / លេខយោង',v:sourceLabel(sourceFromRecord(r))+' / '+(r.sourceRef||r.poNumber||'—')});else rows.push({zh:'部門／領用人',en:'Dept / Receiver',km:'ផ្នែក / អ្នកទទួល',v:(r.dept||'—')+' / '+(r.requester||'—')});rows.push({zh:'檢查人／備註',en:'Inspector / Note',km:'អ្នកត្រួតពិនិត្យ / កំណត់ចំណាំ',v:(r.inspector||'—')+' / '+(r.remarks||'—')})});if(P.length>18)rows.push({zh:'其餘未列',en:'More not shown',km:'មិនបង្ហាញបន្ថែម',v:P.length-18});return GA.telegram.buildSummary({icon:'📦',titleZh:'收發摘要',titleEn:'Receiving / Issue Summary',titleKm:'សង្ខេបទទួល / ចេញ',lang:st.lang,period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),rows:rows})}})}
+  function updateVersionBadge(){var el=document.querySelector('.brand-title,.app-title,.section-title');document.documentElement.setAttribute('data-recv-version',V);var note=document.querySelector('.recv-item-master-note');if(note)note.innerHTML='📌 '+L('Item Master 是唯一共用物品主檔：月購、追加臨採、維修及其他購買共用同一 Item ID；每月計畫數量仍由 Monthly Purchase 管理。','Item Master is the single shared catalog. Monthly, supplemental, repair and other purchases use the same Item ID; monthly planned quantities remain in Monthly Purchase.','Item Master ជាបញ្ជីរួមតែមួយ។')}
+  function init(){migrateMeta();injectMasterFilter();injectItemForm();updateVersionBadge();filteredItems=activeItems();try{filterItems()}catch(e){try{renderItemsTable()}catch(x){}}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,260)});else setTimeout(init,260)
+})();
+</script>
+
+<style id="recv-v3914-css">
+/* v3.9.14 — online CRUD, deterministic balance rebuild and round-trip backup */
+.recv-v3914-manager{margin:12px 0;border:1px solid #dbe3ef;border-radius:12px;background:#fff;overflow:hidden}
+.recv-v3914-manager-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:11px 13px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+.recv-v3914-manager-head small{display:block;color:#64748b;font-weight:500;margin-top:2px}
+.recv-v3914-records{display:grid;gap:8px;padding:10px}
+.recv-v3914-card{display:grid;grid-template-columns:minmax(150px,2fr) repeat(3,minmax(90px,1fr)) auto;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:9px;padding:9px}
+.recv-v3914-card .main b{display:block}.recv-v3914-card small{display:block;color:#64748b;margin-top:3px}
+.recv-v3914-card .cell label{display:block;color:#64748b;font-size:9px;font-weight:700}.recv-v3914-card .cell b{font-size:12px}
+.recv-v3914-actions{display:flex;gap:5px}.recv-v3914-actions .nav-btn{min-height:34px;padding:6px 9px}
+.recv-v3914-form-note{grid-column:1/-1;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a8a;border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.5}
+.recv-v3914-version{display:inline-flex;align-items:center;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:800;margin-left:6px}
+@media(max-width:720px){
+  .recv-v3914-card{grid-template-columns:1fr 1fr}.recv-v3914-card .main{grid-column:1/-1}.recv-v3914-actions{grid-column:1/-1}.recv-v3914-actions .nav-btn{flex:1;justify-content:center}
+  #receive-form .form-box{width:calc(100vw - 18px);max-height:92vh;padding:14px}#receive-form .form-grid{grid-template-columns:1fr 1fr;gap:9px}#receive-form .form-group.full{grid-column:1/-1}
+}
+</style>
+<script id="recv-v3914-js">
+(function(){
+  'use strict';
+  var VERSION='v3.9.14-online-crud-safe';
+  function L(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en}
+  function num(v){return GA.num(v)}
+  function norm(v){return String(v==null?'':v).trim().toLowerCase().replace(/\s+/g,' ')}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])})}
+  function js(v){return String(v==null?'':v).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,' ')}
+  function clone(v){try{return JSON.parse(JSON.stringify(v))}catch(e){return v}}
+  function now(){return new Date().toISOString()}
+  function round(v){return Math.round(num(v)*1000000)/1000000}
+  function yearNow(){return localYMD().slice(0,4)}
+  function sourceOf(r){
+    var s=String(r&&r.purchaseSource||'').toLowerCase();
+    if(s)return s;
+    if(r&&r.sourceKind==='inventory_purchase')return'monthly_po';
+    var t=String(r&&r.remarks||'')+' '+String(r&&r.poNumber||'');
+    if(/monthly\s*po|monthly\s*purchase/i.test(t))return'monthly_po';
+    if(/temp\s*po|temporary/i.test(t))return'temp_po';
+    if(/repair/i.test(t))return'repair';
+    return r&&r.type==='receive'?'other':'';
+  }
+  function sourceName(s){return s==='monthly_po'?L('月購','Monthly PO','ប្រចាំខែ'):s==='temp_po'?L('臨採／追加','Temp PO / extra','PO បន្ទាន់'):s==='repair'?L('維修採購','Repair','ជួសជុល'):L('其他','Other','ផ្សេង')}
+
+  var deletedRecords=[],deletedItems=[];
+  try{
+    var initial=JSON.parse(localStorage.getItem('vrt_receive_data')||'{}');
+    deletedRecords=Array.isArray(initial.deletedRecords)?initial.deletedRecords:[];
+    deletedItems=Array.isArray(initial.deletedItems)?initial.deletedItems:[];
+  }catch(e){}
+  window.recvDeletedRecords=deletedRecords;
+  window.recvDeletedItems=deletedItems;
+
+  function mergeTombstones(base,extra){
+    var map={};
+    (base||[]).concat(extra||[]).forEach(function(x){
+      if(!x||!x.targetId)return;
+      var k=String(x.targetId),old=map[k];
+      if(!old||String(x.updatedAt||'')>=String(old.updatedAt||''))map[k]=x;
+    });
+    return Object.keys(map).map(function(k){return map[k]});
+  }
+  function recordDeleted(id){return deletedRecords.some(function(x){return String(x.targetId)===String(id)})}
+  function itemDeleted(id){return deletedItems.some(function(x){return String(x.targetId)===String(id)})}
+  function persist(){
+    localStorage.setItem('vrt_receive_data',JSON.stringify({
+      items:items,records:records,inventoryImportMeta:inventoryImportMeta,
+      deletedRecords:deletedRecords,deletedItems:deletedItems
+    }));
+    localStorage.setItem('vrt_receive_settings',JSON.stringify(settings));
+  }
+  window.saveLocal=persist;
+
+  function ensureOpening(it){
+    if(it.openingStock!=null&&isFinite(num(it.openingStock)))return;
+    if(it.openingBalance!=null){it.openingStock=num(it.openingBalance);return}
+    var rr=(records||[]).filter(function(r){return String(r.itemId)===String(it.id)&&!recordDeleted(r.id)});
+    var inc=rr.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+num(r.qty)},0);
+    var out=rr.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+num(r.qty)},0);
+    it.openingStock=round(num(it.stock)-inc+out);
+  }
+  function rebuildBalances(){
+    var yr=yearNow(),by={};
+    (items||[]).forEach(function(it){
+      ensureOpening(it);
+      by[String(it.id)]={stock:num(it.openingStock),buy:0,use:0,it:it};
+    });
+    (records||[]).forEach(function(r){
+      if(!r||recordDeleted(r.id))return;
+      var g=by[String(r.itemId)],q=num(r.qty);
+      if(!g||!r.date||q<=0)return;
+      if(r.type==='issue')g.stock-=q;else g.stock+=q;
+      if(String(r.date).slice(0,4)===yr){if(r.type==='issue')g.use+=q;else g.buy+=q}
+      r._dedupeKey=recordFingerprint(r);
+    });
+    Object.keys(by).forEach(function(k){
+      var g=by[k];g.it.stock=round(g.stock);g.it.ytdPurchased=round(g.buy);g.it.ytdUsed=round(g.use);
+    });
+    return Object.keys(by).map(function(k){return {itemId:k,stock:by[k].it.stock}})
+  }
+  window.recvRebuildBalances=rebuildBalances;
+
+  function recordFingerprint(r){
+    return [
+      r.type||'receive',String(r.itemId||''),String(r.date||'').slice(0,10),
+      round(r.qty).toFixed(4),norm(r.dept),sourceOf(r),norm(r.sourceRef||r.poNumber),
+      norm(r.requester),norm(r.inspector),norm(r.remarks)
+    ].join('|');
+  }
+  window.recvRecordFingerprint=recordFingerprint;
+  function duplicateOf(r,excludeId){
+    var fp=recordFingerprint(r);
+    return (records||[]).find(function(x){return String(x.id)!==String(excludeId||'')&&!recordDeleted(x.id)&&recordFingerprint(x)===fp})||null;
+  }
+  function stockWithout(itemId,excludeId){
+    var it=(items||[]).find(function(x){return String(x.id)===String(itemId)});
+    if(!it)return 0;
+    ensureOpening(it);
+    return round(num(it.openingStock)+(records||[]).filter(function(r){
+      return String(r.itemId)===String(itemId)&&String(r.id)!==String(excludeId||'')&&!recordDeleted(r.id);
+    }).reduce(function(a,r){return a+(r.type==='issue'?-num(r.qty):num(r.qty))},0));
+  }
+  function projectedStockError(data,excludeId){
+    var old=(records||[]).find(function(r){return String(r.id)===String(excludeId||'')});
+    var ids={};if(old)ids[String(old.itemId)]=1;if(data&&data.itemId)ids[String(data.itemId)]=1;
+    var projected={};Object.keys(ids).forEach(function(id){projected[id]=stockWithout(id,excludeId)});
+    if(data&&data.itemId)projected[String(data.itemId)]=round((projected[String(data.itemId)]||0)+(data.type==='issue'?-num(data.qty):num(data.qty)));
+    var bad=Object.keys(projected).find(function(id){return projected[id]<-0.000001});
+    return bad?{itemId:bad,stock:projected[bad]}:null;
+  }
+
+  function rebuildPoCache(){
+    (_recvPoCache||[]).forEach(function(po){
+      (po.items||[]).forEach(function(it,idx){
+        var received=(records||[]).filter(function(r){
+          if(r.type!=='receive'||recordDeleted(r.id))return false;
+          if(r.poId&&po.poId)return String(r.poId)===String(po.poId)&&String(r.poItemIndex)===String(idx);
+          return String(r.poNumber||'')===String(po.poNumber||'')&&String(r.poItemIndex)===String(idx);
+        }).reduce(function(a,r){return a+num(r.qty)},0);
+        it.receivedQty=round(received);
+        it.remainingQty=Math.max(0,round(num(it.approvedQty)-received));
+      });
+    });
+  }
+  window.recvRebuildPoCache=rebuildPoCache;
+
+  function injectRecordFields(){
+    var grid=document.querySelector('#receive-form .form-grid');
+    if(!grid||document.getElementById('rf-purchase-source'))return;
+    var remarks=document.getElementById('rf-remarks'),anchor=remarks&&remarks.closest('.form-group');
+    var a=document.createElement('div');a.className='form-group recv-v3914-receive-only';
+    a.innerHTML='<label class="form-label">'+L('採購來源','Purchase source','ប្រភពទិញ')+'</label><select class="form-input" id="rf-purchase-source"><option value="monthly_po">'+L('月購','Monthly PO','ប្រចាំខែ')+'</option><option value="temp_po">'+L('臨採／追加','Temp PO / extra','PO បន្ទាន់')+'</option><option value="repair">'+L('維修採購','Repair','ជួសជុល')+'</option><option value="other">'+L('其他','Other','ផ្សេង')+'</option></select>';
+    var b=document.createElement('div');b.className='form-group recv-v3914-receive-only';
+    b.innerHTML='<label class="form-label">'+L('PO／申請單號','PO / Request ref','PO / លេខយោង')+'</label><input class="form-input" id="rf-source-ref" placeholder="PO / Repair No.">';
+    var n=document.createElement('div');n.id='rf-stock-note';n.className='recv-v3914-form-note';
+    if(anchor){anchor.insertAdjacentElement('beforebegin',a);anchor.insertAdjacentElement('beforebegin',b);anchor.insertAdjacentElement('beforebegin',n)}
+    else{grid.appendChild(a);grid.appendChild(b);grid.appendChild(n)}
+    var type=document.getElementById('rf-type');
+    if(type&&!type._v3914){type._v3914=true;type.addEventListener('change',toggleRecordFields)}
+    var item=document.getElementById('rf-item');
+    if(item&&!item._v3914){item._v3914=true;item.addEventListener('change',toggleRecordFields)}
+  }
+  function toggleRecordFields(){
+    var type=(document.getElementById('rf-type')||{}).value||'receive';
+    document.querySelectorAll('.recv-v3914-receive-only').forEach(function(x){x.style.display=type==='receive'?'':'none'});
+    var id=(document.getElementById('rf-id')||{}).value||'',itemId=(document.getElementById('rf-item')||{}).value||'';
+    var n=document.getElementById('rf-stock-note'),av=stockWithout(itemId,id);
+    if(n)n.innerHTML=type==='issue'?'📦 '+L('此筆儲存前可發放量','Available before saving','អាចចេញបាន')+'：<b>'+av+'</b>':'📥 '+L('編輯時會先撤回舊數量，再套用新數量；不會重複累加。','Editing reverses the old quantity before applying the new one.','ពេលកែ នឹងដកចំនួនចាស់សិន។');
+  }
+  var oldShowReceive=window.showReceiveForm;
+  window.showReceiveForm=function(type){
+    if(oldShowReceive)oldShowReceive(type);
+    injectRecordFields();
+    var t=document.getElementById('rf-type'),i=document.getElementById('rf-item');
+    if(t)t.disabled=false;if(i)i.disabled=false;
+    var s=document.getElementById('rf-purchase-source'),r=document.getElementById('rf-source-ref');
+    if(s)s.value='other';if(r)r.value='';
+    var title=document.getElementById('rf-title');if(title)title.textContent=L('新增收發記錄','Add movement record','បន្ថែមកំណត់ត្រា');
+    toggleRecordFields();
+  };
+  function editRecord(id){
+    var r=(records||[]).find(function(x){return String(x.id)===String(id)});
+    if(!r)return;
+    injectRecordFields();
+    var sel=document.getElementById('rf-item');
+    sel.innerHTML=(items||[]).filter(function(x){return !x.archived||String(x.id)===String(r.itemId)}).map(function(x){
+      return '<option value="'+esc(x.id)+'">'+esc(x.name)+' · '+esc(x.category||'')+'</option>';
+    }).join('');
+    document.getElementById('rf-id').value=r.id;
+    document.getElementById('rf-date').value=String(r.date||'').slice(0,10);
+    document.getElementById('rf-type').value=r.type||'receive';
+    document.getElementById('rf-item').value=r.itemId;
+    document.getElementById('rf-qty').value=num(r.qty);
+    document.getElementById('rf-dept').value=r.dept||'';
+    document.getElementById('rf-req').value=r.requester||'';
+    document.getElementById('rf-inspector').value=r.inspector||'';
+    document.getElementById('rf-remarks').value=r.remarks||'';
+    document.getElementById('rf-purchase-source').value=sourceOf(r)||'other';
+    document.getElementById('rf-source-ref').value=r.sourceRef||r.poNumber||'';
+    document.getElementById('rf-type').disabled=!!r.poId;
+    document.getElementById('rf-item').disabled=!!r.poId;
+    var title=document.getElementById('rf-title');
+    if(title)title.textContent=(r.type==='issue'?L('編輯發放／領用','Edit issue','កែការចេញ'):L('編輯收貨','Edit receipt','កែការទទួល'))+(r.poNumber?' · '+r.poNumber:'');
+    toggleRecordFields();
+    document.getElementById('receive-form').classList.add('show');
+  }
+  window.editReceiveRecord=editRecord;
+
+  var recordSaveLock=false;
+  window.saveReceiveRecord=function(){
+    if(recordSaveLock)return;
+    recordSaveLock=true;
+    try{
+      injectRecordFields();
+      var id=document.getElementById('rf-id').value,itemId=document.getElementById('rf-item').value;
+      var it=(items||[]).find(function(x){return String(x.id)===String(itemId)});
+      var old=(records||[]).find(function(x){return String(x.id)===String(id)});
+      var data={
+        date:document.getElementById('rf-date').value,type:document.getElementById('rf-type').value,
+        itemId:itemId,itemName:it?it.name:'',qty:num(document.getElementById('rf-qty').value),
+        dept:document.getElementById('rf-dept').value.trim(),requester:document.getElementById('rf-req').value.trim(),
+        inspector:document.getElementById('rf-inspector').value.trim(),remarks:document.getElementById('rf-remarks').value.trim(),
+        purchaseSource:(document.getElementById('rf-purchase-source')||{}).value||'other',
+        sourceRef:((document.getElementById('rf-source-ref')||{}).value||'').trim(),periodGranularity:'day',updatedAt:now()
+      };
+      if(data.type==='issue'){data.purchaseSource='';data.sourceRef=''}
+      if(!it||!data.date||data.qty<=0){toast(L('請填日期、品項及大於 0 的數量','Enter date, item and a quantity above zero','បំពេញថ្ងៃ ទំនិញ និងបរិមាណ'),'error');return}
+      if(data.type==='issue'&&!data.dept){toast(L('發放必須填部門','Department is required for issue','ត្រូវបំពេញផ្នែក'),'error');return}
+      if(data.type==='issue'&&data.qty>stockWithout(itemId,id)){toast(L('發放量不可超過可用庫存','Issue quantity cannot exceed available stock','បរិមាណចេញលើសស្តុក'),'error');return}
+      var projected=projectedStockError(data,id);
+      if(projected){toast(L('此修改會使庫存變成負數，請先修正後續發放記錄。','This change would make stock negative. Correct the later issue record first.','ការកែនេះធ្វើឱ្យស្តុកអវិជ្ជមាន។ សូមកែការចេញសិន។'),'error');return}
+      if(duplicateOf(data,id)){toast(L('⚠️ 完全相同的記錄已存在，未重複新增。','⚠️ An identical record already exists; nothing was duplicated.','⚠️ កំណត់ត្រាដូចគ្នាមានរួចហើយ។'),'error');return}
+      var next=Object.assign({},old||{},data);
+      if(data.type==='issue'){next.purchaseSource='';next.sourceRef='';next.poId='';next.poNumber='';next.poPeriod='';next.poItemIndex=''}
+      next.id=old?old.id:newId();next._dedupeKey=recordFingerprint(next);
+      try{recvSnapshotRecord(next)}catch(e){next.amount=round(num(next.unitPrice)*next.qty)}
+      if(old){records[records.indexOf(old)]=next}else records.push(next);
+      rebuildBalances();rebuildPoCache();persist();
+      try{scheduleReceivingAutoUpload(old?'record-edit':'record-add')}catch(e){}
+      document.getElementById('receive-form').classList.remove('show');
+      renderAll();
+      toast(old?L('✅ 記錄已更新，庫存已重新計算','✅ Record updated; stock recalculated','✅ បានកែ និងគណនាស្តុកឡើងវិញ'):L('✅ 記錄已新增','✅ Record added','✅ បានបន្ថែម'),'success');
+    }finally{setTimeout(function(){recordSaveLock=false},250)}
+  };
+
+  window.deleteRecord=function(id){
+    var r=(records||[]).find(function(x){return String(x.id)===String(id)});
+    if(!r)return;
+    if(stockWithout(r.itemId,r.id)<-0.000001){toast(L('刪除此收貨會造成負庫存，請先刪除或修正後續發放。','Deleting this receipt would create negative stock. Correct the later issue first.','ការលុបនេះធ្វើឱ្យស្តុកអវិជ្ជមាន។ សូមកែការចេញសិន។'),'error');return}
+    if(!confirm(L('刪除 '+(r.itemName||'')+' × '+num(r.qty)+'？庫存及 PO 已收量會一併重新計算。','Delete '+(r.itemName||'')+' × '+num(r.qty)+'? Stock and PO received quantity will be recalculated.','លុបកំណត់ត្រានេះ? ស្តុកនឹងគណនាឡើងវិញ។')))return;
+    deletedRecords=mergeTombstones(deletedRecords,[{kind:'record',targetId:r.id,date:r.date,updatedAt:now(),reason:'user_delete'}]);
+    window.recvDeletedRecords=deletedRecords;
+    records=records.filter(function(x){return String(x.id)!==String(id)});
+    rebuildBalances();rebuildPoCache();persist();
+    try{scheduleReceivingAutoUpload('record-delete')}catch(e){}
+    renderAll();toast(L('已刪除；庫存已由流水帳重算','Deleted; stock rebuilt from the ledger','បានលុប និងគណនាស្តុកឡើងវិញ'),'success');
+  };
+
+  window.deleteItem=function(id){
+    var it=(items||[]).find(function(x){return String(x.id)===String(id)});
+    if(!it)return;
+    var hist=(records||[]).some(function(r){return String(r.itemId)===String(id)});
+    var linked=hist||it.inventorySource||(it.purchaseSources&&it.purchaseSources.length)||(it.monthData&&Object.keys(it.monthData).length);
+    if(linked){
+      if(!confirm(L('此品項已有收發／月購歷史，只能停用以保留帳本。確定停用？','This item has movement/monthly history. Archive it and keep the ledger?','ទំនិញនេះមានប្រវត្តិ។ បិទ និងរក្សាបញ្ជី?')))return;
+      it.archived=true;it.updatedAt=now();persist();try{scheduleReceivingAutoUpload('item-archive')}catch(e){};filterItems();return;
+    }
+    if(!confirm(L('此品項沒有歷史，確定刪除？','This item has no history. Delete it?','គ្មានប្រវត្តិ។ លុប?')))return;
+    deletedItems=mergeTombstones(deletedItems,[{kind:'item',targetId:it.id,updatedAt:now(),reason:'user_delete'}]);
+    window.recvDeletedItems=deletedItems;
+    items=items.filter(function(x){return String(x.id)!==String(id)});persist();
+    try{scheduleReceivingAutoUpload('item-delete')}catch(e){};filterItems();
+  };
+
+  var oldSaveItem=window.saveItem;
+  window.saveItem=async function(){
+    var id=(document.getElementById('edit-id')||{}).value||'';
+    var result=oldSaveItem?await oldSaveItem.apply(this,arguments):undefined;
+    if(id){
+      var it=(items||[]).find(function(x){return String(x.id)===String(id)});
+      if(it)(records||[]).forEach(function(r){if(String(r.itemId)===String(id)){r.itemName=it.name;r.updatedAt=now()}});
+    }
+    rebuildBalances();persist();return result;
+  };
+
+  function guardSave(name,before,reason){
+    var original=window[name],locked=false;
+    if(typeof original!=='function')return;
+    window[name]=function(){
+      if(locked){toast(L('正在儲存，請勿重複按','Saving; please do not tap twice','កំពុងរក្សាទុក'),'warning');return}
+      if(before&&before()===false)return;
+      locked=true;
+      try{return original.apply(this,arguments)}
+      finally{
+        rebuildBalances();rebuildPoCache();persist();
+        try{scheduleReceivingAutoUpload(reason||name)}catch(e){}
+        setTimeout(function(){locked=false},400);
+      }
+    };
+  }
+  guardSave('saveReceiveBatchLines',null,'batch-receive-safe');
+  guardSave('saveIssueBatchLines',function(){
+    var valid=(_recvIssueLines||[]).filter(function(r){return r.itemId&&r.date&&num(r.qty)>0&&String(r.dept||'').trim()});
+    for(var i=0;i<valid.length;i++){
+      var d=valid[i],it=(items||[]).find(function(x){return String(x.id)===String(d.itemId)});
+      var c={type:'issue',itemId:d.itemId,itemName:it&&it.name||'',date:d.date,qty:d.qty,dept:d.dept,requester:d.requester,inspector:d.inspector,remarks:d.remarks};
+      if(duplicateOf(c,'')){toast(L('⚠️ 完全相同的發放已存在，未重複新增。','⚠️ Identical issue already exists; not duplicated.','⚠️ ការចេញដូចគ្នាមានរួចហើយ។'),'error');return false}
+    }
+    return true;
+  },'batch-issue-safe');
+  guardSave('savePoReceiveBatch',null,'po-receive-safe');
+
+  var oldSaveAll=window.saveAll;
+  window.saveAll=function(){
+    if(oldSaveAll)oldSaveAll();
+    rebuildBalances();persist();
+    try{scheduleReceivingAutoUpload('manual-save-all')}catch(e){}
+    toast(L('✅ 本機已儲存，變更已排程上傳','✅ Saved locally; cloud upload queued','✅ បានរក្សាទុក និងត្រៀម Upload'),'success');
+  };
+
+  function recordManagerHtml(type){
+    var list=getRecordsForPeriod().filter(function(r){return !type||r.type===type}).slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))||String(b.updatedAt||b.id).localeCompare(String(a.updatedAt||a.id))});
+    var title=type==='receive'?L('本期 Received 可線上操作','Received — online operations','Received អាចកែ Online'):type==='issue'?L('本期 Issue 可線上操作','Issue — online operations','Issue អាចកែ Online'):L('本期收發可線上操作','Movement — online operations','អាចកែ Online');
+    var h='<section class="recv-v3914-manager" id="recv-v3914-manager"><div class="recv-v3914-manager-head"><div><b>🛠️ '+title+'</b><small>'+L('新增、編輯、刪除後均由流水帳重算，不直接累加庫存。','Add, edit and delete rebuild stock from the ledger.','បន្ថែម កែ លុប ហើយគណនាស្តុកឡើងវិញ។')+'</small></div><span class="recv-v3914-version">'+VERSION+'</span></div><div class="recv-v3914-records">';
+    if(!list.length)h+='<div class="recv-empty">— '+L('本期尚無記錄','No records in this period','មិនមានកំណត់ត្រា')+'</div>';
+    list.forEach(function(r){
+      var c;try{c=recvRecordCost(r)}catch(e){c={unitPrice:num(r.unitPrice),amount:num(r.amount)}}
+      var src=r.type==='issue'?(r.dept||'—'):(sourceName(sourceOf(r))+(r.sourceRef||r.poNumber?' · '+(r.sourceRef||r.poNumber):''));
+      h+='<article class="recv-v3914-card"><div class="main"><b>'+(r.type==='issue'?'📤 ':'📥 ')+esc(r.itemName||'—')+'</b><small>'+esc(r.date)+' · '+esc(src)+'</small></div><div class="cell"><label>'+L('數量','Qty','បរិមាណ')+'</label><b>'+num(r.qty)+'</b></div><div class="cell"><label>'+L('單價','Unit','តម្លៃ')+'</label><b>'+num(c.unitPrice).toFixed(2)+'</b></div><div class="cell"><label>'+L('總額','Total','សរុប')+'</label><b>'+num(c.amount).toFixed(2)+'</b></div><div class="recv-v3914-actions"><button class="nav-btn" data-recv-record-action="edit" onclick="editReceiveRecord(\''+js(r.id)+'\')">✏️ '+L('編輯','Edit','កែ')+'</button><button class="nav-btn danger" data-recv-record-action="delete" onclick="deleteRecord(\''+js(r.id)+'\')">🗑️ '+L('刪除','Delete','លុប')+'</button></div></article>';
+    });
+    return h+'</div></section>';
+  }
+  function appendRecordManager(){
+    var host=document.getElementById('receive-content');if(!host)return;
+    var old=document.getElementById('recv-v3914-manager');if(old)old.remove();
+    var type=receiveTab==='receive'||receiveTab==='po'?'receive':receiveTab==='issue'?'issue':'';
+    var editor=host.querySelector&&host.querySelector('.recv-edit-list');
+    if(editor)editor.insertAdjacentHTML('afterend',recordManagerHtml(type));
+    else host.insertAdjacentHTML('afterbegin',recordManagerHtml(type));
+  }
+  var oldRenderContent=window.renderReceiveContent;
+  window.renderReceiveContent=function(){var r=oldRenderContent?oldRenderContent.apply(this,arguments):undefined;appendRecordManager();return r};
+  var oldRenderPo=window.renderPoReceiveTab;
+  window.renderPoReceiveTab=function(){var r=oldRenderPo?oldRenderPo.apply(this,arguments):undefined;appendRecordManager();return r};
+
+  function snapshot(){
+    return {schema:'AC_RECEIVING_BACKUP',version:VERSION,exportedAt:now(),items:clone(items),records:clone(records),inventoryImportMeta:clone(inventoryImportMeta),settings:clone(settings),deletedRecords:clone(deletedRecords),deletedItems:clone(deletedItems)};
+  }
+  function chunks(s,size){var out=[];for(var i=0;i<s.length;i+=size)out.push(s.slice(i,i+size));return out}
+  window.exportExcel=function(){
+    rebuildBalances();persist();
+    var wb=XLSX.utils.book_new(),snap=snapshot();
+    var meta=[['Key','Value'],['Format','AC_RECEIVING_BACKUP'],['Version',VERSION],['Exported At',snap.exportedAt],['Items',items.length],['Records',records.length],['Deleted Records',deletedRecords.length]];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meta),'Meta');
+    var ir=[['Item ID','#','Name','Category','Brand','Size','Unit','Purchase Mode','Stock','Opening Stock','YTD Purchase','YTD Used','Min Stock','Unit Price','Remarks','Archived','Item JSON']];
+    (items||[]).forEach(function(x){var v;try{v=recvItemVersionFor(x,localYMD().slice(0,7))}catch(e){v=x}var j=JSON.stringify(x);if(j.length>30000)j='(see BackupJSON)';ir.push([x.id,x.no,x.name,x.category,(v&&v.brand)||x.brand||'',(v&&v.size)||x.size||'',x.unit||'',x.purchaseMode||'',x.stock,x.openingStock,x.ytdPurchased,x.ytdUsed,x.minStock,(v&&v.unitPrice)||x.unitPrice||0,(v&&v.remarks)||x.remarks||'',!!x.archived,j])});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(ir),'Items');
+    var rr=[['Record ID','Date','Type','Item ID','Item','Qty','Department','Receiver','Inspector','Purchase Source','Order Ref','PO','Unit Price','Amount','Remarks','Record JSON']];
+    (records||[]).forEach(function(r){var c;try{c=recvRecordCost(r)}catch(e){c={unitPrice:r.unitPrice,amount:r.amount}}var j=JSON.stringify(r);if(j.length>30000)j='(see BackupJSON)';rr.push([r.id,r.date,r.type,r.itemId,r.itemName,r.qty,r.dept||'',r.requester||'',r.inspector||'',sourceOf(r),r.sourceRef||'',r.poNumber||'',c.unitPrice,c.amount,r.remarks||'',j])});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rr),'Records');
+    var br=[['Part','JSON Chunk']];chunks(JSON.stringify(snap),28000).forEach(function(x,i){br.push([i+1,x])});
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(br),'BackupJSON');
+    XLSX.writeFile(wb,'VRT_Receiving_Backup_'+localYMD()+'_v3.9.14.xlsx');
+    toast(L('✅ 已匯出可完整匯回的 Excel 備份','✅ Round-trip Excel backup exported','✅ បាន Export Excel ដែល Import ត្រឡប់បាន'),'success');
+  };
+  window.exportAll=window.exportExcel;
+
+  function itemIdentity(x){
+    var v;try{v=recvItemVersionFor(x,localYMD().slice(0,7))}catch(e){v=x}
+    return [norm(x.name),norm(v&&v.size||x.size),norm(v&&v.brand||x.brand),norm(x.unit)].join('|');
+  }
+  function mergeVersions(a,b){
+    var map={};(a||[]).concat(b||[]).forEach(function(v){if(!v)return;var k=String(v.effectiveFrom||'0000-01');if(!map[k]||String(v.updatedAt||'')>=String(map[k].updatedAt||''))map[k]=v});
+    return Object.keys(map).sort().map(function(k){return map[k]});
+  }
+  function mergeDataset(data,mode){
+    data=data&&data.data&&typeof data.data==='object'?data.data:data||{};
+    var incomingItems=Array.isArray(data.items)?clone(data.items):[],incomingRecords=Array.isArray(data.records)?clone(data.records):[];
+    if(mode==='replace'){
+      items=incomingItems;records=incomingRecords;
+      deletedRecords=mergeTombstones([],data.deletedRecords||[]);deletedItems=mergeTombstones([],data.deletedItems||[]);
+    }else{
+      var byId={},byIdentity={},idMap={};
+      (items||[]).forEach(function(x){byId[String(x.id)]=x;byIdentity[itemIdentity(x)]=x});
+      incomingItems.forEach(function(x){
+        if(!x.id)x.id=newId();
+        var cur=byId[String(x.id)]||byIdentity[itemIdentity(x)];
+        if(!cur){items.push(x);cur=x;byId[String(x.id)]=x;byIdentity[itemIdentity(x)]=x}
+        else{
+          idMap[String(x.id)]=cur.id;
+          var keep=String(x.updatedAt||'')>=String(cur.updatedAt||'')?Object.assign({},cur,x):Object.assign({},x,cur);
+          keep.id=cur.id;keep.versions=mergeVersions(cur.versions,x.versions);
+          keep.purchaseSources=Array.from(new Set((cur.purchaseSources||[]).concat(x.purchaseSources||[])));
+          Object.assign(cur,keep);
+        }
+      });
+      var recById={};(records||[]).forEach(function(r){recById[String(r.id)]=r});
+      incomingRecords.forEach(function(r){
+        if(idMap[String(r.itemId)])r.itemId=idMap[String(r.itemId)];
+        var it=(items||[]).find(function(x){return String(x.id)===String(r.itemId)});if(it)r.itemName=it.name;
+        if(!r.id)r.id=newId();
+        var cur=recById[String(r.id)];
+        if(!cur&&!duplicateOf(r,'')){records.push(r);recById[String(r.id)]=r}
+        else if(cur&&String(r.updatedAt||'')>String(cur.updatedAt||''))Object.assign(cur,r);
+      });
+      deletedRecords=mergeTombstones(deletedRecords,data.deletedRecords||[]);
+      deletedItems=mergeTombstones(deletedItems,data.deletedItems||[]);
+    }
+    var dr={};deletedRecords.forEach(function(x){dr[String(x.targetId)]=1});records=records.filter(function(r){return !dr[String(r.id)]});
+    var di={};deletedItems.forEach(function(x){di[String(x.targetId)]=1});items=items.filter(function(x){return !di[String(x.id)]});
+    if(data.inventoryImportMeta)inventoryImportMeta=Object.assign({},inventoryImportMeta,data.inventoryImportMeta);
+    if(data.settings)Object.assign(settings,data.settings);
+    window.recvDeletedRecords=deletedRecords;window.recvDeletedItems=deletedItems;
+    rebuildBalances();rebuildPoCache();persist();filteredItems=(items||[]).filter(function(x){return !x.archived});
+    try{renderAll()}catch(e){}
+    try{scheduleReceivingAutoUpload('safe-import-merge')}catch(e){}
+    return {items:items.length,records:records.length,deletedRecords:deletedRecords.length};
+  }
+  window.recvMergeDataset=mergeDataset;
+  function backupFromWorkbook(wb){
+    if(!wb||!wb.Sheets||!wb.Sheets.Meta||!wb.Sheets.BackupJSON)return null;
+    var meta=XLSX.utils.sheet_to_json(wb.Sheets.Meta,{header:1,defval:'',raw:false});
+    var ok=meta.some(function(r){return String(r[0])==='Format'&&String(r[1])==='AC_RECEIVING_BACKUP'});if(!ok)return null;
+    var rows=XLSX.utils.sheet_to_json(wb.Sheets.BackupJSON,{header:1,defval:'',raw:false});
+    var text=rows.slice(1).sort(function(a,b){return num(a[0])-num(b[0])}).map(function(r){return String(r[1]||'')}).join('');
+    return JSON.parse(text);
+  }
+  var priorImport=window.importExcel;
+  window.importExcel=function(input){
+    var f=input&&input.files&&input.files[0];if(!f)return;
+    f.arrayBuffer().then(function(ab){
+      var wb=XLSX.read(ab,{type:'array',cellDates:true}),backup=backupFromWorkbook(wb);
+      if(!backup){if(priorImport)priorImport(input);setTimeout(function(){rebuildBalances();persist()},1700);return}
+      var result=mergeDataset(backup,'merge');input.value='';
+      toast(L('✅ 備份已安全合併：品項 ','✅ Backup safely merged: items ','✅ បាន Merge៖ ទំនិញ ')+result.items+' / '+L('記錄 ','records ','កំណត់ត្រា ')+result.records,'success');
+    }).catch(function(e){console.error(e);toast(L('匯入失敗：','Import failed: ','Import បរាជ័យ៖ ')+e.message,'error');input.value=''});
+  };
+
+  window.recvDataPanel=function(){
+    GA.dataPanel.open({
+      module:'receiving',count:function(){return records.length},
+      data:function(){return snapshot()},
+      restore:function(obj,mode){return mergeDataset(obj,mode==='replace'?'replace':'merge')},
+      clear:function(){
+        deletedRecords=mergeTombstones(deletedRecords,(records||[]).map(function(r){return{kind:'record',targetId:r.id,date:r.date,updatedAt:now(),reason:'clear_all'}}));
+        deletedItems=mergeTombstones(deletedItems,(items||[]).map(function(x){return{kind:'item',targetId:x.id,updatedAt:now(),reason:'clear_all'}}));
+        items=[];records=[];persist();
+      },
+      exportXlsx:window.exportExcel,onChange:function(){rebuildBalances();filteredItems=[].concat(items);renderAll()}
+    });
+  };
+  window.clearAllData=function(){
+    if(!confirm(L('清除全部本機資料？雲端會收到刪除標記，不能自行復原。','Clear all local data? Deletion markers will sync to cloud.','លុបទិន្នន័យទាំងអស់?')))return;
+    deletedRecords=mergeTombstones(deletedRecords,(records||[]).map(function(r){return{kind:'record',targetId:r.id,date:r.date,updatedAt:now(),reason:'clear_all'}}));
+    deletedItems=mergeTombstones(deletedItems,(items||[]).map(function(x){return{kind:'item',targetId:x.id,updatedAt:now(),reason:'clear_all'}}));
+    items=[];records=[];persist();try{scheduleReceivingAutoUpload('clear-all')}catch(e){};renderAll();
+  };
+
+  window.recvSyncRows=function(){
+    var out=[{_syncId:'meta:receiving',_syncBucket:'meta',kind:'meta'}];
+    (items||[]).forEach(function(x){out.push({_syncId:'item:'+x.id,_syncBucket:'catalog:'+String(x.category||'Other'),kind:'item',row:x})});
+    (records||[]).forEach(function(r,i){var id=r.id||r.recordId||i;out.push({_syncId:'record:'+id,_syncBucket:'m:'+(String(r.date||'').slice(0,7)||'unknown'),_syncPeriod:r.date||'',kind:'record',row:r})});
+    deletedRecords.forEach(function(t){out.push({_syncId:'record-tombstone:'+t.targetId,_syncBucket:'deleted-records',kind:'record_tombstone',row:t})});
+    deletedItems.forEach(function(t){out.push({_syncId:'item-tombstone:'+t.targetId,_syncBucket:'deleted-items',kind:'item_tombstone',row:t})});
+    return out;
+  };
+  window.recvApplySync=function(rows,meta){
+    var ni=[],nr=[],dr=[],di=[];
+    (rows||[]).forEach(function(x){if(!x||!x.row)return;if(x.kind==='item')ni.push(x.row);else if(x.kind==='record')nr.push(x.row);else if(x.kind==='record_tombstone')dr.push(x.row);else if(x.kind==='item_tombstone')di.push(x.row)});
+    deletedRecords=mergeTombstones(deletedRecords,dr);deletedItems=mergeTombstones(deletedItems,di);
+    if(ni.length)items=ni;if(nr.length)records=nr;
+    var drm={};deletedRecords.forEach(function(x){drm[String(x.targetId)]=1});records=records.filter(function(r){return !drm[String(r.id)]});
+    var dim={};deletedItems.forEach(function(x){dim[String(x.targetId)]=1});items=items.filter(function(x){return !dim[String(x.id)]});
+    if(meta&&meta.settings)Object.assign(settings,meta.settings);
+    window.recvDeletedRecords=deletedRecords;window.recvDeletedItems=deletedItems;
+    rebuildBalances();persist();filteredItems=[].concat(items);try{renderAll()}catch(e){}
+  };
+
+  function markVersion(){
+    document.documentElement.setAttribute('data-recv-version',VERSION);
+    var t=document.getElementById('st-receive');
+    if(t&&!t.querySelector('.recv-v3914-version'))t.insertAdjacentHTML('beforeend','<span class="recv-v3914-version">'+VERSION+'</span>');
+  }
+  function init(){
+    injectRecordFields();rebuildBalances();rebuildPoCache();persist();markVersion();
+    try{filterItems();renderAll()}catch(e){console.error(e)}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,360)});else setTimeout(init,360);
+})();
 </script>
 </body>
 </html>

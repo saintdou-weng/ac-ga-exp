@@ -346,11 +346,10 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 <script src="shared/ga-core.js"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
+<script src="shared/ga-telegram.js"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -678,86 +677,44 @@ const _SESSION = _params.get("session") || (GA.cfg().session || "");
 const _UID     = _params.get("uid") || "";
 
 let _saveTimer = null;
-const PROC_LOCAL_KEY='ga_po_state';
-function procCompactOrds(src){
-  const out={}; Object.entries(src||{}).forEach(([k,v])=>{if(v&&(Number(v.qty)>0||String(v.note||'').trim()))out[k]=v;}); return out;
-}
-function procStateSnapshot(updatedAt){
-  return {ords:procCompactOrds(ords),poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog,updatedAt:updatedAt||new Date().toISOString()};
-}
-function procSaveLocal(data){try{localStorage.setItem(PROC_LOCAL_KEY,JSON.stringify(data||procStateSnapshot()));return true;}catch(e){console.warn('Local state save failed:',e);return false;}}
-function procReadLocal(){try{return JSON.parse(localStorage.getItem(PROC_LOCAL_KEY)||'null')}catch(e){return null}}
-function procRecordKey(r){return String((r&&r.id)||[(r&&r.date)||'',(r&&r.type)||'',(r&&r.itemId)||'',(r&&r.qty)||'',(r&&r.dept)||'',(r&&r.requester)||''].join('|'));}
-function procMergeArray(localRows,cloudRows){
-  const m=new Map(); (cloudRows||[]).forEach(r=>m.set(procRecordKey(r),r)); (localRows||[]).forEach(r=>m.set(procRecordKey(r),r)); return Array.from(m.values());
-}
-function procMergeState(localState,cloudState,preferLocal){
-  localState=localState||{}; cloudState=cloudState||{};
-  const winner=preferLocal?localState:cloudState, other=preferLocal?cloudState:localState;
-  const customMap=new Map(); (other.customItems||[]).forEach(i=>customMap.set(String(i.id||i.name),i)); (winner.customItems||[]).forEach(i=>customMap.set(String(i.id||i.name),i));
-  return {
-    ords:Object.assign({},other.ords||{},winner.ords||{}),
-    poStatus:winner.poStatus!=null?winner.poStatus:(other.poStatus||'draft'),
-    sigs:winner.sigs||other.sigs||{applicant:null,verifier:null,approver:null},
-    curMonth:winner.curMonth!=null?winner.curMonth:(other.curMonth!=null?other.curMonth:new Date().getMonth()),
-    itemSettings:Object.assign({},other.itemSettings||{},winner.itemSettings||{}),
-    poNumber:winner.poNumber!=null?winner.poNumber:(other.poNumber||null),
-    hiddenItems:Array.from(new Set([...(other.hiddenItems||[]),...(winner.hiddenItems||[])])),
-    customItems:Array.from(customMap.values()),
-    recvLog:procMergeArray(localState.recvLog,cloudState.recvLog),
-    updatedAt:(preferLocal?localState.updatedAt:cloudState.updatedAt)||new Date().toISOString()
-  };
-}
-function procApplyState(s,replace){
-  if(!s)return false;
-  if(s.customItems) customItems=s.customItems;
-  if(replace){
-    ords={}; Object.values(CATS).forEach(c=>c.items.forEach(i=>{ords[i.id]={qty:0,note:''};}));
-    (customItems||[]).forEach(i=>{if(!ords[i.id])ords[i.id]={qty:0,note:''};});
-  }
-  if(s.ords) Object.entries(s.ords).forEach(([k,v])=>{ords[k]=v;});
-  if(s.poStatus!=null) poStatus=s.poStatus;
-  if(s.sigs) sigs=s.sigs;
-  if(s.curMonth!=null) curMonth=s.curMonth;
-  if(s.itemSettings) itemSettings=s.itemSettings;
-  if(s.poNumber!==undefined) poNumber=s.poNumber;
-  if(s.hiddenItems) hiddenItems=s.hiddenItems;
-  if(s.recvLog) recvLog=s.recvLog;
-  (customItems||[]).forEach(i=>{if(!ords[i.id])ords[i.id]={qty:0,note:''};if(!itemSettings[i.id])itemSettings[i.id]={unit:i.unit||'pcs',safetyStock:5,monthly:i.monthly!==false};});
-  return true;
-}
-async function saveStateCloud(opts){
-  opts=opts||{};
+async function saveStateCloud(){
   try{
-    const local=procReadLocal(); const data=local||procStateSnapshot();
-    const resp=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'saveState',data})});
-    const txt=await resp.text(); let json=null; try{json=txt?JSON.parse(txt):null}catch(_){json=null}
-    if(!resp.ok||(json&&json.ok===false))throw new Error((json&&json.error)||('HTTP '+resp.status));
-    procSaveLocal(data); return true;
-  }catch(e){if(!opts.silent)console.warn('Cloud save failed:',e);return false;}
+    const compactOrds={};
+    Object.entries(ords).forEach(([k,v])=>{if(v&&(v.qty>0||v.note))compactOrds[k]=v;});
+    const data={ords:compactOrds,poStatus,sigs,curMonth,itemSettings,poNumber,hiddenItems,customItems,recvLog};
+    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action:"saveState",data})});
+  }catch(e){console.warn("Cloud save failed:",e);}
 }
-function saveState(reason){
-  const data=procStateSnapshot(); procSaveLocal(data);
-  if(window.GAAutoSync){GAAutoSync.schedule('procurement',reason||'change',{},1500);return;}
-  clearTimeout(_saveTimer); _saveTimer=setTimeout(()=>saveStateCloud({silent:true}),1500);
+function saveState(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(saveStateCloud,1500);
 }
-async function loadStateCloud(opts){
-  opts=opts||{};
+async function loadStateCloud(){
   try{
-    const resp=await fetch(`${GAS_URL}?action=getState&_=${Date.now()}`,{cache:'no-store'});
+    const resp=await fetch(`${GAS_URL}?action=getState`);
     const json=await resp.json();
-    if(!resp.ok||!json.ok)throw new Error(json.error||('HTTP '+resp.status));
-    if(json.data){
-      const cloud=json.data, local=procReadLocal();
-      const pending=!!(window.GAAutoSync&&GAAutoSync.pending('procurement'));
-      const lt=Date.parse(local&&local.updatedAt||0)||0, ct=Date.parse(cloud&&cloud.updatedAt||0)||0;
-      if(!local){procApplyState(cloud,true);procSaveLocal(cloud);}
-      else if(pending||lt>ct){const merged=procMergeState(local,cloud,true);procApplyState(merged,true);procSaveLocal(merged);}
-      else{const merged=procMergeState(local,cloud,false);procApplyState(merged,true);procSaveLocal(merged);}
+    if(json.ok&&json.data){
+      const s=json.data;
+      if(s.ords){ Object.entries(s.ords).forEach(([k,v])=>{ords[k]=v;}); }
+      if(s.poStatus) poStatus=s.poStatus;
+      if(s.sigs) sigs=s.sigs;
+      if(s.curMonth!=null) curMonth=s.curMonth;
+      if(s.itemSettings) itemSettings=s.itemSettings;
+      if(s.poNumber) poNumber=s.poNumber;
+      if(s.hiddenItems) hiddenItems=s.hiddenItems;
+      if(s.recvLog) recvLog=s.recvLog;
+      if(s.customItems){
+        customItems=s.customItems;
+        customItems.forEach(i=>{
+          if(!ords[i.id]) ords[i.id]={qty:0,note:""};
+          if(!itemSettings[i.id]) itemSettings[i.id]={unit:i.unit||"pcs",safetyStock:5};
+        });
+      }
       return true;
     }
-    return true;
-  }catch(e){if(!opts.silent)console.warn('Cloud load failed:',e);return false;}
+  }catch(e){console.warn("Cloud load failed:",e);}
+  return false;
 }
 
 async function loadInvCloud(year){
@@ -928,9 +885,11 @@ function initOrds(){
 }
 initOrds();
 
-// ── PERSIST STATE via localStorage + HRA-PAY style auto sync ──
-const LS_KEY=PROC_LOCAL_KEY;
-function loadState(){ const s=procReadLocal(); if(!s)return false; procApplyState(s,true); return true; }
+// ── PERSIST STATE via localStorage ──
+const LS_KEY="ga_po_state";
+
+// saveState & loadState replaced by cloud versions above
+function loadState(){ return false; } // stub - cloud handles loading
 
 function clearPOState(){
   // Only clear the PO order (not inventory/settings)
@@ -1132,14 +1091,8 @@ function initLogin(){
 function enterApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
-  loadState(); // local-first: 先顯示本機最近資料，再與雲端 reconciliation
   showCloudLoading();
-  loadStateCloud({silent:true}).then(()=>{
-    hideCloudLoading(); bootApp();
-    if(window.GAAutoSync){
-      GAAutoSync.install({key:'procurement',pull:loadStateCloud,push:saveStateCloud,canSync:()=>!!GAS_URL,startDelay:450,anchor:'#ga-cloud'});
-    }
-  });
+  loadStateCloud().then(()=>{ hideCloudLoading(); bootApp(); });
 }
 function onUserPick(){
   const u=USERS.find(x=>x.id===document.getElementById("lu").value);
@@ -1190,7 +1143,7 @@ function hideCloudLoading(){
 }
 
 function bootApp(){
-  // State loaded local-first then reconciled with cloud before bootApp
+  // State already loaded from cloud before bootApp is called
   ensureMonthlyFlags(); // back-fill 每月/非每月 flags for items loaded from cloud
 
   const ms=document.getElementById("msel");
@@ -2216,14 +2169,14 @@ async function doSubmit(){
   if(totalN()===0||poStatus!=="draft")return;
   poStatus="submitted";
   sigs.applicant={name:cu.name,date:new Date().toLocaleDateString()};
-  saveState('submit-review');
+  saveState();
   render(); openMod();
   try{
     const items=ordItems().map(i=>({
       id:i.id,name:i.name,cn:i.cn||i.name,cat:i.cat||"",
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
-    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang};
+    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items};
     await fetch(GAS_URL+"?action=submit&data="+encodeURIComponent(JSON.stringify(payload)));
   }catch(e){console.warn("submit error",e);}
 }
@@ -2231,7 +2184,7 @@ function doVerify(ok){
   if(cu.role!=="verifier"||poStatus!=="submitted")return;
   if(ok){poStatus="verified";sigs.verifier={name:cu.name,date:new Date().toLocaleDateString()};}
   else poStatus="rejected";
-  saveState('review');
+  saveState();
   render(); renderModalBody();
 }
 function doApprove(ok){
@@ -2251,7 +2204,7 @@ function doApprove(ok){
       r.close=Math.max(0,r.open+r.purchase-r.used);
     });
   } else poStatus="rejected";
-  saveState('approval');
+  saveState();
   render(); renderModalBody();
 }
 function resetAll(){
@@ -2637,17 +2590,15 @@ GA.addDict({
     kPO:'ចំនួន PO',kPend:'រង់ចាំ',kAppr:'អនុម័ត',kItems:'ធាតុ',kLow:'ស្តុកតិច',kQty:'បរិមាណសរុប' }
 });
 
-async function procCloudUp(){
+function procCloudUp(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  const ok=await saveStateCloud({silent:false});
-  if(ok){GA.cloud.set('up');GA.toast('☁️ 已上傳採購狀態');}
-  else{GA.cloud.set('err','upload');GA.toast('上傳失敗，已保留待同步狀態','err');}
+  saveStateCloud().then(()=>{ GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態'); })
+    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); });
 }
-async function procCloudDown(){
+function procCloudDown(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  const ok=await loadStateCloud({silent:false});
-  if(ok){GA.cloud.set('down');render();GA.toast('📥 已安全合併雲端採購狀態');}
-  else{GA.cloud.set('err','download');GA.toast('下載失敗','err');}
+  loadStateCloud().then(()=>{ GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態'); })
+    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); });
 }
 
 /* 智慧匯入：PO / 收貨 / 庫存。核可流程不變：
@@ -2678,7 +2629,7 @@ function procImport(){
         }
       }
       GA.toast('📥 '+(msg.join('，')||'無資料匯入'));
-      saveState('import'); render();
+      saveState(); render();
     }
   });
 }
@@ -2728,26 +2679,26 @@ function procTelegram(){
       const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
       const low=lowStockCount();
       return GA.telegram.buildSummary({
-        icon:'📋', titleZh:'採購摘要', titleEn:'Procurement Summary', titleKm:'សង្ខេបការទិញ',
-        lang:s.lang, period:GA.telegram.periodLabel(s.period,s.ptype,s.lang),
+        icon:'📋', titleZh:'採購摘要', titleEn:'Procurement Summary',
+        lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
         rows:[
-          {zh:'採購單數',en:'PO Count',km:'ចំនួន PO',v:rows.length},
-          {zh:'待審',en:'Pending',km:'រង់ចាំពិនិត្យ',v:(byStatus.submitted||0)+(byStatus.verified||0)},
-          {zh:'已核可',en:'Approved',km:'បានអនុម័ត',v:byStatus.approved||0},
-          {zh:'品項數',en:'Items',km:'ចំនួនមុខទំនិញ',v:items},
-          {zh:'低庫存',en:'Low Stock',km:'ស្តុកទាប',v:low}
+          {zh:'採購單數',en:'PO Count',v:rows.length},
+          {zh:'待審',en:'Pending',v:(byStatus.submitted||0)+(byStatus.verified||0)},
+          {zh:'已核可',en:'Approved',v:byStatus.approved||0},
+          {zh:'品項數',en:'Items',v:items},
+          {zh:'低庫存',en:'Low Stock',v:low}
         ],
         footer:'🕐 '+GA.ymd(new Date())
       });
     },
     approvalItems:function(s){
       // 只送目前草稿/待送的 PO 品項（走原有核可順序）
-      return ordItems().map(i=>({ item:i.name, itemZh:i.cn||i.name, qty:(ords[i.id]||{}).qty, unit:getUnit(i.id), dept:'GA', category:(i.catKey||i.cat||''), note:(ords[i.id]||{}).note||'', recordId:i.id }));
+      return ordItems().map(i=>({ item:i.name, qty:(ords[i.id]||{}).qty, dept:'GA', recordId:i.id }));
     }
   });
 }
-/* 摘要／核可請求成功後比照 HRA PAY 立即排入雲端同步（<=60ms）。 */
-(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(reason){if(window.GAAutoSync)GAAutoSync.schedule('procurement',reason,{},60);else setTimeout(function(){try{saveStateCloud({silent:true});}catch(e){}},60);}opt.onSummarySent=function(d,s){bg('telegram-summary');if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg('telegram-approval');if(oa)oa(d,s);};}return open.call(this,opt);};})();
+/* 摘要／核可請求成功後自動保存目前採購狀態；避免還要再等一次手動上傳。 */
+(function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{saveStateCloud();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
 function poHist_inPeriod(s){
   return (poHistoryData||[]).filter(po=>{
     const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
@@ -2857,6 +2808,67 @@ function lowStockList(){
 
 setL(GA.lang||lang);
 initLogin();
+</script>
+
+<!-- v3.9.14 integrity patch -->
+<script>
+(function(){
+  function P(zh,en){return lang==='zh'?zh:en;}
+  window.editRecvRecord=function(id){
+    var r=(recvLog||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
+    openRecvForm(r.type);document.getElementById('rec-id').value=r.id;document.getElementById('rec-type').value=r.type;document.getElementById('rec-date').value=r.date||'';document.getElementById('rec-item').value=String(r.itemId);document.getElementById('rec-qty').value=r.qty||1;document.getElementById('rec-dept').value=r.dept||'';document.getElementById('rec-req').value=r.requester||'';document.getElementById('rec-remarks').value=r.remarks||'';document.getElementById('recv-mtitle').textContent='✏️ '+P('編輯收發記錄','Edit receiving record');
+  };
+  var _pRenderRecv=window.renderRecv;
+  window.renderRecv=function(){_pRenderRecv();document.querySelectorAll('#recv-tbody tr').forEach(function(tr){var del=tr.querySelector('button[onclick^="delRecvRecord"]');if(!del)return;var m=(del.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;var b=document.createElement('button');b.className='il-del';b.style.cssText='border-color:var(--blue-border);color:var(--blue);margin-right:4px';b.textContent='✏️';b.onclick=function(){editRecvRecord(m[1])};del.parentNode.insertBefore(b,del)});};
+  window.saveRecvRecord=function(){
+    var id=document.getElementById('rec-id').value,itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Math.max(1,parseInt(document.getElementById('rec-qty').value)||0),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
+    if(!it||!date||qty<=0){alert(P('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return}
+    if(type==='issue'&&!dept){alert(P('領用／發放必須填部門','Department is required for issue'));return}
+    var dup=(recvLog||[]).find(function(x){return String(x.id)!==String(id)&&x.date===date&&x.type===type&&String(x.itemId)===String(itemId)&&Number(x.qty)===Number(qty)&&String(x.dept||'').trim().toLowerCase()===dept.toLowerCase()});
+    if(dup&&!confirm(P('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
+    var old=id?(recvLog||[]).find(function(x){return String(x.id)===String(id)}):null;
+    if(old){var om=recYearMonth(old.date);if(om.y===YEAR)bumpInvForRecord(om.m,old.itemId,old.type==='receive'?'purchase':'used',-Number(old.qty||0));}
+    var rec={id:id||('rec_'+Date.now()),date:date,type:type,itemId:itemId,itemName:it.name,qty:qty,dept:dept,requester:requester,remarks:remarks,updatedAt:new Date().toISOString(),createdAt:(old&&old.createdAt)||new Date().toISOString()};
+    if(old){var idx=recvLog.indexOf(old);recvLog[idx]=rec}else recvLog.push(rec);
+    var ym=recYearMonth(date);if(ym.y===YEAR)bumpInvForRecord(ym.m,itemId,type==='receive'?'purchase':'used',qty);
+    saveState();if(old){var om2=recYearMonth(old.date);if(om2.y===YEAR){var ok=getMonthKey(om2.m,YEAR);saveInvCloud(YEAR,om2.m,invRecords[ok]||{})}}if(ym.y===YEAR){var key=getMonthKey(ym.m,YEAR);saveInvCloud(YEAR,ym.m,invRecords[key]||{})}closeRecvOv();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
+  };
+})();
+</script>
+
+
+<!-- v3.9.14c Procurement receive/issue stock-integrity -->
+<script id="proc-v3914c-js">
+(function(){
+  function Q(zh,en){return lang==='zh'?zh:en;}
+  function n(v){var x=Number(v);return isFinite(x)?x:0;}
+  function cloneInv(){try{return JSON.parse(JSON.stringify(invRecords||{}))}catch(e){return {}}}
+  function ensureRec(db,m,itemId){var k=getMonthKey(m,YEAR);if(!db[k])db[k]={};if(!db[k][itemId])db[k][itemId]={open:0,purchase:0,used:0,close:0,note:''};return db[k][itemId];}
+  function adjust(db,rec,sign){if(!rec||!rec.date)return {ok:true};var ym=recYearMonth(rec.date);if(ym.y!==YEAR)return {ok:true};var r=ensureRec(db,ym.m,rec.itemId),f=rec.type==='receive'?'purchase':'used';r[f]=n(r[f])+sign*n(rec.qty);if(r[f]<-0.000001)return {ok:false,error:'negative '+f,itemId:rec.itemId,month:ym.m};r[f]=Math.max(0,r[f]);return {ok:true,itemId:rec.itemId,month:ym.m};}
+  function reflow(db,itemId){var prev=null,changed=[];for(var m=0;m<12;m++){var r=ensureRec(db,m,itemId);if(m>0)r.open=prev;var close=n(r.open)+n(r.purchase)-n(r.used);if(close<-0.000001)return {ok:false,itemId:itemId,month:m,close:close};r.close=Math.max(0,close);prev=r.close;changed.push(m);}return {ok:true,months:changed};}
+  function simulate(oldRec,newRec){var db=cloneInv(),ids={},months={};var a=adjust(db,oldRec,-1);if(!a.ok)return {ok:false,error:a};var b=adjust(db,newRec,1);if(!b.ok)return {ok:false,error:b};[oldRec,newRec].forEach(function(r){if(r&&r.date&&recYearMonth(r.date).y===YEAR){ids[String(r.itemId)]=r.itemId;months[recYearMonth(r.date).m]=1;}});for(var k in ids){var x=reflow(db,ids[k]);if(!x.ok)return {ok:false,error:x};x.months.forEach(function(m){months[m]=1;});}return {ok:true,db:db,months:Object.keys(months).map(Number).sort(function(a,b){return a-b})};}
+  function commitSim(sim){invRecords=sim.db;sim.months.forEach(function(m){var k=getMonthKey(m,YEAR);try{saveInvCloud(YEAR,m,invRecords[k]||{})}catch(e){console.warn('saveInvCloud',e)}});}
+  function duplicate(id,date,type,itemId,qty,dept){return (recvLog||[]).find(function(x){return String(x.id)!==String(id||'')&&x.date===date&&x.type===type&&String(x.itemId)===String(itemId)&&n(x.qty)===n(qty)&&String(x.dept||'').trim().toLowerCase()===String(dept||'').trim().toLowerCase()});}
+  window.procInventorySimulation=simulate;
+
+  window.saveRecvRecord=function(){
+    var id=(document.getElementById('rec-id')||{}).value||'',itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Math.max(1,parseInt(document.getElementById('rec-qty').value)||0),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
+    if(!it||!date||qty<=0){alert(Q('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return;}
+    if(type==='issue'&&!dept){alert(Q('領用／發放必須填部門','Department is required for issue'));return;}
+    var dup=duplicate(id,date,type,itemId,qty,dept);if(dup&&!confirm(Q('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
+    var old=id?(recvLog||[]).find(function(x){return String(x.id)===String(id)}):null,rec=Object.assign({},old||{}, {id:id||('rec_'+Date.now()),date:date,type:type,itemId:itemId,itemName:it.name,qty:qty,dept:dept,requester:requester,remarks:remarks,updatedAt:new Date().toISOString(),createdAt:(old&&old.createdAt)||new Date().toISOString()});
+    var sim=simulate(old,rec);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||it.name;alert(Q('❌ 儲存後 '+nm+' 的庫存會小於 0。請先增加收貨、減少領用，或修正日期。','❌ Saving would make '+nm+' stock negative. Add receipts, reduce issues, or correct the date.'));return;}
+    if(old){var idx=recvLog.indexOf(old);recvLog[idx]=rec;}else recvLog.push(rec);commitSim(sim);saveState();closeRecvOv();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
+  };
+
+  window.delRecvRecord=function(id){
+    var r=(recvLog||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
+    var sim=simulate(r,null);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||r.itemName||'Item';alert(Q('❌ 不能刪除此收貨：'+nm+' 已有後續領用依賴這筆數量。請先更正領用。','❌ This receipt cannot be deleted because later issues depend on it. Correct the issue records first.'));return;}
+    if(!confirm(Q('確定刪除此筆？庫存與後續月份結存會重新計算。','Delete this record? Stock and subsequent monthly balances will be recalculated.')))return;
+    recvLog=recvLog.filter(function(x){return String(x.id)!==String(id)});commitSim(sim);saveState();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
+  };
+  document.documentElement.setAttribute('data-procurement-stock-integrity','v3.9.14c');
+})();
 </script>
 </body>
 </html>
