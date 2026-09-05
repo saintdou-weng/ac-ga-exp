@@ -1178,6 +1178,9 @@ function bootApp(){
   rt.style.border=`1px solid ${rc.border}`;
 
   render();
+  // v3.9.15c: always load authoritative PO history on startup.
+  // This keeps Summary, Review/Approve status and Telegram message state aligned with GAS.
+  loadPOHistory().then(()=>_procReconcileCurrentFromHistory()).catch(()=>{});
 }
 
 // ════════════════════════════════
@@ -1304,7 +1307,7 @@ async function loadPOHistory() {
         po.receivingSummary = { received: po.items.reduce((n, it) => n + GA.num(it.receivedQty), 0), remaining: po.items.reduce((n, it) => n + GA.num(it.remainingQty), 0) };
       });
       renderPOHistory();
-      try{ if((poStatus==='submitted'||poStatus==='verified'||poStatus==='approved')&&!submitAckId){ const m=await _procFindExistingServerPO(); if(m) _procApplyServerPO(m); } }catch(_){ }
+      try{ await _procReconcileCurrentFromHistory(); }catch(_){ }
     }
   } catch(e) { console.warn("loadPOHistory error:", e); }
 }
@@ -2031,12 +2034,18 @@ Use Retry Submit below; cloud history is checked first to reduce duplicate submi
         okBtn.onclick=()=>doSubmit(true);
       }
     }else{
-      title.textContent=lang==="zh"?"⏳ 採購單等待審查中":"⏳ Pending Review";
+      title.textContent=lang==="zh"?"⏳ 採購單等待 Phea 審查":"⏳ Pending Phea Review";
       sub.textContent=lang==="zh"
         ?`申請人：${sigs.applicant?.name||"—"}  |  共 ${n} 項  |  ${sigs.applicant?.date||""}
-已送至 Telegram 群組，等待審查`
+伺服器與 Telegram 群組狀態已連接`
         :`Applicant: ${sigs.applicant?.name||"—"}  |  ${n} items
-Sent to Telegram group; pending review`;
+Server and Telegram workflow are linked`;
+      if(cu&&cu.role==='verifier'){
+        okBtn.style.display=''; noBtn.style.display='';
+        okBtn.style.background='var(--green)'; okBtn.textContent=lang==='zh'?'✅ Phea 審查通過':'✅ Verify';
+        noBtn.textContent=lang==='zh'?'↩ 退回修改':'↩ Return';
+        okBtn.onclick=()=>doVerify(true); noBtn.onclick=()=>doVerify(false);
+      }
     }
 
   } else if(poStatus==="verified"){
@@ -2045,9 +2054,15 @@ Sent to Telegram group; pending review`;
     title.textContent=lang==="zh"?"🔵 已審查，等待核可":"🔵 Verified, Pending Approval";
     sub.textContent=lang==="zh"
       ?`審查人：${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
-請在 Telegram 群組核可`
+等待 Paul 核可；網頁與 Telegram 皆可操作`
       :`Verifier: ${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
-Please approve in Telegram group`;
+Pending Paul approval; web and Telegram are both available`;
+    if(cu&&cu.role==='approver'){
+      okBtn.style.display=''; noBtn.style.display='';
+      okBtn.style.background='var(--orange)'; okBtn.textContent=lang==='zh'?'✅ Paul 核可':'✅ Approve';
+      noBtn.textContent=lang==='zh'?'❌ 拒絕':'❌ Reject';
+      okBtn.onclick=()=>doApprove(true); noBtn.onclick=()=>doApprove(false);
+    }
 
   } else if(poStatus==="approved"){
     banner.style.background="var(--green-bg)";
@@ -2111,7 +2126,7 @@ function generatePONumber(){
 
 function rbAction(ok){
   if(cu.role==="verifier") doVerify(ok);
-  else if(["approver","owner"].includes(cu.role)) doApprove(ok);
+  else if(cu.role==="approver"&&poStatus==="verified") doApprove(ok);
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="rejected"&&ok) doEditRejected();
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="approved"&&ok) doStartNewPO();
 }
@@ -2203,9 +2218,15 @@ async function _procFindExistingServerPO(){
     const r=await fetch(`${GAS_URL}?action=getHistory&year=${YEAR}&_=${Date.now()}`,{cache:'no-store'});
     const j=await r.json();
     if(!j.ok) return null;
+    const all=j.data||[];
+    // Prefer the exact server PO id already acknowledged by GAS.
+    if(submitAckId){
+      const exact=all.find(po=>String(po.poId||'')===String(submitAckId));
+      if(exact) return exact;
+    }
     const fp=_procCurrentFp();
     const app=String((sigs.applicant&&sigs.applicant.name)||(cu&&cu.name)||'').trim().toLowerCase();
-    const rows=(j.data||[]).filter(function(po){
+    const rows=all.filter(function(po){
       if(Number(po.year)!==Number(YEAR)||Number(po.month)!==Number(curMonth)) return false;
       if(app && String(po.applicant||'').trim().toLowerCase()!==app) return false;
       return _procItemFp(po.items||[])===fp;
@@ -2217,14 +2238,42 @@ function _procApplyServerPO(po){
   if(!po) return false;
   submitAckId=String(po.poId||po.poNumber||'SERVER_ACK');
   const st=String(po.status||'SUBMITTED').toUpperCase();
-  const map={SUBMITTED:'submitted',VERIFIED:'verified',APPROVED:'approved',RETURNED:'returned',REJECTED:'rejected',VOIDED:'rejected'};
+  const map={SUBMITTED:'submitted',VERIFIED:'verified',APPROVED:'approved',RETURNED:'rejected',REJECTED:'rejected',VOIDED:'rejected'};
   if(map[st]) poStatus=map[st];
-  if(!sigs.applicant) sigs.applicant={name:po.applicant||cu.name,date:po.submitDate||new Date().toLocaleDateString()};
-  if(po.verifier) sigs.verifier={name:po.verifier,date:''};
-  if(po.approver) sigs.approver={name:po.approver,date:po.approveDate||''};
-  if(po.poNumber) poNumber=po.poNumber;
+  // Server is authoritative: clear stale local signatures instead of only adding missing ones.
+  sigs.applicant={name:po.applicant||(cu&&cu.name)||'Applicant',date:po.submitDate||''};
+  sigs.verifier=po.verifier?{name:po.verifier,date:po.verifyDate||''}:null;
+  sigs.approver=po.approver?{name:po.approver,date:po.approveDate||''}:null;
+  poNumber=po.poNumber||null;
   saveState(); render();
   return true;
+}
+function _procSession(){ try{return (GA.cfg&&GA.cfg().session)||'';}catch(_){return '';} }
+async function _procPost(action,data){
+  const payload={action:action,data:Object.assign({},data||{},{session:_procSession()}),session:_procSession()};
+  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+  const txt=await r.text(); let j={}; try{j=txt?JSON.parse(txt):{};}catch(_){j={ok:false,error:txt||('HTTP '+r.status)};}
+  if(!r.ok||j.ok===false) throw new Error(j.error||j.msg||j.message||('HTTP '+r.status));
+  return j.data||j;
+}
+async function _procEnsureTelegram(po){
+  if(!po||!po.poId) return po;
+  const d=await _procPost('procEnsureTelegram',{poId:po.poId,lang:lang});
+  return d&&d.po?d.po:po;
+}
+async function _procReconcileCurrentFromHistory(){
+  try{
+    if(!poHistoryData||!poHistoryData.length) return;
+    let po=null;
+    if(submitAckId) po=poHistoryData.find(x=>String(x.poId||'')===String(submitAckId));
+    if(!po && poStatus!=='draft') po=await _procFindExistingServerPO();
+    if(!po) return;
+    // Repair the exact current PO if old code recorded Pending but Telegram never got the review message.
+    if((String(po.status).toUpperCase()==='SUBMITTED'||String(po.status).toUpperCase()==='VERIFIED')&&!po.groupMessageId){
+      try{ po=await _procEnsureTelegram(po); }catch(e){ console.warn('Telegram repair failed',e); }
+    }
+    _procApplyServerPO(po);
+  }catch(e){ console.warn('PO reconcile failed',e); }
 }
 async function doSubmit(forceRetry){
   if(submitInFlight) return;
@@ -2245,8 +2294,14 @@ async function doSubmit(forceRetry){
     // First check authoritative PO history so Retry does not blindly create another request.
     const existing=await _procFindExistingServerPO();
     if(existing){
-      _procApplyServerPO(existing);
-      try{GA.toast(lang==="zh"?"✅ 雲端已找到原送審，沒有重複送出":"✅ Existing server submission found; no duplicate sent");}catch(_){ }
+      let fixed=existing;
+      if((String(existing.status||'').toUpperCase()==='SUBMITTED'||String(existing.status||'').toUpperCase()==='VERIFIED')&&!existing.groupMessageId){
+        fixed=await _procEnsureTelegram(existing);
+        try{GA.toast(lang==="zh"?"✅ 已補發原採購單到 Telegram 群組":"✅ Missing Telegram review message restored");}catch(_){ }
+      }else{
+        try{GA.toast(lang==="zh"?"✅ 雲端已找到原送審，沒有重複送出":"✅ Existing server submission found; no duplicate sent");}catch(_){ }
+      }
+      _procApplyServerPO(fixed);
       openMod();
       return;
     }
@@ -2254,7 +2309,7 @@ async function doSubmit(forceRetry){
       id:i.id,name:i.name,cn:i.cn||i.name,cat:i.cat||"",
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
-    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang};
+    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()};
     try{GA.toast(lang==="zh"?"📤 正在送審並通知 Telegram 群組…":"📤 Submitting and notifying Telegram group…");}catch(_){ }
     const resp=await fetch(GAS_URL+"?action=submit&data="+encodeURIComponent(JSON.stringify(payload))+"&_="+Date.now(),{cache:'no-store'});
     const txt=await resp.text();
@@ -2280,32 +2335,36 @@ async function doSubmit(forceRetry){
     submitInFlight=false;
   }
 }
-function doVerify(ok){
-  if(cu.role!=="verifier"||poStatus!=="submitted")return;
-  if(ok){poStatus="verified";sigs.verifier={name:cu.name,date:new Date().toLocaleDateString()};}
-  else poStatus="rejected";
-  saveState();
-  render(); renderModalBody();
+async function doVerify(ok){
+  if(!cu||cu.role!=="verifier"||poStatus!=="submitted") return;
+  try{
+    let po=await _procFindExistingServerPO();
+    if(!po||!po.poId) throw new Error(lang==='zh'?'找不到伺服器採購單':'Server PO not found');
+    try{GA.toast(lang==='zh'?'🔎 正在同步審查結果…':'🔎 Syncing review…');}catch(_){ }
+    const d=await _procPost('procDecision',{poId:po.poId,decision:ok?'verify':'return',lang:lang});
+    if(d&&d.po) _procApplyServerPO(d.po);
+    await loadPOHistory();
+    render(); renderModalBody();
+    try{GA.toast(ok?(lang==='zh'?'✅ 已審查並更新 Telegram 群組':'✅ Reviewed and Telegram updated'):(lang==='zh'?'↩ 已退回並通知 Applicant':'↩ Returned and Applicant notified'));}catch(_){ }
+  }catch(e){
+    console.warn('verify failed',e); try{GA.toast((lang==='zh'?'❌ 審查失敗：':'❌ Review failed: ')+(e.message||e));}catch(_){ }
+  }
 }
-function doApprove(ok){
-  if(cu.role!=="approver"||(poStatus!=="verified"&&poStatus!=="submitted"))return;
-  if(ok){
-    poStatus="approved";
-    sigs.approver={name:cu.name,date:new Date().toLocaleDateString()};
-    // Generate sequential PO number
-    poNumber=generatePONumber();
-    // Auto-update inventory: add approved quantities as "purchase"
-    const key=getMonthKey(curMonth,YEAR);
-    if(!invRecords[key]) invRecords[key]={};
-    ordItems().forEach(item=>{
-      if(!invRecords[key][item.id]) invRecords[key][item.id]={open:0,purchase:0,used:0,close:0,note:""};
-      invRecords[key][item.id].purchase+=ords[item.id].qty;
-      const r=invRecords[key][item.id];
-      r.close=Math.max(0,r.open+r.purchase-r.used);
-    });
-  } else poStatus="rejected";
-  saveState();
-  render(); renderModalBody();
+async function doApprove(ok){
+  // Paul may approve only after the verifier stage is completed.
+  if(!cu||cu.role!=="approver"||poStatus!=="verified") return;
+  try{
+    let po=await _procFindExistingServerPO();
+    if(!po||!po.poId) throw new Error(lang==='zh'?'找不到伺服器採購單':'Server PO not found');
+    try{GA.toast(lang==='zh'?'✅ 正在同步核可結果…':'✅ Syncing approval…');}catch(_){ }
+    const d=await _procPost('procDecision',{poId:po.poId,decision:ok?'approve':'reject',lang:lang});
+    if(d&&d.po) _procApplyServerPO(d.po);
+    await Promise.all([loadPOHistory(),loadInvCloud(YEAR)]);
+    render(); renderModalBody();
+    try{GA.toast(ok?(lang==='zh'?'✅ 已核可，群組通知與正式 PO 已同步':'✅ Approved; group notification and PO synced'):(lang==='zh'?'❌ 已拒絕並通知群組':'❌ Rejected and group updated'));}catch(_){ }
+  }catch(e){
+    console.warn('approve failed',e); try{GA.toast((lang==='zh'?'❌ 核可失敗：':'❌ Approval failed: ')+(e.message||e));}catch(_){ }
+  }
 }
 function resetAll(){
   if(confirm(lang==="zh"?"確定清空所有採購資料？":"Clear all order data?"))
@@ -2370,14 +2429,15 @@ function renderModalBody(){
   // Show PO number below approval grid if approved
   let poNumHtml="";
   if(poNumber){
-    poNumHtml=`<div style="text-align:center;margin-top:8px;padding:8px 14px;
+    poNumHtml=`<div id="proc-po-number-box" style="text-align:center;margin-top:8px;padding:8px 14px;
       background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:8px">
       <div style="font-size:10px;color:var(--green);margin-bottom:3px;letter-spacing:1px;text-transform:uppercase">
         ${lang==="zh"?"採購單流水號":"PO Reference Number"}</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--green)">${poNumber}</div>
     </div>`;
   }
-  document.getElementById("apr-grid").insertAdjacentHTML("afterend", poNumHtml);
+  const oldPoBox=document.getElementById("proc-po-number-box"); if(oldPoBox) oldPoBox.remove();
+  if(poNumHtml) document.getElementById("apr-grid").insertAdjacentHTML("afterend", poNumHtml);
 
   let aa="";
   if(cu.role==="applicant"&&poStatus==="draft"){
@@ -2388,7 +2448,7 @@ function renderModalBody(){
   } else if(cu.role==="verifier"&&poStatus==="submitted"){
     aa=`<button class="act-btn" style="background:var(--green);color:#fff" onclick="doVerify(true)">✅ 審查通過</button>
         <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doVerify(false)">↩ 退回修改</button>`;
-  } else if(["approver","owner"].includes(cu.role)&&(poStatus==="verified"||poStatus==="submitted")){
+  } else if(["approver","owner"].includes(cu.role)&&poStatus==="verified"){
     aa=`<button class="act-btn" style="background:var(--orange);color:#fff" onclick="doApprove(true)">✅ 核可</button>
         <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doApprove(false)">❌ 拒絕</button>`;
   } else if(poStatus==="approved"){
@@ -2778,17 +2838,19 @@ function importPoAndSubmit(rows){
 }
 
 /* Telegram 摘要（與核可分離）— 採購支援摘要 + 核可兩模式 */
-function procTelegram(){
+async function procTelegram(){
   // Procurement's toolbar Telegram button is SUMMARY ONLY.
+  // Always refresh server history first so month counts never show 0 from an unloaded local array.
+  try{ await loadPOHistory(); }catch(e){ console.warn("PO history refresh before summary failed",e); }
   // Applicant submission uses doSubmit() so the original Applicant → Verifier → Approver workflow is preserved.
   // The generic tgApproval route requires an authenticated /exp session and was causing Applicant 'not authorised'.
   GA.telegram.open({
     module:'procurement',
     canApprove:false,
-    periods:function(type){ return (poHistoryData||[]).map(po=>GA.periodKey((po.submitDate||po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01'),type)); },
+    periods:function(type){ return (poHistoryData||[]).map(po=>GA.periodKey(procPoPeriodDate(po,type),type)); },
     summary:function(s){
       const rows=poHist_inPeriod(s);
-      const byStatus={}; rows.forEach(po=>{ const st=GA.normStatus(po.status); byStatus[st]=(byStatus[st]||0)+1; });
+      const byStatus={}; rows.forEach(po=>{ const st=procStatusBucket(po.status); byStatus[st]=(byStatus[st]||0)+1; });
       const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
       const low=lowStockCount();
       return GA.telegram.buildSummary({
@@ -2796,7 +2858,7 @@ function procTelegram(){
         lang:s.lang, period:GA.periodLabel(s.period,s.ptype),
         rows:[
           {zh:'採購單數',en:'PO Count',v:rows.length},
-          {zh:'待審',en:'Pending',v:(byStatus.submitted||0)+(byStatus.verified||0)},
+          {zh:'待審',en:'Pending',v:byStatus.pending||0},
           {zh:'已核可',en:'Approved',v:byStatus.approved||0},
           {zh:'品項數',en:'Items',v:items},
           {zh:'低庫存',en:'Low Stock',v:low}
@@ -2812,11 +2874,25 @@ function procTelegram(){
 }
 /* 摘要／核可請求成功後自動保存目前採購狀態；避免還要再等一次手動上傳。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='procurement'){var os=opt.onSummarySent,oa=opt.onApprovalSent;function bg(){setTimeout(function(){try{saveStateCloud();}catch(e){}},300);}opt.onSummarySent=function(d,s){bg();if(os)os(d,s);};opt.onApprovalSent=function(d,s){bg();if(oa)oa(d,s);};}return open.call(this,opt);};})();
+function procStatusBucket(status){
+  const s=String(status||'').trim().toUpperCase();
+  if(['SUBMITTED','VERIFIED','PENDING','WAITING_REVIEW','WAITING_APPROVAL','REVIEWED'].includes(s)) return 'pending';
+  if(s==='APPROVED') return 'approved';
+  if(s==='RETURNED') return 'returned';
+  if(s==='REJECTED') return 'rejected';
+  if(s==='VOIDED'||s==='VOIDED_DUP') return 'voided';
+  return (s||'unknown').toLowerCase();
+}
+function procPoPeriodDate(po,type){
+  // Month/year summaries follow the PO's authoritative purchase month, not a browser/GAS locale-formatted submit date.
+  if(type==='month'||type==='year') return String(po.year)+'-'+String((Number(po.month)||0)+1).padStart(2,'0')+'-01';
+  const raw=String(po.submitDate||'').trim();
+  const d=raw?new Date(raw):null;
+  if(d && !isNaN(d.getTime())) return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return String(po.year)+'-'+String((Number(po.month)||0)+1).padStart(2,'0')+'-01';
+}
 function poHist_inPeriod(s){
-  return (poHistoryData||[]).filter(po=>{
-    const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
-    return GA.inPeriod(d,s.period,s.ptype);
-  });
+  return (poHistoryData||[]).filter(po=>GA.inPeriod(procPoPeriodDate(po,s.ptype),s.period,s.ptype));
 }
 function lowStockCount(){ return lowStockList().length; }
 
@@ -2825,7 +2901,7 @@ var procPC=null;
 function renderAnalytics(){
   if(!procPC){
     procPC=GA.periodControl('#anly-period',{ id:'proc', type:'month',
-      dates:function(){ return (poHistoryData||[]).map(po=>po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01')); },
+      dates:function(){ return (poHistoryData||[]).map(po=>procPoPeriodDate(po,'month')); },
       onChange:function(){ drawAnalytics(); } });
   }
   drawAnalytics();
@@ -2833,16 +2909,16 @@ function renderAnalytics(){
 function drawAnalytics(){
   const st=procPC?procPC.state():{type:'month',key:GA.currentPeriod('month')};
   const rows=(poHistoryData||[]).filter(po=>{
-    const d=po.submitDate||(po.year+'-'+String((po.month||0)+1).padStart(2,'0')+'-01');
+    const d=procPoPeriodDate(po,st.type);
     return GA.inPeriod(d,st.key,st.type);
   });
-  const byStatus={}; rows.forEach(po=>{ const s=GA.normStatus(po.status); byStatus[s]=(byStatus[s]||0)+1; });
+  const byStatus={}; rows.forEach(po=>{ const s=procStatusBucket(po.status); byStatus[s]=(byStatus[s]||0)+1; });
   const items=rows.reduce((a,po)=>a+(po.items||[]).length,0);
   const qty=rows.reduce((a,po)=>a+(po.items||[]).reduce((x,it)=>x+GA.num(it.qty),0),0);
 
   const kpis=[
     {l:'kPO',v:rows.length,c:'var(--ga-sky)'},
-    {l:'kPend',v:(byStatus.submitted||0)+(byStatus.verified||0),c:'var(--ga-warn)'},
+    {l:'kPend',v:byStatus.pending||0,c:'var(--ga-warn)'},
     {l:'kAppr',v:byStatus.approved||0,c:'var(--ga-ok)'},
     {l:'kItems',v:items,c:'var(--ga-ind)'},
     {l:'kQty',v:qty,c:'#8b5cf6'},
@@ -2986,3 +3062,5 @@ initLogin();
 </script>
 </body>
 </html>
+
+<!-- v3.9.15c Procurement server-authoritative workflow + Telegram delivery validation -->
