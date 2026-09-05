@@ -412,4 +412,79 @@ window.addEventListener('load',async function(){await localLoad();buildItems();p
 })();
 </script>
 
+
+<style id="damage-v3916a-css">
+.pendingEditActions{display:inline-flex;gap:5px;flex-wrap:wrap}
+</style>
+<script id="damage-v3916a-js">
+(function(){
+  function ML2(z,e,k){return lang==='en'?e:lang==='km'?k:z}
+  function activeRows3916a(){return (DB||[]).filter(function(r){return r&&!r.archived&&!r.deleted&&String(r.status||'')!=='cancelled'})}
+
+  // Archived/cancelled records stay in audit storage but no longer pollute dashboard/analysis/summary.
+  var _rd3916a=window.renderDash,_ra3916a=window.renderAnalysis,_st3916a=window.summaryText;
+  if(_rd3916a)window.renderDash=function(){var keep=DB;DB=activeRows3916a();try{return _rd3916a()}finally{DB=keep}};
+  if(_ra3916a)window.renderAnalysis=function(){var keep=DB;DB=activeRows3916a();try{return _ra3916a()}finally{DB=keep}};
+  if(_st3916a)window.summaryText=function(st){var keep=DB;DB=activeRows3916a();try{return _st3916a(st)}finally{DB=keep}};
+
+  function pendingButtons(r){
+    return '<span class="pendingEditActions">'
+      +'<button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'review\')">✅ Phea Review</button>'
+      +'<button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML2('退回','Return','ត្រឡប់'))+'</button>'
+      +'<button class="btn" onclick="damageWithdrawEdit(\''+r.id+'\')">✏️ '+esc(ML2('撤回修改','Withdraw & Edit','ដកវិញ និងកែ'))+'</button>'
+      +'<button class="btn bad" onclick="damageCancelPending(\''+r.id+'\')">🗑 '+esc(ML2('刪除重複','Delete Duplicate','លុបស្ទួន'))+'</button>'
+      +'</span>';
+  }
+  function flow3916a(r){
+    if(['draft','returned'].includes(r.status))return '<button class="btn ok" onclick="submitRecord(\''+r.id+'\')">📋 '+esc(T('sendReview'))+'</button>';
+    if(r.status==='pending_review')return pendingButtons(r);
+    if(r.status==='reviewed')return '<button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'approve\')">✅ '+esc(ML2('Paul 核可','Paul Approve','Paul អនុម័ត'))+'</button> <button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML2('退回','Return','ត្រឡប់'))+'</button> <button class="btn bad" onclick="damageDecision(\''+r.id+'\',\'reject\')">❌ '+esc(ML2('拒絕','Reject','បដិសេធ'))+'</button>';
+    if(r.status==='approved'&&!r.repairNo&&r.type==='damage')return '<button class="btn warn" onclick="damageCreateRepair(\''+r.id+'\')">🔧 '+esc(ML2('轉維修','Create Repair','បង្កើតការជួសជុល'))+'</button>';
+    return '';
+  }
+  function onlineActions3916a(r){
+    if(r.status==='pending_review')return '<button class="btn" onclick="openDetail(\''+r.id+'\')">🔍</button> '+flow3916a(r);
+    var edit=['draft','returned'].includes(r.status)?'<button class="btn" onclick="editReport(\''+r.id+'\')">✎</button>':'<button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML2('建立更正','Correction','កែតម្រូវ'))+'</button>';
+    return '<button class="btn" onclick="openDetail(\''+r.id+'\')">🔍</button> '+edit+flow3916a(r)+' <button class="btn bad" onclick="delReport(\''+r.id+'\')">🗑</button>';
+  }
+
+  window.row=function(r,check){
+    return '<tr>'+(check?'<td><input type="checkbox" class="sel" value="'+esc(r.id)+'"></td>':'')+'<td><span class="mini">'+esc(r.id)+'</span></td><td>'+esc(r.date)+'</td><td>'+esc(r.empId||'—')+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.dept||'—')+'</td><td>'+esc(r.type==='lost'?T('lost'):T('damage'))+'</td><td style="max-width:170px;white-space:normal">'+esc(formatItems(r,lang))+'</td><td style="max-width:190px;white-space:normal">'+esc(r.expl||'—')+'</td><td class="money">$'+Number(r.lossAmount||0).toLocaleString()+'</td><td>'+((r.attachments||[]).length?'📷 '+r.attachments.length:'—')+'</td><td>'+badge(r.status)+'</td><td>'+onlineActions3916a(r)+'</td></tr>';
+  };
+  window.recordCardHtml=function(r){
+    return '<div class="recordCard '+esc(r.type)+'"><div class="rcHead"><div><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" class="sel" value="'+esc(r.id)+'"><span class="rcTitle">'+esc(r.type==='lost'?T('lost'):T('damage'))+' · '+esc(r.id)+'</span></label></div><div class="rcDate">'+esc(r.date)+'<br>'+badge(r.status)+'</div></div><div class="rcGrid"><div class="rcCell"><div class="k">'+esc(T('empId'))+'</div><div class="v">'+esc(r.empId||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('name'))+'</div><div class="v">'+esc(r.name||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('dept'))+'</div><div class="v">'+esc(r.dept||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('amount'))+'</div><div class="v">$'+Number(r.lossAmount||0).toLocaleString()+'</div></div></div><div class="rcWide"><b>'+esc(T('items'))+':</b> '+esc(formatItems(r,lang))+'</div><div class="rcWide"><b>'+esc(T('location'))+':</b> '+esc(r.loc||'—')+'　<b>'+esc(T('incidentDate'))+':</b> '+esc(r.incidentDate||'—')+'</div><div class="rcWide"><b>'+esc(T('explain'))+':</b> '+esc(r.expl||'—')+'</div><div class="rcWide"><b>'+esc(T('desc'))+':</b> '+esc(r.desc||'—')+'</div>'+(r.correctionOf?'<div class="rcWide"><span class="corrTag">📝 Correction of '+esc(r.correctionOf)+'</span></div>':'')+(r.repairNo?'<div class="rcWide"><b>🔧 Repair:</b> '+esc(r.repairNo)+'</div>':'')+'<div class="rcFoot"><span class="mini">📷 '+(r.attachments||[]).length+'</span><div class="rcActions">'+onlineActions3916a(r)+'</div></div></div>';
+  };
+
+  window.damageWithdrawEdit=async function(id){
+    await refreshWorkflow(true);var r=(DB||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
+    if(r.status!=='pending_review'){GA.toast(statusLabelFor(r.status,lang),'err');return}
+    var session=await ensureDamageSession();if(!session){GA.toast(ML2('請從 Telegram /exp 或平台控制面板開啟 Damage 後再撤回。','Open Damage from Telegram /exp or the platform control panel before withdrawing.','សូមបើក Damage ពី /exp ឬ platform មុនដកវិញ។'),'err');return}
+    if(!confirm(ML2('撤回這筆待 Phea Review 的報告並立即修改？群組原訊息會標示「已撤回」。','Withdraw this pending Phea Review report and edit it now? The Telegram message will be marked Withdrawn.','ដករបាយការណ៍ដែលកំពុងរង់ចាំ Phea ហើយកែឥឡូវ? សារ Telegram នឹងសម្គាល់ថាបានដកវិញ។')))return;
+    try{var res=await GA.gasPost('damageDecision',{id:id,act:'withdraw',session:session,lang:lang});if(!res||res.ok===false)throw new Error((res&&res.msg)||'Withdraw failed');var d=res.data||{};Object.keys(d).forEach(function(k){if(k!=='id')r[k]=d[k]});r.archived=false;r.deleted=false;r.updatedAt=new Date().toISOString();await localSave();await autoCloud('workflow');renderAll();GA.toast('✏️ '+ML2('已撤回，可修改後重新送審','Withdrawn; edit and resubmit','បានដកវិញ អាចកែហើយផ្ញើឡើងវិញ'));editReport(id)}catch(e){GA.toast(e.message,'err')}
+  };
+
+  window.damageCancelPending=async function(id){
+    await refreshWorkflow(true);var r=(DB||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
+    if(r.status!=='pending_review'){GA.toast(statusLabelFor(r.status,lang),'err');return}
+    var session=await ensureDamageSession();if(!session){GA.toast(ML2('請從 Telegram /exp 或平台控制面板開啟 Damage 後再刪除。','Open Damage from Telegram /exp or the platform control panel before deleting.','សូមបើក Damage ពី /exp ឬ platform មុនលុប។'),'err');return}
+    if(!confirm(ML2('確定這筆是重複／不需要的待審報告？將從正常清單移除，群組原訊息標示「已取消／重複」，稽核歷史仍保留。','Is this pending report a duplicate / no longer needed? It will disappear from active lists, and the Telegram message will be marked Cancelled / Duplicate while audit history is preserved.','តើរបាយការណ៍នេះស្ទួន/មិនត្រូវការទៀតទេ? វានឹងលាក់ពីបញ្ជីសកម្ម ហើយសារ Telegram នឹងសម្គាល់ថាបានបោះបង់/ស្ទួន។')))return;
+    try{var res=await GA.gasPost('damageDecision',{id:id,act:'cancel',session:session,lang:lang});if(!res||res.ok===false)throw new Error((res&&res.msg)||'Cancel failed');var d=res.data||{};Object.keys(d).forEach(function(k){if(k!=='id')r[k]=d[k]});r.archived=true;r.archivedAt=r.archivedAt||new Date().toISOString();r.updatedAt=new Date().toISOString();await localSave();await autoCloud('delete');closeDetail();renderAll();GA.toast('🗑 '+ML2('已移除重複／未完成報告','Duplicate / incomplete report removed','បានលុបរបាយការណ៍ស្ទួន/មិនទាន់បញ្ចប់'))}catch(e){GA.toast(e.message,'err')}
+  };
+
+  var _del3916a=window.delReport;
+  window.delReport=async function(id){var r=(DB||[]).find(function(x){return String(x.id)===String(id)});if(r&&r.status==='pending_review')return damageCancelPending(id);return _del3916a(id)};
+
+  window.workflowActionHtml=function(r){
+    if(['draft','returned'].includes(r.status))return '<div class="bar"><button class="btn ok" onclick="submitRecord(\''+r.id+'\');closeDetail()">📋 '+esc(T('sendReview'))+'</button><button class="btn" onclick="editReport(\''+r.id+'\');closeDetail()">✏️ '+esc(ML2('修改','Edit','កែ'))+'</button><button class="btn bad" onclick="delReport(\''+r.id+'\');closeDetail()">🗑 '+esc(ML2('刪除','Delete','លុប'))+'</button></div>';
+    if(r.status==='pending_review')return '<div class="bar">'+pendingButtons(r)+'</div>';
+    if(r.status==='reviewed')return '<div class="bar"><button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'approve\')">✅ '+esc(ML2('Paul 核可','Paul Approve','Paul អនុម័ត'))+'</button><button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML2('退回','Return','ត្រឡប់'))+'</button><button class="btn bad" onclick="damageDecision(\''+r.id+'\',\'reject\')">❌ '+esc(ML2('拒絕','Reject','បដិសេធ'))+'</button></div>';
+    if(r.status==='approved'&&r.type==='damage'&&!r.repairNo)return '<div class="bar"><button class="btn warn" onclick="damageCreateRepair(\''+r.id+'\')">🔧 '+esc(ML2('轉成維修申請','Create Repair Request','បង្កើតសំណើជួសជុល'))+'</button><button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML2('建立更正','Correction','កែតម្រូវ'))+'</button></div>';
+    return '<div class="bar"><button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML2('建立更正','Correction','កែតម្រូវ'))+'</button></div>';
+  };
+
+  document.documentElement.setAttribute('data-damage-version','3.9.16a');
+  setTimeout(function(){try{renderAll()}catch(e){}},150);
+})();
+</script>
+
 </body></html>
