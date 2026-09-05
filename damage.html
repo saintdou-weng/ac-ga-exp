@@ -148,7 +148,7 @@
 
 </style>
 </head><body><div class="wrap">
-<div class="hero"><div><h1 id="title">⚠️ 損壞／遺失財物報告</h1><small>VRT Damage / Lost Property · v3.9.15 · IndexedDB + Immediate Auto Sync</small><div style="margin-top:3px"><span style="font-size:8px;padding:2px 6px;border:1px solid #64748b;border-radius:10px;color:#dbeafe">📱 IndexedDB records · Drive photos · auto pull/push</span></div></div><div class="grow"></div><div class="cloudRow"><span class="damage-cloud-title" data-t="cloudTitle">☁ 雲端同步</span><span id="ga-cloud" class="ga-cloud idle"></span><button class="btn" onclick="cloudUp()" data-t-title="cloudUp" title="Cloud upload">☁↑</button><button class="btn" onclick="cloudDown()" data-t-title="cloudDown" title="Cloud download">☁↓</button><span class="syncNote" data-t="cloudHint">開啟即下載；儲存即上傳；按鈕僅備援</span></div><div class="lang"><button data-l="zh" onclick="setLang('zh')" class="on">中文</button><button data-l="en" onclick="setLang('en')">EN</button><button data-l="km" onclick="setLang('km')">ខ្មែរ</button></div><a class="btn" href="index.html">← GA-EXP</a></div>
+<div class="hero"><div><h1 id="title">⚠️ 損壞／遺失財物報告</h1><small>VRT Damage / Lost Property · v3.9.16 · IndexedDB + Full Online Workflow</small><div style="margin-top:3px"><span style="font-size:8px;padding:2px 6px;border:1px solid #64748b;border-radius:10px;color:#dbeafe">📱 IndexedDB records · Drive photos · auto pull/push</span></div></div><div class="grow"></div><div class="cloudRow"><span class="damage-cloud-title" data-t="cloudTitle">☁ 雲端同步</span><span id="ga-cloud" class="ga-cloud idle"></span><button class="btn" onclick="cloudUp()" data-t-title="cloudUp" title="Cloud upload">☁↑</button><button class="btn" onclick="cloudDown()" data-t-title="cloudDown" title="Cloud download">☁↓</button><span class="syncNote" data-t="cloudHint">開啟即下載；儲存即上傳；按鈕僅備援</span></div><div class="lang"><button data-l="zh" onclick="setLang('zh')" class="on">中文</button><button data-l="en" onclick="setLang('en')">EN</button><button data-l="km" onclick="setLang('km')">ខ្មែរ</button></div><a class="btn" href="index.html">← GA-EXP</a></div>
 <div class="tabs"><button class="on" data-p="dash" onclick="tab('dash',this)">📊 <span data-t="dash">儀表板／分析</span></button><button data-p="form" onclick="newReport();tab('form',this)">➕ <span data-t="new">新增</span></button><button data-p="records" onclick="tab('records',this)">📋 <span data-t="records">記錄</span></button></div>
 <section id="p-dash" class="pane on">
 <div class="periodCard"><div class="periodRow"><div class="periodModes"><button data-ap="day" onclick="setAna('day')">D</button><button data-ap="week" onclick="setAna('week')">W</button><button data-ap="month" class="on" onclick="setAna('month')">M</button><button data-ap="year" onclick="setAna('year')">Y</button></div><div class="periodNav"><button onclick="shiftAna(-1)" data-t-title="prev">◀</button><select id="anaPeriodSelect" onchange="pickAnaPeriod(this.value)"></select><button onclick="shiftAna(1)" data-t-title="next">▶</button><button onclick="anaToday()" data-t-title="today">●</button><span id="anaPeriodLabel" class="periodLabel"></span></div><div class="grow"></div><button class="btn" onclick="openSummary()">✈️ <span data-t="summary">摘要</span></button></div><input id="anaAnchor" type="date" hidden></div>
@@ -194,7 +194,7 @@ async function localSave(){try{await damageIDBWriteAll(DB);damageStorageState('I
 async function localLoad(){var idb=[],legacy=damageLegacyRows();try{idb=await damageIDBReadAll()}catch(e){console.warn('[Damage IndexedDB load]',e);damageStorageState('⚠ IndexedDB unavailable',true)}var merged=damageMerge(idb,legacy);DB=Array.isArray(merged)?merged:[];if(legacy.length){try{await damageIDBWriteAll(DB);var cnt=await damageIDBCount();if(cnt===DB.filter(function(r){return r&&r.id}).length){localStorage.removeItem(DAMAGE_LEGACY_KEY);damageStorageState('Migrated → IndexedDB · '+cnt+' recs')}else damageStorageState('⚠ Migration verify failed',true)}catch(e){console.warn('[Damage migration]',e);damageStorageState('⚠ Migration pending',true)}}else damageStorageState('IndexedDB · '+DB.length+' recs');return DB}
 function itemObj(en){return ITEMS.find(function(x){return x.en===en})||{en:en,zh:en,km:en}}function multiLangValue(z,e,k,l){return l==='en'?e:l==='km'?k:l==='both'?(z+' / '+e):l==='all3'?(z+' / '+e+' / '+k):z}function itemLabelFor(en,l){var o=itemObj(en);return multiLangValue(o.zh,o.en,o.km,l||lang)}function formatItems(r,l){return (r.items||[]).map(function(x){return itemLabelFor(x,l)}).concat(r.other?[r.other]:[]).join(', ')||'—'}function buildItems(){var checked=Array.from(document.querySelectorAll('#itemGrid input:checked')).map(function(x){return x.value});itemGrid.innerHTML=ITEMS.map(function(x){return '<label class="it"><input type="checkbox" value="'+esc(x.en)+'" '+(checked.includes(x.en)?'checked':'')+'> <span>'+esc(x[lang]||x.en)+'</span></label>'}).join('')}
 // Mobile-Safe: keep DB canonical, localize only the workflow copy sent to the existing GS.
-function workflowRecordForLang(r,L){var c=JSON.parse(JSON.stringify(r||{})),ll=L||lang;c.items=(r.items||[]).map(function(x){return itemLabelFor(x,ll)});if(r.other)c.other=String(r.other);c.uiLang=ll;c.clientVersion='damage-v3.9.14-full-online-integrity';return c}
+function workflowRecordForLang(r,L){var c=JSON.parse(JSON.stringify(r||{})),ll=L||lang;c.items=(r.items||[]).map(function(x){return itemLabelFor(x,ll)});if(r.other)c.other=String(r.other);c.uiLang=ll;c.clientVersion='damage-v3.9.16-full-online-workflow';return c}
 function statusLabelFor(s,l){var m={draft:{zh:'草稿',en:'Draft',km:'ព្រាង'},pending_review:{zh:'待 Phea Review',en:'Pending Phea Review',km:'រង់ចាំ Phea ពិនិត្យ'},reviewed:{zh:'Phea 已 Review',en:'Reviewed by Phea',km:'Phea បានពិនិត្យ'},approved:{zh:'Paul 已核可',en:'Approved by Paul',km:'Paul បានអនុម័ត'},returned:{zh:'已退回',en:'Returned',km:'បានត្រឡប់'},rejected:{zh:'已拒絕',en:'Rejected',km:'បានបដិសេធ'}},a=m[s];return a?multiLangValue(a.zh,a.en,a.km,l||lang):s}
 function translateControls(){var tp=document.getElementById('f-type');if(tp){var v=tp.value||'damage';tp.innerHTML='<option value="damage">'+esc(T('damage'))+'</option><option value="lost">'+esc(T('lost'))+'</option>';tp.value=v}var ft=document.getElementById('ftype');if(ft){var v=ft.value||'';ft.innerHTML='<option value="">'+esc(T('allType'))+'</option><option value="damage">'+esc(T('damage'))+'</option><option value="lost">'+esc(T('lost'))+'</option>';ft.value=v}var fs=document.getElementById('fstatus');if(fs){var v=fs.value||'';var ss=['draft','pending_review','reviewed','approved','returned','rejected'];fs.innerHTML='<option value="">'+esc(T('allStatus'))+'</option>'+ss.map(function(x){return '<option value="'+x+'">'+esc(statusLabelFor(x,lang))+'</option>'}).join('');fs.value=v}var qq=document.getElementById('q');if(qq)qq.placeholder=T('search');var oo=document.getElementById('f-other');if(oo)oo.placeholder=T('other')}
 function ymd(d){return d.toISOString().slice(0,10)}function idNew(){var d=new Date();return 'DMG-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+Math.random().toString(36).slice(2,6).toUpperCase()}
@@ -328,4 +328,88 @@ window.addEventListener('load',async function(){await localLoad();buildItems();p
   document.documentElement.setAttribute('data-damage-audit-lock','v3.9.14b');
 })();
 </script>
+
+<style id="damage-v3916-css">
+#damage-online-strip{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:#eef6ff;border:1px solid #bfdbfe;border-radius:9px;padding:8px 10px;margin:8px 0;font-size:11px;color:#1d4ed8}
+#damage-online-strip b{color:#0f172a}.corrTag{background:#fef3c7;color:#92400e;border-radius:999px;padding:2px 7px;font-size:9px;font-weight:700}
+</style>
+<script id="damage-v3916-js">
+(function(){
+  function ML(z,e,k){return lang==='en'?e:lang==='km'?k:z}
+  function qkeep(){
+    var q=new URLSearchParams(location.search),n=new URLSearchParams();['uid','name','session'].forEach(function(k){if(q.get(k))n.set(k,q.get(k))});return n.toString()
+  }
+  function addStrip(){
+    if(document.getElementById('damage-online-strip'))return;
+    var tabs=document.querySelector('.tabs');if(!tabs)return;
+    var d=document.createElement('div');d.id='damage-online-strip';
+    d.innerHTML='<b>🌐 '+ML('線上操作','Online workflow','ប្រតិបត្តិការអនឡាញ')+'</b><span>➕ '+ML('新增','New','ថ្មី')+'</span><span>✏️ '+ML('草稿/退回可編輯','Edit draft/returned','កែព្រាង/ត្រឡប់')+'</span><span>✅ Phea Review</span><span>✅ Paul Approve</span><span>📄 PDF / Excel / Sheet</span><span>☁ '+ML('自動同步','Auto sync','សមកាលកម្មស្វ័យប្រវត្តិ')+'</span>';
+    tabs.insertAdjacentElement('afterend',d);
+  }
+  var baseSetLang=window.setLang;
+  window.setLang=function(l){var r=baseSetLang(l);var d=document.getElementById('damage-online-strip');if(d){d.remove();addStrip()}return r};
+
+  // Always expose the web workflow button; GAS remains the authority for role and state.
+  function flow3916(r){
+    if(['draft','returned'].includes(r.status))return '<button class="btn ok" onclick="submitRecord(\''+r.id+'\')">📋 '+esc(T('sendReview'))+'</button>';
+    if(r.status==='pending_review')return '<button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'review\')">✅ Phea Review</button> <button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML('退回','Return','ត្រឡប់'))+'</button>';
+    if(r.status==='reviewed')return '<button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'approve\')">✅ '+esc(ML('Paul 核可','Paul Approve','Paul អនុម័ត'))+'</button> <button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML('退回','Return','ត្រឡប់'))+'</button> <button class="btn bad" onclick="damageDecision(\''+r.id+'\',\'reject\')">❌ '+esc(ML('拒絕','Reject','បដិសេធ'))+'</button>';
+    if(r.status==='approved'&&!r.repairNo&&r.type==='damage')return '<button class="btn warn" onclick="damageCreateRepair(\''+r.id+'\')">🔧 '+esc(ML('轉維修','Create Repair','បង្កើតការជួសជុល'))+'</button>';
+    return '';
+  }
+  function onlineActions3916(r){
+    var edit=['draft','returned'].includes(r.status)?'<button class="btn" onclick="editReport(\''+r.id+'\')">✎</button>':'<button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML('建立更正','Correction','កែតម្រូវ'))+'</button>';
+    return edit+flow3916(r)+' <button class="btn bad" onclick="delReport(\''+r.id+'\')">🗑</button>';
+  }
+  window.row=function(r,check){
+    return '<tr>'+(check?'<td><input type="checkbox" class="sel" value="'+esc(r.id)+'"></td>':'')+'<td><span class="mini">'+esc(r.id)+'</span></td><td>'+esc(r.date)+'</td><td>'+esc(r.empId||'—')+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.dept||'—')+'</td><td>'+esc(r.type==='lost'?T('lost'):T('damage'))+'</td><td style="max-width:170px;white-space:normal">'+esc(formatItems(r,lang))+'</td><td style="max-width:190px;white-space:normal">'+esc(r.expl||'—')+'</td><td class="money">$'+Number(r.lossAmount||0).toLocaleString()+'</td><td>'+((r.attachments||[]).length?'📷 '+r.attachments.length:'—')+'</td><td>'+badge(r.status)+'</td><td><button class="btn" onclick="openDetail(\''+r.id+'\')">🔍</button> '+onlineActions3916(r)+'</td></tr>';
+  };
+  window.recordCardHtml=function(r){
+    return '<div class="recordCard '+esc(r.type)+'"><div class="rcHead"><div><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" class="sel" value="'+esc(r.id)+'"><span class="rcTitle">'+esc(r.type==='lost'?T('lost'):T('damage'))+' · '+esc(r.id)+'</span></label></div><div class="rcDate">'+esc(r.date)+'<br>'+badge(r.status)+'</div></div><div class="rcGrid"><div class="rcCell"><div class="k">'+esc(T('empId'))+'</div><div class="v">'+esc(r.empId||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('name'))+'</div><div class="v">'+esc(r.name||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('dept'))+'</div><div class="v">'+esc(r.dept||'—')+'</div></div><div class="rcCell"><div class="k">'+esc(T('amount'))+'</div><div class="v">$'+Number(r.lossAmount||0).toLocaleString()+'</div></div></div><div class="rcWide"><b>'+esc(T('items'))+':</b> '+esc(formatItems(r,lang))+'</div><div class="rcWide"><b>'+esc(T('location'))+':</b> '+esc(r.loc||'—')+'　<b>'+esc(T('incidentDate'))+':</b> '+esc(r.incidentDate||'—')+'</div><div class="rcWide"><b>'+esc(T('explain'))+':</b> '+esc(r.expl||'—')+'</div><div class="rcWide"><b>'+esc(T('desc'))+':</b> '+esc(r.desc||'—')+'</div>'+(r.correctionOf?'<div class="rcWide"><span class="corrTag">📝 Correction of '+esc(r.correctionOf)+'</span></div>':'')+(r.repairNo?'<div class="rcWide"><b>🔧 Repair:</b> '+esc(r.repairNo)+'</div>':'')+'<div class="rcFoot"><span class="mini">📷 '+(r.attachments||[]).length+'</span><div class="rcActions"><button class="btn" onclick="openDetail(\''+r.id+'\')">🔍</button>'+onlineActions3916(r)+'</div></div></div>';
+  };
+
+  window.damageCorrection=async function(id){
+    var r=(DB||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
+    if(!confirm(ML('建立更正版本？原核可/審查記錄會保留。','Create a correction draft? The original workflow history will be preserved.','បង្កើតព្រាងកែតម្រូវ? ប្រវត្តិដើមនឹងរក្សាទុក។')))return;
+    var c=JSON.parse(JSON.stringify(r));c.id=idNew();c.status='draft';c.reviewer='';c.reviewedAt='';c.approver='';c.approvedAt='';c.reportLinks=null;c.repairNo='';c.correctionOf=r.id;c.createdAt=new Date().toISOString();c.updatedAt=c.createdAt;c.desc=(c.desc||'')+(c.desc?' · ':'')+'Correction of '+r.id;
+    DB.unshift(c);await localSave();await autoCloud('correction');renderAll();editReport(c.id);GA.toast('📝 '+ML('已建立更正草稿','Correction draft created','បានបង្កើតព្រាងកែតម្រូវ'));
+  };
+
+  // Full web review/approval action. Role validation is done by GAS session.
+  window.damageDecision=async function(id,act){
+    await refreshWorkflow(true);var r=(DB||[]).find(function(x){return x.id===id});if(!r)return;
+    if(act==='review'&&r.status!=='pending_review'){GA.toast(statusLabelFor(r.status,lang),'err');return}
+    if(act==='approve'&&r.status!=='reviewed'){GA.toast(r.status==='pending_review'?T('waitingPhea'):statusLabelFor(r.status,lang),'err');return}
+    var session=await ensureDamageSession();if(!session){GA.toast(ML('請從 Telegram /exp 或平台控制面板開啟 Damage，以取得線上核可身份。','Open Damage from Telegram /exp or the platform control panel to obtain an approval session.','សូមបើក Damage ពី /exp ឬ platform ដើម្បីទទួលសិទ្ធិអនុម័ត។'),'err');return}
+    var labels={review:ML('確認 Phea Review？','Confirm Phea Review?','បញ្ជាក់ Phea Review?'),approve:ML('確認 Paul 核可？','Confirm Paul approval?','បញ្ជាក់ Paul អនុម័ត?'),return:ML('確認退回？','Return this report?','ត្រឡប់របាយការណ៍នេះ?'),reject:ML('確認拒絕？','Reject this report?','បដិសេធរបាយការណ៍នេះ?')};
+    if(!confirm(labels[act]||labels.approve))return;
+    try{
+      var res=await GA.gasPost('damageDecision',{id:id,act:act,session:session,lang:lang});
+      if(!res||res.ok===false)throw new Error((res&&res.msg)||'Damage decision failed');
+      var d=res.data||{};Object.keys(d).forEach(function(k){if(k!=='id')r[k]=d[k]});r.updatedAt=new Date().toISOString();
+      await localSave();await autoCloud(act==='review'?'review':'approval');await refreshWorkflow(true);renderAll();
+      GA.toast(act==='review'?'✅ Phea Review':act==='approve'?'✅ '+ML('Paul 已核可','Approved by Paul','Paul បានអនុម័ត'):act==='return'?'↩ '+ML('已退回','Returned','បានត្រឡប់'):'❌ '+ML('已拒絕','Rejected','បានបដិសេធ'));
+      if(detail.classList.contains('on'))openDetail(id);
+    }catch(e){GA.toast(e.message,'err')}
+  };
+
+  // Update detail workflow buttons too.
+  window.workflowActionHtml=function(r){
+    if(['draft','returned'].includes(r.status))return '<div class="bar"><button class="btn ok" onclick="submitRecord(\''+r.id+'\');closeDetail()">📋 '+esc(T('sendReview'))+'</button></div>';
+    if(r.status==='pending_review')return '<div class="bar"><button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'review\')">✅ Phea Review</button><button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML('退回','Return','ត្រឡប់'))+'</button></div>';
+    if(r.status==='reviewed')return '<div class="bar"><button class="btn ok" onclick="damageDecision(\''+r.id+'\',\'approve\')">✅ '+esc(ML('Paul 核可','Paul Approve','Paul អនុម័ត'))+'</button><button class="btn warn" onclick="damageDecision(\''+r.id+'\',\'return\')">↩ '+esc(ML('退回','Return','ត្រឡប់'))+'</button><button class="btn bad" onclick="damageDecision(\''+r.id+'\',\'reject\')">❌ '+esc(ML('拒絕','Reject','បដិសេធ'))+'</button></div>';
+    if(r.status==='approved'&&r.type==='damage'&&!r.repairNo)return '<div class="bar"><button class="btn warn" onclick="damageCreateRepair(\''+r.id+'\')">🔧 '+esc(ML('轉成維修申請','Create Repair Request','បង្កើតសំណើជួសជុល'))+'</button><button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML('建立更正','Correction','កែតម្រូវ'))+'</button></div>';
+    return '<div class="bar"><button class="btn" onclick="damageCorrection(\''+r.id+'\')">📝 '+esc(ML('建立更正','Correction','កែតម្រូវ'))+'</button></div>';
+  };
+
+  function init3916(){
+    addStrip();
+    var back=document.querySelector('.hero a[href="index.html"]');var k=qkeep();if(back&&k)back.href='index.html?'+k;
+    document.documentElement.setAttribute('data-damage-version','3.9.16');
+    setTimeout(function(){try{renderAll()}catch(e){}},250);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init3916);else init3916();
+})();
+</script>
+
 </body></html>

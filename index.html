@@ -111,6 +111,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   <a class="kpi" href="procurement.html" style="--kc:var(--ga-sky)"><div class="kpi-l">Monthly PO</div><div class="kpi-v" id="k-po">—</div><div class="kpi-s" id="k-po-s">—</div></a>
   <a class="kpi" href="maintenance.html?form=po" style="--kc:var(--ga-warn)"><div class="kpi-l">Temp PO 臨採</div><div class="kpi-v" id="k-tpo">—</div><div class="kpi-s" id="k-tpo-s">—</div></a>
   <a class="kpi" href="maintenance.html" style="--kc:var(--ga-ok)"><div class="kpi-l">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">—</div></a>
+  <a class="kpi" href="damage.html" style="--kc:#dc2626"><div class="kpi-l">Damage 損壞/遺失</div><div class="kpi-v" id="k-dmg">—</div><div class="kpi-s" id="k-dmg-s">—</div></a>
   <a class="kpi" href="receiving.html" style="--kc:#0891b2"><div class="kpi-l">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">—</div></a>
 <a class="kpi" href="fuel.html?v=20260808-4" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
   <a class="kpi" href="expense.html" style="--kc:var(--ga-bad)"><div class="kpi-l">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">—</div></a>
@@ -141,6 +142,14 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
       <div><div class="card-en">Maintenance Center</div><div class="card-name">維修中心</div></div></div>
     <div class="card-desc">維修申請（含現場照片）＋臨時採購合併，Telegram 一鍵審批、期間分析、歷史查詢與匯出。</div>
     <div class="card-flow">Repair Request → Approval → Temp PO → Record</div>
+  </a>
+
+  <a class="card" style="--cc:#dc2626;--cc-l:#fff1f2" href="damage.html">
+    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">📷 Evidence</span><span class="cbadge">✅ Online Approval</span></div>
+    <div class="card-top"><div class="card-ico">⚠️</div>
+      <div><div class="card-en">Damage / Lost Property</div><div class="card-name">損壞／遺失財物</div></div></div>
+    <div class="card-desc">線上新增、修改、更正、Phea Review、Paul 核可、照片證據、核可 PDF/Excel/Sheet、日週月年與自動雲端同步。</div>
+    <div class="card-flow">Create → Phea Review → Paul Approve → Document / Repair</div>
   </a>
 
   <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=20260808-4">
@@ -207,7 +216,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
         <tbody id="tg-tbody"></tbody>
       </table>
       <button class="ga-btn" onclick="addGroupRow()" style="margin-bottom:8px">➕ <span data-t="addGroup">新增群組</span></button>
-      <p class="m-note">模組欄填 <code>all</code> 或以逗號列出：po, repair, recv, diesel, expense。預設群組 -5271842001。</p>
+      <p class="m-note">模組欄填 <code>all</code> 或以逗號列出：procurement, damage, repair, recv, diesel, expense。預設群組 -5271842001。</p>
       <div class="ga-fld"><label>📢 <span data-t="testMsg">測試通知訊息</span></label>
         <input id="tg-test-msg" placeholder="送至所有啟用群組" value="AC-GA-EXP Platform 通知測試 Test"></div>
     </div>
@@ -276,6 +285,7 @@ function refreshDashboard(){
     s('k-po').textContent=d.po.total;      s('k-po-s').textContent=`待審 ${d.po.pending} · 最新 ${d.po.latest||'—'}`;
     s('k-tpo').textContent=d.tempPo.total;  s('k-tpo-s').textContent=`待審 ${d.tempPo.pending} · 核可 ${d.tempPo.approved}`;
     s('k-rep').textContent=d.repair.total;  s('k-rep-s').textContent=`待審 ${d.repair.pending} · 緊急 ${d.repair.urgent}`;
+    if(s('k-dmg')){ s('k-dmg').textContent=(d.damage&&d.damage.total)||0; s('k-dmg-s').textContent=`待 Phea ${(d.damage&&d.damage.pending)||0} · 待 Paul ${(d.damage&&d.damage.reviewed)||0} · 核可 ${(d.damage&&d.damage.approved)||0}`; }
     s('k-recv').textContent=d.recv.items;   s('k-recv-s').textContent=`低庫存 ${d.recv.lowStock} · 紀錄 ${d.recv.records}`;
     s('k-dsl').textContent=(d.diesel.liters||0).toLocaleString()+'L'; s('k-dsl-s').textContent=`${d.diesel.records} 筆記錄`;
     s('k-exp').textContent=fmtMoney(d.expense.ytd); s('k-exp-s').textContent=`${d.expense.months} 個活躍月`;
@@ -347,8 +357,23 @@ function pushAnomaly(){
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
 
+/* ── v3.9.16 deep-link identity propagation ── */
+function applyModuleDeepLinks(){
+  try{
+    const q=new URLSearchParams(location.search), keep=new URLSearchParams();
+    ['uid','name','session'].forEach(k=>{ if(q.get(k)) keep.set(k,q.get(k)); });
+    const qs=keep.toString(); if(!qs)return;
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const raw=a.getAttribute('href')||'';
+      if(!/^(procurement|maintenance|damage|receiving|fuel|expense)\.html/.test(raw))return;
+      const u=new URL(raw,location.href); ['uid','name','session'].forEach(k=>{ if(keep.get(k))u.searchParams.set(k,keep.get(k)); });
+      a.setAttribute('href',u.pathname.split('/').pop()+(u.search||''));
+    });
+  }catch(e){}
+}
 /* ── init ── */
 GA.boot();
+applyModuleDeepLinks();
 GA.cloud.mount('#ga-cloud');
 document.querySelectorAll('[data-lg]').forEach(b=>{
   b.classList.toggle('on', b.getAttribute('data-lg')===GA.lang);
@@ -356,6 +381,6 @@ document.querySelectorAll('[data-lg]').forEach(b=>{
 });
 refreshDashboard();
 </script>
-<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.14 Full Online Integrity</div>
+<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.16 Workflow / Online Records</div>
 </body>
 </html>

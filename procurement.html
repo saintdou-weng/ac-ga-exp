@@ -2238,13 +2238,14 @@ function _procApplyServerPO(po){
   if(!po) return false;
   submitAckId=String(po.poId||po.poNumber||'SERVER_ACK');
   const st=String(po.status||'SUBMITTED').toUpperCase();
-  const map={SUBMITTED:'submitted',VERIFIED:'verified',APPROVED:'approved',RETURNED:'rejected',REJECTED:'rejected',VOIDED:'rejected'};
+  const map={SUBMITTED:'submitted',VERIFIED:'verified',APPROVED:'approved',RETURNED:'returned',REJECTED:'rejected',VOIDED:'rejected'};
   if(map[st]) poStatus=map[st];
   // Server is authoritative: clear stale local signatures instead of only adding missing ones.
   sigs.applicant={name:po.applicant||(cu&&cu.name)||'Applicant',date:po.submitDate||''};
   sigs.verifier=po.verifier?{name:po.verifier,date:po.verifyDate||''}:null;
   sigs.approver=po.approver?{name:po.approver,date:po.approveDate||''}:null;
   poNumber=po.poNumber||null;
+  window.procCurrentApprovalDoc=po.approvalDoc||null;
   saveState(); render();
   return true;
 }
@@ -2452,8 +2453,14 @@ function renderModalBody(){
     aa=`<button class="act-btn" style="background:var(--orange);color:#fff" onclick="doApprove(true)">✅ 核可</button>
         <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doApprove(false)">❌ 拒絕</button>`;
   } else if(poStatus==="approved"){
+    const ad=window.procCurrentApprovalDoc||null;
+    const files=ad?`<div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:9px">
+      ${ad.url?`<a class="act-btn" style="text-decoration:none;background:#eff6ff;color:#1d4ed8" target="_blank" href="${ad.url}">📊 Sheet</a>`:''}
+      ${ad.pdfUrl?`<a class="act-btn" style="text-decoration:none;background:#fff1f2;color:#b91c1c" target="_blank" href="${ad.pdfUrl}">📄 PDF</a>`:''}
+      ${ad.xlsxUrl?`<a class="act-btn" style="text-decoration:none;background:#ecfdf5;color:#047857" target="_blank" href="${ad.xlsxUrl}">📥 Excel</a>`:''}
+      </div>`:`<button class="act-btn" style="margin-top:9px;background:var(--blue);color:#fff" onclick="procEnsureCurrentDoc()">📄 ${lang==="zh"?"生成核可檔案並補發群組":"Generate approval files & notify group"}</button>`;
     aa=`<div style="text-align:center;padding:10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;color:var(--green);font-weight:700">
-      ✅ ${lang==="zh"?"已核可 — 庫存已自動更新入帳":"Approved — Inventory updated"}</div>`;
+      ✅ ${lang==="zh"?"已核可 — 庫存已自動更新入帳":"Approved — Inventory updated"}</div>${files}`;
   } else if(poStatus==="rejected"){
     aa=`<div style="text-align:center;padding:10px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;color:var(--red);font-weight:700">
       ❌ ${lang==="zh"?"已退回，請修改後重新提交":"Rejected"}</div>`;
@@ -3058,6 +3065,215 @@ initLogin();
     recvLog=recvLog.filter(function(x){return String(x.id)!==String(id)});commitSim(sim);saveState();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
   };
   document.documentElement.setAttribute('data-procurement-stock-integrity','v3.9.14c');
+})();
+</script>
+
+<!-- v3.9.16 Procurement workflow + direct summary + approval files + D/W/M/Y records -->
+<style id="proc-v3916-css">
+#proc-summary-ov,#proc-detail-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:2500;align-items:center;justify-content:center;padding:14px}
+#proc-summary-ov.on,#proc-detail-ov.on{display:flex}
+.proc3916-box{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 70px #0004}
+.proc3916-h{display:flex;gap:8px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.proc3916-b{padding:14px 16px}.proc3916-f{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--border);justify-content:flex-end}
+.proc3916-period{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-bottom:10px}
+.proc3916-modes{display:grid;grid-template-columns:repeat(4,42px);gap:4px}.proc3916-modes button{border:1px solid var(--border);background:#fff;border-radius:7px;padding:7px;font-weight:700}.proc3916-modes button.on{background:var(--blue);color:#fff}
+.proc3916-nav{display:grid;grid-template-columns:auto minmax(150px,1fr) auto auto;gap:5px}.proc3916-nav button,.proc3916-nav select,.proc3916-select{border:1px solid var(--border);background:#fff;border-radius:7px;padding:7px 9px}
+#proc-summary-preview{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.65;max-height:42vh;overflow:auto}
+.proc3916-recbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.proc3916-recbar button,.proc3916-recbar select{border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 10px;font-weight:700}
+.proc3916-recbar button.on{background:var(--blue);color:#fff}
+.proc3916-list{display:grid;gap:9px}
+.proc3916-card{border:1px solid var(--border);border-radius:12px;background:#fff;padding:12px}
+.proc3916-card .h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.proc3916-card .meta{font-size:11px;color:var(--text2);line-height:1.7}.proc3916-card .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.proc3916-card .acts button,.proc3916-card .acts a{border:1px solid var(--border);background:#fff;border-radius:7px;padding:6px 9px;text-decoration:none;color:var(--text);font-weight:700;font-size:11px}
+.proc3916-card .acts .green{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.proc3916-card .acts .blue{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.proc3916-st{font-size:10px;font-weight:800;border-radius:999px;padding:3px 8px;background:#f1f5f9}.proc3916-st.APPROVED{background:#dcfce7;color:#15803d}.proc3916-st.SUBMITTED,.proc3916-st.VERIFIED{background:#fef3c7;color:#92400e}.proc3916-st.RETURNED,.proc3916-st.REJECTED{background:#fee2e2;color:#b91c1c}
+@media(max-width:680px){.proc3916-period{grid-template-columns:1fr}.proc3916-modes{grid-template-columns:repeat(4,1fr)}.proc3916-nav{grid-template-columns:auto minmax(0,1fr) auto auto}}
+</style>
+
+<div id="proc-summary-ov" onclick="if(event.target===this)procSummaryClose()">
+  <div class="proc3916-box">
+    <div class="proc3916-h"><b>✈️ Procurement Summary / 採購摘要</b><div style="flex:1"></div><button class="inv-btn" onclick="procSummaryClose()">✕</button></div>
+    <div class="proc3916-b">
+      <div class="proc3916-period">
+        <div class="proc3916-modes">
+          <button data-psm="day" onclick="procSummaryType('day')">D</button>
+          <button data-psm="week" onclick="procSummaryType('week')">W</button>
+          <button data-psm="month" class="on" onclick="procSummaryType('month')">M</button>
+          <button data-psm="year" onclick="procSummaryType('year')">Y</button>
+        </div>
+        <div class="proc3916-nav">
+          <button onclick="procSummaryShift(-1)">◀</button><select id="proc-summary-period" onchange="procSummaryAnchor=this.value;procSummaryRefresh()"></select>
+          <button onclick="procSummaryShift(1)">▶</button><button onclick="procSummaryToday()">●</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+        <label>Language</label>
+        <select id="proc-summary-lang" class="proc3916-select" onchange="procSummaryRefresh()">
+          <option value="zh">中文</option><option value="en">English</option><option value="km">ខ្មែរ</option><option value="all3">中 / EN / ខ្មែរ</option>
+        </select>
+        <span id="proc-summary-count" style="font-size:11px;color:var(--text2)"></span>
+      </div>
+      <div id="proc-summary-preview"></div>
+    </div>
+    <div class="proc3916-f">
+      <button class="inv-btn" onclick="procSummaryClose()">關閉 Close</button>
+      <button class="inv-btn primary" id="proc-summary-send" onclick="procSummarySend()">📤 Send to Telegram Group</button>
+    </div>
+  </div>
+</div>
+
+<div id="proc-detail-ov" onclick="if(event.target===this)procDetailClose()">
+  <div class="proc3916-box">
+    <div class="proc3916-h"><b id="proc-detail-title">PO</b><div style="flex:1"></div><button class="inv-btn" onclick="procDetailClose()">✕</button></div>
+    <div class="proc3916-b" id="proc-detail-body"></div>
+  </div>
+</div>
+
+<script id="proc-v3916-js">
+(function(){
+  window.PROC_V3916='3.9.16';
+  var _baseShowPage=window.showPage;
+  var recState={ptype:'month',anchor:(new Date()).toISOString().slice(0,10),status:'all'};
+  window.procSummaryPtype='month'; window.procSummaryAnchor=(new Date()).toISOString().slice(0,10);
+
+  function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
+  function dt(v){var d=new Date(String(v||''));return isNaN(d)?null:d}
+  function ymd2(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function pRange(type,anchor){
+    var d=dt((anchor||ymd2(new Date()))+'T12:00:00')||new Date(),s=new Date(d),e=new Date(d);
+    if(type==='week'){var wd=(d.getDay()+6)%7;s.setDate(d.getDate()-wd);e=new Date(s);e.setDate(s.getDate()+6)}
+    else if(type==='month'){s=new Date(d.getFullYear(),d.getMonth(),1,12);e=new Date(d.getFullYear(),d.getMonth()+1,0,12)}
+    else if(type==='year'){s=new Date(d.getFullYear(),0,1,12);e=new Date(d.getFullYear(),11,31,12)}
+    return [ymd2(s),ymd2(e)];
+  }
+  function poDate(po,type){
+    if(type==='month'||type==='year')return String(po.year)+'-'+String(Number(po.month)+1).padStart(2,'0')+'-01';
+    var d=dt(po.submitDate);return d?ymd2(d):String(po.year)+'-'+String(Number(po.month)+1).padStart(2,'0')+'-01';
+  }
+  function inP(po,type,anchor){var x=poDate(po,type),r=pRange(type,anchor);return x>=r[0]&&x<=r[1]}
+  function pLabel(type,anchor){var r=pRange(type,anchor);if(type==='day')return r[0];if(type==='week')return r[0]+' ~ '+r[1];if(type==='month')return r[0].slice(0,7);return r[0].slice(0,4)}
+  function shiftAnchor(anchor,type,n){var d=dt((anchor||ymd2(new Date()))+'T12:00:00')||new Date();if(type==='day')d.setDate(d.getDate()+n);else if(type==='week')d.setDate(d.getDate()+7*n);else if(type==='month')d.setMonth(d.getMonth()+n);else d.setFullYear(d.getFullYear()+n);return ymd2(d)}
+  function uniquePeriods(type){
+    var a=(poHistoryData||[]).map(function(po){return poDate(po,type)});a.push(ymd2(new Date()));
+    var m={};a.forEach(function(x){var r=pRange(type,x),k=type==='day'?r[0]:type==='week'?r[0]:type==='month'?r[0].slice(0,7):r[0].slice(0,4);m[k]=x});
+    return Object.keys(m).sort().reverse().map(function(k){return {v:m[k],l:type==='week'?pLabel(type,m[k]):k}});
+  }
+  function ensureRecordsPage(){
+    if(document.getElementById('pt-records'))return;
+    var tabs=document.getElementById('page-tabs'), before=document.getElementById('pt-set');
+    var t=document.createElement('div');t.className='ptab';t.id='pt-records';t.innerHTML='<span>📚 PO Records</span>';t.onclick=procShowRecords;tabs.insertBefore(t,before);
+    var pg=document.createElement('div');pg.className='page';pg.id='page-records';
+    pg.innerHTML='<div class="proc3916-recbar">'+
+      '<button data-prt="day" onclick="procRecType(\'day\')">D</button><button data-prt="week" onclick="procRecType(\'week\')">W</button><button data-prt="month" class="on" onclick="procRecType(\'month\')">M</button><button data-prt="year" onclick="procRecType(\'year\')">Y</button>'+
+      '<button onclick="procRecShift(-1)">◀</button><select id="proc-rec-period" onchange="recState.anchor=this.value;procRenderRecords()"></select><button onclick="procRecShift(1)">▶</button><button onclick="procRecToday()">●</button>'+
+      '<select id="proc-rec-status" onchange="recState.status=this.value;procRenderRecords()"><option value="all">All status</option><option value="SUBMITTED">Pending Phea</option><option value="VERIFIED">Waiting Paul</option><option value="APPROVED">Approved</option><option value="RETURNED">Returned</option><option value="REJECTED">Rejected</option></select>'+
+      '<button onclick="procRecordsReload()">↻ Refresh</button><button onclick="procSummaryOpen()">✈️ Summary</button></div>'+
+      '<div id="proc-rec-info" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div><div id="proc-rec-list" class="proc3916-list"></div>';
+    document.getElementById('app').appendChild(pg);
+  }
+  window.procShowRecords=async function(){
+    ensureRecordsPage();
+    document.querySelectorAll('.page').forEach(function(x){x.classList.remove('on')});document.querySelectorAll('.ptab').forEach(function(x){x.classList.remove('on')});
+    document.getElementById('page-records').classList.add('on');document.getElementById('pt-records').classList.add('on');
+    document.getElementById('htitle').textContent=lang==='zh'?'採購記錄／核可文件':'PO Records / Approval Files';
+    await procRecordsReload();
+  };
+  window.procRecordsReload=async function(){try{await loadPOHistory()}catch(e){console.warn(e)}procRenderRecords()};
+  window.procRecType=function(t){recState.ptype=t;document.querySelectorAll('[data-prt]').forEach(function(b){b.classList.toggle('on',b.dataset.prt===t)});procRenderRecords()};
+  window.procRecShift=function(n){recState.anchor=shiftAnchor(recState.anchor,recState.ptype,n);procRenderRecords()};
+  window.procRecToday=function(){recState.anchor=ymd2(new Date());procRenderRecords()};
+  window.procRenderRecords=function(){
+    var sel=document.getElementById('proc-rec-period');if(!sel)return;
+    var opts=uniquePeriods(recState.ptype),key=pLabel(recState.ptype,recState.anchor);
+    sel.innerHTML=opts.map(function(o){return '<option value="'+o.v+'" '+(pLabel(recState.ptype,o.v)===key?'selected':'')+'>'+esc2(o.l)+'</option>'}).join('');
+    var rows=(poHistoryData||[]).filter(function(po){return inP(po,recState.ptype,recState.anchor)}).filter(function(po){return recState.status==='all'||String(po.status||'')===recState.status});
+    document.getElementById('proc-rec-info').textContent=pLabel(recState.ptype,recState.anchor)+' · '+rows.length+' PO';
+    document.getElementById('proc-rec-list').innerHTML=rows.map(function(po){
+      var doc=po.approvalDoc||null,st=String(po.status||'');
+      var files=doc?'<a target="_blank" href="'+esc2(doc.url||'#')+'">Sheet</a><a target="_blank" href="'+esc2(doc.pdfUrl||'#')+'">PDF</a><a target="_blank" href="'+esc2(doc.xlsxUrl||'#')+'">Excel</a>':
+        (st==='APPROVED'?'<button class="green" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 Generate files</button>':'');
+      return '<div class="proc3916-card"><div class="h"><div><b>'+esc2(po.poNumber||po.poId||'PO')+'</b><div class="meta">'+esc2(procMonthLabel(Number(po.month),po.year))+' · '+(po.items||[]).length+' items<br>Applicant: '+esc2(po.applicant||'—')+' · Verifier: '+esc2(po.verifier||'—')+' · Approver: '+esc2(po.approver||'—')+'</div></div><span class="proc3916-st '+esc2(st)+'">'+esc2(st)+'</span></div>'+
+      '<div class="acts"><button onclick="procDetailOpen(\''+esc2(po.poId)+'\')">👁 View</button>'+files+
+      ((st==='RETURNED'||st==='REJECTED'||st==='APPROVED')?'<button class="blue" onclick="procRevisePO(\''+esc2(po.poId)+'\')">✏️ '+(st==='APPROVED'?'Create revision':'Edit / resubmit')+'</button>':'')+
+      '</div></div>';
+    }).join('')||'<div class="proc3916-card">— No records —</div>';
+  };
+  window.procMonthLabel=function(m,y){var a=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return (a[m]||('M'+(m+1)))+' '+y};
+  function findPO(id){return (poHistoryData||[]).find(function(x){return String(x.poId)===String(id)})}
+  window.procDetailOpen=async function(id){var po=findPO(id);if(!po){await loadPOHistory();po=findPO(id)}if(!po)return;
+    document.getElementById('proc-detail-title').textContent=po.poNumber||po.poId;
+    var d=po.approvalDoc||null;
+    document.getElementById('proc-detail-body').innerHTML='<div class="meta">Status: <b>'+esc2(po.status)+'</b><br>Period: '+esc2(procMonthLabel(Number(po.month),po.year))+'<br>Applicant: '+esc2(po.applicant||'—')+' '+esc2(po.submitDate||'')+'<br>Verifier: '+esc2(po.verifier||'—')+' '+esc2(po.verifyDate||'')+'<br>Approver: '+esc2(po.approver||'—')+' '+esc2(po.approveDate||'')+'</div><hr>'+
+      (po.items||[]).map(function(it,i){return '<div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>#'+(i+1)+' '+esc2(it.name||it.item||'—')+'</b> · Qty '+esc2(it.qty||0)+(it.note?'<div class="meta">'+esc2(it.note)+'</div>':'')+'</div>'}).join('')+
+      (d?'<div class="acts" style="margin-top:12px"><a target="_blank" href="'+esc2(d.url||'#')+'">Google Sheet</a><a target="_blank" href="'+esc2(d.pdfUrl||'#')+'">PDF</a><a target="_blank" href="'+esc2(d.xlsxUrl||'#')+'">Excel</a></div>':(String(po.status)==='APPROVED'?'<button class="inv-btn primary" style="margin-top:12px" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 Generate approval files</button>':''));
+    document.getElementById('proc-detail-ov').classList.add('on');
+  };
+  window.procDetailClose=function(){document.getElementById('proc-detail-ov').classList.remove('on')};
+  window.procEnsureDoc=async function(id,send){try{GA.toast('⏳ Generating approval files…');var d=await _procPost('procEnsureApprovalDoc',{poId:id,send:send!==false});await loadPOHistory();procRenderRecords();if(d&&d.doc)GA.toast('✅ Approval files ready')}catch(e){GA.toast('❌ '+e.message,'err')}};
+
+  window.procEnsureCurrentDoc=async function(){
+    if(!submitAckId){GA.toast('❌ PO server ID missing','err');return;}
+    try{GA.toast('⏳ Generating approval files…');var d=await _procPost('procEnsureApprovalDoc',{poId:submitAckId,send:true});var x=d&&d.data?d.data:d;if(x&&x.po)_procApplyServerPO(x.po);if(x&&x.doc)window.procCurrentApprovalDoc=x.doc;await loadPOHistory();renderModalBody();GA.toast('✅ Approval files ready and group notified');}catch(e){GA.toast('❌ '+e.message,'err')}
+  };
+  window.procRevisePO=function(id){
+    var po=findPO(id);if(!po)return;
+    if(!confirm((lang==='zh'?'建立此採購單的修訂草稿？原核可記錄會保留。':'Create a revision draft? The original approved record will be preserved.')))return;
+    clearPOState();curMonth=Number(po.month)||0;ords={};(po.items||[]).forEach(function(it){var hit=allItems().find(function(x){return String(x.id)===String(it.id)||String(x.name||'').toLowerCase()===String(it.name||it.item||'').toLowerCase()});if(hit)ords[hit.id]={qty:Number(it.qty)||0,note:(it.note||'')+(po.poNumber?' [Revision of '+po.poNumber+']':'')}});
+    poStatus='draft';sigs={applicant:null,verifier:null,approver:null};poNumber=null;submitAckId='';saveState();showPage('po');render();window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  window.procSummaryOpen=async function(){try{await loadPOHistory()}catch(e){console.warn(e)}document.getElementById('proc-summary-ov').classList.add('on');procSummaryRefresh()};
+  window.procSummaryClose=function(){document.getElementById('proc-summary-ov').classList.remove('on')};
+  window.procSummaryType=function(t){procSummaryPtype=t;document.querySelectorAll('[data-psm]').forEach(function(b){b.classList.toggle('on',b.dataset.psm===t)});procSummaryRefresh()};
+  window.procSummaryShift=function(n){procSummaryAnchor=shiftAnchor(procSummaryAnchor,procSummaryPtype,n);procSummaryRefresh()};
+  window.procSummaryToday=function(){procSummaryAnchor=ymd2(new Date());procSummaryRefresh()};
+  function summaryRows(){return (poHistoryData||[]).filter(function(po){return inP(po,procSummaryPtype,procSummaryAnchor)})}
+  function summaryText3916(){
+    var rows=summaryRows(),l=document.getElementById('proc-summary-lang').value||'zh',cnt=function(st){return rows.filter(function(x){return String(x.status||'')===st}).length},items=rows.reduce(function(n,x){return n+(x.items||[]).length},0);
+    var Z={zh:['📋 採購摘要 / Procurement Summary','期間 / Period','採購單數 / PO Count','待 Phea / Pending Phea','待 Paul / Waiting Paul','已核可 / Approved','品項數 / Items'],
+      en:['📋 Procurement Summary','Period','PO Count','Pending Phea','Waiting Paul','Approved','Items'],
+      km:['📋 សង្ខេបការទិញ','រយៈពេល','ចំនួន PO','រង់ចាំ Phea','រង់ចាំ Paul','បានអនុម័ត','ទំនិញ']};
+    var a=Z[l==='all3'?'zh':l]||Z.zh,lines=[a[0],'━━━━━━━━━━━━━━━━',a[1]+': '+pLabel(procSummaryPtype,procSummaryAnchor),a[2]+': '+rows.length,a[3]+': '+cnt('SUBMITTED'),a[4]+': '+cnt('VERIFIED'),a[5]+': '+cnt('APPROVED'),a[6]+': '+items,'━━━━━━━━━━━━━━━━'];
+    rows.slice(0,30).forEach(function(po,i){lines.push('#'+(i+1)+' '+(po.poNumber||po.poId||'PO')+' · '+procMonthLabel(Number(po.month),po.year)+' · '+String(po.status||'')+' · '+(po.items||[]).length+' items')});
+    if(l==='all3')lines.unshift('中文 / English / ខ្មែរ');
+    return lines.join('\n');
+  }
+  window.procSummaryRefresh=function(){var sel=document.getElementById('proc-summary-period');if(!sel)return;var opts=uniquePeriods(procSummaryPtype),key=pLabel(procSummaryPtype,procSummaryAnchor);sel.innerHTML=opts.map(function(o){return '<option value="'+o.v+'" '+(pLabel(procSummaryPtype,o.v)===key?'selected':'')+'>'+esc2(o.l)+'</option>'}).join('');var rows=summaryRows();document.getElementById('proc-summary-count').textContent=rows.length+' PO';document.getElementById('proc-summary-preview').textContent=summaryText3916()};
+  window.procSummarySend=async function(){
+    var b=document.getElementById('proc-summary-send');if(b.disabled)return;b.disabled=true;
+    try{var L=document.getElementById('proc-summary-lang').value||'zh',R=pRange(procSummaryPtype,procSummaryAnchor),label=pLabel(procSummaryPtype,procSummaryAnchor);var d=await _procPost('procSendSummary',{ptype:procSummaryPtype,start:R[0],end:R[1],label:label,lang:L});
+      var x=d&&d.data?d.data:d;if(x&&x.skippedDuplicate)GA.toast('☑ Summary already sent / 摘要內容未變，不重複發送');else GA.toast('✅ Summary sent to Telegram group · '+((x&&x.count)||0)+' PO');
+      procSummaryClose();
+    }catch(e){GA.toast('❌ Summary send failed: '+e.message,'err')}finally{b.disabled=false}
+  };
+  window.procTelegram=window.procSummaryOpen;
+
+  // Reconcile authoritative server state every time Preview opens. This removes stale local
+  // combinations such as Applicant Signed + Verifier Pending + Approver Signed.
+  var baseOpen=window.openMod;
+  window.openMod=async function(){try{await loadPOHistory();await _procReconcileCurrentFromHistory()}catch(e){console.warn(e)}return baseOpen.apply(this,arguments)};
+
+  // Exact server PO number wins before item fingerprint matching.
+  var baseFind=window._procFindExistingServerPO;
+  window._procFindExistingServerPO=async function(){
+    try{
+      var r=await fetch(GAS_URL+'?action=getHistory&year='+YEAR+'&_='+Date.now(),{cache:'no-store'}),j=await r.json(),all=(j&&j.data)||[];
+      if(submitAckId){var x=all.find(function(po){return String(po.poId||'')===String(submitAckId)});if(x)return x}
+      if(poNumber){var y=all.find(function(po){return String(po.poNumber||'')===String(poNumber)});if(y)return y}
+    }catch(e){}
+    return baseFind();
+  };
+
+  function init3916(){
+    ensureRecordsPage();
+    var back=document.querySelector('.ptab[onclick*="index.html"]'); if(back){
+      var q=new URLSearchParams(location.search),keep=new URLSearchParams();['uid','name','session'].forEach(function(k){if(q.get(k))keep.set(k,q.get(k))});
+      if(String(keep))back.onclick=function(){location.href='index.html?'+keep.toString()};
+    }
+    document.documentElement.setAttribute('data-procurement-version','3.9.16');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init3916);else init3916();
 })();
 </script>
 </body>
