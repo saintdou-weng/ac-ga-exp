@@ -3068,7 +3068,7 @@ initLogin();
 })();
 </script>
 
-<!-- v3.9.16 Procurement workflow + direct summary + approval files + D/W/M/Y records -->
+<!-- v3.9.16b Procurement workflow + detailed item/qty summary + approval files + D/W/M/Y records -->
 <style id="proc-v3916-css">
 #proc-summary-ov,#proc-detail-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.48);z-index:2500;align-items:center;justify-content:center;padding:14px}
 #proc-summary-ov.on,#proc-detail-ov.on{display:flex}
@@ -3132,7 +3132,7 @@ initLogin();
 
 <script id="proc-v3916-js">
 (function(){
-  window.PROC_V3916='3.9.16';
+  window.PROC_V3916='3.9.16b';
   var _baseShowPage=window.showPage;
   var recState={ptype:'month',anchor:(new Date()).toISOString().slice(0,10),status:'all'};
   window.procSummaryPtype='month'; window.procSummaryAnchor=(new Date()).toISOString().slice(0,10);
@@ -3230,12 +3230,28 @@ initLogin();
   window.procSummaryToday=function(){procSummaryAnchor=ymd2(new Date());procSummaryRefresh()};
   function summaryRows(){return (poHistoryData||[]).filter(function(po){return inP(po,procSummaryPtype,procSummaryAnchor)})}
   function summaryText3916(){
-    var rows=summaryRows(),l=document.getElementById('proc-summary-lang').value||'zh',cnt=function(st){return rows.filter(function(x){return String(x.status||'')===st}).length},items=rows.reduce(function(n,x){return n+(x.items||[]).length},0);
-    var Z={zh:['📋 採購摘要 / Procurement Summary','期間 / Period','採購單數 / PO Count','待 Phea / Pending Phea','待 Paul / Waiting Paul','已核可 / Approved','品項數 / Items'],
-      en:['📋 Procurement Summary','Period','PO Count','Pending Phea','Waiting Paul','Approved','Items'],
-      km:['📋 សង្ខេបការទិញ','រយៈពេល','ចំនួន PO','រង់ចាំ Phea','រង់ចាំ Paul','បានអនុម័ត','ទំនិញ']};
-    var a=Z[l==='all3'?'zh':l]||Z.zh,lines=[a[0],'━━━━━━━━━━━━━━━━',a[1]+': '+pLabel(procSummaryPtype,procSummaryAnchor),a[2]+': '+rows.length,a[3]+': '+cnt('SUBMITTED'),a[4]+': '+cnt('VERIFIED'),a[5]+': '+cnt('APPROVED'),a[6]+': '+items,'━━━━━━━━━━━━━━━━'];
-    rows.slice(0,30).forEach(function(po,i){lines.push('#'+(i+1)+' '+(po.poNumber||po.poId||'PO')+' · '+procMonthLabel(Number(po.month),po.year)+' · '+String(po.status||'')+' · '+(po.items||[]).length+' items')});
+    var rows=summaryRows(),l=document.getElementById('proc-summary-lang').value||'zh',
+      cnt=function(st){return rows.filter(function(x){return String(x.status||'')===st}).length},
+      itemLines=rows.reduce(function(n,x){return n+(x.items||[]).length},0),
+      totalQty=rows.reduce(function(n,x){return n+(x.items||[]).reduce(function(s,it){return s+(Number(it.qty)||0)},0)},0);
+    function qfmt(v){v=Number(v)||0;return Math.abs(v-Math.round(v))<0.000001?String(Math.round(v)):String(Math.round(v*100)/100)}
+    function itemName(it){
+      var en=String(it.name||it.item||'—'),zh=String(it.cn||'').trim();
+      if(l==='en')return en;
+      if(l==='km')return zh&&zh!==en?zh+' / '+en:en;
+      return zh&&zh!==en?zh+' / '+en:en;
+    }
+    var Z={zh:['📋 採購摘要 / Procurement Summary','期間 / Period','採購單數 / PO Count','待 Phea / Pending Phea','待 Paul / Waiting Paul','已核可 / Approved','品項筆數 / Item lines','總數量 / Total Qty','本單數量 / PO Qty'],
+      en:['📋 Procurement Summary','Period','PO Count','Pending Phea','Waiting Paul','Approved','Item lines','Total Qty','PO Qty'],
+      km:['📋 សង្ខេបការទិញ','រយៈពេល','ចំនួន PO','រង់ចាំ Phea','រង់ចាំ Paul','បានអនុម័ត','ចំនួនមុខទំនិញ','បរិមាណសរុប','បរិមាណ PO']};
+    var a=Z[l==='all3'?'zh':l]||Z.zh,lines=[a[0],'━━━━━━━━━━━━━━━━',a[1]+': '+pLabel(procSummaryPtype,procSummaryAnchor),a[2]+': '+rows.length,a[3]+': '+cnt('SUBMITTED'),a[4]+': '+cnt('VERIFIED'),a[5]+': '+cnt('APPROVED'),a[6]+': '+itemLines,a[7]+': '+qfmt(totalQty),'━━━━━━━━━━━━━━━━'];
+    rows.forEach(function(po,i){
+      var its=po.items||[],sub=its.reduce(function(s,it){return s+(Number(it.qty)||0)},0);
+      lines.push('#'+(i+1)+' '+(po.poNumber||po.poId||'PO')+' · '+procMonthLabel(Number(po.month),po.year)+' · '+String(po.status||''));
+      its.forEach(function(it,j){lines.push((j===its.length-1?'└ ':'├ ')+(j+1)+'. '+itemName(it)+' × '+qfmt(it.qty))});
+      lines.push('  '+a[8]+': '+qfmt(sub));
+      if(i<rows.length-1)lines.push('────────────────');
+    });
     if(l==='all3')lines.unshift('中文 / English / ខ្មែរ');
     return lines.join('\n');
   }
@@ -3271,7 +3287,7 @@ initLogin();
       var q=new URLSearchParams(location.search),keep=new URLSearchParams();['uid','name','session'].forEach(function(k){if(q.get(k))keep.set(k,q.get(k))});
       if(String(keep))back.onclick=function(){location.href='index.html?'+keep.toString()};
     }
-    document.documentElement.setAttribute('data-procurement-version','3.9.16');
+    document.documentElement.setAttribute('data-procurement-version','3.9.16b');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init3916);else init3916();
 })();
