@@ -53,10 +53,13 @@ var groupCache = null;
 TG.groups = function (force) {
   if (groupCache && !force) return Promise.resolve(groupCache);
   return GA.gasGet('getGroups').then(function (r) {
+    TG.defaultChatId=String(r.defaultChatId||(r.data&&r.data.defaultChatId)||'');
     groupCache = (r.data && r.data.groups) || r.groups || [];
     return groupCache;
-  }).catch(function () { return []; });
+  });
 };
+TG.matchesModule=function(list,module){var alias={fuel:'diesel',recv:'receiving',transport:'transportation'},wanted=alias[module]||module;return String(list||'all').toLowerCase().split(/[\s,;]+/).some(function(m){return m==='all'||(alias[m]||m)===wanted;});};
+TG.deliveryResult=function(d){d=d||{};var errors=d.errors||[],duplicate=!!d.skippedDuplicate,receipts=d.receipts||[],confirmed=Number(d.sent)>0&&receipts.some(function(r){return r.chatId&&r.messageId;});return {ok:confirmed&&!errors.length,duplicate:duplicate,receipts:receipts,text:duplicate?'相同摘要已略過，本次沒有新發送 / Duplicate skipped; no new message':confirmed?'Telegram 已確認 '+Number(d.sent)+' 個群組 / '+Number(d.sent)+' group(s) confirmed':Number(d.sent)>0?'伺服器回報已發送，但缺少訊息編號；請更新 GS 後核對 / Server reports sent but no message receipt; update GAS and verify':'未取得群組發送確認 / No group delivery confirmation',errors:errors};};
 
 /* ═══════════ 開啟視窗 ═══════════
    opt = {
@@ -69,6 +72,7 @@ TG.groups = function (force) {
    }                                                                 */
 TG.open = function (opt) {
   opt = opt || {};
+  var groupsReady=false,sending=false,resendKey='';
   var st = {
     mode: 'summary',
     scope: (opt.scopes && opt.scopes[0] && opt.scopes[0].v) || 'all',
@@ -130,6 +134,9 @@ TG.open = function (opt) {
 
         '<div class="ga-fld"><label>' + GA.T('tgPreview') + '</label>' +
           '<pre id="tg-pv" class="ga-pre"></pre></div>' +
+        '<p id="tg-result" role="status" style="white-space:pre-wrap"></p>' +
+        '<div id="tg-receipts"></div>' +
+        '<label id="tg-resend-label"><input type="checkbox" id="tg-resend"> '+(GA.lang==='zh'?'刻意再發一次（新增群組訊息）':'Send a new copy intentionally')+'</label>' +
         '<p class="ga-note" id="tg-note">' + GA.T('tgNoteSum') + '</p>' +
       '</div>' +
       '<div class="ga-modal-f">' +
@@ -145,19 +152,20 @@ TG.open = function (opt) {
   ov.onclick = function (e) { if (e.target === ov) close(); };
 
   /* 群組清單 */
-  TG.groups().then(function (gs) {
+  TG.groups(true).then(function (gs) {
     var sel = el('tg-group');
     var usable = gs.filter(function (g) {
       if (g.enabled === false) return false;
-      var m = String(g.modules || 'all');
-      return m === 'all' || !opt.module || m.indexOf(opt.module) >= 0;
+      return !opt.module || TG.matchesModule(g.modules,opt.module);
     });
     sel.innerHTML = usable.length
       ? usable.map(function (g) { return '<option value="' + GA.esc(g.chatId) + '">' + GA.esc(g.name || g.chatId) + '</option>'; }).join('')
-      : '<option value="">' + (GA.lang === 'zh' ? '（使用預設群組）' : '(default group)') + '</option>';
+      : TG.defaultChatId?'<option value="'+GA.esc(TG.defaultChatId)+'">GA-EXP ('+GA.esc(TG.defaultChatId)+')</option>':'<option value="">'+(GA.lang==='zh'?'無可用群組，請檢查設定':'No available group; check settings')+'</option>';
+    if(TG.defaultChatId&&usable.some(function(g){return String(g.chatId)===TG.defaultChatId;}))sel.value=TG.defaultChatId;
     st.group = sel.value;
+    groupsReady=!!st.group;preview();
     sel.onchange = function () { st.group = this.value; };
-  });
+  }).catch(function(e){el('tg-group').innerHTML='<option value="">'+GA.esc(e.message)+'</option>';el('tg-result').textContent='❌ '+e.message;groupsReady=false;preview();});
 
   /* 期間清單：只列有資料的期間，另保留「全部」 */
   function fillPeriods() {
@@ -182,6 +190,7 @@ TG.open = function (opt) {
   ov.querySelectorAll('#tg-mode [data-m]').forEach(function (b) {
     b.onclick = function () {
       st.mode = b.getAttribute('data-m');
+      el('tg-resend-label').style.display=st.mode==='summary'?'':'none';
       ov.querySelectorAll('#tg-mode [data-m]').forEach(function (x) { x.classList.toggle('on', x === b); });
       el('tg-note').textContent = GA.T(st.mode === 'summary' ? 'tgNoteSum' : 'tgNoteApp');
       el('tg-kind').textContent = st.mode === 'summary' ? '📄 ' + GA.T('tgSummary') : '📋 ' + GA.T('tgApproval');
@@ -206,36 +215,42 @@ TG.open = function (opt) {
           period: TG.periodLabel(st.period, st.ptype, st.lang),
           items: items
         });
-        el('tg-send').disabled = !items.length;
+        el('tg-send').disabled = sending||!groupsReady||!items.length;
       } else {
         pv.textContent = opt.summary ? opt.summary(st) : '(no preview)';
-        el('tg-send').disabled = false;
+        el('tg-send').disabled = sending||!groupsReady;
       }
     } catch (e) { pv.textContent = '⚠️ ' + e.message; }
   }
 
   el('tg-send').onclick = async function () {
+    if(sending||!groupsReady)return;
+    sending=true;
     var btn = this, old = btn.textContent;
     btn.disabled = true; btn.textContent = GA.T('tgSending');
 
     var done = function (msg, ok) {
       GA.toast(msg, ok ? '' : 'err');
-      btn.disabled = false; btn.textContent = old;
-      if (ok) close();
+      sending=false;btn.disabled = !groupsReady; btn.textContent = old;
+      el('tg-result').textContent=msg;
+      if (ok&&st.mode==='approval') close();
     };
 
     if(opt.beforeSend){try{if(await opt.beforeSend()===false){done('❌ '+(GA.lang==='zh'?'雲端未同步，請先處理同步狀態':'Cloud not synced; resolve sync first'),false);return;}}catch(e){done(e.message,false);return;}}
     if (st.mode === 'summary') {
+      var latest=opt.summary?opt.summary(st):el('tg-pv').textContent;
+      if(latest!==el('tg-pv').textContent){el('tg-pv').textContent=latest;done(GA.lang==='zh'?'同步後資料已更新，請核對預覽再按確認傳送':'Data changed after sync. Review the updated preview and send again.',false);return;}
+      if(el('tg-resend').checked&&!resendKey)resendKey=crypto.randomUUID();
       /* 摘要：後端只發訊息，不建 batch、不加按鈕、不改狀態 */
       GA.gasPost('tgSummary', {
         module: opt.module, scope: st.scope,
         ptype: st.ptype, period: st.period,
         lang: st.lang, chatId: st.group,
-        text: el('tg-pv').textContent
+        text: el('tg-pv').textContent,resendKey:el('tg-resend').checked?resendKey:''
       }).then(function (r) {
-        var d=r.data||r; var msg=d.skippedDuplicate?'相同摘要已發送，已略過 / Duplicate summary skipped':('✈️ '+GA.T('tgSent')+' · '+(Number(d.sent)||0)+' group(s)'); if(d.errors&&d.errors.length)msg+=' · '+d.errors.join(' | '); done(msg,!(d.errors&&d.errors.length));
-        if (opt.onSummarySent) opt.onSummarySent(r.data || r, st);
-      }).catch(function (e) { done('❌ ' + e.message, false); });
+        var d=r.data||r,result=TG.deliveryResult(d);showReceipts(result.receipts);done(result.text+(result.errors.length?' · '+result.errors.join(' | '):''),result.ok);
+        if (result.ok&&opt.onSummarySent) opt.onSummarySent(d, st);
+      }).catch(function (e) {showReceipts(e.payload&&e.payload.data&&e.payload.data.receipts||[]);done('❌ ' + e.message, false);});
 
     } else {
       var items = opt.approvalItems ? (opt.approvalItems(st) || []) : [];
@@ -259,6 +274,8 @@ TG.open = function (opt) {
       });
     }
   };
+
+  function showReceipts(receipts){var box=el('tg-receipts');box.replaceChildren();(receipts||[]).forEach(function(r){var p=document.createElement('p');p.textContent=(r.title||r.chatId)+' · '+r.chatId+' · Message #'+r.messageId+(r.status==='previously_sent'?' (previously sent)':'');if(/^https:\/\/t\.me\//.test(r.url||'')){var a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';a.textContent=GA.lang==='zh'?' 開啟群組訊息':' Open message';p.appendChild(a);}box.appendChild(p);});}
 
   el('tg-kind').textContent = '📄 ' + GA.T('tgSummary');
   el('tg-ptype').value=st.ptype;
@@ -362,4 +379,3 @@ TG.buildApprovalPreview = function (o) {
 };
 
 })(window);
-

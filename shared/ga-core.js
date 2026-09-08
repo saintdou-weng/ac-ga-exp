@@ -71,8 +71,30 @@ function parseEnvelope(raw) {
   return d;
 }
 
+GA.requestJSON = function (url, options, timeoutMs) {
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer, opts = Object.assign({}, options || {});
+  if (controller) opts.signal = controller.signal;
+  var deadline = new Promise(function (_, reject) {
+    timer = setTimeout(function () {
+      reject(new Error('雲端回應逾時；資料保留本機，請稍後重試 / Cloud response timed out; retry to confirm the result'));
+      if (controller) controller.abort();
+    }, timeoutMs || 45000);
+  });
+  var request = Promise.resolve().then(function () { return fetch(url, opts); }).then(function (r) {
+    return r.text().then(function (raw) {
+      var data = parseEnvelope(raw);
+      if (r.ok === false) throw new Error('HTTP ' + r.status + ': cloud request failed');
+      if (!data || data.ok !== true) throw new Error('雲端未確認成功 / Cloud did not confirm success');
+      return data;
+    });
+  });
+  return Promise.race([request, deadline]).finally(function () { clearTimeout(timer); });
+};
+
 GA.gasGet = function (action, params) {
-  var url = GA.gasUrl() + '?action=' + encodeURIComponent(action);
+  var base = GA.gasUrl();
+  var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action);
   params = params || {};
   for (var k in params) {
     if (!params.hasOwnProperty(k)) continue;
@@ -81,18 +103,18 @@ GA.gasGet = function (action, params) {
     url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
   }
   var s = GA.session(); if (s) url += '&session=' + encodeURIComponent(s);
-  return fetch(url).then(function (r) { return r.text(); }).then(parseEnvelope);
+  return GA.requestJSON(url);
 };
 
 GA.gasPost = function (action, payload, extra) {
   var body = { action: action, data: payload };
   if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) body[k] = extra[k];
   var s = GA.session(); if (s) body.session = s;
-  return fetch(GA.gasUrl(), {
+  return GA.requestJSON(GA.gasUrl(), {
     method: 'POST',
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'text/plain;charset=utf-8' }   // 避免 CORS preflight
-  }).then(function (r) { return r.text(); }).then(parseEnvelope);
+  });
 };
 
 /* ═══════════════════ 3. 三語 i18n ═══════════════════ */
@@ -857,4 +879,3 @@ GA.boot = function (opt) {
 };
 
 })(window);
-
