@@ -72,8 +72,8 @@ TG.open = function (opt) {
   var st = {
     mode: 'summary',
     scope: (opt.scopes && opt.scopes[0] && opt.scopes[0].v) || 'all',
-    ptype: 'month',
-    period: GA.currentPeriod('month'),
+    ptype: opt.ptype || 'month',
+    period: opt.period || GA.currentPeriod(opt.ptype || 'month'),
     lang: 'both',
     group: ''
   };
@@ -171,12 +171,12 @@ TG.open = function (opt) {
       list.map(function (k) {
         return '<option value="' + k + '">' + GA.esc(GA.periodLabel(k, st.ptype)) + '</option>';
       }).join('');
-    st.period = list.length ? list[0] : 'ALL';
+    st.period = (st.period==='ALL'||list.indexOf(st.period)>=0) ? st.period : (list.length ? list[0] : 'ALL');
     sel.value = st.period;
     sel.onchange = function () { st.period = this.value; preview(); };
   }
 
-  el('tg-ptype').onchange = function () { st.ptype = this.value; fillPeriods(); preview(); };
+  el('tg-ptype').onchange = function () { var old=st.ptype,k=st.period,anchor=old==='week'?(GA.weekRange(k)||{}).start:old==='month'?k+'-01':old==='year'?k+'-01-01':k;st.ptype=this.value;st.period=k==='ALL'?'ALL':GA.periodKey(anchor,st.ptype)||GA.currentPeriod(st.ptype);fillPeriods();preview(); };
   el('tg-lang').onchange = function () { st.lang = this.value; preview(); };
 
   ov.querySelectorAll('#tg-mode [data-m]').forEach(function (b) {
@@ -214,7 +214,7 @@ TG.open = function (opt) {
     } catch (e) { pv.textContent = '⚠️ ' + e.message; }
   }
 
-  el('tg-send').onclick = function () {
+  el('tg-send').onclick = async function () {
     var btn = this, old = btn.textContent;
     btn.disabled = true; btn.textContent = GA.T('tgSending');
 
@@ -224,6 +224,7 @@ TG.open = function (opt) {
       if (ok) close();
     };
 
+    if(opt.beforeSend){try{if(await opt.beforeSend()===false){done('❌ '+(GA.lang==='zh'?'雲端未同步，請先處理同步狀態':'Cloud not synced; resolve sync first'),false);return;}}catch(e){done(e.message,false);return;}}
     if (st.mode === 'summary') {
       /* 摘要：後端只發訊息，不建 batch、不加按鈕、不改狀態 */
       GA.gasPost('tgSummary', {
@@ -232,7 +233,7 @@ TG.open = function (opt) {
         lang: st.lang, chatId: st.group,
         text: el('tg-pv').textContent
       }).then(function (r) {
-        done('✈️ ' + GA.T('tgSent') + ' · ' + ((r.data && r.data.sent) || 1) + ' group(s)', true);
+        var d=r.data||r; var msg=d.skippedDuplicate?'相同摘要已發送，已略過 / Duplicate summary skipped':('✈️ '+GA.T('tgSent')+' · '+(Number(d.sent)||0)+' group(s)'); if(d.errors&&d.errors.length)msg+=' · '+d.errors.join(' | '); done(msg,!(d.errors&&d.errors.length));
         if (opt.onSummarySent) opt.onSummarySent(r.data || r, st);
       }).catch(function (e) { done('❌ ' + e.message, false); });
 
@@ -260,6 +261,7 @@ TG.open = function (opt) {
   };
 
   el('tg-kind').textContent = '📄 ' + GA.T('tgSummary');
+  el('tg-ptype').value=st.ptype;
   fillPeriods();
   preview();
   return { close: close };
@@ -360,3 +362,4 @@ TG.buildApprovalPreview = function (o) {
 };
 
 })(window);
+

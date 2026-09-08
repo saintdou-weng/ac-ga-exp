@@ -94,18 +94,18 @@ tr:hover td{background:#f5f8f6}
 .hidden{display:none!important}
 </style>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js"></script>
+<script src="shared/ga-core.js?v=3.9.17"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
+<script src="shared/ga-telegram.js?v=3.9.17"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.17"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.17"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.17"></scr'+'ipt>');}
 </script>
 
 </head>
-<body>
+<body><nav style="padding:10px;display:flex;gap:18px;flex-wrap:wrap;background:#e8eef5"><a href="index.html">GA-EXP</a><a href="transportation.html">🚐 Transportation 行車紀錄</a><a href="etc.html">🛣️ ETC 通行費</a></nav>
 
 <!-- HEADER -->
 <div class="header">
@@ -815,7 +815,7 @@ document.getElementById('formModal').classList.add('open');
 function closeForm(){document.getElementById('formModal').classList.remove('open');editId=null}
 function saveRec(){
 const cat=document.getElementById('formBody').dataset.cat;
-const _oldFuel=editId?DB.find(r=>r.id===editId):null;const d={id:editId||crypto.randomUUID(),cat,date:document.getElementById('f_date').value,liters:cleanNum(document.getElementById('f_liters').value),inspector:document.getElementById('f_inspector')?.value.trim()||'',remarks:document.getElementById('f_remarks')?.value||'',createdAt:(_oldFuel&&_oldFuel.createdAt)||new Date().toISOString(),updatedAt:new Date().toISOString()};
+const _oldFuel=editId?DB.find(r=>r.id===editId):null;const d={...(_oldFuel||{}),id:editId||crypto.randomUUID(),cat,date:document.getElementById('f_date').value,liters:cleanNum(document.getElementById('f_liters').value),inspector:document.getElementById('f_inspector')?.value.trim()||'',remarks:document.getElementById('f_remarks')?.value||'',createdAt:(_oldFuel&&_oldFuel.createdAt)||new Date().toISOString(),updatedAt:new Date().toISOString()};
 if(cat==='driver'){d.driver=document.getElementById('f_driver').value.trim();d.plate=document.getElementById('f_plate').value.trim();d.km=cleanNum(document.getElementById('f_km').value);d.from='';d.to=''}
 else if(cat==='forklift'){d.dept=document.getElementById('f_dept').value.trim();d.forklift=document.getElementById('f_forklift').value.trim();d.startKM=cleanNum(document.getElementById('f_startKM').value);d.arriveKM=cleanNum(document.getElementById('f_arriveKM').value);d.totalKM=d.arriveKM-d.startKM}
 else{d.machine=document.getElementById('f_machine').value.trim();d.kw=cleanNum(document.getElementById('f_kw').value);d.hours=document.getElementById('f_hours').value.trim()}
@@ -1243,7 +1243,7 @@ var _fuelDeleteFiltered=deleteFiltered;deleteFiltered=function(){var before=DB.l
 var _fuelClearAll=clearAll;clearAll=function(){var before=DB.length,r=_fuelClearAll.apply(this,arguments);if(before&&DB.length===0)scheduleFuelAutoSync('file-delete');return r;};
 try{ GA.cloud.mount('#ga-cloud'); }catch(e){}
 init();
-if(window.GAAutoSync)GAAutoSync.install({key:'fuel',pull:fuelCloudDownloadSafe,push:fuelCloudUploadSafe,canSync:function(){return !!document.getElementById('gasUrl').value.trim();},startDelay:120,anchor:'#ga-cloud'});else setTimeout(function(){fuelCloudDownloadSafe({silent:true}).catch(function(){})},120);
+// v3.9.17 uses the durable record sync below.
 </script>
 
 <!-- v3.9.14 integrity patch -->
@@ -1306,5 +1306,8 @@ if(window.GAAutoSync)GAAutoSync.install({key:'fuel',pull:fuelCloudDownloadSafe,p
   document.documentElement.setAttribute('data-fuel-duplicate-integrity','v3.9.14c');
 })();
 </script>
+<script src="shared/ga-mobility.js?v=3.9.17"></script>
+<script src="shared/ga-mobility-store.js?v=3.9.17"></script>
+<script src="shared/ga-fuel-v3917.js?v=3.9.17"></script>
 </body>
 </html>

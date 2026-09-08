@@ -958,3 +958,4 @@
      bookmarks continue to work while using the HRA Portal sync engine. */
   g.GASmartSync = g.HRASmartSync;
 })(window);
+

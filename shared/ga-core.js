@@ -240,7 +240,7 @@ GA.ymd = function (d) {
 GA.parseYMD = function (s) {
   var m = String(s || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (!m) return null;
-  return new Date(+m[1], +m[2] - 1, +m[3]);   // local midnight，不跨時區
+  var d=new Date(+m[1],+m[2]-1,+m[3]); return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null;
 };
 /* Excel serial date → 'YYYY-MM-DD'（用 UTC getter 讀 serial，避免本地時區偏移） */
 GA.excelDate = function (v) {
@@ -285,7 +285,7 @@ GA.periodKey = function (dateStr, type) {
   var d = GA.parseYMD(dateStr);
   if (!d) return '';
   if (type === 'day') return GA.ymd(d);
-  if (type === 'week') { var ws = GA.weekStart(d); return ws.getFullYear() + '-W' + p2(GA.isoWeek(ws)); }
+  if (type === 'week') { var ws = GA.weekStart(d), th=new Date(ws); th.setDate(th.getDate()+3); return th.getFullYear() + '-W' + p2(GA.isoWeek(ws)); }
   if (type === 'month') return d.getFullYear() + '-' + p2(d.getMonth() + 1);
   return String(d.getFullYear());
 };
@@ -332,7 +332,7 @@ GA.shiftPeriod = function (key, type, dir) {
     var r = GA.weekRange(key);
     var b = r ? r.startDate : GA.weekStart(new Date());
     b.setDate(b.getDate() + dir * 7);
-    return b.getFullYear() + '-W' + p2(GA.isoWeek(b));
+    return GA.periodKey(GA.ymd(b),'week');
   }
   if (type === 'month') {
     var mm = String(key).match(/^(\d{4})-(\d{2})$/);
@@ -857,3 +857,4 @@ GA.boot = function (opt) {
 };
 
 })(window);
+

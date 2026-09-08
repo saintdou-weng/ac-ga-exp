@@ -82,12 +82,12 @@
       s.busy=true;s.lastRun=Date.now();setState(s,'syncing');
       try{
         if(typeof s.opts.pull==='function'){
-          try{await s.opts.pull({silent:true,auto:true,reason:reason});}catch(e){if(s.opts.log!==false)console.warn('[GAAutoSync pull '+key+']',e);}
+          var pulled=await s.opts.pull({silent:true,auto:true,reason:reason}); if(pulled===false)throw new Error('Download failed; upload paused to protect cloud data');
         }
         var ok=true;
-        if(typeof s.opts.push==='function'){
+        if(typeof s.opts.push==='function' && (priorPending || !/^(startup-reconcile|reconcile|resume|pageshow|network-restored|resume-focus|resume-visible)$/.test(String(reason)))){
           var po=mergeExtra({silent:true,auto:true,reason:reason},extra),ctx={key:key,reason:String(reason||''),at:Date.now()};
-          g.__GA_SYNC_CONTEXT=ctx;try{var r=await s.opts.push(po);ok=(r!==false);}finally{if(g.__GA_SYNC_CONTEXT===ctx)g.__GA_SYNC_CONTEXT=null;}
+          g.__GA_SYNC_CONTEXT=ctx;try{var r=await s.opts.push(po);ok=(r!==false&&!(r&&r.needsPull)&&!(r&&r.ok===false));}finally{if(g.__GA_SYNC_CONTEXT===ctx)g.__GA_SYNC_CONTEXT=null;}
         }
         if(ok){clear(key);setState(s,'synced',hhmm());}
         else if(!priorPending&&/^(startup-reconcile|reconcile|resume|pageshow|network-restored)$/.test(String(reason||''))){clear(key);setState(s,'checked',hhmm());}
@@ -114,3 +114,4 @@
   function pending(key){return read(key);}function state(key){var s=C[key];return s?{state:s.state,detail:s.stateDetail,lastRun:s.lastRun}:null;}
   g.GAAutoSync={version:VERSION,install:install,schedule:schedule,markDirty:schedule,run:run,flush:run,pending:pending,state:state};
 })(window);
+

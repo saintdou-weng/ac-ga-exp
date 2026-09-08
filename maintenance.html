@@ -179,14 +179,14 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js"></script>
+<script src="shared/ga-core.js?v=3.9.17"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js?v=3.9.3-20260825"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.5-20260826"></script>
+<script src="shared/ga-telegram.js?v=3.9.17"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.17"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.3-20260825"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.5-20260826"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.17"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.17"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1035,7 +1035,7 @@ async function mtCloudDownload(opts){
     GA.cloud.mount('#ga-cloud');
     const r=await GA.cloud.download('maintenance');
     const d=r.data||r;
-    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){if(!opts.silent)showToast(lang==='zh'?'☁️ 雲端尚無維修／臨採備份':'No maintenance cloud backup yet');return false;}
+    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){if(!opts.silent)showToast(lang==='zh'?'☁️ 雲端尚無維修／臨採備份':'No maintenance cloud backup yet');return true;}
     currentData.rep=mtMergeRows(currentData.rep,d.rep);
     currentData.po=mtMergeRows(currentData.po,d.po);
     if(d.drafts){try{localStorage.setItem('mt_import_draft',JSON.stringify(d.drafts));}catch(e){}}
