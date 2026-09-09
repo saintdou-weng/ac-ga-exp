@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   AC-GA-EXP Platform · shared/ga-core.js   v2.0
+   AC-GA-EXP Platform · shared/ga-core.js   v2.1
    共用核心：設定 / GAS 客戶端 / 三語 i18n / 本地日期 / 期間控制 /
              雲端同步 / Toast / 表格 / 圖表登錄
    ─────────────────────────────────────────────────────────────────
@@ -14,7 +14,8 @@
 'use strict';
 
 var GA = global.GA = global.GA || {};
-GA.VERSION = '2.0';
+GA.VERSION = '2.1';
+GA.PLATFORM_VERSION = '3.9.18';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
@@ -93,28 +94,140 @@ GA.requestJSON = function (url, options, timeoutMs) {
 };
 
 GA.gasGet = function (action, params) {
-  var base = GA.gasUrl();
-  var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action);
-  params = params || {};
-  for (var k in params) {
-    if (!params.hasOwnProperty(k)) continue;
-    var v = params[k];
-    if (v === undefined || v === null || v === '') continue;
-    url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
+  function send() {
+    var base = GA.gasUrl();
+    var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action);
+    params = params || {};
+    for (var k in params) {
+      if (!params.hasOwnProperty(k)) continue;
+      var v = params[k];
+      if (v === undefined || v === null || v === '') continue;
+      url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
+    }
+    var s = GA.session(); if (s) url += '&session=' + encodeURIComponent(s);
+    return GA.requestJSON(url);
   }
-  var s = GA.session(); if (s) url += '&session=' + encodeURIComponent(s);
-  return GA.requestJSON(url);
+  /* ping is the read-only contract probe itself. Every other named request
+     first requires a backend that rejects unknown actions; otherwise an old
+     deployment can return a generic ok:true and make a missing download look
+     successful. */
+  var gate = action === 'ping' || !GA.backend || !GA.backend.require
+    ? Promise.resolve() : GA.backend.require('strictActionErrors', { action:action });
+  return gate.then(send).catch(function (e) {
+    throw GA.normalizeCloudError(e, action);
+  });
 };
 
 GA.gasPost = function (action, payload, extra) {
-  var body = { action: action, data: payload };
-  if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) body[k] = extra[k];
-  var s = GA.session(); if (s) body.session = s;
-  return GA.requestJSON(GA.gasUrl(), {
-    method: 'POST',
-    body: JSON.stringify(body),
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' }   // 避免 CORS preflight
+  function send() {
+    var body = { action: action, data: payload };
+    if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) body[k] = extra[k];
+    var s = GA.session(); if (s) body.session = s;
+    return GA.requestJSON(GA.gasUrl(), {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }   // 避免 CORS preflight
+    }).then(function (r) {
+      /* AC_GA_EXP.gs signs every handled response with revision. A bare
+         {ok:true} is the legacy fall-through that caused phantom saves. */
+      if (!r || r.revision === undefined || r.revision === null) {
+        var e = new Error(GA.backendMessage(action));
+        e.code = 'BACKEND_OUTDATED'; e.action = action; e.payload = r;
+        throw e;
+      }
+      return r;
+    });
+  }
+  var gate = !GA.backend || !GA.backend.require
+    ? Promise.resolve() : GA.backend.require('strictActionErrors', { action:action });
+  return gate.then(send).catch(function (e) {
+    throw GA.normalizeCloudError(e, action);
   });
+};
+
+/* ── Backend contract / compatibility ──────────────────────────────
+   A cached HTML page can be newer than the user's saved GAS Web App.
+   In that state an unknown POST must never be treated as a successful save.
+   Keep the current data destination unchanged, retain the local outbox, and
+   tell the user exactly which deployed capability is missing.              */
+var BACKEND_CACHE = {};
+function backendLang() {
+  var l = GA.lang || GA.cfg().lang || 'zh';
+  return l === 'en' || l === 'km' ? l : 'zh';
+}
+function backendText(zh, en, km) {
+  var l = backendLang(); return l === 'en' ? en : l === 'km' ? km : zh;
+}
+function isCompatibilityMessage(v) {
+  return /unknown\s+action|unsupported\s+(?:action|module|capability)|not\s+implemented|client[_\s-]*update|does\s+not\s+support/i.test(String(v || ''));
+}
+GA.isBackendCompatibilityError = function (e) {
+  return !!(e && (e.code === 'BACKEND_OUTDATED' || e.code === 'UNKNOWN_ACTION' || e.code === 'CLIENT_UPDATE' || isCompatibilityMessage(e.message)));
+};
+GA.backendMessage = function (action, version) {
+  var name = action || 'cloud action';
+  var suffix = version ? ' (GS ' + version + ')' : '';
+  return backendText(
+    '目前儲存的 GAS 部署不支援「' + name + '」' + suffix + '。資料仍保留在本機，且不會標記為已同步。請把本包 AC_GA_EXP.gs 更新到同一個 Apps Script 現有部署後再重試。',
+    'The saved GAS deployment does not support "' + name + '"' + suffix + '. Data remains local and is not marked synced. Update the existing Apps Script deployment with this package\'s AC_GA_EXP.gs, then retry.',
+    'GAS ដែលបានរក្សាទុកមិនគាំទ្រ "' + name + '"' + suffix + '។ ទិន្នន័យនៅក្នុងម៉ាស៊ីន ហើយមិនត្រូវបានសម្គាល់ថា Sync ទេ។ សូមដាក់ AC_GA_EXP.gs កំណែថ្មីទៅ deployment ដដែល ហើយសាកម្ដងទៀត។'
+  );
+};
+GA.showBackendIssue = function (action, detail) {
+  if (!global.document || !document.body) return;
+  var id = 'ga-backend-alert', box = document.getElementById(id);
+  if (!box) {
+    box = document.createElement('div'); box.id = id; box.setAttribute('role', 'alert');
+    box.style.cssText = 'position:sticky;top:0;z-index:10000;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#fff1f2;color:#9f1239;border:1px solid #fda4af;font:600 12px/1.5 system-ui,sans-serif;box-shadow:0 2px 10px rgba(15,23,42,.12)';
+    box.innerHTML = '<span data-ga-backend-text></span><button type="button" data-ga-backend-retry style="margin-left:auto;border:1px solid #be123c;background:#fff;color:#9f1239;border-radius:7px;padding:5px 9px;font-weight:700;cursor:pointer">' +
+      backendText('重新檢查','Retry check','ពិនិត្យម្ដងទៀត') + '</button>';
+    document.body.insertBefore(box, document.body.firstChild);
+    box.querySelector('[data-ga-backend-retry]').onclick = function () {
+      GA.backend.check(true).then(function (info) {
+        var required = box.getAttribute('data-capability') || '';
+        if (!required || info.capabilities.indexOf(required) >= 0) {
+          box.remove(); try { global.dispatchEvent(new CustomEvent('ga-backend-ready', { detail: info })); } catch (_) {}
+        } else box.querySelector('[data-ga-backend-text]').textContent = GA.backendMessage(required, info.version);
+      }).catch(function (e) { box.querySelector('[data-ga-backend-text]').textContent = e.message; });
+    };
+  }
+  box.setAttribute('data-capability', action || '');
+  box.querySelector('[data-ga-backend-text]').textContent = '⚠ ' + (detail || GA.backendMessage(action));
+};
+GA.normalizeCloudError = function (e, action) {
+  e = e instanceof Error ? e : new Error(String(e || 'Cloud error'));
+  e.action = e.action || action || '';
+  if (GA.isBackendCompatibilityError(e)) {
+    if (!e.originalMessage) e.originalMessage = e.message;
+    e.code = 'BACKEND_OUTDATED';
+    e.message = GA.backendMessage(action || e.action);
+    GA.showBackendIssue(action || e.action, e.message);
+  }
+  return e;
+};
+GA.backend = {
+  check: function (force) {
+    var url = GA.gasUrl(), hit = BACKEND_CACHE[url];
+    if (!force && hit && Date.now() - hit.at < 60000) return hit.promise;
+    var p = GA.gasGet('ping', { _t: Date.now() }).then(function (r) {
+      var d = r && r.data && typeof r.data === 'object' ? Object.assign({}, r, r.data) : (r || {});
+      return { ok:true, url:url, version:String(d.version || ''), capabilities:Array.isArray(d.capabilities) ? d.capabilities.slice() : [], actions:d.actions || {}, raw:r };
+    });
+    BACKEND_CACHE[url] = { at:Date.now(), promise:p };
+    return p.catch(function (e) { delete BACKEND_CACHE[url]; throw e; });
+  },
+  require: function (capability, opt) {
+    opt = opt || {};
+    return this.check(!!opt.force).then(function (info) {
+      if (info.capabilities.indexOf(capability) < 0) {
+        var e = new Error(GA.backendMessage(opt.action || capability, info.version));
+        e.code = 'BACKEND_OUTDATED'; e.action = opt.action || capability; e.backend = info;
+        GA.showBackendIssue(capability, e.message); throw e;
+      }
+      return info;
+    });
+  },
+  clear: function () { BACKEND_CACHE = {}; }
 };
 
 /* ═══════════════════ 3. 三語 i18n ═══════════════════ */

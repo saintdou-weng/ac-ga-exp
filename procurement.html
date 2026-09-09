@@ -343,13 +343,13 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.17a"></script>
+<script src="shared/ga-core.js?v=3.9.18"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js?v=3.9.17a"></script>
+<script src="shared/ga-telegram.js?v=3.9.18"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.17a"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.18"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -683,9 +683,7 @@ async function saveStateCloud(){
     Object.entries(ords).forEach(([k,v])=>{if(v&&(v.qty>0||v.note))compactOrds[k]=v;});
     const data={ords:compactOrds,poStatus,sigs,curMonth,itemSettings,poNumber,submitAckId,hiddenItems,customItems,recvLog};
     try{if(window.GA&&GA.cloud){GA.cloud.mount('#ga-cloud');GA.cloud.set('sync','Auto saving…')}}catch(_){ }
-    const resp=await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveState",data})});
-    let j={};try{j=await resp.json()}catch(_){ }if(!resp.ok||j.ok===false)throw new Error(j.error||j.message||('HTTP '+resp.status));
+    await GA.gasPost('saveState',data);
     try{if(window.GA&&GA.cloud){GA.cloud.set('up','Auto saved');GA.saveCfg({sync_procurement:new Date().toISOString()})}}catch(_){ }
     return true;
   }catch(e){console.warn("Cloud save failed:",e);try{if(window.GA&&GA.cloud)GA.cloud.set('err',e.message||'Auto save failed')}catch(_){ }return false;}
@@ -696,8 +694,7 @@ function saveState(){
 }
 async function loadStateCloud(){
   try{
-    const resp=await fetch(`${GAS_URL}?action=getState`);
-    const json=await resp.json();
+    const json=await GA.gasGet('getState');
     if(json.ok&&json.data){
       const s=json.data;
       if(s.ords){ Object.entries(s.ords).forEach(([k,v])=>{ords[k]=v;}); }
@@ -724,8 +721,7 @@ async function loadStateCloud(){
 
 async function loadInvCloud(year){
   try{
-    const resp=await fetch(`${GAS_URL}?action=getInventory&year=${year}`);
-    const json=await resp.json();
+    const json=await GA.gasGet('getInventory',{year:year});
     if(json.ok&&json.data){
       Object.entries(json.data).forEach(([month,items])=>{
         const key=`${year}_${month}`;
@@ -739,20 +735,18 @@ async function loadInvCloud(year){
 
 async function saveInvCloud(year, month, records){
   try{
-    await fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify({action:"saveInventory",data:{year,month,records}})});
-  }catch(e){console.warn("Inv save failed:",e);}
+    await GA.gasPost('saveInventory',{year,month,records});
+    return true;
+  }catch(e){console.warn("Inv save failed:",e);throw e;}
 }
 
 async function exportYearExcel(year){
   try{
     showCloudLoading(lang==="zh"?`☁️ 載入 ${year} 年資料...`:`☁️ Loading ${year} data...`);
-    const [histResp, invResp]=await Promise.all([
-      fetch(`${GAS_URL}?action=getHistory&year=${year}`),
-      fetch(`${GAS_URL}?action=getInventory&year=${year}`),
+    const [histJson, invJson]=await Promise.all([
+      GA.gasGet('getHistory',{year:year}),
+      GA.gasGet('getInventory',{year:year}),
     ]);
-    const histJson=await histResp.json();
-    const invJson=await invResp.json();
     hideCloudLoading();
     if(histJson.ok && invJson.ok){
       generateYearExcel(year, histJson.data||[], invJson.data||{});
@@ -1286,11 +1280,10 @@ let poHistoryData = [];
 
 async function loadPOHistory() {
   try {
-    const [resp, recvResp] = await Promise.all([
-      fetch(`${GAS_URL}?action=getHistory&year=${YEAR}`),
-      fetch(`${GAS_URL}?action=monthlyPoApproved&year=${YEAR}`)
+    const [json, recvJson] = await Promise.all([
+      GA.gasGet('getHistory',{year:YEAR}),
+      GA.gasGet('monthlyPoApproved',{year:YEAR})
     ]);
-    const json = await resp.json(), recvJson = await recvResp.json();
     if (json.ok) {
       poHistoryData = json.data || [];
       const recvMap = {};
@@ -1351,8 +1344,7 @@ async function voidPO(poId, poNum) {
     : `Void PO ${poNum}?\nInventory will be reversed automatically.`;
   if (!confirm(msg)) return;
   try {
-    const resp = await fetch(`${GAS_URL}?action=voidPO&poId=${encodeURIComponent(poId)}&userName=${encodeURIComponent(cu.name)}`);
-    const json = await resp.json();
+    const json = await GA.gasGet('voidPO',{poId:poId,userName:cu.name});
     if (json.ok) {
       alert(lang==="zh" ? "✅ 已作廢，庫存已回退！" : "✅ Voided! Inventory reversed.");
       await loadPOHistory();
@@ -2215,8 +2207,7 @@ function _procCurrentFp(){
 }
 async function _procFindExistingServerPO(){
   try{
-    const r=await fetch(`${GAS_URL}?action=getHistory&year=${YEAR}&_=${Date.now()}`,{cache:'no-store'});
-    const j=await r.json();
+    const j=await GA.gasGet('getHistory',{year:YEAR,_:Date.now()});
     if(!j.ok) return null;
     const all=j.data||[];
     // Prefer the exact server PO id already acknowledged by GAS.
@@ -2251,10 +2242,7 @@ function _procApplyServerPO(po){
 }
 function _procSession(){ try{return (GA.cfg&&GA.cfg().session)||'';}catch(_){return '';} }
 async function _procPost(action,data){
-  const payload={action:action,data:Object.assign({},data||{},{session:_procSession()}),session:_procSession()};
-  const r=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
-  const txt=await r.text(); let j={}; try{j=txt?JSON.parse(txt):{};}catch(_){j={ok:false,error:txt||('HTTP '+r.status)};}
-  if(!r.ok||j.ok===false) throw new Error(j.error||j.msg||j.message||('HTTP '+r.status));
+  const j=await GA.gasPost(action,Object.assign({},data||{},{session:_procSession()}));
   return j.data||j;
 }
 async function _procEnsureTelegram(po){
@@ -2312,10 +2300,7 @@ async function doSubmit(forceRetry){
     }));
     const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()};
     try{GA.toast(lang==="zh"?"📤 正在送審並通知 Telegram 群組…":"📤 Submitting and notifying Telegram group…");}catch(_){ }
-    const resp=await fetch(GAS_URL+"?action=submit&data="+encodeURIComponent(JSON.stringify(payload))+"&_="+Date.now(),{cache:'no-store'});
-    const txt=await resp.text();
-    let out={}; try{out=txt?JSON.parse(txt):{};}catch(_){out={ok:resp.ok};}
-    if(!resp.ok||out.ok===false) throw new Error(out.msg||out.error||('HTTP '+resp.status));
+    const out=await GA.gasGet('submit',{data:JSON.stringify(payload),_:Date.now()});
     // IMPORTANT: only sign locally AFTER GAS confirms the request.
     poStatus="submitted";
     sigs.applicant={name:cu.name,date:new Date().toLocaleDateString()};
@@ -2762,19 +2747,23 @@ GA.addDict({
     kPO:'ចំនួន PO',kPend:'រង់ចាំ',kAppr:'អនុម័ត',kItems:'ធាតុ',kLow:'ស្តុកតិច',kQty:'បរិមាណសរុប' }
 });
 
-function procCloudUp(){
+async function procCloudUp(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  saveStateCloud().then(()=>{ GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態'); })
-    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); });
+  try{
+    if(await saveStateCloud()!==true) throw new Error('雲端未確認儲存 / Cloud did not confirm save');
+    GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態');
+  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); }
 }
-function procCloudDown(){
+async function procCloudDown(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
-  loadStateCloud().then(()=>{ GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態'); })
-    .catch(e=>{ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); });
+  try{
+    if(await loadStateCloud()!==true) throw new Error('雲端未回傳可用資料 / Cloud returned no usable state');
+    GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態');
+  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); }
 }
 /* v3.9.15: startup already pulls; resume/network also refresh automatically when no unsaved local change is queued. */
 let _procAutoPullAt=0;
-function procAutoPull(reason){if(_saveTimer)return;const now=Date.now();if(now-_procAutoPullAt<2500)return;_procAutoPullAt=now;loadStateCloud().then(()=>{try{GA.cloud.mount('#ga-cloud');GA.cloud.set('down','Auto '+(reason||'refresh'))}catch(_){ }render();}).catch(e=>{try{GA.cloud.set('err',e.message||'Auto refresh failed')}catch(_){ }});}
+function procAutoPull(reason){if(_saveTimer)return;const now=Date.now();if(now-_procAutoPullAt<2500)return;_procAutoPullAt=now;loadStateCloud().then(ok=>{if(ok!==true)throw new Error('Auto refresh was not confirmed');try{GA.cloud.mount('#ga-cloud');GA.cloud.set('down','Auto '+(reason||'refresh'))}catch(_){ }render();}).catch(e=>{try{GA.cloud.set('err',e.message||'Auto refresh failed')}catch(_){ }});}
 window.addEventListener('online',()=>setTimeout(()=>procAutoPull('network'),120));
 window.addEventListener('focus',()=>setTimeout(()=>procAutoPull('focus'),120));
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>procAutoPull('resume'),120)});
@@ -3259,7 +3248,7 @@ initLogin();
   window.procSummarySend=async function(){
     var b=document.getElementById('proc-summary-send');if(b.disabled)return;b.disabled=true;
     try{var L=document.getElementById('proc-summary-lang').value||'zh',R=pRange(procSummaryPtype,procSummaryAnchor),label=pLabel(procSummaryPtype,procSummaryAnchor);var d=await _procPost('procSendSummary',{ptype:procSummaryPtype,start:R[0],end:R[1],label:label,lang:L});
-      var x=d&&d.data?d.data:d;if(x&&x.skippedDuplicate)GA.toast('☑ Summary already sent / 摘要內容未變，不重複發送');else GA.toast('✅ Summary sent to Telegram group · '+((x&&x.count)||0)+' PO');
+      var x=d&&d.data?d.data:d,result=GA.telegram.deliveryResult(x);if(!result.ok)throw new Error(result.text+(result.errors.length?' · '+result.errors.join(' | '):''));GA.toast((result.duplicate?'☑ ':'✅ ')+result.text+' · '+((x&&x.count)||0)+' PO');
       procSummaryClose();
     }catch(e){GA.toast('❌ Summary send failed: '+e.message,'err')}finally{b.disabled=false}
   };
@@ -3274,7 +3263,7 @@ initLogin();
   var baseFind=window._procFindExistingServerPO;
   window._procFindExistingServerPO=async function(){
     try{
-      var r=await fetch(GAS_URL+'?action=getHistory&year='+YEAR+'&_='+Date.now(),{cache:'no-store'}),j=await r.json(),all=(j&&j.data)||[];
+      var j=await GA.gasGet('getHistory',{year:YEAR,_:Date.now()}),all=(j&&j.data)||[];
       if(submitAckId){var x=all.find(function(po){return String(po.poId||'')===String(submitAckId)});if(x)return x}
       if(poNumber){var y=all.find(function(po){return String(po.poNumber||'')===String(poNumber)});if(y)return y}
     }catch(e){}

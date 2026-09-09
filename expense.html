@@ -10,12 +10,12 @@
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.6-20260824" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.6-20260824'">
-<script src="shared/ga-core.js?v=3.9.17a"></script>
+<script src="shared/ga-core.js?v=3.9.18"></script>
 <script src="shared/ga-data.js?v=3.6-20260824"></script>
 <script src="shared/ga-import.js?v=3.6-20260824"></script>
-<script src="shared/ga-telegram.js?v=3.9.17a"></script>
-<script src="shared/ga-smart-sync.js?v=3.8-20260824"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.17a"></script>
+<script src="shared/ga-telegram.js?v=3.9.18"></script>
+<script src="shared/ga-smart-sync.js?v=3.9.18"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.18"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.9.9-20260828" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.9-20260828'"></script>
 <script id="ga-exp-xlsb-utility-inline-v399">
 (function(global){
@@ -196,7 +196,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.9-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.8-20260824"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.9-20260828"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -714,6 +714,7 @@ function expCloudUpload(opts){
   opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url){return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));}
   expSyncStatus(opts.silent?'背景同步中…':'智慧同步中…','sync');
   return GASmartSync.push({url:url,tool:EXP_SMART_TOOL,records:expSyncRows(),meta:expSyncMeta(),legacyToRecords:expLegacyToSync,autoMerge:true,onStatus:expSyncStatus,summary:{records:allRows().length,periods:expPeriodKeys('month').length}}).then(function(r){
+    if(!r||r.ok!==true||r.needsPull||r.cancelled)throw new Error('Expense cloud upload was not confirmed');
     try{GA.saveCfg({sync_expense:new Date().toISOString()});}catch(e){}
     expSyncStatus(r&&r.skipped?'雲端已是最新':'上傳完成｜雲端資料已保留','up');
     if(!opts.silent)GA.toast(r&&r.skipped?'☁️ 已是最新':'☁️ 已上傳並保留雲端歷史','success');
@@ -725,6 +726,7 @@ function expCloudDownload(opts){
   expSyncStatus('智慧下載中…','sync');
   return GASmartSync.pull({url:url,tool:EXP_SMART_TOOL,localRecords:expSyncRows(),legacyToRecords:expLegacyToSync,apply:expApplySync,onStatus:expSyncStatus}).then(function(r){
     if(r&&r.noCloud){expSyncStatus('雲端尚無費用資料','idle');if(!opts.silent)GA.toast('☁️ 雲端尚無費用資料','warning');return r;}
+    if(!r||r.ok!==true||r.cancelled)throw new Error('Expense cloud download was not confirmed');
     expSyncStatus('下載完成｜保留本機與雲端資料','down');if(!opts.silent)GA.toast('📥 已同步雲端資料（本機資料保留）','success');return r;
   }).catch(function(e){expSyncStatus(e.message,'err');if(!opts.silent)GA.toast('❌ 下載失敗：'+e.message,'err');throw e;});
 }
@@ -738,7 +740,7 @@ function expDownload(){return expCloudDownload({silent:false});}
 /* 不依賴每個模組重複改 modal：費用的摘要／核可成功後都自動排程背景同步。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){doExpenseImport(this.files);});})();
-loadData();ensureExpenseModel();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.9.14',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
+loadData();ensureExpenseModel();GA.boot({header:{sel:'#ga-header',icon:'💰',name:'Expense Center 費用中心',version:'v3.9.18',cloudKey:'expense',onUpload:expUpload,onDownload:expDownload,onTelegram:expTelegram,onImport:expImport,onExport:expExport}});
 if(window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownload,push:expCloudUpload,canSync:function(){return !!(GA.gasUrl&&GA.gasUrl());},startDelay:120,anchor:'#ga-cloud'});}else{setTimeout(function(){try{expCloudDownload({silent:true}).catch(function(){})}catch(_){ }},120);try{if(localStorage.getItem(EXP_SMART_PENDING))setTimeout(function(){scheduleExpenseAutoCloudSync('retry');},250);}catch(e){}}
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
 pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){saveExpenseUI();render();}});restoreExpenseUI();GA.on('lang',function(){render();});saveExpenseUI();render();

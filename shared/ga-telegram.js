@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   AC-GA-EXP Platform · shared/ga-telegram.js   v3.9.3
+   AC-GA-EXP Platform · shared/ga-telegram.js   v3.9.18
    Telegram：摘要 Summary 與 核可 Approval 完全分離
    ─────────────────────────────────────────────────────────────────
    摘要 Summary：
@@ -59,7 +59,7 @@ TG.groups = function (force) {
   });
 };
 TG.matchesModule=function(list,module){var alias={fuel:'diesel',recv:'receiving',transport:'transportation'},wanted=alias[module]||module;return String(list||'all').toLowerCase().split(/[\s,;]+/).some(function(m){return m==='all'||(alias[m]||m)===wanted;});};
-TG.deliveryResult=function(d){d=d||{};var errors=d.errors||[],duplicate=!!d.skippedDuplicate,receipts=d.receipts||[],confirmed=Number(d.sent)>0&&receipts.some(function(r){return r.chatId&&r.messageId;});return {ok:confirmed&&!errors.length,duplicate:duplicate,receipts:receipts,text:duplicate?'相同摘要已略過，本次沒有新發送 / Duplicate skipped; no new message':confirmed?'Telegram 已確認 '+Number(d.sent)+' 個群組 / '+Number(d.sent)+' group(s) confirmed':Number(d.sent)>0?'伺服器回報已發送，但缺少訊息編號；請更新 GS 後核對 / Server reports sent but no message receipt; update GAS and verify':'未取得群組發送確認 / No group delivery confirmation',errors:errors};};
+TG.deliveryResult=function(d){d=d||{};var errors=Array.isArray(d.errors)?d.errors:[],duplicate=!!d.skippedDuplicate,receipts=Array.isArray(d.receipts)?d.receipts:[],receiptCount=receipts.filter(function(r){return r&&r.chatId&&r.messageId;}).length,confirmed=receiptCount>0&&(Number(d.sent)>0||duplicate);return {ok:confirmed&&!errors.length,duplicate:duplicate,receipts:receipts,text:duplicate&&confirmed?'相同摘要先前已送達；請由下方回執開啟原訊息。若要新增一則，請勾選「重新發一則」 / Same summary was already delivered; open the original receipt below. Check “send a new copy” to post another message':duplicate?'後端表示摘要重複，但沒有原訊息回執；請更新 GAS 後再核對 / Backend reports a duplicate but provided no original receipt; update GAS and verify':confirmed?'Telegram 已確認 '+receiptCount+' 則訊息、'+Number(d.sent)+' 個群組 / '+receiptCount+' message receipt(s), '+Number(d.sent)+' group(s) confirmed':Number(d.sent)>0?'伺服器回報已發送，但缺少群組 Message ID；不可視為送達，請更新 GAS / Server reports sent but no group Message ID; delivery is unconfirmed, update GAS':'未取得群組發送確認 / No group delivery confirmation',errors:errors};};
 
 /* ═══════════ 開啟視窗 ═══════════
    opt = {
@@ -136,7 +136,7 @@ TG.open = function (opt) {
           '<pre id="tg-pv" class="ga-pre"></pre></div>' +
         '<p id="tg-result" role="status" style="white-space:pre-wrap"></p>' +
         '<div id="tg-receipts"></div>' +
-        '<label id="tg-resend-label"><input type="checkbox" id="tg-resend"> '+(GA.lang==='zh'?'刻意再發一次（新增群組訊息）':'Send a new copy intentionally')+'</label>' +
+        '<label id="tg-resend-label"><input type="checkbox" id="tg-resend"> '+(GA.lang==='zh'?'重新發一則新訊息（未勾選時，相同摘要只顯示原訊息）':'Send a new copy (otherwise an identical summary opens the original receipt)')+'</label>' +
         '<p class="ga-note" id="tg-note">' + GA.T('tgNoteSum') + '</p>' +
       '</div>' +
       '<div class="ga-modal-f">' +
@@ -242,15 +242,20 @@ TG.open = function (opt) {
       if(latest!==el('tg-pv').textContent){el('tg-pv').textContent=latest;done(GA.lang==='zh'?'同步後資料已更新，請核對預覽再按確認傳送':'Data changed after sync. Review the updated preview and send again.',false);return;}
       if(el('tg-resend').checked&&!resendKey)resendKey=crypto.randomUUID();
       /* 摘要：後端只發訊息，不建 batch、不加按鈕、不改狀態 */
-      GA.gasPost('tgSummary', {
-        module: opt.module, scope: st.scope,
-        ptype: st.ptype, period: st.period,
-        lang: st.lang, chatId: st.group,
-        text: el('tg-pv').textContent,resendKey:el('tg-resend').checked?resendKey:''
-      }).then(function (r) {
-        var d=r.data||r,result=TG.deliveryResult(d);showReceipts(result.receipts);done(result.text+(result.errors.length?' · '+result.errors.join(' | '):''),result.ok);
-        if (result.ok&&opt.onSummarySent) opt.onSummarySent(d, st);
-      }).catch(function (e) {showReceipts(e.payload&&e.payload.data&&e.payload.data.receipts||[]);done('❌ ' + e.message, false);});
+      try {
+        /* Older GAS versions can say ok/sent without returning a Telegram
+           message receipt.  Require the receipt contract before attempting
+           a summary so the UI never reports a phantom delivery. */
+        if (GA.backend && GA.backend.require) await GA.backend.require('tgSummaryReceipt', { action:'tgSummary' });
+        var response = await GA.gasPost('tgSummary', {
+          module: opt.module, scope: st.scope,
+          ptype: st.ptype, period: st.period,
+          lang: st.lang, chatId: st.group,
+          text: el('tg-pv').textContent,resendKey:el('tg-resend').checked?resendKey:''
+        });
+        var data=response.data||response,result=TG.deliveryResult(data);showReceipts(result.receipts);done(result.text+(result.errors.length?' · '+result.errors.join(' | '):''),result.ok);
+        if (result.ok&&opt.onSummarySent) opt.onSummarySent(data, st);
+      } catch (e) {showReceipts(e.payload&&e.payload.data&&e.payload.data.receipts||[]);done('❌ ' + e.message, false);}
 
     } else {
       var items = opt.approvalItems ? (opt.approvalItems(st) || []) : [];
@@ -266,6 +271,9 @@ TG.open = function (opt) {
         items: items
       }).then(function (r) {
         var d = r.data || {};
+        var receipt=d.receipt||{};
+        if(!d.chatId||!d.messageId||!receipt.chatId||!receipt.messageId)throw new Error(GA.lang==='zh'?'Telegram 未回傳群組 Message ID，核可請求不可視為已送達':'Telegram returned no group Message ID; approval delivery is unconfirmed');
+        showReceipts([receipt]);
         done('📋 ' + (d.updated ? (GA.lang === 'zh' ? '已更新原核可訊息' : 'Updated existing request')
                                 : (GA.lang === 'zh' ? '核可請求已送出' : 'Approval request sent')), true);
         if (opt.onApprovalSent) opt.onApprovalSent(d, st);

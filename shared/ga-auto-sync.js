@@ -1,4 +1,4 @@
-/* AC-GA-EXP Auto Sync v1.0 — 2026-08-26
+/* AC-GA-EXP Auto Sync v1.1 — 2026-09-09
  * Adapted from AC-HRA-PAY Auto Sync v1.2 behavior.
  *
  * Goals:
@@ -14,7 +14,7 @@
   'use strict';
   if(g.GAAutoSync)return;
 
-  var VERSION='1.0', C={}, PFX='gaexp:auto2:';
+  var VERSION='1.1', C={}, PFX='gaexp:auto2:';
   function online(){try{return !('onLine' in navigator)||navigator.onLine;}catch(_){return true;}}
   function read(k){try{return JSON.parse(localStorage.getItem(PFX+k)||'null');}catch(_){return null;}}
   function write(k,v){try{localStorage.setItem(PFX+k,JSON.stringify(v));}catch(_){} }
@@ -54,6 +54,7 @@
     if(state==='syncing')return tr('☁ 同步中…','☁ Syncing…','☁ កំពុង Sync…');
     if(state==='synced')return tr('✅ 雲端已同步','✅ Cloud synced','✅ Cloud បាន Sync')+(detail?' '+detail:'');
     if(state==='offline')return tr('☁ 離線待傳','☁ Offline pending','☁ Offline រង់ចាំ');
+    if(state==='incompatible')return tr('⛔ GAS 版本不相容','⛔ GAS version incompatible','⛔ កំណែ GAS មិនត្រូវគ្នា');
     if(state==='retry')return tr('⚠ 雲端待重試','⚠ Cloud retry','⚠ Cloud រង់ចាំសាកឡើងវិញ');
     if(state==='checked')return tr('☁ 已檢查','☁ Checked','☁ បានពិនិត្យ')+(detail?' '+detail:'');
     return tr('☁ 自動同步','☁ Auto sync','☁ Sync ស្វ័យប្រវត្តិ');
@@ -65,6 +66,7 @@
       else if(state==='synced'||state==='checked'){bg='#ecfdf5';fg='#047857';bd='#a7f3d0';}
       else if(state==='dirty'){bg='#fffbeb';fg='#b45309';bd='#fde68a';}
       else if(state==='offline'||state==='retry'){bg='#fff7ed';fg='#c2410c';bd='#fed7aa';}
+      else if(state==='incompatible'){bg='#fff1f2';fg='#be123c';bd='#fda4af';}
       el.style.background=bg;el.style.color=fg;el.style.borderColor=bd;el.title='AC-GA-EXP Auto Sync · '+stateText(state,detail);
     }
     try{g.dispatchEvent(new CustomEvent('ga-autosync-state',{detail:{key:s.key,state:state,detail:detail||'',at:Date.now()}}));}catch(_){}
@@ -93,7 +95,7 @@
         else if(!priorPending&&/^(startup-reconcile|reconcile|resume|pageshow|network-restored)$/.test(String(reason||''))){clear(key);setState(s,'checked',hhmm());}
         else{write(key,{reason:reason,extra:extra,at:Date.now()});setState(s,'retry');}
         return ok;
-      }catch(e){write(key,{reason:reason,extra:extra,at:Date.now()});setState(s,'retry');if(s.opts.log!==false)console.warn('[GAAutoSync '+key+']',e);return false;}
+      }catch(e){write(key,{reason:reason,extra:extra,at:Date.now()});var incompatible=!!(g.GA&&GA.isBackendCompatibilityError&&GA.isBackendCompatibilityError(e));setState(s,incompatible?'incompatible':'retry',e&&e.message||'');if(s.opts.log!==false)console.warn('[GAAutoSync '+key+']',e);return false;}
       finally{s.busy=false;if(s.queued){var q=s.queued;s.queued=null;schedule(q.reason,q.extra,250);}}
     }
     function schedule(reason,extra,delay){
@@ -114,4 +116,3 @@
   function pending(key){return read(key);}function state(key){var s=C[key];return s?{state:s.state,detail:s.stateDetail,lastRun:s.lastRun}:null;}
   g.GAAutoSync={version:VERSION,install:install,schedule:schedule,markDirty:schedule,run:run,flush:run,pending:pending,state:state};
 })(window);
-

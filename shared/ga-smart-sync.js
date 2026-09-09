@@ -1,4 +1,4 @@
-/* AC HRA Portal Smart Sync v1.7
+/* AC HRA Portal Smart Sync v1.8
  * Bucket-level incremental sync for the HRA Portal.
  *
  * The existing attendance page has its own date-shard protocol and keeps using
@@ -12,7 +12,7 @@
   'use strict';
   if (g.HRASmartSync) { if (!g.GASmartSync) g.GASmartSync = g.HRASmartSync; return; }
 
-  var VERSION = '1.7';
+  var VERSION = '1.8';
   var STATE_PREFIX = 'ac_hra_smart_sync_v2_';
   var FULL_CACHE_DB = 'AC_HRA_FullCloudCache_v1', FULL_CACHE_STORE = 'snapshots';
   var nativeFetch = g.fetch ? g.fetch.bind(g) : null;
@@ -41,6 +41,16 @@
   function canonicalTool(v) {
     var raw = text(v).trim().toLowerCase().replace(/\s+/g, '_');
     return TOOL_ALIASES[raw] || raw || 'tool';
+  }
+  function gaCloudContract(tool) {
+    var c = canonicalTool(tool);
+    /* Receiving and Expense belong to AC-GA-EXP. Their legacy generic
+       `push` endpoint can acknowledge an unknown action without saving it,
+       so these two modules must use the current smart-sync contract. */
+    if (['receiving','expense'].indexOf(c) >= 0 && g.GA && GA.backend && GA.backend.require) {
+      return GA.backend.require('smartSync', { action:'smart sync' });
+    }
+    return Promise.resolve(null);
   }
   function toolCandidates(v) {
     var raw = text(v).trim().toLowerCase().replace(/\s+/g, '_'), c = canonicalTool(raw), out = [];
@@ -701,7 +711,7 @@
     var url = text(opts.url).trim(), tool = opts.tool, records = sortRows(opts.records || []), cacheRows = records, status = opts.onStatus;
     if (!url) return Promise.reject(new Error('GAS URL missing'));
     callStatus(status, '智慧同步：比對雲端差異…', 'busy');
-    return getManifest(url, tool).then(function (remote) {
+    return gaCloudContract(tool).then(function () { return getManifest(url, tool); }).then(function (remote) {
       remote = remote || {};
       if (remote.compatibilityFallback) {
         return legacyPush(opts, records, status);
@@ -748,6 +758,7 @@
         });
       });
     }).catch(function (err) {
+      if (err && err.code === 'BACKEND_OUTDATED') throw err;
       if (!isUnsupportedSmartError(err)) throw err;
       callStatus(status, '智慧同步工具未部署，改用相容合併上傳…', 'warn');
       return legacyPush(opts, records, status);
@@ -827,7 +838,7 @@
     var url = text(opts.url).trim(), tool = opts.tool, localRows = sortRows(opts.localRecords || []), status = opts.onStatus;
     if (!url) return Promise.reject(new Error('GAS URL missing'));
     callStatus(status, '智慧拉取：比對雲端差異…', 'busy');
-    return getManifest(url, tool).then(function (remote) {
+    return gaCloudContract(tool).then(function () { return getManifest(url, tool); }).then(function (remote) {
       remote = remote || {};
       if (!remote.exists && remote.legacy) {
         return legacyPull(url, tool, status, false, opts).then(function (legacy) {
@@ -945,6 +956,7 @@
       }
       return continueSmartPull();
     }).catch(function (err) {
+      if (err && err.code === 'BACKEND_OUTDATED') throw err;
       if (!isUnsupportedSmartError(err)) throw err;
       callStatus(status, '智慧同步工具未部署，改用相容合併下載…', 'warn');
       return compatibilityPull(opts, localRows, status, err.message || err);
@@ -958,4 +970,3 @@
      bookmarks continue to work while using the HRA Portal sync engine. */
   g.GASmartSync = g.HRASmartSync;
 })(window);
-

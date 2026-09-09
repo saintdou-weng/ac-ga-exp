@@ -10,10 +10,10 @@
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.6-20260824" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.6-20260824'">
-<script src="shared/ga-core.js?v=3.9.17a"></script>
+<script src="shared/ga-core.js?v=3.9.18"></script>
 <script src="shared/ga-data.js?v=3.6-20260824"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
 </script>
 
 <style>
@@ -113,7 +113,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   <a class="kpi" href="maintenance.html" style="--kc:var(--ga-ok)"><div class="kpi-l">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">—</div></a>
   <a class="kpi" href="damage.html" style="--kc:#dc2626"><div class="kpi-l">Damage 損壞/遺失</div><div class="kpi-v" id="k-dmg">—</div><div class="kpi-s" id="k-dmg-s">—</div></a>
   <a class="kpi" href="receiving.html" style="--kc:#0891b2"><div class="kpi-l">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">—</div></a>
-<a class="kpi" href="fuel.html?v=3.9.17a" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
+<a class="kpi" href="fuel.html?v=3.9.18" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
   <a class="kpi" href="expense.html" style="--kc:var(--ga-bad)"><div class="kpi-l">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">—</div></a>
 </div>
 
@@ -152,7 +152,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
     <div class="card-flow">Create → Phea Review → Paul Approve → Document / Repair</div>
   </a>
 
-  <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=3.9.17a">
+  <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=3.9.18">
     <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
     <div class="card-top"><div class="card-ico">🛢️</div>
       <div><div class="card-en">Fuel Center</div><div class="card-name">燃油中心</div></div></div>
@@ -261,37 +261,71 @@ function closeSettings(){ document.getElementById('set-ov').classList.remove('on
 function saveSettings(){
   GA.saveCfg({ gasUrl:document.getElementById('set-gas').value.trim(),
                lang:document.getElementById('set-lang').value });
+  if(GA.backend)GA.backend.clear();
   GA.setLang(document.getElementById('set-lang').value);
   closeSettings();
   GA.toast('✅ 設定已儲存，所有模組自動套用');
   refreshDashboard();
 }
-function testGAS(){
+async function testGAS(){
   const url=document.getElementById('set-gas').value.trim();
   if(!url){ GA.toast('請先輸入 GAS URL'); return; }
   GA.saveCfg({gasUrl:url});
+  if(GA.backend)GA.backend.clear();
   GA.toast('⏳ 測試中...');
-  GA.gasGet('ping').then(d=>GA.toast('✅ 連線成功 '+(d.msg||d.ts||'')))
-    .catch(e=>GA.toast('❌ '+e.message,'err'));
+  try{
+    const info=await GA.backend.check(true), required=['strictActionErrors','dashboardV2','mobilitySync','tgSummaryReceipt','smartSync'];
+    const missing=required.filter(x=>info.capabilities.indexOf(x)<0);
+    if(missing.length){const e=new Error(GA.backendMessage(missing[0],info.version));e.code='BACKEND_OUTDATED';throw e;}
+    GA.toast('✅ 完整雲端功能已確認 · GS '+info.version+' · '+required.length+' checks');
+  }catch(e){GA.normalizeCloudError(e,'platform cloud');GA.toast('❌ '+e.message,'err');}
 }
 
 /* ── Dashboard ── */
 function fmtMoney(v){ return '$'+Number(v||0).toLocaleString(undefined,{maximumFractionDigits:0}); }
 let dashboardRequest=null;
+let dashboardSchemaWarning='';
+function dashboardPart(raw,key,defaults){
+  const value=raw&&raw[key];
+  return {available:!!value&&typeof value==='object',value:Object.assign({},defaults,value&&typeof value==='object'?value:{})};
+}
+function dashboardSet(id,value,sub){
+  const el=document.getElementById(id),small=document.getElementById(id+'-s');
+  if(el)el.textContent=value;
+  if(small)small.textContent=sub;
+}
 function refreshDashboard(){
   if(dashboardRequest)return dashboardRequest;
   if(!GA.gasUrl()){ GA.cloud.set('idle','未設定 GAS'); return; }
   GA.cloud.set('sync');
   dashboardRequest=GA.gasGet('dashboard',{_t:Date.now()}).then(d=>{
-    const s=e=>document.getElementById(e);
-    s('k-po').textContent=d.po.total;      s('k-po-s').textContent=`待審 ${d.po.pending} · 最新 ${d.po.latest||'—'}`;
-    s('k-tpo').textContent=d.tempPo.total;  s('k-tpo-s').textContent=`待審 ${d.tempPo.pending} · 核可 ${d.tempPo.approved}`;
-    s('k-rep').textContent=d.repair.total;  s('k-rep-s').textContent=`待審 ${d.repair.pending} · 緊急 ${d.repair.urgent}`;
-    if(s('k-dmg')){ s('k-dmg').textContent=(d.damage&&d.damage.total)||0; s('k-dmg-s').textContent=`待 Phea ${(d.damage&&d.damage.pending)||0} · 待 Paul ${(d.damage&&d.damage.reviewed)||0} · 核可 ${(d.damage&&d.damage.approved)||0}`; }
-    s('k-recv').textContent=d.recv.items;   s('k-recv-s').textContent=`低庫存 ${d.recv.lowStock} · 紀錄 ${d.recv.records}`;
-    s('k-dsl').textContent=(d.diesel.liters||0).toLocaleString()+'L'; s('k-dsl-s').textContent=`${d.diesel.records} 筆記錄`;
-    s('k-exp').textContent=fmtMoney(d.expense.ytd); s('k-exp-s').textContent=`${d.expense.months} 個活躍月`;
-    GA.cloud.set('down','已連線 '+(d.ts||''));
+    const raw=d&&d.data&&typeof d.data==='object'?Object.assign({},d,d.data):d||{};
+    const po=dashboardPart(raw,'po',{total:0,pending:0,latest:''});
+    const tpo=dashboardPart(raw,'tempPo',{total:0,pending:0,approved:0});
+    const rep=dashboardPart(raw,'repair',{total:0,pending:0,urgent:0});
+    const dmg=dashboardPart(raw,'damage',{total:0,pending:0,reviewed:0,approved:0});
+    const recv=dashboardPart(raw,'recv',{items:0,lowStock:0,records:0});
+    const diesel=dashboardPart(raw,'diesel',{liters:0,records:0});
+    const expense=dashboardPart(raw,'expense',{ytd:0,months:0});
+    dashboardSet('k-po',po.available?po.value.total:'—',po.available?`待審 ${po.value.pending} · 最新 ${po.value.latest||'—'}`:'此 GAS 未提供此欄位');
+    dashboardSet('k-tpo',tpo.available?tpo.value.total:'—',tpo.available?`待審 ${tpo.value.pending} · 核可 ${tpo.value.approved}`:'此 GAS 未提供此欄位');
+    dashboardSet('k-rep',rep.available?rep.value.total:'—',rep.available?`待審 ${rep.value.pending} · 緊急 ${rep.value.urgent}`:'此 GAS 未提供此欄位');
+    dashboardSet('k-dmg',dmg.available?dmg.value.total:'—',dmg.available?`待 Phea ${dmg.value.pending} · 待 Paul ${dmg.value.reviewed} · 核可 ${dmg.value.approved}`:'此 GAS 未提供此欄位');
+    dashboardSet('k-recv',recv.available?recv.value.items:'—',recv.available?`低庫存 ${recv.value.lowStock} · 紀錄 ${recv.value.records}`:'此 GAS 未提供此欄位');
+    dashboardSet('k-dsl',diesel.available?Number(diesel.value.liters||0).toLocaleString(undefined,{maximumFractionDigits:2})+'L':'—',diesel.available?`${diesel.value.records} 筆記錄`:'此 GAS 未提供此欄位');
+    dashboardSet('k-exp',expense.available?fmtMoney(expense.value.ytd):'—',expense.available?`${expense.value.months} 個活躍月`:'此 GAS 未提供此欄位');
+    const parts={po,tpo,rep,dmg,recv,diesel,expense},labels={po:'Procurement',tpo:'Temp PO',rep:'Maintenance',dmg:'Damage',recv:'Receiving',diesel:'Fuel',expense:'Expense'};
+    const missing=Object.keys(parts).filter(k=>!parts[k].available).map(k=>labels[k]);
+    if(missing.length){
+      const msg='Dashboard 已載入可用資料；目前 GAS 少了 '+missing.join(', ')+' 欄位，請更新同一個現有部署。';
+      GA.cloud.set('conflict','部分資料 · '+missing.join(', '));
+      GA.showBackendIssue('dashboardV2',msg);
+      if(dashboardSchemaWarning!==msg){dashboardSchemaWarning=msg;GA.toast('⚠️ '+msg,'err');}
+    }else{
+      dashboardSchemaWarning='';
+      const old=document.getElementById('ga-backend-alert');if(old&&old.getAttribute('data-capability')==='dashboardV2')old.remove();
+      GA.cloud.set('down','已連線 '+(raw.ts||d.ts||''));
+    }
   }).catch(e=>{ GA.cloud.set('err',e.message); GA.toast('❌ Dashboard：'+e.message,'err'); }).finally(()=>{dashboardRequest=null;});
   return dashboardRequest;
 }
@@ -386,6 +420,6 @@ refreshDashboard();
 window.addEventListener('focus',()=>{if(!document.hidden)refreshDashboard();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDashboard();});
 </script>
-<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.17a · Fuel Save / Cloud / Telegram</div>
+<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.18 · Cloud Contract / Receiving UX</div>
 </body>
 </html>

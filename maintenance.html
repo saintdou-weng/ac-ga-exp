@@ -179,14 +179,14 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.17a"></script>
+<script src="shared/ga-core.js?v=3.9.18"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js"></script>
-<script src="shared/ga-telegram.js?v=3.9.17a"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.17a"></script>
+<script src="shared/ga-telegram.js?v=3.9.18"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.18"></script>
 <script src="shared/ga-vrt-parsers.js"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.17a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.17a"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.18"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -826,8 +826,7 @@ async function fetchHistory(sys,q){
   let records=null;
   const action=sys==='rep'?'repairHistory':'tempHistory';
   try{
-    const r=await fetch(`${GAS_URL}?action=${action}&item=${encodeURIComponent(q)}&approvedOnly=1`);
-    const d=await r.json();
+    const d=await GA.gasGet(action,{item:q,approvedOnly:1});
     if(d.records&&d.records.length>0)records=d.records;
   }catch(e){}
   const panel=document.getElementById(sys+'-history-panel');
@@ -850,10 +849,12 @@ function getV(id){const el=document.getElementById(id);return el?el.value.trim()
    submit 的欄位需在 body 頂層（GAS handleRepairSubmitBody 直接讀 body.xxx），
    故不用 GA.gasPost（它會把 payload 包進 data）。用共用信封解析錯誤。 */
 async function postGAS(payload){
-  const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain;charset=utf-8'}});
-  const txt=await res.text();
-  if(txt.trim().charAt(0)==='<') throw new Error('GAS 回傳錯誤頁（可能未部署或權限不足）');
-  return JSON.parse(txt);
+  if(GA.backend&&GA.backend.require) await GA.backend.require('strictActionErrors',{action:payload.action||'maintenance write'});
+  const out=await GA.requestJSON(GAS_URL,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain;charset=utf-8'}});
+  if(out.revision===undefined||out.revision===null){
+    const e=new Error(GA.backendMessage(payload.action||'maintenance write'));e.code='BACKEND_OUTDATED';throw e;
+  }
+  return out;
 }
 
 /* ── 提交：維修 ── */
