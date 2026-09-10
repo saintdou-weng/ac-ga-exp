@@ -5,11 +5,11 @@
 <title>VRT Damage / Lost Property Report</title>
 <link rel="stylesheet" href="shared/ga.css">
 <script src="shared/xlsx.full.min.js"></script>
-<script src="shared/ga-core.js?v=3.9.18"></script>
-<script src="shared/ga-telegram.js?v=3.9.18"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.18"></script>
+<script src="shared/ga-core.js?v=3.9.19"></script>
+<script src="shared/ga-telegram.js?v=3.9.19"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.19"></script>
 <script>
-/* Mobile-Safe fallback: embeds GA-EXP Auto Sync when shared/ga-auto-sync.js?v=3.9.18 is old/missing. */
+/* Mobile-Safe fallback: embeds GA-EXP Auto Sync when shared/ga-auto-sync.js?v=3.9.19 is old/missing. */
 /* AC-GA-EXP Auto Sync v1.0 — 2026-08-26
  * Adapted from AC-HRA-PAY Auto Sync v1.2 behavior.
  *
@@ -148,7 +148,7 @@
 
 </style>
 </head><body><div class="wrap">
-<div class="hero"><div><h1 id="title">⚠️ 損壞／遺失財物報告</h1><small>VRT Damage / Lost Property · v3.9.18 · IndexedDB + Full Online Workflow</small><div style="margin-top:3px"><span style="font-size:8px;padding:2px 6px;border:1px solid #64748b;border-radius:10px;color:#dbeafe">📱 IndexedDB records · Drive photos · auto pull/push</span></div></div><div class="grow"></div><div class="cloudRow"><span class="damage-cloud-title" data-t="cloudTitle">☁ 雲端同步</span><span id="ga-cloud" class="ga-cloud idle"></span><button class="btn" onclick="cloudUp()" data-t-title="cloudUp" title="Cloud upload">☁↑</button><button class="btn" onclick="cloudDown()" data-t-title="cloudDown" title="Cloud download">☁↓</button><span class="syncNote" data-t="cloudHint">開啟即下載；儲存即上傳；按鈕僅備援</span></div><div class="lang"><button data-l="zh" onclick="setLang('zh')" class="on">中文</button><button data-l="en" onclick="setLang('en')">EN</button><button data-l="km" onclick="setLang('km')">ខ្មែរ</button></div><a class="btn" href="index.html">← GA-EXP</a></div>
+<div class="hero"><div><h1 id="title">⚠️ 損壞／遺失財物報告</h1><small>VRT Damage / Lost Property · v3.9.19 · IndexedDB + Full Online Workflow</small><div style="margin-top:3px"><span style="font-size:8px;padding:2px 6px;border:1px solid #64748b;border-radius:10px;color:#dbeafe">📱 IndexedDB records · Drive photos · auto pull/push</span></div></div><div class="grow"></div><div class="cloudRow"><span class="damage-cloud-title" data-t="cloudTitle">☁ 雲端同步</span><span id="ga-cloud" class="ga-cloud idle"></span><button class="btn" onclick="cloudUp()" data-t-title="cloudUp" title="Cloud upload">☁↑</button><button class="btn" onclick="cloudDown()" data-t-title="cloudDown" title="Cloud download">☁↓</button><span class="syncNote" data-t="cloudHint">開啟即下載；儲存即上傳；按鈕僅備援</span></div><div class="lang"><button data-l="zh" onclick="setLang('zh')" class="on">中文</button><button data-l="en" onclick="setLang('en')">EN</button><button data-l="km" onclick="setLang('km')">ខ្មែរ</button></div><a class="btn" href="index.html">← GA-EXP</a></div>
 <div class="tabs"><button class="on" data-p="dash" onclick="tab('dash',this)">📊 <span data-t="dash">儀表板／分析</span></button><button data-p="form" onclick="newReport();tab('form',this)">➕ <span data-t="new">新增</span></button><button data-p="records" onclick="tab('records',this)">📋 <span data-t="records">記錄</span></button></div>
 <section id="p-dash" class="pane on">
 <div class="periodCard"><div class="periodRow"><div class="periodModes"><button data-ap="day" onclick="setAna('day')">D</button><button data-ap="week" onclick="setAna('week')">W</button><button data-ap="month" class="on" onclick="setAna('month')">M</button><button data-ap="year" onclick="setAna('year')">Y</button></div><div class="periodNav"><button onclick="shiftAna(-1)" data-t-title="prev">◀</button><select id="anaPeriodSelect" onchange="pickAnaPeriod(this.value)"></select><button onclick="shiftAna(1)" data-t-title="next">▶</button><button onclick="anaToday()" data-t-title="today">●</button><span id="anaPeriodLabel" class="periodLabel"></span></div><div class="grow"></div><button class="btn" onclick="openSummary()">✈️ <span data-t="summary">摘要</span></button></div><input id="anaAnchor" type="date" hidden></div>

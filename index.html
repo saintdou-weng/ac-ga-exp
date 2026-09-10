@@ -10,10 +10,10 @@
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.6-20260824" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.6-20260824'">
-<script src="shared/ga-core.js?v=3.9.18"></script>
+<script src="shared/ga-core.js?v=3.9.19"></script>
 <script src="shared/ga-data.js?v=3.6-20260824"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.18"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
 </script>
 
 <style>
@@ -85,7 +85,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
 @media(max-width:640px){ .wrap{padding:18px 12px 50px} h1.plat{font-size:19px} }
 </style>
 </head>
-<body><nav style="padding:12px;background:#e4ecf3;display:flex;gap:18px"><a href="transportation.html">🚐 Transportation 行車紀錄</a><a href="etc.html">🛣️ ETC 通行費</a></nav>
+<body>
 <div class="wrap">
 
 <header class="plat">
@@ -113,7 +113,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   <a class="kpi" href="maintenance.html" style="--kc:var(--ga-ok)"><div class="kpi-l">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">—</div></a>
   <a class="kpi" href="damage.html" style="--kc:#dc2626"><div class="kpi-l">Damage 損壞/遺失</div><div class="kpi-v" id="k-dmg">—</div><div class="kpi-s" id="k-dmg-s">—</div></a>
   <a class="kpi" href="receiving.html" style="--kc:#0891b2"><div class="kpi-l">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">—</div></a>
-<a class="kpi" href="fuel.html?v=3.9.18" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
+<a class="kpi" href="fuel.html?v=3.9.19" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
   <a class="kpi" href="expense.html" style="--kc:var(--ga-bad)"><div class="kpi-l">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">—</div></a>
 </div>
 
@@ -152,7 +152,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
     <div class="card-flow">Create → Phea Review → Paul Approve → Document / Repair</div>
   </a>
 
-  <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=3.9.18">
+  <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=3.9.19">
     <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
     <div class="card-top"><div class="card-ico">🛢️</div>
       <div><div class="card-en">Fuel Center</div><div class="card-name">燃油中心</div></div></div>
@@ -168,6 +168,19 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
     <div class="card-flow">PO · Repair · Diesel · Manual → Budget Control</div>
   </a>
 
+  <a class="card" id="module-transportation" style="--cc:#1d4ed8;--cc-l:#dbeafe" href="transportation.html?v=3.9.19">
+    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">D / W / M / Y</span></div>
+    <div class="card-top"><div class="card-ico">🚐</div><div><div class="card-en">Transportation Center</div><div class="card-name" data-t="transportTitle">行車紀錄中心</div></div></div>
+    <div class="card-desc" data-t="transportDesc">獨立記錄司機、用車原因及里程；日週月年查詢、司機排名、線上新增編輯、匯入匯出與 Telegram 摘要。</div>
+    <div class="card-flow">Journey → Driver / Distance → Analysis</div>
+  </a>
+  <a class="card" id="module-etc" style="--cc:#b45309;--cc-l:#fef3c7" href="etc.html?v=3.9.19">
+    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">D / W / M / Y</span></div>
+    <div class="card-top"><div class="card-ico">🛣️</div><div><div class="card-en">ETC Toll Center</div><div class="card-name" data-t="etcTitle">ETC 通行費中心</div></div></div>
+    <div class="card-desc" data-t="etcDesc">通行費、儲值分開記錄；日週月年分析，用車人、司機與車牌趟數排名，逐日費用及 Telegram 摘要。</div>
+    <div class="card-flow">Tolls / Top-ups → Users / Drivers → Ranking</div>
+  </a>
+
   <div class="card" style="--cc:var(--ga-mut);--cc-l:var(--ga-line2)" onclick="openSettings()">
     <div class="card-top"><div class="card-ico">⚙️</div>
       <div><div class="card-en">Settings</div><div class="card-name">設定中心</div></div></div>
@@ -178,7 +191,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
 </div>
 
 <footer class="plat">
-  <span>AC-GA-EXP Platform v2.0 · saintdou-weng.github.io/ac-ga-exp</span>
+  <span>AC-GA-EXP Platform v3.9.19 · saintdou-weng.github.io/ac-ga-exp</span>
   <span>Bot: @acgaexp_bot · GAS: AC_GA_EXP · Sheet: AC_GA_EXP_DB</span>
 </footer>
 </div>
@@ -192,10 +205,11 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
         <input id="set-gas" placeholder="https://script.google.com/macros/s/.../exec"></div>
       <div class="ga-fld"><label data-t="defLang">預設語言 Default Language</label>
         <select id="set-lang"><option value="zh">繁體中文</option><option value="en">English</option><option value="km">ភាសាខ្មែរ</option></select></div>
+      <pre id="gas-diagnostic" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#edf2f7;color:#173453;border-radius:8px">按「測試連線」查看實際雲端版本及缺少能力。</pre>
       <p class="m-note">
         💡 Bot Token 僅存放於 GAS 後端（CONFIG），瀏覽器端不儲存。<br>
         💡 各模組自動沿用此 GAS URL，無需在各頁重填。<br>
-        ⚠️ 每次 GAS 重新部署後，記得在 GAS 編輯器重跑 <b>setupPolling()</b>。
+        更新同一 GAS 部署：管理部署 → 編輯 → 新版本 → 部署；原有觸發器存在時不需重跑 setupPolling。
       </p>
     </div>
     <div class="ga-modal-f">
@@ -216,7 +230,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
         <tbody id="tg-tbody"></tbody>
       </table>
       <button class="ga-btn" onclick="addGroupRow()" style="margin-bottom:8px">➕ <span data-t="addGroup">新增群組</span></button>
-      <p class="m-note">模組欄填 <code>all</code> 或以逗號列出：procurement, damage, repair, recv, diesel, expense。預設群組 -5271842001。</p>
+      <p class="m-note">模組欄填 <code>all</code> 或以逗號列出：procurement, damage, repair, recv, diesel, expense, transportation, etc。預設群組 -5271842001。</p>
       <div class="ga-fld"><label>📢 <span data-t="testMsg">測試通知訊息</span></label>
         <input id="tg-test-msg" placeholder="送至所有啟用群組" value="AC-GA-EXP Platform 通知測試 Test"></div>
     </div>
@@ -273,12 +287,16 @@ async function testGAS(){
   GA.saveCfg({gasUrl:url});
   if(GA.backend)GA.backend.clear();
   GA.toast('⏳ 測試中...');
+  document.getElementById('gas-diagnostic').textContent='正在檢查目前設定的 GAS…';
   try{
     const info=await GA.backend.check(true), required=['strictActionErrors','dashboardV2','mobilitySync','tgSummaryReceipt','smartSync'];
     const missing=required.filter(x=>info.capabilities.indexOf(x)<0);
-    if(missing.length){const e=new Error(GA.backendMessage(missing[0],info.version));e.code='BACKEND_OUTDATED';throw e;}
+    document.getElementById('gas-diagnostic').textContent='前端版本：'+GA.PLATFORM_VERSION+'\n雲端實際版本：'+(info.version||'未回報（舊版或不同程式）')+'\n缺少能力：'+(missing.join(', ')||'無')+'\n目前連線：'+info.url+'\n'+(missing.length?'請更新同一 Apps Script 專案，再從管理部署選擇新版本發布；僅儲存程式不會更新 /exec。':'前後端能力檢查通過，可再測同步與摘要回執。');
+    if(missing.length){const e=new Error(GA.backendMessage(missing[0],info.version));e.code='BACKEND_OUTDATED';e.capability=missing[0];e.backend=info;throw e;}
     GA.toast('✅ 完整雲端功能已確認 · GS '+info.version+' · '+required.length+' checks');
-  }catch(e){GA.normalizeCloudError(e,'platform cloud');GA.toast('❌ '+e.message,'err');}
+    const alert=document.getElementById('ga-backend-alert');if(alert)alert.remove();
+    await refreshDashboard();
+  }catch(e){GA.normalizeCloudError(e,'platform cloud');if(!e.backend)document.getElementById('gas-diagnostic').textContent=e.message;GA.toast('❌ '+e.message,'err');}
 }
 
 /* ── Dashboard ── */
@@ -326,7 +344,7 @@ function refreshDashboard(){
       const old=document.getElementById('ga-backend-alert');if(old&&old.getAttribute('data-capability')==='dashboardV2')old.remove();
       GA.cloud.set('down','已連線 '+(raw.ts||d.ts||''));
     }
-  }).catch(e=>{ GA.cloud.set('err',e.message); GA.toast('❌ Dashboard：'+e.message,'err'); }).finally(()=>{dashboardRequest=null;});
+  }).catch(e=>{ GA.cloud.set('err',GA.isBackendCompatibilityError(e)?'GAS 版本待更新；請到設定測試連線':e.message); if(!GA.isBackendCompatibilityError(e))GA.toast('❌ Dashboard：'+e.message,'err'); }).finally(()=>{dashboardRequest=null;});
   return dashboardRequest;
 }
 
@@ -408,6 +426,11 @@ function applyModuleDeepLinks(){
     });
   }catch(e){}
 }
+GA.addDict({
+ zh:{transportTitle:'行車紀錄中心',etcTitle:'ETC 通行費中心',transportDesc:'獨立記錄司機、用車原因及里程；日週月年分析、司機排名、線上新增編輯、匯入匯出與摘要。',etcDesc:'通行費與儲值分開；日週月年分析、用車人／司機／車牌排名、逐日費用與摘要。'},
+ en:{transportTitle:'Transportation Center',etcTitle:'ETC Toll Center',transportDesc:'Separate journey records, drivers, purpose and distance. Day/week/month/year analysis, rankings, online editing, import/export and summaries.',etcDesc:'Separate tolls and top-ups. Day/week/month/year analysis, user/driver/vehicle rankings, daily costs and summaries.'},
+ km:{transportTitle:'មជ្ឈមណ្ឌលកំណត់ត្រាធ្វើដំណើរ',etcTitle:'មជ្ឈមណ្ឌលថ្លៃផ្លូវ ETC',transportDesc:'កំណត់ត្រាអ្នកបើកបរ គោលបំណង និងចម្ងាយ។ វិភាគថ្ងៃ សប្តាហ៍ ខែ ឆ្នាំ និងចំណាត់ថ្នាក់។',etcDesc:'ថ្លៃផ្លូវ និងបញ្ចូលប្រាក់ដាច់ដោយឡែក។ វិភាគថ្ងៃ សប្តាហ៍ ខែ ឆ្នាំ និងចំណាត់ថ្នាក់អ្នកប្រើ។'}
+});
 /* ── init ── */
 GA.boot();
 applyModuleDeepLinks();
@@ -420,6 +443,6 @@ refreshDashboard();
 window.addEventListener('focus',()=>{if(!document.hidden)refreshDashboard();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDashboard();});
 </script>
-<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.18 · Cloud Contract / Receiving UX</div>
+<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.19 · Transportation / ETC Analysis</div>
 </body>
 </html>

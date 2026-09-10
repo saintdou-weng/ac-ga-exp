@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   AC-GA-EXP Platform · shared/ga-telegram.js   v3.9.18
+   AC-GA-EXP Platform · shared/ga-telegram.js   v3.9.19
    Telegram：摘要 Summary 與 核可 Approval 完全分離
    ─────────────────────────────────────────────────────────────────
    摘要 Summary：

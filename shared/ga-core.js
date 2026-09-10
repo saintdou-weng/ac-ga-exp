@@ -15,7 +15,7 @@
 
 var GA = global.GA = global.GA || {};
 GA.VERSION = '2.1';
-GA.PLATFORM_VERSION = '3.9.18';
+GA.PLATFORM_VERSION = '3.9.19';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
@@ -168,7 +168,7 @@ GA.backendMessage = function (action, version) {
   var name = action || 'cloud action';
   var suffix = version ? ' (GS ' + version + ')' : '';
   return backendText(
-    '目前儲存的 GAS 部署不支援「' + name + '」' + suffix + '。資料仍保留在本機，且不會標記為已同步。請把本包 AC_GA_EXP.gs 更新到同一個 Apps Script 現有部署後再重試。',
+    '目前 GAS 未確認所需能力「' + name + '」' + (version ? suffix : '（雲端未回報版本）') + '。請在設定檢查版本，並把 AC_GA_EXP.gs 更新至同一個現有部署：管理部署 → 編輯 → 新版本 → 部署。本機資料與待傳內容保留。',
     'The saved GAS deployment does not support "' + name + '"' + suffix + '. Data remains local and is not marked synced. Update the existing Apps Script deployment with this package\'s AC_GA_EXP.gs, then retry.',
     'GAS ដែលបានរក្សាទុកមិនគាំទ្រ "' + name + '"' + suffix + '។ ទិន្នន័យនៅក្នុងម៉ាស៊ីន ហើយមិនត្រូវបានសម្គាល់ថា Sync ទេ។ សូមដាក់ AC_GA_EXP.gs កំណែថ្មីទៅ deployment ដដែល ហើយសាកម្ដងទៀត។'
   );
@@ -200,8 +200,8 @@ GA.normalizeCloudError = function (e, action) {
   if (GA.isBackendCompatibilityError(e)) {
     if (!e.originalMessage) e.originalMessage = e.message;
     e.code = 'BACKEND_OUTDATED';
-    e.message = GA.backendMessage(action || e.action);
-    GA.showBackendIssue(action || e.action, e.message);
+    e.message = GA.backendMessage(e.capability || action || e.action, e.backend && e.backend.version);
+    GA.showBackendIssue(e.capability || action || e.action, e.message);
   }
   return e;
 };
@@ -221,7 +221,7 @@ GA.backend = {
     return this.check(!!opt.force).then(function (info) {
       if (info.capabilities.indexOf(capability) < 0) {
         var e = new Error(GA.backendMessage(opt.action || capability, info.version));
-        e.code = 'BACKEND_OUTDATED'; e.action = opt.action || capability; e.backend = info;
+        e.code = 'BACKEND_OUTDATED'; e.action = opt.action || capability; e.capability = capability; e.backend = info;
         GA.showBackendIssue(capability, e.message); throw e;
       }
       return info;
