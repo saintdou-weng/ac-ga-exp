@@ -352,6 +352,7 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
 </script>
 
+<link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
 </head>
 <body>
 
@@ -1249,7 +1250,7 @@ function renderGrid(){
           <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ('${item.id}',-1)">−</button>
           <input class="qinput" type="number" min="0" value="${o.qty}"
             style="${on?`border-color:${col}66;color:${col}`:""}"
-            oninput="setQ('${item.id}',this.value)"/>
+            step="0.0001" onchange="setQ('${item.id}',this.value)"/>
           <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ('${item.id}',1)">+</button>
           <span class="qunit" onclick="openUnitEdit('${item.id}','${item.name}')" title="點擊修改單位">${unit}</span>
         </div>
@@ -2075,9 +2076,7 @@ Pending Paul approval; web and Telegram are both available`;
     okBtn.style.display="";
     okBtn.style.background="var(--blue)";
     okBtn.textContent=lang==="zh"?"🆕 開始新採購單":"🆕 Start New PO";
-    okBtn.onclick=()=>{
-      if(confirm(lang==="zh"?"確定開始新的採購單？":"Start a new PO?")) doStartNewPO();
-    };
+    okBtn.onclick=()=>doStartNewPO();
 
   } else if(poStatus==="rejected"){
     banner.style.background="var(--red-bg)";
@@ -3281,6 +3280,7 @@ initLogin();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init3916);else init3916();
 })();
 </script>
+<script src="shared/ga-po-draft.js?v=3.9.20"></script>
 </body>
 </html>
 
