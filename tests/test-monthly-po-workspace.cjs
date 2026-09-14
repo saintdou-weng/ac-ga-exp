@@ -23,8 +23,8 @@ async function setup(page){
  const item=w.eval('allItems()[0]'),other=w.eval('allItems()[1]'),year=w.eval('YEAR');let requests=[],saves=[];
  const source={poId:'last',poNumber:'PO-LAST',year,month:7,status:'approved',items:[{id:item.id,name:item.name,qty:30.25,note:'check stock'},{id:other.id,name:other.name,qty:2}]};
  const prior={...source,poId:'dec',poNumber:'PO-DEC',year:year-1,month:11};
- w.GA.gasGet=async(action,data)=>{requests.push([action,data]);return {ok:true,data:data.year===year?[source]:[prior]};};
- w.GA.gasPost=async(action,data)=>{saves.push(JSON.parse(JSON.stringify(data)));return {ok:true};};
+ w.GA.gasGet=async(action,data)=>{requests.push([action,data]);if(action==='getState')return {ok:true,data:null,stateToken:'empty'};return {ok:true,data:data.year===year?[source]:[prior]};};
+ w.GA.gasPost=async(action,data)=>{saves.push(JSON.parse(JSON.stringify(data)));return {ok:true,stateToken:'saved'};};
  await w.procDraftOpen(false);assert.equal($('po-work-source').value,'0');$('po-work-copy').click();
  assert.equal(w.eval('ordItems().length'),0,'copy is isolated until save');
  assert.equal(w.document.querySelector('[data-qty="0"]').value,'30.25');
@@ -37,7 +37,7 @@ async function setup(page){
  assert.equal(w.GAPO.match({id:1,name:'Same'},[{id:1,name:'Different'},{id:2,name:'Same'},{id:3,name:'Same'}],()=> 'pcs'),null);
  await w.procDraftOpen(false);$('po-work-month').value=0;$('po-work-source').value='0';$('po-work-copy').click();assert($('po-work-message').textContent.includes('早於'));$('po-work-source').value='1';$('po-work-copy').click();assert.equal(w.document.querySelector('[data-qty="0"]').value,'30.25','previous December works');
  w.GA.gasPost=async()=>{throw Error('offline');};$('po-work-reviewed').checked=true;await $('po-work-save').onclick();assert($('po-work-dialog').open);assert($('po-work-message').textContent.includes('雲端未確認'));assert(w.localStorage.getItem('ga_po_draft_v3920_qa'));
- w.GA.gasPost=async(action,data)=>{saves.push(data);return {ok:true};};$('po-work-reviewed').checked=true;await $('po-work-save').onclick();assert(!$('po-work-dialog').open);
+ w.GA.gasPost=async(action,data)=>{saves.push(data);return {ok:true,stateToken:'saved'};};$('po-work-reviewed').checked=true;await $('po-work-save').onclick();assert(!$('po-work-dialog').open);
  await w.procDraftOpen(false);w.eval('poStatus="submitted"');$('po-work-reviewed').checked=true;const before=saves.length;await $('po-work-save').onclick();assert.equal(saves.length,before,'concurrent state change blocked');
  assert.equal(p.errors.length,0,p.errors.join('\n'));
  console.log('PASS prior-year copy, editable decimals, search/add/remove, manual review, fresh approvals, unit match, source unchanged, cloud failure/retry, state conflict');

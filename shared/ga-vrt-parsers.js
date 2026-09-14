@@ -684,6 +684,62 @@ VRT.parseExpenseMonthSheet = function (rows, meta) {
   return out;
 };
 
+
+/* Repair-Maintainance v3.9.21: repeated equipment blocks and two-row headers.
+   Read current repair Amount/Date only; Last time repair and charts are references. */
+VRT.isMaintenanceSheet = function(rows, meta) {
+  var sn=txt(meta&&(meta.sheetName||meta.sheet));
+  if (/chart|picture|photo/i.test(sn)) return false;
+  return (rows||[]).slice(0,8).some(function(r){return (r||[]).some(function(v){return /date\s*maintenance\s*\/\s*repair/i.test(txt(v));});});
+};
+VRT.parseRepairSheet = function(rows, meta) {
+  meta=meta||{};var sn=txt(meta.sheetName||meta.sheet),out=[];
+  if (/chart|picture|photo/i.test(sn)) return out;
+  if(!VRT.isMaintenanceSheet(rows,meta))return VRT.parseOtherExpenses(rows,meta);
+  var hi=-1;
+  for(var h=1;h<Math.min(10,rows.length);h++)if((rows[h]||[]).some(function(v){return /^description$/i.test(txt(v));})&&(rows[h]||[]).some(function(v){return /^amount$/i.test(txt(v));})){hi=h;break;}
+  if(hi<0)throw new Error('維修表頭無法辨識 / Repair column headers were not recognized: '+sn);
+  var head=rows[hi]||[],upper=rows[hi-1]||[],descs=[];
+  head.forEach(function(v,c){if(/^description$/i.test(txt(v)))descs.push(c);});
+  var fy=txt(meta.fileName||meta.file).match(/20\d{2}/),fileYear=fy?+fy[0]:0;
+  descs.forEach(function(dc,bi){
+    var start=0;for(var c=0;c<dc;c++)if(/^m(?:o?nth|nth|onth)$/i.test(txt(upper[c])))start=c;
+    var end=bi+1<descs.length?descs[bi+1]-1:Math.max(head.length,upper.length),ac=-1,pc=-1,datec=-1,supc=-1,loc=-1,brand=-1,spec=-1;
+    for(var c=start;c<end;c++){
+      var hv=hn(head[c]),uv=hn(upper[c]);
+      if(c>dc&&ac<0&&hv==='amount')ac=c;
+      if(c>dc&&pc<0&&/^(up|unitprice)$/.test(hv))pc=c;
+      if(/datemaintenancerepair/.test(uv))datec=c;
+      if(uv==='supplier')supc=c;
+      if(uv==='location')loc=c;
+      if(uv==='brand')brand=c;
+      if(uv==='spec')spec=c;
+    }
+    if(ac<0||datec<0)throw new Error('缺維修日期／金額欄 / Missing repair date or amount column: '+sn);
+    var title='';for(var t=0;t<hi-1;t++)for(var tc=start;tc<=dc;tc++){var v=txt((rows[t]||[])[tc]);if(/maintenance|repair/i.test(v))title=v;}
+    var ty=title.match(/20\d{2}/),titleYear=ty?+ty[0]:0;
+    // Sheet name identifies aircon / washing; copied template titles may be stale.
+    var equipment=descs.length>1?title.replace(/^20\d{2}\s*/,'').replace(/\s*Maintenance\s*\/\s*Repair\s*$/i,'').trim():sn;
+    if(!equipment)equipment=sn+' #'+(bi+1);
+    var month=0;
+    for(var ri=hi+1;ri<rows.length;ri++){
+      var r=rows[ri]||[],m=monthNum(r[start]);if(m)month=m;
+      if(/^(total|ttl|g\.?ttl)$/i.test(txt(r[start]))) {month=0;continue;}
+      var desc=txt(r[dc]);if(!desc||/^(description|total|ttl)$/i.test(desc))continue;
+      var rawAmount=r[ac];if(rawAmount===null||rawAmount===undefined||txt(rawAmount)==='')continue;
+      if(!Number.isFinite(Number(txt(rawAmount).replace(/[$,\s]/g,''))))throw new Error(sn+' row '+(ri+1+(meta.rowOffset||0))+': 金額無效 / Invalid amount');
+      var date=d(r[datec]),warnings=[],precision='day';
+      if(!date){if(txt(r[datec]))throw new Error(sn+' row '+(ri+1)+': 無效維修日期 / Invalid repair date');var year=fileYear||titleYear;if(!year||!month)throw new Error(sn+' row '+(ri+1)+': 缺少日期與年月 / Missing date and period');date=year+'-'+String(month).padStart(2,'0')+'-01';precision='month';warnings.push('只有月份，請補實際維修日期 / Month only; verify actual repair date');}
+      if(fileYear&&+date.slice(0,4)!==fileYear)warnings.push('實際日期不在檔名年度，依實際日期保留 / Date differs from filename year; original date retained');
+      if(titleYear&&+date.slice(0,4)!==titleYear)warnings.push('表頭年份與實際日期不同 / Template title year differs from repair date');
+      var location=loc>=0?txt(r[loc]):equipment,b=brand>=0?txt(r[brand]):'',sp=spec>=0?txt(r[spec]):'',price=pc>=0?n(r[pc]):0,amount=Math.round(n(rawAmount)*100)/100;
+      out.push({date:date,item:desc,issue:desc,equipment:equipment,location:location,brand:b,spec:sp,qty:1,unit:'job',price:price,amount:amount,estAmount:amount,
+        supplier:supc>=0?txt(r[supc]):'',purpose:[equipment,location!==equipment?location:''].filter(Boolean).join(' · '),category:'repair_maintenance',categoryLabel:sn,expenseCategory:'repair_maintenance',currency:'USD',sourceModule:'excel',
+        sourceBlock:'col-'+(start+(meta.columnOffset||0)),_repairLayout:'maintenance-v1',periodGranularity:precision,_warn:warnings.join(' · '),_row:ri+1+(meta.rowOffset||0)});
+    }
+  });
+  return out;
+};
 /* ══════════ 註冊到智慧匯入 ══════════ */
 function reg(type, detectFn, parseFn) {
   GA.smartImport.register(type, { detect: detectFn, parse: parseFn });
@@ -703,11 +759,13 @@ reg('po', function (ctx) {
 reg('repair', function (ctx) {
   var sn = String(ctx.sheetName||'').toLowerCase().trim();
   var h = (ctx.headers||[]).join('|');
+  if (VRT.isMaintenanceSheet(ctx.rows,ctx)) return 1;
   if (sn === 'expenses' && /desc|q'?ty|supplier|purpose/.test(h)) return 1;
   if (/forklift/.test(sn) && !/chart/.test(sn)) return 1;
   return 0;
 }, function (ctx) {
   var sn = String(ctx.sheetName||'').toLowerCase().trim();
+  if (VRT.isMaintenanceSheet(ctx.rows,ctx)) return VRT.parseRepairSheet(ctx.rows,ctx);
   if (/forklift/.test(sn)) return VRT.parseForklift(ctx.rows, ctx);
   return VRT.parseOtherExpenses(ctx.rows, ctx);
 });

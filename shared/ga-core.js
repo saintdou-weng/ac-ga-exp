@@ -15,7 +15,7 @@
 
 var GA = global.GA = global.GA || {};
 GA.VERSION = '2.1';
-GA.PLATFORM_VERSION = '3.9.19';
+GA.PLATFORM_VERSION = '3.9.21';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
@@ -165,10 +165,11 @@ GA.isBackendCompatibilityError = function (e) {
   return !!(e && (e.code === 'BACKEND_OUTDATED' || e.code === 'UNKNOWN_ACTION' || e.code === 'CLIENT_UPDATE' || isCompatibilityMessage(e.message)));
 };
 GA.backendMessage = function (action, version) {
-  var name = action || 'cloud action';
+  var labels={strictActionErrors:backendText('雲端版本驗證','cloud version verification','ការផ្ទៀងផ្ទាត់កំណែ Cloud'),getState:backendText('採購與收發紀錄','PO and receipt records','កំណត់ត្រាទិញ និងទទួល'),saveState:backendText('採購與收發儲存','PO and receipt save','រក្សាទុកការទិញ និងទទួល'),dashboard:backendText('首頁資料','dashboard data','ទិន្នន័យទំព័រដើម')};
+  var name = labels[action] || action || 'cloud action';
   var suffix = version ? ' (GS ' + version + ')' : '';
   return backendText(
-    '目前 GAS 未確認所需能力「' + name + '」' + (version ? suffix : '（雲端未回報版本）') + '。請在設定檢查版本，並把 AC_GA_EXP.gs 更新至同一個現有部署：管理部署 → 編輯 → 新版本 → 部署。本機資料與待傳內容保留。',
+    '目前 Apps Script 尚未確認「' + name + '」' + (version ? suffix : '（雲端未回報版本）') + '。請在設定檢查版本，並把本包 backend/AC_GA_EXP.gs 更新至同一個現有部署：管理部署 → 編輯 → 新版本 → 部署。本機資料與待傳內容保留。',
     'The saved GAS deployment does not support "' + name + '"' + suffix + '. Data remains local and is not marked synced. Update the existing Apps Script deployment with this package\'s AC_GA_EXP.gs, then retry.',
     'GAS ដែលបានរក្សាទុកមិនគាំទ្រ "' + name + '"' + suffix + '។ ទិន្នន័យនៅក្នុងម៉ាស៊ីន ហើយមិនត្រូវបានសម្គាល់ថា Sync ទេ។ សូមដាក់ AC_GA_EXP.gs កំណែថ្មីទៅ deployment ដដែល ហើយសាកម្ដងទៀត។'
   );
@@ -185,7 +186,7 @@ GA.showBackendIssue = function (action, detail) {
     box.querySelector('[data-ga-backend-retry]').onclick = function () {
       GA.backend.check(true).then(function (info) {
         var required = box.getAttribute('data-capability') || '';
-        if (!required || info.capabilities.indexOf(required) >= 0) {
+        if (!required || info.capabilities.indexOf(required) >= 0 || ((info.actions.get||[]).concat(info.actions.post||[])).indexOf(required)>=0) {
           box.remove(); try { global.dispatchEvent(new CustomEvent('ga-backend-ready', { detail: info })); } catch (_) {}
         } else box.querySelector('[data-ga-backend-text]').textContent = GA.backendMessage(required, info.version);
       }).catch(function (e) { box.querySelector('[data-ga-backend-text]').textContent = e.message; });

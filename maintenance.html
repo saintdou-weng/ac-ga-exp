@@ -179,14 +179,14 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.19"></script>
+<script src="shared/ga-core.js?v=3.9.21"></script>
 <script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js"></script>
+<script src="shared/ga-import.js?v=3.9.21"></script>
 <script src="shared/ga-telegram.js?v=3.9.19"></script>
 <script src="shared/ga-auto-sync.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.19"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -1222,18 +1222,18 @@ function mtImport(){
     existing:function(type){
       const sys=type==='temppo'?'po':(type==='repair'?'rep':null);
       if(!sys) return [];
-      return (currentData[sys]||[]).map(r=>({date:String(r[0]||'').slice(0,10),item:r[4],qty:r[7],_fp:GA.fingerprint([sys,r[0],r[4],r[7]])}));
+      let drafts=[];try{drafts=(JSON.parse(localStorage.getItem('mt_import_draft')||'{}')[type]||[]);}catch(_){}
+      return drafts.concat((currentData[sys]||[]).map(r=>({date:String(r[0]||'').slice(0,10),item:r[4],qty:r[7],_fp:GA.fingerprint([sys,r[0],r[4],r[7]])})));
     },
     onImport:function(payload){
       const rep=(payload.repair||[]), tpo=(payload.temppo||[]);
-      showToast((lang==='zh'?'已解析：維修 ':'Parsed: repair ')+rep.length+' / 臨採 '+tpo.length+(lang==='zh'?'（草稿，請於線上或群組核可）':' (draft)'));
-      // 匯入資料以草稿留存本機，供後續線上補送；不直接寫 GAS 核可表
+      // Include existing imported drafts, and update by source fingerprint instead of concatenating.
       try{
-        const key='mt_import_draft';
-        const cur=JSON.parse(localStorage.getItem(key)||'{}');
-        cur.repair=(cur.repair||[]).concat(rep); cur.temppo=(cur.temppo||[]).concat(tpo);
-        localStorage.setItem(key,JSON.stringify(cur));
-      }catch(e){}
+        const key='mt_import_draft',cur=JSON.parse(localStorage.getItem(key)||'{}');let changed=0;
+        [['repair',rep],['temppo',tpo]].forEach(function(pair){const type=pair[0],list=cur[type]||[],index=new Map();list.forEach(function(r,i){index.set(r._fp||GA.smartImport.fingerprintOf(type,r),i);});pair[1].forEach(function(r){const fp=r._fp||GA.smartImport.fingerprintOf(type,r),i=index.get(fp);if(i!==undefined){list[i]=Object.assign({},r,{recordId:list[i].recordId||r.recordId});}else{index.set(fp,list.length);list.push(r);}changed++;});cur[type]=list;});
+        localStorage.setItem(key,JSON.stringify(cur));if(window.mtDraftBadge)mtDraftBadge();
+        showToast((lang==='zh'?'已保存匯入草稿：':'Imported drafts saved: ')+(cur.repair||[]).length+' / '+(cur.temppo||[]).length);
+      }catch(e){showToast('❌ '+(lang==='zh'?'本機儲存失敗：':'Local save failed: ')+e.message);throw e;}
       scheduleMaintenanceAutoSync('import');
     }
   });

@@ -343,16 +343,17 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.19"></script>
+<script src="shared/ga-core.js?v=3.9.21"></script>
 <script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js"></script>
+<script src="shared/ga-import.js?v=3.9.21"></script>
 <script src="shared/ga-telegram.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
 </script>
 
 <link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
+<style>#cloud-loading{display:none}#cloud-loading.show{display:flex;align-items:center;gap:8px;padding:12px 18px;background:#e8f1fb;color:#174d79;border-bottom:1px solid #9bb9d8}</style>
 </head>
 <body>
 
@@ -386,7 +387,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- APP -->
 <!-- Cloud loading overlay -->
-<div id="cloud-loading">
+<div id="cloud-loading" role="status" aria-live="polite">
   <div class="cloud-spin"></div>
   <div class="cloud-txt" id="cloud-txt">☁️ 載入資料中... Loading data...</div>
 </div>
@@ -595,7 +596,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       <div class="fl" id="rec-l-item">品項</div>
       <select class="fi" id="rec-item" style="width:100%;margin-bottom:12px"></select>
       <div style="display:flex;gap:10px;margin-bottom:12px">
-        <div style="flex:1"><div class="fl" id="rec-l-qty">數量</div><input class="fi" type="number" min="1" id="rec-qty" value="1" style="width:100%"/></div>
+        <div style="flex:1"><div class="fl" id="rec-l-qty">數量</div><input class="fi" type="number" min="0" step="0.0001" id="rec-qty" value="1" style="width:100%"/></div>
         <div style="flex:1"><div class="fl" id="rec-l-dept">部門/供應商</div><input class="fi" id="rec-dept" style="width:100%"/></div>
       </div>
       <div class="fl" id="rec-l-req">經手人</div>
@@ -3006,8 +3007,8 @@ initLogin();
   var _pRenderRecv=window.renderRecv;
   window.renderRecv=function(){_pRenderRecv();document.querySelectorAll('#recv-tbody tr').forEach(function(tr){var del=tr.querySelector('button[onclick^="delRecvRecord"]');if(!del)return;var m=(del.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;var b=document.createElement('button');b.className='il-del';b.style.cssText='border-color:var(--blue-border);color:var(--blue);margin-right:4px';b.textContent='✏️';b.onclick=function(){editRecvRecord(m[1])};del.parentNode.insertBefore(b,del)});};
   window.saveRecvRecord=function(){
-    var id=document.getElementById('rec-id').value,itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Math.max(1,parseInt(document.getElementById('rec-qty').value)||0),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
-    if(!it||!date||qty<=0){alert(P('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return}
+    var id=document.getElementById('rec-id').value,itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Number(document.getElementById('rec-qty').value),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
+    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(P('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return}
     if(type==='issue'&&!dept){alert(P('領用／發放必須填部門','Department is required for issue'));return}
     var dup=(recvLog||[]).find(function(x){return String(x.id)!==String(id)&&x.date===date&&x.type===type&&String(x.itemId)===String(itemId)&&Number(x.qty)===Number(qty)&&String(x.dept||'').trim().toLowerCase()===dept.toLowerCase()});
     if(dup&&!confirm(P('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
@@ -3037,8 +3038,8 @@ initLogin();
   window.procInventorySimulation=simulate;
 
   window.saveRecvRecord=function(){
-    var id=(document.getElementById('rec-id')||{}).value||'',itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Math.max(1,parseInt(document.getElementById('rec-qty').value)||0),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
-    if(!it||!date||qty<=0){alert(Q('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return;}
+    var id=(document.getElementById('rec-id')||{}).value||'',itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Number(document.getElementById('rec-qty').value),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
+    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(Q('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return;}
     if(type==='issue'&&!dept){alert(Q('領用／發放必須填部門','Department is required for issue'));return;}
     var dup=duplicate(id,date,type,itemId,qty,dept);if(dup&&!confirm(Q('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
     var old=id?(recvLog||[]).find(function(x){return String(x.id)===String(id)}):null,rec=Object.assign({},old||{}, {id:id||('rec_'+Date.now()),date:date,type:type,itemId:itemId,itemName:it.name,qty:qty,dept:dept,requester:requester,remarks:remarks,updatedAt:new Date().toISOString(),createdAt:(old&&old.createdAt)||new Date().toISOString()});
@@ -3281,6 +3282,7 @@ initLogin();
 })();
 </script>
 <script src="shared/ga-po-draft.js?v=3.9.20"></script>
+<script src="shared/ga-proc-cloud.js?v=3.9.21"></script>
 </body>
 </html>
 

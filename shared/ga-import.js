@@ -335,6 +335,7 @@ SI.scan = function (files) {
   var jobs = Array.prototype.slice.call(files).map(function (f) {
     return SI.readFile(f).then(function (wb) {
       return wb.SheetNames.map(function (sn) {
+        if (/^(chart|picture|photo)(?:\s|$|\()/i.test(String(sn).trim()) && /repair|maintain/i.test(f.name)) return null;
         var ws = wb.Sheets[sn];
         if (!ws || !ws['!ref']) return null;
         var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
@@ -342,7 +343,8 @@ SI.scan = function (files) {
         var hi = findHeaderRow(rows);
         var ctx = {
           fileName: f.name, sheetName: sn, rows: rows,
-          headerRow: hi, headers: headerCells(rows, hi), workbook: wb
+          headerRow: hi, headers: headerCells(rows, hi), workbook: wb,
+          rowOffset:XLSX.utils.decode_range(ws['!ref']).s.r,columnOffset:XLSX.utils.decode_range(ws['!ref']).s.c
         };
         var det = SI.detect(ctx);
         var parsed = { records: [], skip: {}, errors: [] };
