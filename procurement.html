@@ -343,13 +343,14 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.21"></script>
+<script src="shared/ga-core.js?v=3.9.22"></script>
+<script src="shared/ga-cloud-diagnostic.js?v=3.9.22"></script>
 <script src="shared/ga-data.js"></script>
 <script src="shared/ga-import.js?v=3.9.21"></script>
 <script src="shared/ga-telegram.js?v=3.9.19"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.22"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
 </script>
 
 <link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
@@ -1561,9 +1562,10 @@ function setRecvFilter(f){ recvFilter=f; renderRecv(); }
 
 function renderRecv(){
   // chips
-  const all=recvLog.length;
-  const rc=recvLog.filter(r=>r.type==="receive").length;
-  const uc=recvLog.filter(r=>r.type==="issue").length;
+  const periodLog=recvLog.filter(r=>String(r.date||'').slice(0,7)===YEAR+'-'+String(curMonth+1).padStart(2,'0'));
+  const all=periodLog.length;
+  const rc=periodLog.filter(r=>r.type==="receive").length;
+  const uc=periodLog.filter(r=>r.type==="issue").length;
   const ca=document.getElementById("rcf-all"), cr=document.getElementById("rcf-recv"), cu2=document.getElementById("rcf-use");
   if(ca){
     ca.textContent=(lang==="zh"?"全部":"All")+` (${all})`;
@@ -1590,7 +1592,7 @@ function renderRecv(){
     <th></th>
   </tr>`;
 
-  const list=recvLog
+  const list=periodLog
     .filter(r=>recvFilter==="all"?true:r.type===recvFilter)
     .slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.id||"").localeCompare(a.id||""));
 
@@ -3283,6 +3285,7 @@ initLogin();
 </script>
 <script src="shared/ga-po-draft.js?v=3.9.20"></script>
 <script src="shared/ga-proc-cloud.js?v=3.9.21"></script>
+<script src="shared/ga-proc-receiving.js?v=3.9.22"></script>
 </body>
 </html>
 

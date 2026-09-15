@@ -15,7 +15,7 @@
 
 var GA = global.GA = global.GA || {};
 GA.VERSION = '2.1';
-GA.PLATFORM_VERSION = '3.9.21';
+GA.PLATFORM_VERSION = '3.9.22';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
@@ -41,7 +41,7 @@ GA.saveCfg = function (patch) {
   return c;
 };
 GA.gasUrl = function () {
-  var u = (GA.cfg().gasUrl || '').trim();
+  var u = String(GA.cfg().gasUrl || '').trim();
   return u || DEFAULT_GAS;
 };
 GA.DEFAULT_GAS = DEFAULT_GAS;
@@ -73,6 +73,7 @@ function parseEnvelope(raw) {
 }
 
 GA.requestJSON = function (url, options, timeoutMs) {
+  options = Object.assign({cache:'no-store'}, options || {});
   var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   var timer, opts = Object.assign({}, options || {});
   if (controller) opts.signal = controller.signal;
@@ -94,8 +95,10 @@ GA.requestJSON = function (url, options, timeoutMs) {
 };
 
 GA.gasGet = function (action, params) {
+  var destination = GA.gasUrl();
   function send() {
-    var base = GA.gasUrl();
+    if(destination !== GA.gasUrl()) throw new Error('連線設定已變更，請重試 / Connection changed; retry');
+    var base = destination;
     var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action);
     params = params || {};
     for (var k in params) {
@@ -105,7 +108,7 @@ GA.gasGet = function (action, params) {
       url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(v);
     }
     var s = GA.session(); if (s) url += '&session=' + encodeURIComponent(s);
-    return GA.requestJSON(url);
+    return GA.requestJSON(url + '&_fresh=' + Date.now().toString(36) + Math.random().toString(36).slice(2,7));
   }
   /* ping is the read-only contract probe itself. Every other named request
      first requires a backend that rejects unknown actions; otherwise an old
@@ -119,7 +122,9 @@ GA.gasGet = function (action, params) {
 };
 
 GA.gasPost = function (action, payload, extra) {
+  var destination = GA.gasUrl();
   function send() {
+    if(destination !== GA.gasUrl()) throw new Error('連線設定已變更，請重試 / Connection changed; retry');
     var body = { action: action, data: payload };
     if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) body[k] = extra[k];
     var s = GA.session(); if (s) body.session = s;
@@ -165,11 +170,11 @@ GA.isBackendCompatibilityError = function (e) {
   return !!(e && (e.code === 'BACKEND_OUTDATED' || e.code === 'UNKNOWN_ACTION' || e.code === 'CLIENT_UPDATE' || isCompatibilityMessage(e.message)));
 };
 GA.backendMessage = function (action, version) {
-  var labels={strictActionErrors:backendText('雲端版本驗證','cloud version verification','ការផ្ទៀងផ្ទាត់កំណែ Cloud'),getState:backendText('採購與收發紀錄','PO and receipt records','កំណត់ត្រាទិញ និងទទួល'),saveState:backendText('採購與收發儲存','PO and receipt save','រក្សាទុកការទិញ និងទទួល'),dashboard:backendText('首頁資料','dashboard data','ទិន្នន័យទំព័រដើម')};
+  var labels={smartCommitToken:backendText('上傳版本比對','upload version check','ពិនិត្យកំណែផ្ទុកឡើង'),monthlyPoReceiptGuard:backendText('Monthly PO 收貨及數量核對','Monthly PO receipt validation','ផ្ទៀងផ្ទាត់ការទទួល Monthly PO'),strictActionErrors:backendText('雲端版本驗證','cloud version verification','ការផ្ទៀងផ្ទាត់កំណែ Cloud'),getState:backendText('採購與收發紀錄','PO and receipt records','កំណត់ត្រាទិញ និងទទួល'),saveState:backendText('採購與收發儲存','PO and receipt save','រក្សាទុកការទិញ និងទទួល'),dashboard:backendText('首頁資料','dashboard data','ទិន្នន័យទំព័រដើម')};
   var name = labels[action] || action || 'cloud action';
   var suffix = version ? ' (GS ' + version + ')' : '';
   return backendText(
-    '目前 Apps Script 尚未確認「' + name + '」' + (version ? suffix : '（雲端未回報版本）') + '。請在設定檢查版本，並把本包 backend/AC_GA_EXP.gs 更新至同一個現有部署：管理部署 → 編輯 → 新版本 → 部署。本機資料與待傳內容保留。',
+    '目前連線尚未確認「' + name + '」' + (version ? suffix : '（雲端未回報版本）') + '。請按「檢查連線設定」，核對瀏覽器目前儲存的網址與實際版本；本機資料及待傳內容保留。',
     'The saved GAS deployment does not support "' + name + '"' + suffix + '. Data remains local and is not marked synced. Update the existing Apps Script deployment with this package\'s AC_GA_EXP.gs, then retry.',
     'GAS ដែលបានរក្សាទុកមិនគាំទ្រ "' + name + '"' + suffix + '។ ទិន្នន័យនៅក្នុងម៉ាស៊ីន ហើយមិនត្រូវបានសម្គាល់ថា Sync ទេ។ សូមដាក់ AC_GA_EXP.gs កំណែថ្មីទៅ deployment ដដែល ហើយសាកម្ដងទៀត។'
   );
@@ -192,13 +197,14 @@ GA.showBackendIssue = function (action, detail) {
       }).catch(function (e) { box.querySelector('[data-ga-backend-text]').textContent = e.message; });
     };
   }
+  if(!box.querySelector('[data-ga-backend-settings]')){var settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.setAttribute('data-ga-backend-settings','');settingsButton.textContent=backendText('檢查連線設定','Check connection settings','ពិនិត្យការតភ្ជាប់');settingsButton.style.cssText='border:1px solid #be123c;background:#fff;color:#9f1239;border-radius:7px;padding:5px 9px;font-weight:700;cursor:pointer';settingsButton.onclick=function(){if(GA.openCloudDiagnostic)GA.openCloudDiagnostic();};box.appendChild(settingsButton);}
   box.setAttribute('data-capability', action || '');
   box.querySelector('[data-ga-backend-text]').textContent = '⚠ ' + (detail || GA.backendMessage(action));
 };
 GA.normalizeCloudError = function (e, action) {
   e = e instanceof Error ? e : new Error(String(e || 'Cloud error'));
   e.action = e.action || action || '';
-  if (GA.isBackendCompatibilityError(e)) {
+  if (GA.isBackendCompatibilityError(e) && (!e.backend || !e.backend.url || e.backend.url===GA.gasUrl())) {
     if (!e.originalMessage) e.originalMessage = e.message;
     e.code = 'BACKEND_OUTDATED';
     e.message = GA.backendMessage(e.capability || action || e.action, e.backend && e.backend.version);
@@ -207,12 +213,24 @@ GA.normalizeCloudError = function (e, action) {
   return e;
 };
 GA.backend = {
+  probe: function(url){
+    var u=String(url||'').trim();
+    if(!/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(u))return Promise.reject(new Error(backendText('請使用 Apps Script 正式部署 /exec 網址（不是編輯器或 /dev 網址）','Use the deployed Apps Script /exec URL, not the editor or /dev URL','សូមប្រើតំណ Apps Script /exec')));
+    // Read-only probe: no session, no configuration changes, no writes.
+    return GA.requestJSON(u+'?action=ping&_t='+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2),{cache:'no-store'},25000).then(function(r){
+      var d=r&&r.data&&typeof r.data==='object'?Object.assign({},r,r.data):(r||{});
+      return {ok:true,url:u,version:String(d.version||''),capabilities:Array.isArray(d.capabilities)?d.capabilities.slice():[],actions:d.actions||{},dataStore:String(d.dataStore||''),checkedAt:new Date().toISOString(),raw:r};
+    });
+  },
   check: function (force) {
     var url = GA.gasUrl(), hit = BACKEND_CACHE[url];
     if (!force && hit && Date.now() - hit.at < 60000) return hit.promise;
-    var p = GA.gasGet('ping', { _t: Date.now() }).then(function (r) {
-      var d = r && r.data && typeof r.data === 'object' ? Object.assign({}, r, r.data) : (r || {});
-      return { ok:true, url:url, version:String(d.version || ''), capabilities:Array.isArray(d.capabilities) ? d.capabilities.slice() : [], actions:d.actions || {}, raw:r };
+    var p = GA.backend.probe(url).then(function(info){
+      if(url===GA.gasUrl()){
+        var box=document.getElementById('ga-backend-alert'),required=box&&box.getAttribute('data-capability');
+        if(box&&info.capabilities.indexOf(required)>=0)box.remove();
+      }
+      return info;
     });
     BACKEND_CACHE[url] = { at:Date.now(), promise:p };
     return p.catch(function (e) { delete BACKEND_CACHE[url]; throw e; });
@@ -223,7 +241,7 @@ GA.backend = {
       if (info.capabilities.indexOf(capability) < 0) {
         var e = new Error(GA.backendMessage(opt.action || capability, info.version));
         e.code = 'BACKEND_OUTDATED'; e.action = opt.action || capability; e.capability = capability; e.backend = info;
-        GA.showBackendIssue(capability, e.message); throw e;
+        if(info.url===GA.gasUrl())GA.showBackendIssue(capability, e.message); throw e;
       }
       return info;
     });

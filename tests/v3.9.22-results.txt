@@ -1,0 +1,42 @@
+GA-EXP v3.9.22 local regression results — 2026-09-14
+
+test-po-receiving-v3922.cjs
+PASS actual frontend + GAS: selected month/year, other-device receipts, cross-month totals, decimal batch, one confirmation, repeat-click protection, edit amount/stock, delete last month row, changed PO and offline block
+PASS two devices: deleting a receipt and adding another in the same month preserves deletion and new receipt
+PASS Receiving receive/issue/balance/PO tabs and actual movement Excel date/decimal import
+PASS locked GAS commit: stale receiving/expense writes, missing client token, over-receipt and unavailable bucket are rejected without changing cloud manifest
+PASS Procurement current-month progress and batch entry use the same approved PO source
+PASS login diagnostics: compare legacy/current URLs, fresh no-session probes, no automatic destination change, verified explicit apply preserves local data
+
+test-monthly-po-workspace.cjs
+PASS all HTML inline scripts and shared JS syntax
+PASS prior-year copy, editable decimals, search/add/remove, manual review, fresh approvals, unit match, source unchanged, cloud failure/retry, state conflict
+PASS PO remaining prefill, live decimal balance, refresh retention, validation/cancel, real ledger save, no double stock, repeat click protection
+
+test-proc-cloud.cjs
+PASS legacy cloud write gate, plain error, loading UI, durable pending PO/receipt reload, confirmed retry, receipt zero/decimal validation
+PASS actual backend ping/version/capabilities, unknown GET/POST rejection, PO/receipt state round-trip
+
+test-platform-pages.cjs
+PASS index complete page initialization
+PASS procurement complete page initialization
+PASS receiving complete page initialization
+PASS maintenance complete page initialization + imported draft dedupe/update
+PASS expense complete page initialization
+PASS damage complete page initialization
+PASS fuel complete page initialization
+PASS etc complete page initialization
+PASS transportation complete page initialization
+
+test-repair-import.cjs
+PARSED {"Forklift / 2026":{"count":14,"cents":58250},"Aircon / 2026":{"count":31,"cents":80000},"Genset & Staff house / 2024":{"count":6,"cents":11800},"Washing & DryMachine / 2026":{"count":6,"cents":21500}}
+PASS full XLSB import, all repair sheets, date/amount/room mapping, repeated import, one-line update, smart import routing, D/W/M/Y and expense render
+
+test-mobility-cloud.cjs
+IndexedDB/outbox simulation: add, edit, delete, reload offline, delete during upload, cross-device conflict PASS; requests=11
+
+test-backend-delivery.cjs
+Real GAS mobility handler: mirror-write failure repaired on idempotent retry; unreadable cloud retained PASS
+Actual dashboard computation: 30 + 30.25 = 60.25 L (no whole-liter rounding) PASS
+Real GAS Telegram handler: receipts, target IDs, duplicate with original receipt, explicit new copy, Telegram 403, safe partial retry and zero-target rejection PASS
+Cloud transport: HTML permission error, msg envelope, bounded timeout and subsequent retry PASS

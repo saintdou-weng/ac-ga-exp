@@ -44,13 +44,14 @@ async function setup(page){
  }finally{p.close();}
  const r=await setup('receiving.html');try{
  const w=r.w,$=id=>w.document.getElementById(id);w.eval(`receiveTab='po';_recvPoLoadedYear=2026;_recvPoLoading=false;_recvPoView='all';records=[{id:'prior',date:'2026-09-01',type:'receive',itemId:'master',itemName:'QA Stock',qty:10,poId:'qa-po',poNumber:'QA-PO',poItemIndex:0,purchaseSource:'monthly_po'}];items=[{id:'master',name:'QA Stock',unit:'pcs',openingStock:0,stock:10}];_recvPoCache=[{poId:'qa-po',poNumber:'QA-PO',period:'2026-09',items:[{name:'QA Stock',approvedQty:30.25,receivedQty:10,remainingQty:20.25,unit:'pcs'}]}];renderPoReceiveTab();`);
+ w.eval("periodMode='month';periodDate=new Date(2026,8,1);");w.GA.backend.require=async()=>({capabilities:['monthlyPoReceiptGuard']});w.GA.gasGet=async()=>({ok:true,data:JSON.parse(w.eval('JSON.stringify(_recvPoCache)')),receiptHashes:{}});w.recvCloudPull=async()=>({ok:true,remoteHashes:{}});
  assert.equal($('po-qty-0').value,'0');w.applyPoReceiveDefaults();assert.equal($('po-qty-0').value,'20.25');assert.equal(w.eval('records.length'),1,'fill must not post');
  $('po-qty-0').value='5.125';$('po-qty-0').dispatchEvent(new w.Event('input'));assert.equal($('po-qty-0').closest('tr').cells[6].textContent,'15.125');
  $('po-batch-inspector').value='QA Inspector';$('po-batch-inspector').dispatchEvent(new w.Event('input'));w.renderPoReceiveTab();assert.equal($('po-qty-0').value,'5.125','refresh preserves draft');assert.equal($('po-batch-inspector').value,'QA Inspector');
- $('po-qty-0').value='21';w.savePoReceiveBatch();assert.equal(w.eval('records.length'),1,'over receipt blocked');
- $('po-qty-0').value='5.125';w.confirm=()=>false;w.savePoReceiveBatch();assert.equal(w.eval('records.length'),1,'cancel does not save');w.confirm=()=>true;
- w.eval("scheduleReceivingAutoUpload=function(){};");w.savePoReceiveBatch();assert.equal(w.eval('records.length'),2,'actual legacy save is called');assert.equal(w.eval('records[1].qty'),5.125);assert.equal(w.eval('items[0].stock'),15.125);assert.equal(w.eval('_recvPoCache[0].items[0].remainingQty'),15.125);
- assert.equal($('po-qty-0').value,'0','saved input clears');w.savePoReceiveBatch();assert.equal(w.eval('records.length'),2,'repeat click does not post again');
+ $('po-qty-0').value='21';await w.savePoReceiveBatch();assert.equal(w.eval('records.length'),1,'over receipt blocked');
+ $('po-qty-0').value='5.125';w.confirm=()=>false;await w.savePoReceiveBatch();assert.equal(w.eval('records.length'),1,'cancel does not save');w.confirm=()=>true;
+ w.eval("scheduleReceivingAutoUpload=function(){};");await w.savePoReceiveBatch();assert.equal(w.eval('records.length'),2,'actual legacy save is called');assert.equal(w.eval('records[1].qty'),5.125);assert.equal(w.eval('items[0].stock'),15.125);assert.equal(w.eval('_recvPoCache[0].items[0].remainingQty'),15.125);
+ assert.equal($('po-qty-0').value,'0','saved input clears');await w.savePoReceiveBatch();assert.equal(w.eval('records.length'),2,'repeat click does not post again');
  w.applyPoReceiveDefaults();assert.equal($('po-qty-0').value,'15.125');assert.equal(w.eval('records.length'),2);assert(!w.document.querySelector('[onclick="receiveAllPoNow()"]'));
  assert.equal(r.errors.length,0,r.errors.join('\n'));
  console.log('PASS PO remaining prefill, live decimal balance, refresh retention, validation/cancel, real ledger save, no double stock, repeat click protection');

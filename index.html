@@ -10,10 +10,11 @@
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.6-20260824" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.6-20260824'">
-<script src="shared/ga-core.js?v=3.9.21"></script>
+<script src="shared/ga-core.js?v=3.9.22"></script>
+<script src="shared/ga-cloud-diagnostic.js?v=3.9.22"></script>
 <script src="shared/ga-data.js?v=3.6-20260824"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.22"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.6-20260824"></scr'+'ipt>');}
 </script>
 
 <style>
@@ -284,18 +285,16 @@ function saveSettings(){
 async function testGAS(){
   const url=document.getElementById('set-gas').value.trim();
   if(!url){ GA.toast('請先輸入 GAS URL'); return; }
-  GA.saveCfg({gasUrl:url});
-  if(GA.backend)GA.backend.clear();
   GA.toast('⏳ 測試中...');
   document.getElementById('gas-diagnostic').textContent='正在檢查目前設定的 GAS…';
   try{
-    const info=await GA.backend.check(true), required=['strictActionErrors','dashboardV2','mobilitySync','tgSummaryReceipt','smartSync'];
+    const info=await GA.backend.probe(url), required=['strictActionErrors','procStateToken','dashboardV2','mobilitySync','tgSummaryReceipt','smartSync','smartCommitToken','monthlyPoReceiptGuard'];
     const missing=required.filter(x=>info.capabilities.indexOf(x)<0);
     document.getElementById('gas-diagnostic').textContent='前端版本：'+GA.PLATFORM_VERSION+'\n雲端實際版本：'+(info.version||'未回報（舊版或不同程式）')+'\n缺少能力：'+(missing.join(', ')||'無')+'\n目前連線：'+info.url+'\n'+(missing.length?'請更新同一 Apps Script 專案，再從管理部署選擇新版本發布；僅儲存程式不會更新 /exec。':'前後端能力檢查通過，可再測同步與摘要回執。');
     if(missing.length){const e=new Error(GA.backendMessage(missing[0],info.version));e.code='BACKEND_OUTDATED';e.capability=missing[0];e.backend=info;throw e;}
     GA.toast('✅ 完整雲端功能已確認 · GS '+info.version+' · '+required.length+' checks');
-    const alert=document.getElementById('ga-backend-alert');if(alert)alert.remove();
-    await refreshDashboard();
+    if(url===GA.gasUrl()){GA.backend.clear();const alert=document.getElementById('ga-backend-alert');if(alert)alert.remove();await refreshDashboard();}
+    else document.getElementById('gas-diagnostic').textContent+='\n測試成功，網址尚未套用；請確認是原資料庫後按儲存。';
   }catch(e){GA.normalizeCloudError(e,'platform cloud');if(!e.backend)document.getElementById('gas-diagnostic').textContent=e.message;GA.toast('❌ '+e.message,'err');}
 }
 

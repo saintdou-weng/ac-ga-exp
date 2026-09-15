@@ -42,13 +42,13 @@
     var raw = text(v).trim().toLowerCase().replace(/\s+/g, '_');
     return TOOL_ALIASES[raw] || raw || 'tool';
   }
-  function gaCloudContract(tool) {
+  function gaCloudContract(tool,writing) {
     var c = canonicalTool(tool);
     /* Receiving and Expense belong to AC-GA-EXP. Their legacy generic
        `push` endpoint can acknowledge an unknown action without saving it,
        so these two modules must use the current smart-sync contract. */
     if (['receiving','expense'].indexOf(c) >= 0 && g.GA && GA.backend && GA.backend.require) {
-      return GA.backend.require('smartSync', { action:'smart sync' });
+      return GA.backend.require(writing?'smartCommitToken':'smartSync', { action:writing?'smart sync save':'smart sync' });
     }
     return Promise.resolve(null);
   }
@@ -197,10 +197,11 @@
   function jsonFetch(url, opts) {
     if (!nativeFetch) return Promise.reject(new Error('Browser fetch unavailable'));
     var request = Object.assign({ cache:'no-store' }, opts || {});
+    if(g.GA&&GA.requestJSON)return GA.requestJSON(url,request,45000);
     return nativeFetch(url, request).then(function (r) {
       return r.text().then(function (raw) {
         var j; try { j = JSON.parse(raw); } catch (_) { throw new Error('Cloud returned non-JSON: ' + raw.slice(0, 100)); }
-        if (!r.ok || (j && j.ok === false)) throw new Error((j && j.error) || ('HTTP ' + r.status));
+        if (!r.ok || (j && j.ok === false)) {var err=new Error((j&&(j.error||j.msg))||('HTTP '+r.status));err.code=j&&j.code;throw err;}
         return j;
       });
     });
@@ -711,7 +712,7 @@
     var url = text(opts.url).trim(), tool = opts.tool, records = sortRows(opts.records || []), cacheRows = records, status = opts.onStatus;
     if (!url) return Promise.reject(new Error('GAS URL missing'));
     callStatus(status, '智慧同步：比對雲端差異…', 'busy');
-    return gaCloudContract(tool).then(function () { return getManifest(url, tool); }).then(function (remote) {
+    return gaCloudContract(tool,true).then(function () { return getManifest(url, tool); }).then(function (remote) {
       remote = remote || {};
       if (remote.compatibilityFallback) {
         return legacyPush(opts, records, status);
@@ -823,7 +824,7 @@
           callStatus(status, '雲端已是最新，沒有需要上傳的變更', 'ok');
           return { ok:true, skipped:true, unchanged:records.length, migrated:false };
         }
-        return post(url, { action:'smartCommit', tool:tool, uploadId:uploadId, hashes:hashes, counts:counts, recordCount:recordCount, meta:meta, summary:opts.summary || {} }).then(function (d) {
+        return post(url, { action:'smartCommit', tool:tool, uploadId:uploadId, baseHashes:remote.hashes||{}, baseMetaHash:remote.metaHash||'', hashes:hashes, counts:counts, recordCount:recordCount, meta:meta, summary:opts.summary || {} }).then(function (d) {
           var out = { ok:true, recordCount:recordCount, uploaded:sent, unchanged:Math.max(0, records.length - sent), changedBuckets:changed.length, removedBuckets:deleted.length, migrated:!!migrated, timestamp:(d && (d.timestamp || d.updatedAt)) || now() };
           writeState(tool, { hashes:hashes, counts:counts, metaHash:metaHash, updatedAt:out.timestamp });
           callStatus(status, '完成｜本機 ' + records.length.toLocaleString() + '｜上傳 ' + sent.toLocaleString() + (deleted.length ? '｜刪除 ' + deleted.length + ' 區' : '') + '｜其餘不重複傳輸', 'ok');
@@ -885,6 +886,7 @@
               if (bh && lb.hash !== bh) conflictKeys.push(k);
               out[k] = lb.records; pending += lb.count; return;
             }
+            if(opts.allowDeletes&&!lb&&bh&&rh===bh){pending++;return;}
             var localChanged = !!(lb && bh && lb.hash !== bh);
             var remoteChanged = !!(rh && bh && rh !== bh);
             if (localChanged && !remoteChanged) {
@@ -935,7 +937,7 @@
             callStatus(status, '完成｜下載 ' + downloaded.toLocaleString() + '｜未變 ' + unchanged.toLocaleString() + (removed ? '｜套用雲端刪除 ' + removed : '') + (pending ? '｜本機待上傳 ' + pending : ''), conflictKeys.length ? 'warn' : 'ok');
             var manifestCount = Number(remote.recordCount) || Object.keys(remote.counts || {}).reduce(function (n, k) { return n + (Number(remote.counts[k]) || 0); }, 0);
             return { ok:true, records:finalRows, remoteRecords:remoteRows, meta:remote.meta || {}, downloaded:downloaded, unchanged:unchanged, removed:removed, pendingUpload:pending, conflicts:conflictKeys,
-              remoteRecordCount:Math.max(manifestCount, remoteRows.length) };
+              remoteRecordCount:Math.max(manifestCount, remoteRows.length), remoteHashes:remoteH };
           }
         });
       }); };
