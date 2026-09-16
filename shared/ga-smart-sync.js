@@ -357,6 +357,12 @@
   }
   function getManifest(url, tool) {
     var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=smartManifest&tool=' + enc(tool));
+    if(['expense','receiving'].indexOf(canonicalTool(tool))>=0){
+      // These modules already verified the GA contract. An HTML/failed request
+      // is a connection failure, never evidence that legacy data is empty.
+      function verifiedManifest(j){var d=dataOf(j);if(!d||typeof d.exists!=='boolean'){var e=new Error('雲端未回傳有效資料清單 / Cloud returned an invalid manifest');e.code='CLOUD_INVALID_RESPONSE';throw e;}return d;}
+      return jsonFetch(endpoint).then(verifiedManifest).catch(function(){return post(url,{action:'smartManifest',tool:tool}).then(verifiedManifest);});
+    }
     function fallback(reason) {
       return { exists:false, legacy:true, compatibilityFallback:true,
         reason:text(reason || 'smartManifest unsupported') };
@@ -445,10 +451,15 @@
     return tryCandidate(0, null);
   }
   function post(url, body) {
+    if(['expense','receiving'].indexOf(canonicalTool(body.tool))>=0&&g.GA&&GA.gasUrl&&url!==GA.gasUrl())return Promise.reject(new Error('連線設定已變更，請重新同步 / Connection changed; retry sync'));
     return jsonFetch(url, { method:'POST', redirect:'follow', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) }).then(dataOf);
   }
   function smartBucketRead(url, tool, bucket, remoteIndex, expectedCount, onStatus) {
     var endpoint = noCache(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'action=smartBucket&tool=' + enc(tool) + '&bucket=' + enc(bucket));
+    if(['expense','receiving'].indexOf(canonicalTool(tool))>=0){
+      function completeBucket(j){var d=dataOf(j);if(!d||!Array.isArray(d.records)||d.records.length!==Number(expectedCount)){var e=new Error('下載資料不完整，尚未套用；請重試 / Incomplete cloud bucket; retry before applying data');e.code='CLOUD_INCOMPLETE';throw e;}return d;}
+      return jsonFetch(endpoint).then(completeBucket).catch(function(){return post(url,{action:'smartBucket',read:true,tool:tool,bucket:bucket}).then(completeBucket);});
+    }
     var fallback = function (reason) {
       /* Read by the bucket's stable name first.  The old fallback used the
          index of the local+remote union; when a phone had one local-only

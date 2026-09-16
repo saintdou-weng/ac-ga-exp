@@ -17,6 +17,9 @@
       d=document.createElement('dialog');d.id='ga-cloud-diagnostic';d.style.cssText='width:min(640px,calc(100% - 28px));box-sizing:border-box;border:1px solid #94a3b8;border-radius:16px;padding:24px;color:#172b40;background:white;box-shadow:0 14px 60px #0f172a55;font:14px/1.6 system-ui;z-index:20000';
       d.innerHTML='<form method="dialog" style="float:right"><button aria-label="Close">✕</button></form><h2 style="margin:0 0 10px">'+T('雲端連線檢查','Cloud connection check','ពិនិត្យការតភ្ជាប់ Cloud')+'</h2><p>'+T('先確認這個瀏覽器正在連哪個部署。檢查不會上傳資料或更換網址。','Check which deployment this browser uses. A check does not upload data or change the URL.','ពិនិត្យ deployment ដែលកម្មវិធីនេះប្រើ ដោយមិនផ្ទុកទិន្នន័យឡើង។')+'</p><label>'+T('目前儲存的 Apps Script 網址','Saved Apps Script URL','តំណ Apps Script')+'<input id="ga-diag-url" type="url" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #94a3b8;border-radius:8px"></label><div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button type="button" id="ga-diag-check">'+T('檢查上方網址','Check URL above','ពិនិត្យតំណខាងលើ')+'</button><button type="button" id="ga-diag-default">'+T('比較套件預設連線','Compare packaged connection','ប្រៀបធៀបការតភ្ជាប់ដើម')+'</button></div><pre id="ga-diag-result" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f8;padding:12px;border-radius:8px;font:13px/1.6 system-ui"></pre><label style="display:block;margin:12px 0"><input type="checkbox" id="ga-diag-same"> '+T('若更換網址，我已確認它連到原本的資料庫；本機資料會保留。','If changing the URL, I confirmed it uses the original database; local data is retained.','បើប្តូរតំណ ខ្ញុំបានបញ្ជាក់ថាវាប្រើទិន្នន័យដើម។')+'</label><button type="button" id="ga-diag-apply" disabled style="background:#17648d;color:white;padding:10px 16px;border:0;border-radius:8px">'+T('套用已驗證網址並重新載入','Apply verified URL & reload','អនុវត្តតំណ និងផ្ទុកឡើងវិញ')+'</button>';
       document.body.appendChild(d);
+      var packaged=document.createElement('button');packaged.type='button';packaged.id='ga-diag-use-default';packaged.textContent=T('檢查套件網址','Check packaged URL','ពិនិត្យតំណដើម');
+      $('ga-diag-default').insertAdjacentElement('afterend',packaged);
+      packaged.onclick=function(){$('ga-diag-url').value=GA.DEFAULT_GAS;$('ga-diag-same').checked=false;$('ga-diag-check').click();};
       $('ga-diag-url').oninput=()=>{verified=null;ready();};$('ga-diag-same').onchange=ready;
       $('ga-diag-check').onclick=async()=>{
         const thisRun=++run,url=$('ga-diag-url').value.trim();verified=null;ready();$('ga-diag-result').textContent=T('檢查中…','Checking…','កំពុងពិនិត្យ…');
@@ -31,13 +34,18 @@
       };
       $('ga-diag-apply').onclick=()=>{
         ready();if($('ga-diag-apply').disabled)return;
+        try{
         const old=GA.gasUrl();
         if(old!==verified.url){localStorage.setItem('ga_previous_cloud_connection',JSON.stringify({url:old,at:new Date().toISOString()}));GA.saveCfg({gasUrl:verified.url,session:''});}else GA.saveCfg({gasUrl:verified.url});
+        if(GA.gasUrl()!==verified.url)throw new Error(T('連線設定未保存，請先處理本機保存問題。','Connection setting was not saved. Resolve the local save error first.','មិនបានរក្សាទុកការកំណត់។'));
         GA.backend.clear();location.reload();
+        }catch(e){$('ga-diag-result').textContent=e.message;}
       };
     }
     verified=null;++run;$('ga-diag-url').value=GA.gasUrl();$('ga-diag-same').checked=false;$('ga-diag-result').textContent=T('網頁版本：','Web version: ','កំណែគេហទំព័រ៖ ')+GA.PLATFORM_VERSION;ready();d.showModal();$('ga-diag-check').click();
   };
   function mount(){const login=document.querySelector('.login-box');if(login&&!$('ga-login-cloud-check')){const b=document.createElement('button');b.id='ga-login-cloud-check';b.type='button';b.textContent=T('☁ 檢查連線設定','☁ Check cloud connection','☁ ពិនិត្យការតភ្ជាប់');b.style.cssText='width:100%;margin-top:12px;padding:10px;border:1px solid #9caebe;border-radius:8px;background:#edf4fa;color:#23465f;font-weight:600';b.onclick=GA.openCloudDiagnostic;login.appendChild(b);}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
+  function headerButton(){var host=document.querySelector('.ga-hd-tools');if(!host||$('ga-header-cloud-check'))return;var b=document.createElement('button');b.type='button';b.id='ga-header-cloud-check';b.className='ga-ico';b.textContent=T('⚙ 連線檢查','⚙ Connection','⚙ ពិនិត្យការតភ្ជាប់');b.onclick=GA.openCloudDiagnostic;host.appendChild(b);GA.on('lang',function(){b.textContent=T('⚙ 連線檢查','⚙ Connection','⚙ ពិនិត្យការតភ្ជាប់');});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',headerButton);else headerButton();
 })();

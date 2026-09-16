@@ -115,10 +115,10 @@ GA.dataPanel = function (opt) {
           ? '將以備份【覆蓋】目前資料，現有資料會被清除。'
           : '將把備份【合併】進目前資料。') +
           (mod && opt.module && mod !== opt.module ? '\n⚠️ 備份來自模組「' + mod + '」，與目前模組不同。' : '');
-        GA.confirm(msg).then(function (ok) {
+        GA.confirm(msg).then(async function (ok) {
           if (!ok) { GA.toast(GA.T('dmCancelled')); return; }
           try {
-            if (opt.restore) opt.restore(body, mode);
+            if (opt.restore) await opt.restore(body, mode);
             GA.toast('📥 ' + GA.T('dmDone'));
             if (opt.onChange) opt.onChange();
             close();
@@ -129,11 +129,11 @@ GA.dataPanel = function (opt) {
     rd.readAsText(f);
   };
 
-  ov.querySelector('#dm-clear').onclick = function () {
+  ov.querySelector('#dm-clear').onclick = async function () {
     var ans = prompt(GA.T('dmClearWarn'));
     if (ans !== 'DELETE') { GA.toast(GA.T('dmCancelled')); return; }
     try {
-      if (opt.clear) opt.clear();
+      if (opt.clear) await opt.clear();
       GA.toast('🗑 ' + GA.T('dmDone'));
       if (opt.onChange) opt.onChange();
       close();
@@ -144,4 +144,3 @@ GA.dataPanel = function (opt) {
 };
 
 })(window);
-

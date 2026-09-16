@@ -15,7 +15,7 @@
 
 var GA = global.GA = global.GA || {};
 GA.VERSION = '2.1';
-GA.PLATFORM_VERSION = '3.9.22';
+GA.PLATFORM_VERSION = '3.9.23';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';
@@ -58,8 +58,10 @@ function parseEnvelope(raw) {
   var t = String(raw || '').trim();
   if (!t) throw new Error('Empty response from GAS');
   if (t.charAt(0) === '<') {
-    var m = t.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    throw new Error('GAS 回傳 HTML 錯誤頁' + (m ? '：' + m[1].trim() : '（可能未部署或權限不足）'));
+    var missing=/找不到網頁|找不到网页|page not found|file does not exist|requested file does not exist|404/i.test(t);
+    var login=/accounts\.google\.com|sign in|登入|登錄|authorization required|access denied|permission denied/i.test(t);
+    var message=missing?backendText('雲端網址回覆「找不到網頁」；請檢查此瀏覽器儲存的部署網址。','The cloud URL returned Page not found. Check the deployment URL saved in this browser.','រកមិនឃើញទំព័រ Cloud។ សូមពិនិត្យតំណ deployment។'):login?backendText('雲端回覆登入／權限頁；請檢查原 Apps Script 網頁應用程式的存取權限。','Cloud returned a sign-in or access page. Check the original Apps Script web app access settings.','Cloud តម្រូវឱ្យចូលគណនី ឬសិទ្ធិចូលប្រើ។'):backendText('雲端回傳網頁，未回傳資料；請檢查連線設定並重試。','Cloud returned HTML instead of data. Check the connection and retry.','Cloud ផ្ញើទំព័រ HTML ជំនួសទិន្នន័យ។');
+    var htmlError=new Error(message);htmlError.code=missing?'CLOUD_HTML_NOT_FOUND':login?'CLOUD_HTML_AUTH':'CLOUD_HTML';throw htmlError;
   }
   var d;
   try { d = JSON.parse(t); }
@@ -170,7 +172,7 @@ GA.isBackendCompatibilityError = function (e) {
   return !!(e && (e.code === 'BACKEND_OUTDATED' || e.code === 'UNKNOWN_ACTION' || e.code === 'CLIENT_UPDATE' || isCompatibilityMessage(e.message)));
 };
 GA.backendMessage = function (action, version) {
-  var labels={smartCommitToken:backendText('上傳版本比對','upload version check','ពិនិត្យកំណែផ្ទុកឡើង'),monthlyPoReceiptGuard:backendText('Monthly PO 收貨及數量核對','Monthly PO receipt validation','ផ្ទៀងផ្ទាត់ការទទួល Monthly PO'),strictActionErrors:backendText('雲端版本驗證','cloud version verification','ការផ្ទៀងផ្ទាត់កំណែ Cloud'),getState:backendText('採購與收發紀錄','PO and receipt records','កំណត់ត្រាទិញ និងទទួល'),saveState:backendText('採購與收發儲存','PO and receipt save','រក្សាទុកការទិញ និងទទួល'),dashboard:backendText('首頁資料','dashboard data','ទិន្នន័យទំព័រដើម')};
+  var labels={smartSync:backendText('資料同步','data sync','សមកាលកម្មទិន្នន័យ'),'smart sync':backendText('資料同步','data sync','សមកាលកម្មទិន្នន័យ'),smartCommitToken:backendText('上傳版本比對','upload version check','ពិនិត្យកំណែផ្ទុកឡើង'),monthlyPoReceiptGuard:backendText('Monthly PO 收貨及數量核對','Monthly PO receipt validation','ផ្ទៀងផ្ទាត់ការទទួល Monthly PO'),strictActionErrors:backendText('雲端版本驗證','cloud version verification','ការផ្ទៀងផ្ទាត់កំណែ Cloud'),getState:backendText('採購與收發紀錄','PO and receipt records','កំណត់ត្រាទិញ និងទទួល'),saveState:backendText('採購與收發儲存','PO and receipt save','រក្សាទុកការទិញ និងទទួល'),dashboard:backendText('首頁資料','dashboard data','ទិន្នន័យទំព័រដើម')};
   var name = labels[action] || action || 'cloud action';
   var suffix = version ? ' (GS ' + version + ')' : '';
   return backendText(
@@ -204,6 +206,7 @@ GA.showBackendIssue = function (action, detail) {
 GA.normalizeCloudError = function (e, action) {
   e = e instanceof Error ? e : new Error(String(e || 'Cloud error'));
   e.action = e.action || action || '';
+  if(/^CLOUD_HTML/.test(e.code||''))GA.showBackendIssue('strictActionErrors',e.message);
   if (GA.isBackendCompatibilityError(e) && (!e.backend || !e.backend.url || e.backend.url===GA.gasUrl())) {
     if (!e.originalMessage) e.originalMessage = e.message;
     e.code = 'BACKEND_OUTDATED';
@@ -958,7 +961,7 @@ GA.header = function (sel, opt) {
       '<a class="ga-hd-home" href="index.html" data-t-title="home" title="' + GA.T('home') + '">🏠</a>' +
       '<div class="ga-hd-id">' +
         '<div class="ga-hd-name">' + GA.esc(opt.icon || '') + ' ' + GA.esc(opt.name || '') + '</div>' +
-        '<div class="ga-hd-ver">AC-GA-EXP ' + GA.esc(opt.version || 'v2.0') + '</div>' +
+        '<div class="ga-hd-ver">AC-GA-EXP ' + GA.esc('v'+GA.PLATFORM_VERSION) + '</div>' +
       '</div>' +
       '<div class="ga-cloud idle" id="ga-cloud"></div>' +
       '<div class="ga-hd-tools">' +
