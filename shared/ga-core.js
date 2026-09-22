@@ -15,7 +15,7 @@
 
 var GA = global.GA = global.GA || {};
 GA.VERSION = '2.1';
-GA.PLATFORM_VERSION = '3.9.23';
+GA.PLATFORM_VERSION = '3.9.24';
 
 /* ═══════════════════ 1. 設定 Config ═══════════════════ */
 var CFG_KEY = 'ac_ga_exp_config';

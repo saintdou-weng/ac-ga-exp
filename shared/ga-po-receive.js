@@ -19,7 +19,8 @@
     if(!r||r.type!=='receive')return false;
     const hasId=!!(r.poId||r.poNumber),same=(r.poId&&String(r.poId)===String(po.poId))||(r.poNumber&&String(r.poNumber)===String(po.poNumber));
     if(same){if(r.poSourceItemId&&(it.itemId||it.id))return String(r.poSourceItemId)===String(it.itemId||it.id);if(r.poItemIndex!==undefined&&r.poItemIndex!==null&&r.poItemIndex!=='')return Number(r.poItemIndex)===idx;return norm(r.itemName)===norm(it.name);}
-    return !hasId&&(r.purchaseSource==='monthly_po'||/monthly\s*po/i.test(r.remarks||''))&&norm(r.itemName)===norm(it.name)&&String(r.date||'').slice(0,7)===po.period;
+    const source=norm(r.purchaseSource);
+    return !!po.poNumber&&!hasId&&(source==='monthly_po'||(!source&&/monthly\s*po/i.test(r.remarks||'')))&&norm(r.itemName)===norm(it.name)&&String(r.date||'').slice(0,7)===po.period;
   }
   window.recvReconcilePoCache=function(){
     (_recvPoCache||[]).forEach(po=>(po.items||[]).forEach((it,idx)=>{

@@ -1,0 +1,9 @@
+.recv-catalog-intro{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#e7f0fb;color:#173e64;border:1px solid #8aaac6;border-radius:10px;padding:12px 14px;margin:0 0 14px;line-height:1.6;font-size:13px}
+.recv-catalog-empty{padding:22px 15px;border:1px dashed #829bad;border-radius:10px;background:#f0f5f8;color:#36516a;line-height:1.7}
+.recv-catalog-conflict{padding:14px;border:1px solid #bd8732;border-radius:10px;background:#fff5db;color:#624811;line-height:1.6;margin-bottom:14px;overflow-wrap:anywhere}.recv-catalog-conflict p{margin:7px 0}
+.recv-catalog-details{background:#edf5f2;color:#205741;border-radius:6px;padding:7px;margin-top:6px;font-size:12px;line-height:1.5}
+.recv-edit-card .itemfield input[type=search]{margin-bottom:6px}.recv-edit-card .itemfield .nav-btn{margin-top:6px;min-height:36px}.recv-edit-card .head .row-btn.del{width:auto;min-height:36px;padding:6px 10px;background:#fff0ec;color:#96351e;border-color:#bd604b;font-weight:700}
+[data-catalog-search-status]{color:#85580e;font-size:12px;line-height:1.6}.recv-v3912-actions button:disabled{opacity:.5;cursor:not-allowed}
+#recv-item-form-help{background:#e7f0fb;border-radius:8px;padding:11px;color:#274a69;line-height:1.6;font-size:13px}#recv-use-existing-item{margin-bottom:12px}#recv-use-existing-item[hidden]{display:none}
+#page-items .row-actions{flex-wrap:wrap}#page-items .row-actions .nav-btn{font-size:11px;padding:6px 8px;min-height:32px}
+@media(max-width:700px){.recv-catalog-intro{align-items:stretch}.recv-catalog-intro .nav-btn{width:100%}.recv-edit-card .grid{grid-template-columns:1fr 1fr}.recv-edit-card .grid .itemfield{grid-column:1/-1}.recv-v3912-actions .nav-btn{flex:1 1 auto}.recv-catalog-details{font-size:11px}}
