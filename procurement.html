@@ -1128,12 +1128,8 @@ function doLogin(){
   if(user.pin!==pin){err.textContent=L3("❌ PIN 錯誤，請重試","❌ Wrong PIN, please try again","❌ PIN មិនត្រឹមត្រូវ សូមព្យាយាមម្ដងទៀត");return;}
   cu={...user};
   err.style.display="none";
-  // 向 GAS 換 session（供送核可用；失敗仍可離線操作與提交）
-  if(user.tgId){
-    GA.gasPost("issueSession",{tgId:user.tgId})
-      .then(r=>{ if(r.data&&r.data.session) GA.setSession(r.data.session); })
-      .catch(()=>{});
-  }
+  // v3.9.27: every PIN login gets a server session (Submit / Review / Approve need it)
+  _procLoginSession(true).catch(()=>{});
   enterApp();
 }
 function doLogout(){
@@ -2330,8 +2326,43 @@ function _procApplyServerPO(po){
   return true;
 }
 function _procSession(){ try{return (GA.cfg&&GA.cfg().session)||'';}catch(_){return '';} }
+/* v3.9.27: session helpers — PIN logins used to have no session, so the server
+   rejected Submit/Review/Approve ("Applicant 必須由 /exp 或有效登入送審"). */
+function _procSessionValid(){
+  const p=String(_procSession()).split('.');
+  return p.length===3 && Number(p[1]) > Date.now()+60000;
+}
+let _procLoginBusy=null;
+function _procLoginSession(force){
+  if(!force && _procSessionValid()) return Promise.resolve(true);
+  if(_procLoginBusy) return _procLoginBusy;
+  const u=cu||{};
+  let job;
+  if(u.pin){
+    job=GA.gasPost("pinLogin",{role:u.role,pin:u.pin,tgId:u.tgId||""})
+      .then(r=>{const d=r&&r.data||r||{};if(d.session){GA.setSession(d.session);return true;}return false;})
+      .catch(e=>{ /* older GAS without pinLogin: keep the previous Telegram-ID route for Paul */
+        if(u.tgId) return GA.gasPost("issueSession",{tgId:u.tgId}).then(r=>{const d=r&&r.data||{};if(d.session){GA.setSession(d.session);return true;}return false;});
+        throw e; });
+  }else if(_UID){
+    job=GA.gasPost("issueSession",{tgId:_UID}).then(r=>{const d=r&&r.data||{};if(d.session){GA.setSession(d.session);return true;}return false;});
+  }else job=Promise.resolve(false);
+  _procLoginBusy=job.finally(()=>{_procLoginBusy=null;});
+  return _procLoginBusy;
+}
+function _procIsAuthErr(e){ return !!e && (e.code==='NO_PERM' || /登入|log ?in/i.test(String(e.message||''))) && !/Only |只有/.test(String(e.message||'')); }
+async function _procWithSession(fn){
+  try{ await _procLoginSession(false); }catch(_){ }
+  try{ return await fn(); }
+  catch(e){
+    if(!_procIsAuthErr(e)) throw e;
+    let ok=false; try{ ok=await _procLoginSession(true); }catch(_){ }
+    if(!ok) throw e;
+    return await fn();   // one retry with a fresh session
+  }
+}
 async function _procPost(action,data){
-  const j=await GA.gasPost(action,Object.assign({},data||{},{session:_procSession()}));
+  const j=await _procWithSession(()=>GA.gasPost(action,Object.assign({},data||{},{session:_procSession()})));
   return j.data||j;
 }
 async function _procEnsureTelegram(po){
@@ -2387,9 +2418,9 @@ async function doSubmit(forceRetry){
       id:i.id,name:i.name,cn:i.cn||i.name,cat:i.cat||"",
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
-    const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()};
+    const mkPayload=()=>({name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()});
     try{GA.toast(L3("📤 正在送審並通知 Telegram 群組…","📤 Submitting and notifying Telegram group…","📤 កំពុងដាក់ស្នើ និងជូនដំណឹងក្រុម Telegram…"));}catch(_){ }
-    const out=await GA.gasGet('submit',{data:JSON.stringify(payload),_:Date.now()});
+    const out=await _procWithSession(()=>GA.gasGet('submit',{data:JSON.stringify(mkPayload()),_:Date.now()}));
     // IMPORTANT: only sign locally AFTER GAS confirms the request.
     poStatus="submitted";
     sigs.applicant={name:cu.name,date:new Date().toLocaleDateString()};
