@@ -38,8 +38,10 @@ function txt(v){ return String(v===null||v===undefined?'':v).trim(); }
 /* 這些檔案的日期多為 Excel serial（數字），統一轉 YYYY-MM-DD */
 function d(v){
   var s = txt(v), m = s.match(/^(\d{1,2})-(\d{1,2})--(20\d{2})$/);
-  if (m) return m[3] + '-' + String(+m[2]).padStart(2,'0') + '-' + String(+m[1]).padStart(2,'0');
-  return GA.excelDate(v);
+  var out = m ? GA.excelDate(m[3] + '-' + m[2] + '-' + m[1]) : GA.excelDate(v); /* v3.9.25 validated */
+  /* v3.9.25: a date-looking cell that is not a real date is reported by the importer instead of silently dropped */
+  if (!out && (m || /^\d{1,4}[-\/.]\d{1,2}[-\/.]\d{2,4}$/.test(s))) { try { (GA._invalidDates = GA._invalidDates || []).push(s); } catch (e) {} }
+  return out;
 }
 
 function hn(v){

@@ -78,7 +78,7 @@
     function canSync(){try{return typeof s.opts.canSync==='function'?!!s.opts.canSync():true;}catch(_){return false;}}
     async function run(reason,extra){
       reason=reason||'reconcile';extra=extra||{};
-      if(s.busy){s.queued={reason:reason,extra:mergeExtra(s.queued&&s.queued.extra,extra)};return false;}
+      if(s.busy){var RQ=/^(startup-reconcile|reconcile|resume|pageshow|network-restored|resume-focus|resume-visible)$/,keepReason=(s.queued&&!RQ.test(String(s.queued.reason||''))&&RQ.test(String(reason)))?s.queued.reason:reason;/* v3.9.25: a queued data change is never downgraded to a plain resume */s.queued={reason:keepReason,extra:mergeExtra(s.queued&&s.queued.extra,extra)};return false;}
       var priorPending=read(key);
       if(!online()||!canSync()){write(key,{reason:reason,extra:extra,at:Date.now()});setState(s,online()?'retry':'offline');return false;}
       s.busy=true;s.lastRun=Date.now();setState(s,'syncing');
@@ -96,7 +96,7 @@
         else{write(key,{reason:reason,extra:extra,at:Date.now()});setState(s,'retry');}
         return ok;
       }catch(e){write(key,{reason:reason,extra:extra,at:Date.now()});var incompatible=!!(g.GA&&GA.isBackendCompatibilityError&&GA.isBackendCompatibilityError(e));setState(s,incompatible?'incompatible':'retry',e&&e.message||'');if(s.opts.log!==false)console.warn('[GAAutoSync '+key+']',e);return false;}
-      finally{s.busy=false;if(s.queued){var q=s.queued;s.queued=null;schedule(q.reason,q.extra,250);}}
+      finally{s.busy=false;if(s.queued){var q=s.queued;s.queued=null;/* v3.9.25: a resume/reconcile that arrived during a run is already covered by that run's pull; only real changes are re-queued */if(read(key)||!/^(startup-reconcile|reconcile|resume|pageshow|network-restored|resume-focus|resume-visible)$/.test(String(q.reason||'')))schedule(q.reason,q.extra,250);}}
     }
     function schedule(reason,extra,delay){
       reason=reason||'change';extra=extra||{};var old=read(key)||{};write(key,{reason:reason,extra:mergeExtra(old.extra,extra),at:Date.now()});setState(s,online()?'dirty':'offline');

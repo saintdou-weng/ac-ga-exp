@@ -30,14 +30,27 @@ function storedLang() {
   return validLang(c.lang) ? c.lang : (validLang(shared) ? shared : 'zh');
 }
 
+var CFG_MEM = null; /* v3.9.25: settings that could not be written (storage full) stay valid for this session */
 GA.cfg = function () {
-  try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); }
-  catch (e) { return {}; }
+  var c;
+  try { c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}') || {}; }
+  catch (e) { c = {}; }
+  if (CFG_MEM) for (var k in CFG_MEM) if (CFG_MEM.hasOwnProperty(k)) c[k] = CFG_MEM[k];
+  return c;
 };
 GA.saveCfg = function (patch) {
   var c = GA.cfg();
   for (var k in patch) if (patch.hasOwnProperty(k)) c[k] = patch[k];
-  try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); } catch (e) {}
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(c)); CFG_MEM = null; }
+  catch (e) {
+    CFG_MEM = c;
+    try {
+      var l = GA.lang || 'zh', msg = l === 'en' ? 'Storage full — settings kept in this session only; please sync / clear old photos'
+        : l === 'km' ? 'ទំហំផ្ទុកពេញ — ការកំណត់នៅក្នុងវគ្គនេះប៉ុណ្ណោះ' : '本機儲存空間已滿 — 設定只保留在本次畫面，請同步或清除舊照片';
+      if (GA.toast && !GA._cfgQuotaToast) { GA._cfgQuotaToast = 1; setTimeout(function () { GA._cfgQuotaToast = 0; }, 8000); GA.toast(msg, 'err'); }
+      else if (!GA.toast && typeof console !== 'undefined') console.warn('[GA.saveCfg]', e);
+    } catch (_) {}
+  }
   return c;
 };
 GA.gasUrl = function () {
@@ -56,7 +69,7 @@ GA.setSession = function (t) { GA.saveCfg({ session: t }); };
    直接 .json() 會拋出無意義的 SyntaxError。            */
 function parseEnvelope(raw) {
   var t = String(raw || '').trim();
-  if (!t) throw new Error('Empty response from GAS');
+  if (!t) throw new Error(backendText('雲端沒有回應內容 / Empty response from GAS','The cloud sent an empty reply — please try again','Cloud មិនបានផ្ញើទិន្នន័យ — សូមព្យាយាមម្ដងទៀត'));
   if (t.charAt(0) === '<') {
     var missing=/找不到網頁|找不到网页|page not found|file does not exist|requested file does not exist|404/i.test(t);
     var login=/accounts\.google\.com|sign in|登入|登錄|authorization required|access denied|permission denied/i.test(t);
@@ -65,9 +78,9 @@ function parseEnvelope(raw) {
   }
   var d;
   try { d = JSON.parse(t); }
-  catch (e) { throw new Error('GAS 回應非 JSON：' + t.slice(0, 120)); }
+  catch (e) { throw new Error(backendText('GAS 回應非 JSON：','Cloud reply could not be read: ','មិនអាចអានការឆ្លើយតបពី Cloud៖ ') + t.slice(0, 120)); }
   if (d && d.ok === false) {
-    var err = new Error(d.error || d.msg || 'GAS error');
+    var err = new Error(d.error || d.msg || backendText('GAS error','Cloud error','កំហុស Cloud'));
     err.code = d.code; err.payload = d;
     throw err;
   }
@@ -81,15 +94,19 @@ GA.requestJSON = function (url, options, timeoutMs) {
   if (controller) opts.signal = controller.signal;
   var deadline = new Promise(function (_, reject) {
     timer = setTimeout(function () {
-      reject(new Error('雲端回應逾時；資料保留本機，請稍後重試 / Cloud response timed out; retry to confirm the result'));
+      var te = new Error(backendText('雲端回應逾時；資料保留本機，請稍後重試 / Cloud response timed out; retry to confirm the result','Cloud response timed out — please try again','Cloud មិនឆ្លើយតបទាន់ពេល — សូមព្យាយាមម្ដងទៀត'));
+      te.code = 'TIMEOUT'; reject(te);
       if (controller) controller.abort();
     }, timeoutMs || 45000);
   });
-  var request = Promise.resolve().then(function () { return fetch(url, opts); }).then(function (r) {
+  var request = Promise.resolve().then(function () {
+    /* v3.9.26: a raw fetch rejection ("Failed to fetch", "offline") becomes a translated no-internet message */
+    return Promise.resolve().then(function () { return fetch(url, opts); }).catch(function (e) { throw GA.networkError(e); });
+  }).then(function (r) {
     return r.text().then(function (raw) {
       var data = parseEnvelope(raw);
-      if (r.ok === false) throw new Error('HTTP ' + r.status + ': cloud request failed');
-      if (!data || data.ok !== true) throw new Error('雲端未確認成功 / Cloud did not confirm success');
+      if (r.ok === false) throw new Error('HTTP ' + r.status + ': ' + backendText('cloud request failed','cloud request failed','សំណើ Cloud បរាជ័យ'));
+      if (!data || data.ok !== true) throw new Error(backendText('雲端未確認成功','Cloud did not confirm success','Cloud មិនបានបញ្ជាក់ថាជោគជ័យ'));
       return data;
     });
   });
@@ -99,7 +116,7 @@ GA.requestJSON = function (url, options, timeoutMs) {
 GA.gasGet = function (action, params) {
   var destination = GA.gasUrl();
   function send() {
-    if(destination !== GA.gasUrl()) throw new Error('連線設定已變更，請重試 / Connection changed; retry');
+    if(destination !== GA.gasUrl()) throw new Error(backendText('連線設定已變更，請重試','Connection settings changed — please try again','ការកំណត់ការតភ្ជាប់បានផ្លាស់ប្ដូរ — សូមព្យាយាមម្ដងទៀត'));
     var base = destination;
     var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'action=' + encodeURIComponent(action);
     params = params || {};
@@ -126,7 +143,7 @@ GA.gasGet = function (action, params) {
 GA.gasPost = function (action, payload, extra) {
   var destination = GA.gasUrl();
   function send() {
-    if(destination !== GA.gasUrl()) throw new Error('連線設定已變更，請重試 / Connection changed; retry');
+    if(destination !== GA.gasUrl()) throw new Error(backendText('連線設定已變更，請重試','Connection settings changed — please try again','ការកំណត់ការតភ្ជាប់បានផ្លាស់ប្ដូរ — សូមព្យាយាមម្ដងទៀត'));
     var body = { action: action, data: payload };
     if (extra) for (var k in extra) if (extra.hasOwnProperty(k)) body[k] = extra[k];
     var s = GA.session(); if (s) body.session = s;
@@ -165,6 +182,31 @@ function backendLang() {
 function backendText(zh, en, km) {
   var l = backendLang(); return l === 'en' ? en : l === 'km' ? km : zh;
 }
+/* v3.9.26: per-language text helper + friendly network errors for staff screens */
+GA.tri = function (zh, en, km) { return backendText(zh, en, km === undefined ? en : km); };
+GA.netText = function (saved) {
+  return saved
+    ? backendText('沒有網路 — 已存在本機，恢復連線後會自動傳送', 'No internet — saved on this device, will send automatically', 'គ្មានអ៊ីនធឺណិត — បានរក្សាទុកក្នុងឧបករណ៍នេះ ហើយនឹងផ្ញើដោយស្វ័យប្រវត្តិ')
+    : backendText('沒有網路 — 請稍後再試', 'No internet — please try again', 'គ្មានអ៊ីនធឺណិត — សូមព្យាយាមម្ដងទៀត');
+};
+GA.isNetworkError = function (e) {
+  if (!e) return false;
+  if (e.code === 'NETWORK' || e.code === 'TIMEOUT') return true;
+  return /failed to fetch|networkerror|network request failed|load failed|err_internet|err_network|^(error: )?offline$/i.test(String(e.originalMessage || e.message || e).trim());
+};
+GA.networkError = function (e) {
+  if (e && (e.name === 'AbortError' || e.code === 'NETWORK' || e.code === 'TIMEOUT' || e.code === 'BACKEND_OUTDATED' || /^CLOUD_HTML/.test(e.code || ''))) return e;
+  var x = new Error(GA.netText(false));
+  x.code = 'NETWORK'; x.originalMessage = (e && e.message) || String(e || ''); x.cause = e;
+  return x;
+};
+/* Text for a caught error: network failures become a plain translated sentence.
+   saved=true only when the flow really keeps the data on the device and retries automatically. */
+GA.errText = function (e, saved) {
+  if (e && e.code === 'TIMEOUT') return e.message;
+  if (GA.isNetworkError(e)) return GA.netText(!!saved);
+  return (e && e.message) || String(e || '');
+};
 function isCompatibilityMessage(v) {
   return /unknown\s+action|unsupported\s+(?:action|module|capability)|not\s+implemented|client[_\s-]*update|does\s+not\s+support/i.test(String(v || ''));
 }
@@ -400,21 +442,37 @@ GA.parseYMD = function (s) {
   var d=new Date(+m[1],+m[2]-1,+m[3]); return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null;
 };
 /* Excel serial date → 'YYYY-MM-DD'（用 UTC getter 讀 serial，避免本地時區偏移） */
-GA.excelDate = function (v) {
+GA.excelDate = function (v) { /* v3.9.25: validated result; '' = invalid date (callers must reject/list it) */
   if (v === null || v === undefined || v === '') return '';
-  if (v instanceof Date && !isNaN(v)) return GA.ymd(v);
-  if (typeof v === 'number' && isFinite(v)) {
-    if (v < 1 || v > 60000) return '';
+  function ok(y, mo, d) {
+    y = +y; mo = +mo; d = +d;
+    if (!(y >= 1990 && y <= 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return '';
+    var t = new Date(y, mo - 1, d);
+    if (t.getFullYear() !== y || t.getMonth() !== mo - 1 || t.getDate() !== d) return '';
+    return y + '-' + p2(mo) + '-' + p2(d);
+  }
+  if (v instanceof Date) {
+    if (isNaN(v)) return '';
+    /* SheetJS cellDates:true returns e.g. 23:59:56 of the previous local day → snap to the nearest midnight when within 2 min */
+    var ms = ((v.getHours() * 60 + v.getMinutes()) * 60 + v.getSeconds()) * 1000 + v.getMilliseconds();
+    var dd = new Date(v.getTime());
+    if (ms > 86400000 - 120000) dd = new Date(v.getFullYear(), v.getMonth(), v.getDate() + 1);
+    return ok(dd.getFullYear(), dd.getMonth() + 1, dd.getDate());
+  }
+  if (typeof v === 'number') {
+    if (!isFinite(v) || v < 1 || v > 60000) return '';
     var d = new Date(Math.round((v - 25569) * 86400000));
-    return d.getUTCFullYear() + '-' + p2(d.getUTCMonth() + 1) + '-' + p2(d.getUTCDate());
+    return ok(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate());
   }
   var s = String(v).trim();
+  if (/^\d+(\.\d+)?$/.test(s) && +s >= 20000 && +s <= 60000) return GA.excelDate(+s);
   var m = s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
-  if (m) return m[1] + '-' + p2(+m[2]) + '-' + p2(+m[3]);
-  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);          // DD/MM/YYYY
-  if (m) return m[3] + '-' + p2(+m[2]) + '-' + p2(+m[1]);
+  if (m) return ok(m[1], m[2], m[3]);
+  m = s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);          // DD/MM/YYYY only (ambiguous/US order is rejected)
+  if (m) return ok(m[3], m[2], m[1]);
+  if (/^\d{1,2}[-\/.]\d{1,2}([-\/.]\d{1,4})?$/.test(s)) return '';  // short / partial numeric forms are ambiguous
   var d2 = new Date(s);
-  return isNaN(d2) ? '' : GA.ymd(d2);
+  return isNaN(d2) ? '' : ok(d2.getFullYear(), d2.getMonth() + 1, d2.getDate());
 };
 
 /* 週一為一週之始 */
@@ -453,13 +511,14 @@ GA.periodLabel = function (key, type) {
     var d = GA.parseYMD(key); if (!d) return key;
     var wd = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
     var wz = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-    return key + (L === 'zh' ? '（週' + wz + '）' : ' (' + wd + ')');
+    var wk = ['អាទិត្យ', 'ចន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'][d.getDay()];
+    return key + (L === 'zh' ? '（週' + wz + '）' : ' (' + (L === 'km' ? wk : wd) + ')');
   }
   if (type === 'week') {
     var m = key.match(/^(\d{4})-W(\d+)$/); if (!m) return key;
     var r = GA.weekRange(key);
     var w = L === 'zh' ? '第' + (+m[2]) + '週' : L === 'km' ? 'សប្តាហ៍ ' + (+m[2]) : 'W' + (+m[2]);
-    return m[1] + ' ' + w + (r ? '（' + r.start + ' ~ ' + r.end + '）' : '');
+    return m[1] + ' ' + w + (r ? (L === 'zh' ? '（' + r.start + ' ~ ' + r.end + '）' : ' (' + r.start + ' ~ ' + r.end + ')') : '');
   }
   if (type === 'month') {
     var mm = key.match(/^(\d{4})-(\d{2})$/); if (!mm) return key;
@@ -660,6 +719,9 @@ GA.cloud = {
       conflict: { i: '⚠', t: GA.T('cloudConflict'), c: 'warn' }
     };
     var m = map[state] || map.idle;
+    /* v3.9.26: module status details are often Chinese-only; never show them in EN / KM */
+    if (detail && GA.lang !== 'zh' && /[\u3400-\u9fff]/.test(String(detail))) detail = '';
+    if (detail && GA.isNetworkError({ message: String(detail) })) detail = GA.netText(false);
     this.el.className = 'ga-cloud ' + m.c;
     this.el.innerHTML = '<span class="ga-cloud-dot">' + m.i + '</span>' +
       '<span class="ga-cloud-txt">' + m.t + (detail ? ' · ' + GA.esc(detail) : '') + '</span>';
@@ -934,13 +996,15 @@ GA.PALETTE = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6',
 /* ═══════════════════ 12. CDN 檢查 ═══════════════════ */
 GA.checkCDN = function () {
   var miss = [];
-  if (typeof XLSX === 'undefined') miss.push('SheetJS (Excel 匯入匯出)');
-  if (typeof Chart === 'undefined') miss.push('Chart.js (圖表)');
+  /* v3.9.25: only libraries the page actually includes are checked (index no longer loads SheetJS / Chart.js) */
+  function included(re) { try { return Array.prototype.some.call(document.getElementsByTagName('script'), function (s) { return re.test(s.getAttribute('src') || ''); }); } catch (e) { return true; } }
+  if (typeof XLSX === 'undefined' && included(/xlsx/i)) miss.push('SheetJS (' + backendText('Excel 匯入匯出', 'Excel import / export', 'នាំចូល / នាំចេញ Excel') + ')');
+  if (typeof Chart === 'undefined' && included(/chart/i)) miss.push('Chart.js (' + backendText('圖表', 'charts', 'តារាងក្រាហ្វិក') + ')');
   if (miss.length) {
     var bar = document.createElement('div');
     bar.className = 'ga-cdn-warn';
-    bar.innerHTML = '⚠️ 下列元件載入失敗，相關功能暫停但其餘仍可使用：<b>' +
-      miss.join('、') + '</b>　請檢查網路或改用可連外的裝置。';
+    bar.innerHTML = backendText('⚠️ 下列元件載入失敗，相關功能暫停但其餘仍可使用：', '⚠️ These parts did not load; those features are paused, everything else still works: ', '⚠️ ផ្នែកខាងក្រោមមិនបានផ្ទុក មុខងារទាំងនោះផ្អាក តែផ្នែកផ្សេងនៅប្រើបាន៖ ') + '<b>' +
+      miss.join(backendText('、', ', ', ', ')) + '</b>　' + backendText('請檢查網路或改用可連外的裝置。', 'Check the internet or use another device.', 'សូមពិនិត្យអ៊ីនធឺណិត ឬប្រើឧបករណ៍ផ្សេង។');
     document.body.insertBefore(bar, document.body.firstChild);
   }
   return miss;
@@ -956,11 +1020,16 @@ GA.header = function (sel, opt) {
   var svgUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.9A5 5 0 1115.9 6H16a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>';
   var svgDn = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.9A5 5 0 1115.9 6H16a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>';
 
+  /* v3.9.26: opt.name / opt.title may be {zh,en,km} so the header and tab title follow the language */
+  function pick(v) { return v && typeof v === 'object' ? (v[GA.lang] || v.en || v.zh || '') : (v || ''); }
+  function hdName() { return GA.esc(opt.icon || '') + ' ' + GA.esc(pick(opt.name)); }
+  function hdTitle() { if (opt.title) try { document.title = pick(opt.title); } catch (e) {} }
+  hdTitle();
   host.innerHTML =
     '<div class="ga-hd">' +
       '<a class="ga-hd-home" href="index.html" data-t-title="home" title="' + GA.T('home') + '">🏠</a>' +
       '<div class="ga-hd-id">' +
-        '<div class="ga-hd-name">' + GA.esc(opt.icon || '') + ' ' + GA.esc(opt.name || '') + '</div>' +
+        '<div class="ga-hd-name">' + hdName() + '</div>' +
         '<div class="ga-hd-ver">AC-GA-EXP ' + GA.esc('v'+GA.PLATFORM_VERSION) + '</div>' +
       '</div>' +
       '<div class="ga-cloud idle" id="ga-cloud"></div>' +
@@ -997,6 +1066,8 @@ GA.header = function (sel, opt) {
   bind('ga-btn-exp', opt.onExport);
 
   GA.on('lang', function () {
+    var nm = host.querySelector('.ga-hd-name'); if (nm) nm.innerHTML = hdName();
+    hdTitle();
     GA.applyLang(host);
     host.querySelectorAll('[data-lg]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-lg') === GA.lang);

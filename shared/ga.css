@@ -220,6 +220,27 @@ body{margin:0;background:var(--ga-bg);color:var(--ga-txt);
   .ga-tbl td{max-width:150px}
 }
 @media(min-width:769px){ .ga-ico span{display:inline} }
+/* ═══ v3.9.26 觸控裝置：按鈕／選單／輸入框至少 44px 點擊區（滑鼠桌面不受影響） ═══ */
+@media (pointer:coarse){
+  button,.btn,.ga-btn,.ga-ico,[role=button],a.btn,select,
+  input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=file]):not([type=range]):not([type=color]),
+  .ga-lang button,.lang button,.lang-btn,[data-lg],[data-lang],
+  .qbtn,.ga-x,.ga-modal-h .ga-x,.ph button,.close,.mclose,.modal-x,[data-close],
+  .ga-seg button,.ga-pc-seg button,.ga-pc button,.periodModes button,.periodNav button,.periodNav select,
+  .viewToggle button,.rcActions button,.exp-mini-actions button,.exp-tab,.tab,.tabs button,td button{
+    min-height:44px !important;
+  }
+  button,.btn,.ga-btn,.ga-ico,[role=button],a.btn,
+  .ga-lang button,.lang button,.lang-btn,[data-lg],[data-lang],
+  .qbtn,.ga-x,.ph button,.close,.mclose,.modal-x,[data-close],
+  .ga-seg button,.ga-pc-seg button,.periodModes button,.periodNav button,
+  .viewToggle button,.rcActions button,.exp-mini-actions button,td button{
+    min-width:44px !important;
+  }
+  a.btn,.lang-btn,.qbtn,.ga-x{display:inline-flex;align-items:center;justify-content:center}
+  input[type=checkbox],input[type=radio]{min-width:22px;min-height:22px}
+  .ph button{width:44px;height:44px}
+}
 @media print{
   .ga-hd,.ga-pc,.ga-modal-f,.ga-tbl-bar,.ga-pg,.ga-toast{display:none !important}
   body{background:#fff}

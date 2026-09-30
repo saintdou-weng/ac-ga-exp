@@ -18,17 +18,23 @@ GA.addDict({
     dmImportJson:'匯入備份', dmClear:'清空全部資料', dmDelSel:'刪除選取',
     dmMerge:'合併（保留現有）', dmReplace:'覆蓋（清除現有）', dmRecords:'目前筆數',
     dmClearWarn:'此動作會刪除本機所有資料，無法復原。請輸入 DELETE 確認：',
-    dmDone:'完成', dmCancelled:'已取消', dmBackupNote:'備份檔含全部資料，可用於還原或轉移到其他裝置。' },
+    dmDone:'完成', dmCancelled:'已取消', dmBackupNote:'備份檔含全部資料，可用於還原或轉移到其他裝置。',
+    dmAskReplace:'將以備份【覆蓋】目前資料，現有資料會被清除。', dmAskMerge:'將把備份【合併】進目前資料。',
+    dmOtherModule:'⚠️ 備份來自模組「{m}」，與目前模組不同。', dmBadFile:'備份檔格式錯誤：' },
   en:{ dmTitle:'Data Management', dmExportXlsx:'Export Excel', dmExportJson:'Export Backup',
     dmImportJson:'Import Backup', dmClear:'Clear All Data', dmDelSel:'Delete Selected',
     dmMerge:'Merge (keep existing)', dmReplace:'Replace (clear existing)', dmRecords:'Records',
     dmClearWarn:'This deletes ALL local data and cannot be undone. Type DELETE to confirm:',
-    dmDone:'Done', dmCancelled:'Cancelled', dmBackupNote:'Backup contains all data; use to restore or move to another device.' },
+    dmDone:'Done', dmCancelled:'Cancelled', dmBackupNote:'Backup contains all data; use to restore or move to another device.',
+    dmAskReplace:'The backup will REPLACE the current data. Existing data will be cleared.', dmAskMerge:'The backup will be MERGED into the current data.',
+    dmOtherModule:'⚠️ This backup is from module "{m}", not the current module.', dmBadFile:'Backup file format error: ' },
   km:{ dmTitle:'គ្រប់គ្រងទិន្នន័យ', dmExportXlsx:'នាំចេញ Excel', dmExportJson:'នាំចេញបម្រុងទុក',
     dmImportJson:'នាំចូលបម្រុងទុក', dmClear:'លុបទិន្នន័យទាំងអស់', dmDelSel:'លុបអ្វីដែលបានជ្រើស',
     dmMerge:'បញ្ចូលគ្នា', dmReplace:'ជំនួស', dmRecords:'ចំនួនកំណត់ត្រា',
     dmClearWarn:'នេះនឹងលុបទិន្នន័យទាំងអស់។ វាយ DELETE ដើម្បីបញ្ជាក់៖',
-    dmDone:'រួចរាល់', dmCancelled:'បានបោះបង់', dmBackupNote:'ឯកសារបម្រុងទុកមានទិន្នន័យទាំងអស់។' }
+    dmDone:'រួចរាល់', dmCancelled:'បានបោះបង់', dmBackupNote:'ឯកសារបម្រុងទុកមានទិន្នន័យទាំងអស់។',
+    dmAskReplace:'ឯកសារបម្រុងទុកនឹងជំនួសទិន្នន័យបច្ចុប្បន្ន។ ទិន្នន័យដែលមានស្រាប់នឹងត្រូវលុប។', dmAskMerge:'ឯកសារបម្រុងទុកនឹងបញ្ចូលទៅក្នុងទិន្នន័យបច្ចុប្បន្ន។',
+    dmOtherModule:'⚠️ ឯកសារបម្រុងទុកនេះមកពីម៉ូឌុល "{m}" មិនមែនម៉ូឌុលបច្ចុប្បន្នទេ។', dmBadFile:'ទម្រង់ឯកសារបម្រុងទុកមិនត្រឹមត្រូវ៖ ' }
 });
 
 /* opt = {
@@ -111,10 +117,8 @@ GA.dataPanel = function (opt) {
         var obj = JSON.parse(e.target.result);
         var body = obj.data || obj;
         var mod = obj._meta && obj._meta.module;
-        var msg = (mode === 'replace'
-          ? '將以備份【覆蓋】目前資料，現有資料會被清除。'
-          : '將把備份【合併】進目前資料。') +
-          (mod && opt.module && mod !== opt.module ? '\n⚠️ 備份來自模組「' + mod + '」，與目前模組不同。' : '');
+        var msg = GA.T(mode === 'replace' ? 'dmAskReplace' : 'dmAskMerge') +
+          (mod && opt.module && mod !== opt.module ? '\n' + GA.T('dmOtherModule').replace('{m}', mod) : '');
         GA.confirm(msg).then(async function (ok) {
           if (!ok) { GA.toast(GA.T('dmCancelled')); return; }
           try {
@@ -124,7 +128,7 @@ GA.dataPanel = function (opt) {
             close();
           } catch (err) { GA.toast(err.message, 'err'); }
         });
-      } catch (err) { GA.toast('備份檔格式錯誤：' + err.message, 'err'); }
+      } catch (err) { GA.toast(GA.T('dmBadFile') + err.message, 'err'); }
     };
     rd.readAsText(f);
   };

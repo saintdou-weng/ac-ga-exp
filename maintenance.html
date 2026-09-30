@@ -177,34 +177,34 @@
     .fg{width:100%}select.fi{min-width:unset;width:100%}
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.24"></script>
+<script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
+<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
+<script src="shared/ga-core.js?v=3.9.26"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
-<script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js?v=3.9.21"></script>
-<script src="shared/ga-telegram.js?v=3.9.19"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
+<script src="shared/ga-data.js?v=3.9.26"></script>
+<script src="shared/ga-import.js?v=3.9.26"></script>
+<script src="shared/ga-telegram.js?v=3.9.26"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.25"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.24"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');}
 </script>
 
 </head>
 <body>
 
 <div class="topbar">
-  <a class="topbar-home" href="index.html" title="AC-GA-EXP Platform">🏠</a>
+  <a class="topbar-home" href="index.html" title="AC-GA-EXP Platform" data-mt-title="t_home">🏠</a>
   <div class="topbar-icon" id="tb-icon">🔧</div>
   <div style="flex:1">
     <div class="topbar-title" id="tt">維修中心 · Maintenance Center</div>
     <div class="topbar-sub">AC-GA-EXP Platform · @acgaexp_bot</div>
   </div>
   <div id="ga-cloud" class="ga-cloud idle" style="margin:0 6px"></div>
-  <button class="topbar-icon" id="mt-cloud-up-btn" onclick="mtCloudUpload()" title="上傳雲端 Upload" style="cursor:pointer">⬆️</button>
-  <button class="topbar-icon" id="mt-cloud-dn-btn" onclick="mtCloudDownload()" title="下載雲端 Download" style="cursor:pointer">⬇️</button>
-  <button class="topbar-icon" onclick="mtImport()" title="Smart Import 智慧匯入" style="cursor:pointer">📥</button>
-  <button class="topbar-icon" onclick="mtTelegram()" title="Telegram 摘要 Summary" style="cursor:pointer">✈️</button>
+  <button class="topbar-icon" id="mt-cloud-up-btn" onclick="mtCloudUpload()" title="上傳雲端 Upload" data-mt-title="t_up" style="cursor:pointer">⬆️</button>
+  <button class="topbar-icon" id="mt-cloud-dn-btn" onclick="mtCloudDownload()" title="下載雲端 Download" data-mt-title="t_down" style="cursor:pointer">⬇️</button>
+  <button class="topbar-icon" onclick="mtImport()" title="Smart Import 智慧匯入" data-mt-title="t_smart" style="cursor:pointer">📥</button>
+  <button class="topbar-icon" onclick="mtTelegram()" title="Telegram 摘要 Summary" data-mt-title="t_tg" style="cursor:pointer">✈️</button>
   <div class="lang-toggle">
     <button class="lang-btn active" data-l="zh" onclick="setLang('zh')">中文</button>
     <button class="lang-btn" data-l="en" onclick="setLang('en')">EN</button>
@@ -250,7 +250,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       </div>
       <div class="info-cell">
         <div class="cell-label"><span id="rep-l-no">維修號 Repair No.</span><span style="font-size:9px;color:#9ca3af" id="rep-l-no-opt">如有 if any</span></div>
-        <input class="cell-input" id="rep-no" type="text" placeholder="e.g. VRT-F-GA-06-0454" maxlength="50">
+        <input class="cell-input" id="rep-no" type="text" placeholder="e.g. VRT-F-GA-06-0454" data-mt-ph="ph_repno" maxlength="50">
       </div>
       <div class="info-cell">
         <div class="cell-label"><span id="rep-l-date">申請日期 Date</span></div>
@@ -258,7 +258,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       </div>
       <div class="info-cell">
         <div class="cell-label"><span id="rep-l-inspector">檢查人 Inspector</span></div>
-        <input class="cell-input" id="rep-inspector" type="text" placeholder="姓名 / Name" maxlength="50">
+        <input class="cell-input" id="rep-inspector" type="text" placeholder="姓名 / Name" data-mt-ph="ph_name" maxlength="50">
       </div>
     </div>
   </div>
@@ -300,7 +300,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
     <div class="remark-row">
       <div class="remark-label" id="rep-l-remark">📝 備註 Remark</div>
-      <input class="remark-input" id="rep-remark" type="text" placeholder="Additional notes" maxlength="200">
+      <input class="remark-input" id="rep-remark" type="text" placeholder="Additional notes" data-mt-ph="ph_remark_rep" maxlength="200">
     </div>
   </div>
 
@@ -363,7 +363,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       </div>
       <div class="info-cell">
         <div class="cell-label"><span id="po-l-inspector">檢查人 Inspector</span></div>
-        <input class="cell-input" id="po-inspector" type="text" placeholder="姓名 / Name" maxlength="50">
+        <input class="cell-input" id="po-inspector" type="text" placeholder="姓名 / Name" data-mt-ph="ph_name" maxlength="50">
       </div>
     </div>
   </div>
@@ -392,7 +392,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <div class="estimate-total"><span id="po-total-label">預估總額 Estimated Total</span><strong id="po-grand-total">$0.00</strong></div>
     <div class="remark-row">
       <div class="remark-label" id="po-l-remark">📝 備註 Remark</div>
-      <input class="remark-input" id="po-remark" type="text" placeholder="Additional notes / 其他說明" maxlength="200">
+      <input class="remark-input" id="po-remark" type="text" placeholder="Additional notes / 其他說明" data-mt-ph="ph_remark_po" maxlength="200">
     </div>
   </div>
 
@@ -442,7 +442,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <option value="已退件">❌ 已退件</option>
       </select>
     </div>
-    <div class="fg"><div class="fl" id="reprec-fl-search">搜尋</div><input class="fi rq-search" data-sys="rep" type="text" placeholder="設備/申請人/地點..." style="min-width:150px"></div>
+    <div class="fg"><div class="fl" id="reprec-fl-search">搜尋</div><input class="fi rq-search" data-sys="rep" type="text" placeholder="設備/申請人/地點..." data-mt-ph="ph_search_rep" style="min-width:150px"></div>
     <button class="btn-q" id="rep-query-btn" onclick="queryRecords('rep')">🔍 <span id="reprec-q-lbl">查詢</span></button>
     <button class="btn-xl" id="rep-export-btn" onclick="exportExcel('rep')">📥 <span id="reprec-x-lbl">下載 Excel</span></button>
   </div>
@@ -457,7 +457,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   </div>
 
   <div class="ga-kpis" id="rep-extra-kpi" style="margin-bottom:10px"></div>
-  <div class="ga-charts" id="rep-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">🔧 設備故障排行 Top Failing Equipment</div><div class="ga-chart-box"><canvas id="rep-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">🚨 緊急程度 Urgency</div><div class="ga-chart-box"><canvas id="rep-ch-dept"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">📍 地點分布 Location</div><div class="ga-chart-box"><canvas id="rep-ch-loc"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">💰 維修成本 Top Cost</div><div class="ga-chart-box"><canvas id="rep-ch-cost"></canvas></div></div></div>
+  <div class="ga-charts" id="rep-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_equip">🔧 設備故障排行 Top Failing Equipment</div><div class="ga-chart-box"><canvas id="rep-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_urg">🚨 緊急程度 Urgency</div><div class="ga-chart-box"><canvas id="rep-ch-dept"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_loc">📍 地點分布 Location</div><div class="ga-chart-box"><canvas id="rep-ch-loc"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_cost">💰 維修成本 Top Cost</div><div class="ga-chart-box"><canvas id="rep-ch-cost"></canvas></div></div></div>
   <div class="rec-wrap" id="rep-rec-wrap">
     <div class="empty-state"><div class="ei">🔧</div><div id="reprec-empty">選擇條件後點「查詢」 · Select filters and query</div></div>
   </div>
@@ -484,7 +484,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <option value="已退件">❌ 已退件</option>
       </select>
     </div>
-    <div class="fg"><div class="fl" id="porec-fl-search">搜尋</div><input class="fi rq-search" data-sys="po" type="text" placeholder="品項/申請人/部門..." style="min-width:150px"></div>
+    <div class="fg"><div class="fl" id="porec-fl-search">搜尋</div><input class="fi rq-search" data-sys="po" type="text" placeholder="品項/申請人/部門..." data-mt-ph="ph_search_po" style="min-width:150px"></div>
     <button class="btn-q" id="po-query-btn" onclick="queryRecords('po')">🔍 <span id="porec-q-lbl">查詢</span></button>
     <button class="btn-xl" id="po-export-btn" onclick="exportExcel('po')">📥 <span id="porec-x-lbl">下載 Excel</span></button>
   </div>
@@ -498,7 +498,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <div class="stat-card"><div class="stat-label" id="porec-sl-rejected">已退件</div><div class="stat-value" id="po-sv-rejected" style="color:var(--red)">0</div></div>
   </div>
 
-  <div class="ga-charts" id="po-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t">狀態 Status</div><div class="ga-chart-box"><canvas id="po-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t">部門 Dept</div><div class="ga-chart-box"><canvas id="po-ch-dept"></canvas></div></div></div>
+  <div class="ga-charts" id="po-charts" style="display:none;margin-bottom:10px"><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_status">狀態 Status</div><div class="ga-chart-box"><canvas id="po-ch-status"></canvas></div></div><div class="ga-chart"><div class="ga-chart-t" data-mt="ch_dept">部門 Dept</div><div class="ga-chart-box"><canvas id="po-ch-dept"></canvas></div></div></div>
   <div class="rec-wrap" id="po-rec-wrap">
     <div class="empty-state"><div class="ei">📋</div><div id="porec-empty">選擇條件後點「查詢」 · Select filters and query</div></div>
   </div>
@@ -507,29 +507,29 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 </div>
 <div id="mt-edit-modal" class="mt-modal" style="display:none" onclick="if(event.target===this)mtCloseEdit()">
   <div class="mt-modal-card">
-    <div class="mt-modal-head"><span>✏️ 編輯記錄 Edit Record</span><button class="mt-modal-close" onclick="mtCloseEdit()">×</button></div>
+    <div class="mt-modal-head"><span data-mt="ed_title">✏️ 編輯記錄 Edit Record</span><button class="mt-modal-close" onclick="mtCloseEdit()">×</button></div>
     <input type="hidden" id="mt-edit-sys"><input type="hidden" id="mt-edit-row">
     <div class="mt-edit-grid">
-      <label class="mt-edit-field"><span>時間 Timestamp</span><input id="mt-edit-timestamp" type="text"></label>
-      <label class="mt-edit-field"><span>狀態 Status</span><select id="mt-edit-status"><option value="待審核">⏳ 待審核</option><option value="已核可">✅ 已核可</option><option value="已退件">❌ 已退件</option></select></label>
-      <label class="mt-edit-field"><span>申請人 Applicant</span><input id="mt-edit-applicant"></label>
-      <label class="mt-edit-field"><span>部門 Department</span><input id="mt-edit-dept"></label>
-      <label class="mt-edit-field"><span>編號 Reference</span><input id="mt-edit-ref"></label>
-      <label class="mt-edit-field"><span>品項／設備 Item / Equipment</span><input id="mt-edit-item"></label>
-      <label class="mt-edit-field"><span>規格 Spec</span><input id="mt-edit-spec"></label>
-      <label class="mt-edit-field"><span>地點／尺寸 Location / Size</span><input id="mt-edit-location"></label>
-      <label class="mt-edit-field"><span>數量 Quantity</span><input id="mt-edit-qty" type="number" step="any" min="0"></label>
-      <label class="mt-edit-field"><span>預估單價 Unit Price</span><input id="mt-edit-unit" type="number" step="any" min="0"></label>
-      <label class="mt-edit-field"><span>項目總額 Total</span><input id="mt-edit-total" type="number" step="any" min="0"></label>
-      <label class="mt-edit-field"><span>供應商 Supplier</span><input id="mt-edit-supplier"></label>
-      <label class="mt-edit-field"><span>用途／故障描述 Purpose / Issue</span><input id="mt-edit-detail"></label>
-      <label class="mt-edit-field"><span>處理方式／用途 Action / Purpose</span><input id="mt-edit-action"></label>
-      <label class="mt-edit-field"><span>緊急程度 Urgency</span><select id="mt-edit-urgency"><option value="normal">一般 Normal</option><option value="urgent">緊急 Urgent</option><option value="critical">重大 Critical</option></select></label>
-      <label class="mt-edit-field"><span>檢查人 Inspector</span><input id="mt-edit-inspector"></label>
-      <label class="mt-edit-field full"><span>備註 Remarks</span><textarea id="mt-edit-remarks"></textarea></label>
-      <div class="mt-edit-field full" id="mt-edit-report-wrap" style="display:none"><span>核可報告 Approval Report</span><a id="mt-edit-report" class="mt-edit-link" target="_blank" rel="noopener"></a></div>
+      <label class="mt-edit-field"><span data-mt="ed_ts">時間 Timestamp</span><input id="mt-edit-timestamp" type="text"></label>
+      <label class="mt-edit-field"><span data-mt="ed_status">狀態 Status</span><select id="mt-edit-status"><option value="待審核">⏳ 待審核</option><option value="已核可">✅ 已核可</option><option value="已退件">❌ 已退件</option></select></label>
+      <label class="mt-edit-field"><span data-mt="ed_app">申請人 Applicant</span><input id="mt-edit-applicant"></label>
+      <label class="mt-edit-field"><span data-mt="ed_dept">部門 Department</span><input id="mt-edit-dept"></label>
+      <label class="mt-edit-field"><span data-mt="ed_ref">編號 Reference</span><input id="mt-edit-ref"></label>
+      <label class="mt-edit-field"><span data-mt="ed_item">品項／設備 Item / Equipment</span><input id="mt-edit-item"></label>
+      <label class="mt-edit-field"><span data-mt="ed_spec">規格 Spec</span><input id="mt-edit-spec"></label>
+      <label class="mt-edit-field"><span data-mt="ed_loc">地點／尺寸 Location / Size</span><input id="mt-edit-location"></label>
+      <label class="mt-edit-field"><span data-mt="ed_qty">數量 Quantity</span><input id="mt-edit-qty" type="number" step="any" min="0"></label>
+      <label class="mt-edit-field"><span data-mt="ed_unit">預估單價 Unit Price</span><input id="mt-edit-unit" type="number" step="any" min="0"></label>
+      <label class="mt-edit-field"><span data-mt="ed_total">項目總額 Total</span><input id="mt-edit-total" type="number" step="any" min="0"></label>
+      <label class="mt-edit-field"><span data-mt="ed_sup">供應商 Supplier</span><input id="mt-edit-supplier"></label>
+      <label class="mt-edit-field"><span data-mt="ed_detail">用途／故障描述 Purpose / Issue</span><input id="mt-edit-detail"></label>
+      <label class="mt-edit-field"><span data-mt="ed_action">處理方式／用途 Action / Purpose</span><input id="mt-edit-action"></label>
+      <label class="mt-edit-field"><span data-mt="ed_urg">緊急程度 Urgency</span><select id="mt-edit-urgency"><option value="normal">一般 Normal</option><option value="urgent">緊急 Urgent</option><option value="critical">重大 Critical</option></select></label>
+      <label class="mt-edit-field"><span data-mt="ed_insp">檢查人 Inspector</span><input id="mt-edit-inspector"></label>
+      <label class="mt-edit-field full"><span data-mt="ed_rem">備註 Remarks</span><textarea id="mt-edit-remarks"></textarea></label>
+      <div class="mt-edit-field full" id="mt-edit-report-wrap" style="display:none"><span data-mt="ed_report">核可報告 Approval Report</span><a id="mt-edit-report" class="mt-edit-link" target="_blank" rel="noopener"></a></div>
     </div>
-    <div class="mt-edit-foot"><button class="btn-q" onclick="mtCloseEdit()">取消 Cancel</button><button class="btn-xl show" id="mt-edit-save" onclick="mtSaveEdit()">💾 儲存 Save</button></div>
+    <div class="mt-edit-foot"><button class="btn-q" onclick="mtCloseEdit()" data-mt="ed_cancel">取消 Cancel</button><button class="btn-xl show" id="mt-edit-save" onclick="mtSaveEdit()" data-mt="ed_save">💾 儲存 Save</button></div>
   </div>
 </div>
 <div id="toast"></div>
@@ -622,7 +622,7 @@ en:{
   searching:'Searching: ',results:'Results',recs:'records',maxPhoto:'Max 3 photos',netErr:'❌ Network error. Please retry.',
 },
 km:{
-  tt:'មជ្ឈមណ្ឌលជួសជុល Maintenance',
+  tt:'មជ្ឈមណ្ឌលជួសជុល',
   'tab-rep-lbl':'ស្នើសុំជួសជុល','tab-po-lbl':'ការទិញបន្ទាន់','tab-reprec-lbl':'កំណត់ត្រាជួសជុល','tab-porec-lbl':'កំណត់ត្រាទិញ',
   'rep-hint':'* ចាំបាច់ · អតិបរមា 4 ធាតុ · ដាក់ស្នើទៅក្រុមអនុម័ត (មានរូបថត)',
   'po-hint':'* ចាំបាច់ · អតិបរមា 4 ធាតុ · ដាក់ស្នើទៅក្រុមអនុម័ត',
@@ -660,6 +660,83 @@ km:{
 };
 function T(k){return (TXT[lang]&&TXT[lang][k])||TXT.zh[k]||k}
 
+/* v3.9.26 i18n: static labels, tooltips, placeholders, option labels (stored values unchanged) */
+function mtL(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en}
+const MTX={'mtc_all':{zh:'全部狀態',en:'All statuses',km:'ស្ថានភាពទាំងអស់'},
+'mtc_pending':{zh:'⏳ 待審核',en:'⏳ Pending',km:'⏳ រង់ចាំ'},
+'mtc_approved':{zh:'✅ 已核可',en:'✅ Approved',km:'✅ អនុម័ត'},
+'mtc_rejected':{zh:'❌ 已退件',en:'❌ Rejected',km:'❌ បដិសេធ'},
+'mtc_voided':{zh:'🗄 已作廢',en:'🗄 Voided',km:'🗄 បានបិទ'},
+'mtc_auto':{zh:'☁ 自動載入',en:'☁ Auto load',km:'☁ ផ្ទុកស្វ័យប្រវត្តិ'},
+'mtc_period':{zh:'↻ 切換期間即更新',en:'↻ Period changes refresh',km:'↻ ប្តូររយៈពេល = ផ្ទុកថ្មី'},
+'mtc_ph_rep':{zh:'設備／申請人／地點',en:'Equipment / applicant / location',km:'ឧបករណ៍ / អ្នកស្នើ / ទីតាំង'},
+'mtc_ph_po':{zh:'品項／申請人／部門',en:'Item / applicant / department',km:'ទំនិញ / អ្នកស្នើ / ផ្នែក'},
+'page_title':{zh:'AC-GA-EXP · Maintenance Center 維修中心',en:'AC-GA-EXP · Maintenance Center',km:'AC-GA-EXP · មជ្ឈមណ្ឌលជួសជុល'},
+'t_home':{zh:'AC-GA-EXP Platform',en:'AC-GA-EXP Platform',km:'វេទិកា AC-GA-EXP'},
+'t_up':{zh:'上傳雲端 Upload',en:'Upload to cloud',km:'ផ្ទុកឡើងទៅពពក'},
+'t_down':{zh:'下載雲端 Download',en:'Download from cloud',km:'ទាញយកពីពពក'},
+'t_smart':{zh:'Smart Import 智慧匯入',en:'Smart Import',km:'នាំចូលឆ្លាតវៃ'},
+'t_tg':{zh:'Telegram 摘要 Summary',en:'Telegram summary',km:'សេចក្តីសង្ខេប Telegram'},
+'ph_repno':{zh:'例：VRT-F-GA-06-0454',en:'e.g. VRT-F-GA-06-0454',km:'ឧ. VRT-F-GA-06-0454'},
+'ph_name':{zh:'姓名 / Name',en:'Name',km:'ឈ្មោះ'},
+'ph_remark_rep':{zh:'其他說明',en:'Additional notes',km:'កំណត់ចំណាំបន្ថែម'},
+'ph_remark_po':{zh:'Additional notes / 其他說明',en:'Additional notes',km:'កំណត់ចំណាំបន្ថែម'},
+'ph_search_rep':{zh:'設備/申請人/地點...',en:'Equipment / applicant / location...',km:'ឧបករណ៍ / អ្នកស្នើ / ទីតាំង...'},
+'ph_search_po':{zh:'品項/申請人/部門...',en:'Item / applicant / department...',km:'ទំនិញ / អ្នកស្នើ / ផ្នែក...'},
+'ch_equip':{zh:'🔧 設備故障排行 Top Failing Equipment',en:'🔧 Top Failing Equipment',km:'🔧 ឧបករណ៍ខូចញឹកញាប់បំផុត'},
+'ch_urg':{zh:'🚨 緊急程度 Urgency',en:'🚨 Urgency',km:'🚨 កម្រិតបន្ទាន់'},
+'ch_loc':{zh:'📍 地點分布 Location',en:'📍 Location',km:'📍 ទីតាំង'},
+'ch_cost':{zh:'💰 維修成本 Top Cost',en:'💰 Top Repair Cost',km:'💰 ថ្លៃជួសជុលខ្ពស់បំផុត'},
+'ch_status':{zh:'狀態 Status',en:'Status',km:'ស្ថានភាព'},
+'ch_dept':{zh:'部門 Dept',en:'Department',km:'ផ្នែក'},
+'ed_title':{zh:'✏️ 編輯記錄 Edit Record',en:'✏️ Edit Record',km:'✏️ កែកំណត់ត្រា'},
+'ed_ts':{zh:'時間 Timestamp',en:'Timestamp',km:'ពេលវេលា'},
+'ed_status':{zh:'狀態 Status',en:'Status',km:'ស្ថានភាព'},
+'ed_app':{zh:'申請人 Applicant',en:'Applicant',km:'អ្នកស្នើសុំ'},
+'ed_dept':{zh:'部門 Department',en:'Department',km:'ផ្នែក'},
+'ed_ref':{zh:'編號 Reference',en:'Reference',km:'លេខយោង'},
+'ed_item':{zh:'品項／設備 Item / Equipment',en:'Item / Equipment',km:'ទំនិញ / ឧបករណ៍'},
+'ed_spec':{zh:'規格 Spec',en:'Spec',km:'លក្ខណៈ'},
+'ed_loc':{zh:'地點／尺寸 Location / Size',en:'Location / Size',km:'ទីតាំង / ទំហំ'},
+'ed_qty':{zh:'數量 Quantity',en:'Quantity',km:'បរិមាណ'},
+'ed_unit':{zh:'預估單價 Unit Price',en:'Unit price (est.)',km:'តម្លៃឯកតា (ប៉ាន់ស្មាន)'},
+'ed_total':{zh:'項目總額 Total',en:'Total',km:'សរុប'},
+'ed_sup':{zh:'供應商 Supplier',en:'Supplier',km:'អ្នកផ្គត់ផ្គង់'},
+'ed_detail':{zh:'用途／故障描述 Purpose / Issue',en:'Purpose / Issue',km:'គោលបំណង / បញ្ហា'},
+'ed_action':{zh:'處理方式／用途 Action / Purpose',en:'Action / Purpose',km:'វិធីដោះស្រាយ / គោលបំណង'},
+'ed_urg':{zh:'緊急程度 Urgency',en:'Urgency',km:'កម្រិតបន្ទាន់'},
+'ed_insp':{zh:'檢查人 Inspector',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ'},
+'ed_rem':{zh:'備註 Remarks',en:'Remarks',km:'កំណត់ចំណាំ'},
+'ed_report':{zh:'核可報告 Approval Report',en:'Approval report',km:'របាយការណ៍អនុម័ត'},
+'ed_cancel':{zh:'取消 Cancel',en:'Cancel',km:'បោះបង់'},
+'ed_save':{zh:'💾 儲存 Save',en:'💾 Save',km:'💾 រក្សាទុក'}};
+function mtX(k){const e=MTX[k];return e?(e[lang]||e.zh):k}
+const MT_STATUS_LBL={'已核可':{en:'Approved',km:'បានអនុម័ត'},'待審核':{en:'Pending',km:'រង់ចាំ'},'已退件':{en:'Rejected',km:'បានបដិសេធ'},'已退回':{en:'Returned',km:'បានប្រគល់ត្រឡប់'},'已作廢':{en:'Voided',km:'បានបិទ'}};
+function mtDeptLabel(v){const e=MT_DEPT_LBL[String(v==null?'':v).trim()];return lang==='zh'||!e?v:e[lang]}
+const MT_URG_LBL={normal:{zh:'一般',en:'Normal',km:'ធម្មតា'},urgent:{zh:'緊急',en:'Urgent',km:'បន្ទាន់'},critical:{zh:'重大',en:'Critical',km:'បន្ទាន់ខ្លាំង'}};
+function mtUrgLabel(v){const e=MT_URG_LBL[String(v==null?'':v).trim().toLowerCase()];return lang==='zh'||!e?v:e[lang]}
+function mtStatusLabel(s){const e=MT_STATUS_LBL[s];return lang==='zh'||!e?s:e[lang]||s}
+const MT_DEPT_LBL={'管理部 Admin':{en:'Admin',km:'ផ្នែករដ្ឋបាល'},'生產部 Production':{en:'Production',km:'ផ្នែកផលិតកម្ម'},'宿舍 Staff house':{en:'Staff house',km:'អន្តេវាសិកដ្ឋានបុគ្គលិក'},'其它 Others':{en:'Others',km:'ផ្សេងៗ'}};
+const MT_MONTHS={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],km:['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ']};
+function mtApplyStatic(){
+  document.title=mtX('page_title');
+  document.querySelectorAll('[data-mt]').forEach(el=>{el.textContent=mtX(el.getAttribute('data-mt'))});
+  document.querySelectorAll('[data-mt-ph]').forEach(el=>{el.setAttribute('placeholder',mtX(el.getAttribute('data-mt-ph')))});
+  document.querySelectorAll('[data-mt-title]').forEach(el=>{el.setAttribute('title',mtX(el.getAttribute('data-mt-title')))});
+  const selectLbl=mtL('-- 請選擇 Select --','-- Select --','-- ជ្រើសរើស --');
+  ['rep-name','po-name','rep-dept','po-dept'].forEach(id=>{const sel=document.getElementById(id);if(!sel)return;
+    sel.querySelectorAll('option').forEach(o=>{if(!o.value){o.textContent=selectLbl;return}const e=MT_DEPT_LBL[o.value];if(e)o.textContent=lang==='zh'?o.value:e[lang];});});
+  const allLbl=mtL('全部','All','ទាំងអស់'),stIcon={'待審核':'⏳ ','已核可':'✅ ','已退件':'❌ '};
+  document.querySelectorAll('.rq-year option[value=""]').forEach(o=>{o.textContent=allLbl});
+  document.querySelectorAll('.rq-month option').forEach(o=>{if(!o.value){o.textContent=mtL('全部 All','All','ទាំងអស់');return}const m=+o.value;o.textContent=lang==='zh'?m+'月':MT_MONTHS[lang][m-1]});
+  document.querySelectorAll('.rq-status option,#mt-edit-status option').forEach(o=>{if(!o.value){o.textContent=allLbl;return}if(stIcon[o.value])o.textContent=stIcon[o.value]+mtStatusLabel(o.value)});
+  const urg={normal:mtL('一般 Normal','Normal','ធម្មតា'),urgent:mtL('緊急 Urgent','Urgent','បន្ទាន់'),critical:mtL('重大 Critical','Critical','បន្ទាន់ខ្លាំង')};
+  document.querySelectorAll('#mt-edit-urgency option').forEach(o=>{if(urg[o.value])o.textContent=urg[o.value]});
+  if(window.mtApprovalGuard)try{mtApprovalGuard()}catch(e){}
+  ['rep','po'].forEach(sys=>{const t=document.getElementById(sys+'-s-title'),sub=document.getElementById(sys+'-s-sub'),ic=document.getElementById(sys+'-s-icon');
+    if(t)t.textContent=(ic&&ic.textContent==='🚨')?T('s-title-urgent'):T('s-title');if(sub)sub.innerHTML=T('s-sub');});
+}
+
 function setLang(l){
   lang=['zh','en','km'].includes(l)?l:'zh';
   try{ GA.setLang(l); }catch(e){}
@@ -673,6 +750,7 @@ function setLang(l){
     const em=document.getElementById(p+'-empty');if(em)em.textContent=T('empty');
   });
   updateDropdowns(lang);
+  mtApplyStatic();
 }
 GA.on('lang', function(l){ if(l !== lang) setLang(l); });
 
@@ -680,6 +758,13 @@ const ACTIONS={
   zh:['','Repair 維修','Buy new part 買新品','Change from stock 換庫存'],
   en:['','Repair','Buy new part','Change from stock'],
   km:['','ជួសជុល Repair','ទិញថ្មី Buy new','ប្តូរពីស្តុក Stock']
+};
+/* v3.9.26: display labels only — the option value stays ACTIONS[lang][j] (sent to GAS) */
+const ACTION_LBL={km:['','ជួសជុល','ទិញគ្រឿងថ្មី','ប្តូរពីស្តុក']};
+const ROW_PH={
+  zh:{item:'例：冷氣',loc:'例：302 房',iss:'例：漏水',poItem:'例：冷氣濾網',poQty:'例：1 盒',poPur:'例：辦公室使用',na:'N/A'},
+  en:{item:'e.g. Aircon',loc:'e.g. Room 302',iss:'e.g. Leaking',poItem:'e.g. Aircon filter',poQty:'e.g. 1 box',poPur:'e.g. Office use',na:'N/A'},
+  km:{item:'ឧ. ម៉ាស៊ីនត្រជាក់',loc:'ឧ. បន្ទប់ 302',iss:'ឧ. លេចទឹក',poItem:'ឧ. តម្រងម៉ាស៊ីនត្រជាក់',poQty:'ឧ. 1 ប្រអប់',poPur:'ឧ. ប្រើក្នុងការិយាល័យ',na:'មិនមាន'}
 };
 const URGENCY={
   zh:[{v:'normal',t:'🟢 普通 Normal'},{v:'urgent',t:'🟡 緊急 Urgent'},{v:'critical',t:'🔴 非常緊急 Critical'}],
@@ -690,10 +775,13 @@ const URGENCY={
 function updateDropdowns(l){
   for(let i=0;i<4;i++){
     const a=document.getElementById('rep-act'+i);
-    if(a){const cv=a.value;a.innerHTML=ACTIONS[l].map((x,j)=>`<option value="${x}">${j===0?(l==='zh'?'-- 選擇 --':l==='km'?'-- ជ្រើសរើស --':'-- Select --'):x}</option>`).join('');a.value=cv;}
+    if(a){const cv=a.value;a.innerHTML=ACTIONS[l].map((x,j)=>`<option value="${x}">${j===0?(l==='zh'?'-- 選擇 --':l==='km'?'-- ជ្រើសរើស --':'-- Select --'):((ACTION_LBL[l]||ACTIONS[l])[j]||x)}</option>`).join('');a.value=cv;}
     const u=document.getElementById('rep-urg'+i);
     if(u){const cv=u.value||'normal';u.innerHTML=URGENCY[l].map(x=>`<option value="${x.v}">${x.t}</option>`).join('');u.value=cv;}
   }
+  const ph=ROW_PH[l]||ROW_PH.en,setPh=(id,v)=>{const el=document.getElementById(id);if(el)el.setAttribute('placeholder',v)};
+  setPh('rep-item0',ph.item);setPh('rep-loc0',ph.loc);setPh('rep-iss0',ph.iss);setPh('po-item0',ph.poItem);setPh('po-qty0',ph.poQty);setPh('po-pur0',ph.poPur);
+  for(let i=0;i<4;i++)['rep-spec','po-bs','po-size','po-bal'].forEach(p=>setPh(p+i,ph.na));
 }
 
 /* ── 分頁 ── */
@@ -990,7 +1078,33 @@ async function queryRecords(sys){
 function mtCloudPayload(){
   let drafts={};
   try{ drafts=JSON.parse(localStorage.getItem('mt_import_draft')||'{}'); }catch(e){}
-  return { schema:1, savedAt:new Date().toISOString(), rep:currentData.rep||[], po:currentData.po||[], drafts:drafts };
+  return { schema:1, savedAt:new Date().toISOString(), rep:currentData.rep||[], po:currentData.po||[], drafts:drafts, draftTombs:mtDraftTombs() };
+}
+/* v3.9.25: import drafts merge by fingerprint with delete tombstones (newest wins) — never overwrite local drafts with the cloud copy. */
+function mtDraftTombs(){try{const t=JSON.parse(localStorage.getItem('mt_import_draft_tomb')||'{}');return t&&typeof t==='object'?t:{};}catch(e){return {};}}
+function mtDraftKey(type,r){if(!r||typeof r!=='object')return '';let k=r._fp||r.id||'';if(!k){try{k=GA.smartImport&&GA.smartImport.fingerprintOf?GA.smartImport.fingerprintOf(type,r):'';}catch(e){k='';}}return String(k||JSON.stringify(r));}
+function mtDraftTs(v){const n=v?Date.parse(v):0;return isNaN(n)?0:n;}
+function mtMarkDraftDeleted(type,r){const t=mtDraftTombs(),k=mtDraftKey(type,r);if(!k)return;t[type]=t[type]||{};t[type][k]=new Date().toISOString();try{localStorage.setItem('mt_import_draft_tomb',JSON.stringify(t));}catch(e){}}
+function mtMergeDrafts(localD,cloudD,localT,cloudT){
+  localD=localD||{};cloudD=cloudD||{};localT=localT||{};cloudT=cloudT||{};
+  const drafts={},tombs={},cutoff=Date.now()-90*86400000;
+  ['repair','temppo'].forEach(type=>{
+    const T={};[localT[type]||{},cloudT[type]||{}].forEach(src=>Object.keys(src).forEach(k=>{if(mtDraftTs(src[k])>mtDraftTs(T[k]))T[k]=src[k];}));
+    const map=new Map();
+    (Array.isArray(cloudD[type])?cloudD[type]:[]).forEach(r=>{const k=mtDraftKey(type,r);if(k)map.set(k,r);});
+    const order=[];(Array.isArray(localD[type])?localD[type]:[]).forEach(r=>{const k=mtDraftKey(type,r);if(!k)return;const c=map.get(k);order.push(k);map.set(k,(c&&mtDraftTs(c.updatedAt)>mtDraftTs(r.updatedAt))?c:r);});
+    (Array.isArray(cloudD[type])?cloudD[type]:[]).forEach(r=>{const k=mtDraftKey(type,r);if(k&&order.indexOf(k)<0)order.push(k);});
+    const seen={};drafts[type]=order.filter(k=>{if(seen[k])return false;seen[k]=1;const r=map.get(k);return !(T[k]&&mtDraftTs(T[k])>=mtDraftTs(r&&r.updatedAt));}).map(k=>map.get(k));
+    tombs[type]={};Object.keys(T).forEach(k=>{if(mtDraftTs(T[k])>=cutoff)tombs[type][k]=T[k];});
+  });
+  return {drafts:drafts,tombs:tombs};
+}
+function mtApplyCloudDrafts(cloud){
+  let local={};try{local=JSON.parse(localStorage.getItem('mt_import_draft')||'{}');}catch(e){}
+  const m=mtMergeDrafts(local,cloud&&cloud.drafts,mtDraftTombs(),cloud&&cloud.draftTombs);
+  try{localStorage.setItem('mt_import_draft',JSON.stringify(m.drafts));localStorage.setItem('mt_import_draft_tomb',JSON.stringify(m.tombs));}catch(e){try{showToast('⚠️ '+mtL('本機儲存空間已滿，草稿只保留在本次畫面','Storage full — drafts kept in this session only','ទំហំផ្ទុកពេញ — ព្រាងនៅតែក្នុងវគ្គនេះ'));}catch(_){}}
+  if(window.mtDraftBadge)try{mtDraftBadge();}catch(e){}
+  return m;
 }
 function mtRowKey(r){
   // 核可狀態變更不應把同一筆記錄合併成兩筆；若有 GAS row number 優先使用。
@@ -1012,21 +1126,17 @@ async function mtCloudUpload(opts){
   try{
     GA.cloud.mount('#ga-cloud');
     // 先讀取現有雲端備份，再合併後上傳，避免查詢條件較窄時把完整備份覆蓋掉。
-    const old=await GA.cloud.download('maintenance');
-    const od=old.data||old;
-    if(od){
+    // v3.9.25: reuse the copy Auto Sync pulled a moment ago instead of downloading it twice.
+    const cached=window._mtCloudCache&&Date.now()-window._mtCloudCache.at<30000?window._mtCloudCache.data:null;
+    let od=cached;if(!od){const old=await GA.cloud.download('maintenance');od=old&&(old.data||old);}
+    window._mtCloudCache=null;
+    if(od&&typeof od==='object'){
       p.rep=mtMergeRows(p.rep,od.rep);
       p.po=mtMergeRows(p.po,od.po);
-      const oldDrafts=od.drafts||{};
-      ['repair','temppo'].forEach(k=>{
-        const seen={};
-        p.drafts[k]=[].concat(oldDrafts[k]||[],p.drafts[k]||[]).filter(r=>{
-          const key=JSON.stringify(r);if(seen[key])return false;seen[key]=1;return true;
-        });
-      });
+      const m=mtApplyCloudDrafts(od);p.drafts=m.drafts;p.draftTombs=m.tombs;
     }
     await GA.cloud.upload('maintenance',p);
-    if(!opts.silent)showToast(lang==='zh'?'☁️ 維修／臨採資料已上傳雲端':lang==='km'?'☁️ ទិន្នន័យជួសជុល／ទិញបន្ទាន់បានផ្ទុកឡើង':'☁️ Maintenance / Temp PO cloud backup saved');
+    if(!opts.silent)showToast(mtL('☁️ 維修／臨採資料已上傳雲端','☁️ Maintenance / Temp PO cloud backup saved','☁️ ទិន្នន័យជួសជុល / ទិញបន្ទាន់បានផ្ទុកឡើង'));
     try{GA.saveCfg({sync_maintenance:new Date().toISOString()});GA.cloud.set('up');}catch(e){}
     return true;
   }catch(e){if(!opts.silent)showToast((T('netErr')||'Network error')+' '+(e.message||''));try{GA.cloud.set('err',e.message||'');}catch(x){}return false;}
@@ -1037,13 +1147,14 @@ async function mtCloudDownload(opts){
     GA.cloud.mount('#ga-cloud');
     const r=await GA.cloud.download('maintenance');
     const d=r.data||r;
-    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){if(!opts.silent)showToast(lang==='zh'?'☁️ 雲端尚無維修／臨採備份':'No maintenance cloud backup yet');return true;}
+    if(!d||(!Array.isArray(d.rep)&&!Array.isArray(d.po))){if(!opts.silent)showToast(mtL('☁️ 雲端尚無維修／臨採備份','☁️ No maintenance / Temp PO cloud backup yet','☁️ មិនទាន់មានការបម្រុងទុកជួសជុល / ទិញបន្ទាន់នៅលើពពក'));return true;}
     currentData.rep=mtMergeRows(currentData.rep,d.rep);
     currentData.po=mtMergeRows(currentData.po,d.po);
-    if(d.drafts){try{localStorage.setItem('mt_import_draft',JSON.stringify(d.drafts));}catch(e){}}
+    window._mtCloudCache={data:d,at:Date.now()};/* v3.9.25 reused by the push step of the same sync */
+    if(d.drafts||d.draftTombs)mtApplyCloudDrafts(d);/* v3.9.25 merge, never overwrite local drafts */
     const sys=mtCurrentSys();
     renderFiltered(sys);
-    if(!opts.silent)showToast(lang==='zh'?'📥 維修／臨採資料已下載（已合併）':lang==='km'?'📥 ទិន្នន័យបានទាញយក និងបញ្ចូលរួម':'📥 Maintenance / Temp PO data downloaded and merged');
+    if(!opts.silent)showToast(mtL('📥 維修／臨採資料已下載（已合併）','📥 Maintenance / Temp PO data downloaded and merged','📥 ទិន្នន័យបានទាញយក និងបញ្ចូលរួម'));
     try{GA.cloud.set('down');}catch(e){}return true;
   }catch(e){if(!opts.silent)showToast((T('netErr')||'Network error')+' '+(e.message||''));return false;}
 }
@@ -1061,24 +1172,32 @@ const HDRS={
   rep:['時間','申請人','部門','維修號','設備名稱','規格/編號','地點','故障描述','處理方式','緊急程度','供應商','項目總額','備註','狀態','核可人','核可時間','檢查人','數量','預估單價','項目總額','報告連結','編輯'],
   po:['時間','申請人','部門','PO號','品項','品牌/規格','尺寸','數量','庫存','用途','供應商','項目總額','備註','狀態','核可人','核可時間','檢查人','預估單價','項目總額','報告連結','編輯']
 };
+/* v3.9.26: display headers per language (HDRS itself unchanged) */
+const HDRS_I18N={
+  en:{rep:['Time','Applicant','Dept','Repair No.','Equipment','Spec/ID','Location','Issue','Action','Urgency','Supplier','Line Total','Remarks','Status','Approver','Approved At','Inspector','Qty','Unit Price','Line Total','Report Link','Edit'],
+      po:['Time','Applicant','Dept','PO No.','Item','Brand/Spec','Size','Qty','Balance','Purpose','Supplier','Line Total','Remarks','Status','Approver','Approved At','Inspector','Unit Price','Line Total','Report Link','Edit']},
+  km:{rep:['ពេលវេលា','អ្នកស្នើសុំ','ផ្នែក','លេខជួសជុល','ឧបករណ៍','លក្ខណៈ/លេខ','ទីតាំង','បញ្ហា','វិធីដោះស្រាយ','កម្រិតបន្ទាន់','អ្នកផ្គត់ផ្គង់','សរុប','កំណត់ចំណាំ','ស្ថានភាព','អ្នកអនុម័ត','ពេលអនុម័ត','អ្នកត្រួតពិនិត្យ','ចំនួន','តម្លៃឯកតា','សរុប','តំណរបាយការណ៍','កែ'],
+      po:['ពេលវេលា','អ្នកស្នើសុំ','ផ្នែក','លេខ PO','ទំនិញ','ម៉ាក/លក្ខណៈ','ទំហំ','ចំនួន','ស្តុក','គោលបំណង','អ្នកផ្គត់ផ្គង់','សរុប','កំណត់ចំណាំ','ស្ថានភាព','អ្នកអនុម័ត','ពេលអនុម័ត','អ្នកត្រួតពិនិត្យ','តម្លៃឯកតា','សរុប','តំណរបាយការណ៍','កែ']}
+};
+function mtHdrs(sys){return (HDRS_I18N[lang]&&HDRS_I18N[lang][sys])||HDRS[sys]}
 function mtStatus(v){const s=String(v==null?'':v).trim(),u=s.toUpperCase();if(u==='APPROVED'||u==='APPROVE'||s==='已核可'||s==='核可')return'已核可';if(u==='REJECTED'||u==='REJECT'||s==='已退件'||s==='已拒絕')return'已退件';if(u==='RETURNED'||u==='RETURN'||s==='已退回'||s==='退回')return'已退回';if(u==='VOIDED'||u==='ARCHIVED'||u==='VOID'||s==='已作廢'||s==='作廢'||s==='已封存')return'已作廢';if(u==='PENDING'||u==='SUBMITTED'||u==='VERIFIED'||s==='待核可'||s==='等待核可'||s==='等待審查')return'待審核';return s||'待審核';}
 function renderRecords(sys,records){
   const wrap=document.getElementById(sys+'-rec-wrap');
   if(!records.length){wrap.innerHTML=`<div class="empty-state"><div class="ei">🔍</div><div>${T('noRecord')}</div></div>`;return}
   const bc=s=>s==='已核可'?'ba':s==='已退件'?'br':'bp';
-  const bt=s=>s==='已核可'?'✅ '+s:s==='已退件'?'❌ '+s:'⏳ '+s;
+  const bt=s=>(s==='已核可'?'✅ ':s==='已退件'?'❌ ':'⏳ ')+mtStatusLabel(s);
   wrap.innerHTML=`
     <div class="rec-head">${T('results')} — ${records.length} ${T('recs')}</div>
     <div class="rec-scroll"><table class="rtable">
-      <thead><tr>${HDRS[sys].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
-      <tbody>${records.map(row=>`<tr>${row.slice(0,21).map((c,i)=>i===13?`<td><span class="badge ${bc(mtStatus(c))}">${bt(mtStatus(c))}</span></td>`:`<td title="${GA.esc(c)}">${GA.esc(c||'—')}</td>`).join('')}<td><button class="mt-edit-btn" onclick="mtOpenEdit('${sys}',${Number(row[21])||0})">✏️ 編輯</button></td></tr>`).join('')}</tbody>
+      <thead><tr>${mtHdrs(sys).map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+      <tbody>${records.map(row=>`<tr>${row.slice(0,21).map((c,i)=>i===13?`<td><span class="badge ${bc(mtStatus(c))}">${bt(mtStatus(c))}</span></td>`:`<td title="${GA.esc(c)}">${GA.esc(c||'—')}</td>`).join('')}<td><button class="mt-edit-btn" onclick="mtOpenEdit('${sys}',${Number(row[21])||0})">✏️ ${mtL('編輯','Edit','កែ')}</button></td></tr>`).join('')}</tbody>
     </table></div>`;
   if(records.length>0)document.getElementById(sys+'-export-btn').classList.add('show');
 }
 function mtEditSet(id,v){const el=document.getElementById(id);if(el)el.value=v==null?'':v;}
 function mtOpenEdit(sys,rowNumber){
   const row=(currentData[sys]||[]).find(r=>Number(r[21])===Number(rowNumber));
-  if(!row||!rowNumber){showToast('⚠️ 找不到這筆記錄，請重新查詢 / Record not found');return;}
+  if(!row||!rowNumber){showToast(mtL('⚠️ 找不到這筆記錄，請重新查詢','⚠️ Record not found, please search again','⚠️ រកមិនឃើញកំណត់ត្រា សូមស្វែងរកម្តងទៀត'));return;}
   document.getElementById('mt-edit-sys').value=sys;document.getElementById('mt-edit-row').value=rowNumber;
   const rep=sys==='rep';
   mtEditSet('mt-edit-timestamp',row[0]);mtEditSet('mt-edit-status',mtStatus(row[13]));
@@ -1093,20 +1212,25 @@ function mtOpenEdit(sys,rowNumber){
   document.getElementById('mt-edit-modal').style.display='flex';
 }
 function mtCloseEdit(){const m=document.getElementById('mt-edit-modal');if(m)m.style.display='none';}
+/* v3.9.25: total = qty × unit price (2 dp, decimal-safe) whenever both are filled */
+function mtEditRecalc(){const q=document.getElementById('mt-edit-qty'),u=document.getElementById('mt-edit-unit'),t=document.getElementById('mt-edit-total');if(!q||!u||!t)return;const qs=String(q.value).trim(),us=String(u.value).trim();if(qs===''||us==='')return;const qn=Number(qs),un=Number(us);if(!isFinite(qn)||!isFinite(un))return;t.value=String(Math.round((qn*un+Number.EPSILON)*100)/100);}
+(function(){function bind(){['mt-edit-qty','mt-edit-unit'].forEach(id=>{const e=document.getElementById(id);if(e&&!e.dataset.mtRecalc){e.dataset.mtRecalc='1';e.addEventListener('input',mtEditRecalc);e.addEventListener('change',mtEditRecalc);}});}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();})();
 async function mtSaveEdit(){
   const sys=document.getElementById('mt-edit-sys').value,rowNumber=Number(document.getElementById('mt-edit-row').value),btn=document.getElementById('mt-edit-save');
   if(!sys||!rowNumber)return;
+  mtEditRecalc();
   const fields={timestamp:document.getElementById('mt-edit-timestamp').value,applicantName:document.getElementById('mt-edit-applicant').value,department:document.getElementById('mt-edit-dept').value,ref:document.getElementById('mt-edit-ref').value,itemName:document.getElementById('mt-edit-item').value,spec:document.getElementById('mt-edit-spec').value,location:document.getElementById('mt-edit-location').value,detail:document.getElementById('mt-edit-detail').value,action:document.getElementById('mt-edit-action').value,urgency:document.getElementById('mt-edit-urgency').value,supplier:document.getElementById('mt-edit-supplier').value,qty:document.getElementById('mt-edit-qty').value,unitPrice:document.getElementById('mt-edit-unit').value,amount:document.getElementById('mt-edit-total').value,inspector:document.getElementById('mt-edit-inspector').value,remarks:document.getElementById('mt-edit-remarks').value,status:document.getElementById('mt-edit-status').value};
-  btn.disabled=true;btn.textContent='⏳ 儲存中…';
+  btn.disabled=true;btn.textContent=mtL('⏳ 儲存中…','⏳ Saving…','⏳ កំពុងរក្សាទុក…');
   try{
-    const d=await GA.gasPost('recordUpdate',{sys,rowNumber,fields});
+    const _orig=(currentData[sys]||[]).find(r=>Number(r[21])===rowNumber);/* v3.9.25: identity check so a stale rowNumber can never edit another record */
+    const d=await GA.gasPost('recordUpdate',{sys,rowNumber,fields,expect:_orig?{ref:_orig[3],item:_orig[4],applicant:_orig[1],timestamp:_orig[0]}:null});
     if(!d||d.ok===false)throw new Error((d&&d.error)||'Save failed');
     const idx=(currentData[sys]||[]).findIndex(r=>Number(r[21])===rowNumber);
     if(idx>=0&&Array.isArray(d.row))currentData[sys][idx]=d.row;
-    mtCloseEdit();renderFiltered(sys);showToast(d.revisionRequired?'⚠️ 已核可內容有修改：整張申請已回到待審，必須重新核可 / Approved request changed: re-approval required':'✅ 記錄已更新，雲端備份排程中 / Record updated');
+    mtCloseEdit();renderFiltered(sys);showToast(d.revisionRequired?mtL('⚠️ 已核可內容有修改：整張申請已回到待審，必須重新核可','⚠️ Approved request changed: it is back to pending and must be re-approved','⚠️ សំណើដែលបានអនុម័តត្រូវបានកែ៖ ត្រឡប់ទៅរង់ចាំ ហើយត្រូវអនុម័តឡើងវិញ'):mtL('✅ 記錄已更新，雲端備份排程中','✅ Record updated; cloud backup scheduled','✅ បានធ្វើបច្ចុប្បន្នភាពកំណត់ត្រា ហើយបានកំណត់ពេលបម្រុងទុកលើពពក'));
     scheduleMaintenanceAutoSync(d.revisionRequired?'revision':'change');
-  }catch(e){showToast('❌ '+(e.message||'Save failed'));}
-  btn.disabled=false;btn.textContent='💾 儲存 Save';
+  }catch(e){showToast('❌ '+(e.message||mtL('儲存失敗','Save failed','រក្សាទុកបរាជ័យ')));}
+  btn.disabled=false;btn.textContent=mtX('ed_save');
 }
 function renderStats(sys,records){
   document.getElementById(sys+'-sv-total').textContent=records.length;
@@ -1127,11 +1251,11 @@ function renderRecCharts(sys,records){
 
   if(sys==='rep'){ renderRepairCharts(records); return; }
 
-  const byStatus={};records.forEach(r=>{const s=mtStatus(r[13]);byStatus[s]=(byStatus[s]||0)+1;});
+  const byStatus={};records.forEach(r=>{const s=mtStatusLabel(mtStatus(r[13]));byStatus[s]=(byStatus[s]||0)+1;});
   GA.chart(sys+'-ch-status',{type:'doughnut',
     data:{labels:Object.keys(byStatus),datasets:[{data:Object.values(byStatus),backgroundColor:['#f59e0b','#10b981','#ef4444','#94a3b8'],borderWidth:1}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:9}}}}}});
-  const byDept={};records.forEach(r=>{const d=r[2]||'—';byDept[d]=(byDept[d]||0)+1;});
+  const byDept={};records.forEach(r=>{const d=mtDeptLabel(r[2])||'—';byDept[d]=(byDept[d]||0)+1;});
   const top=Object.entries(byDept).sort((a,b)=>b[1]-a[1]).slice(0,8);
   GA.chart(sys+'-ch-dept',{type:'bar',
     data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),backgroundColor:'#0284c7',borderRadius:5}]},
@@ -1146,14 +1270,14 @@ function renderRepairCharts(records){
   records.forEach(r=>{ const e=(r[4]||'—').toString().trim(); byEquip[e]=(byEquip[e]||0)+1; });
   const topE=Object.entries(byEquip).sort((a,b)=>b[1]-a[1]).slice(0,8);
   GA.chart('rep-ch-status',{type:'bar',
-    data:{labels:topE.map(x=>x[0]),datasets:[{label:'次數',data:topE.map(x=>x[1]),backgroundColor:'#0d9488',borderRadius:5}]},
+    data:{labels:topE.map(x=>x[0]),datasets:[{label:mtL('次數','Count','ចំនួនដង'),data:topE.map(x=>x[1]),backgroundColor:'#0d9488',borderRadius:5}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{font:{size:9},precision:0}},y:{ticks:{font:{size:9}}}}}});
 
   // 2) 緊急程度分布
   const byUrg={};
   records.forEach(r=>{ let u=(r[9]||'normal').toString().toLowerCase();
-    u=/urgent|緊急/.test(u)?'🚨 緊急':/critical|重大/.test(u)?'⛔ 重大':'一般';
+    u=/urgent|緊急/.test(u)?mtL('🚨 緊急','🚨 Urgent','🚨 បន្ទាន់'):/critical|重大/.test(u)?mtL('⛔ 重大','⛔ Critical','⛔ បន្ទាន់ខ្លាំង'):mtL('一般','Normal','ធម្មតា');
     byUrg[u]=(byUrg[u]||0)+1; });
   GA.chart('rep-ch-dept',{type:'doughnut',
     data:{labels:Object.keys(byUrg),datasets:[{data:Object.values(byUrg),backgroundColor:['#ef4444','#b91c1c','#94a3b8'],borderWidth:1}]},
@@ -1164,7 +1288,7 @@ function renderRepairCharts(records){
   records.forEach(r=>{ const l=(r[6]||'—').toString().trim(); byLoc[l]=(byLoc[l]||0)+1; });
   const topL=Object.entries(byLoc).sort((a,b)=>b[1]-a[1]).slice(0,8);
   GA.chart('rep-ch-loc',{type:'bar',
-    data:{labels:topL.map(x=>x[0]),datasets:[{label:'次數',data:topL.map(x=>x[1]),backgroundColor:'#8b5cf6',borderRadius:5}]},
+    data:{labels:topL.map(x=>x[0]),datasets:[{label:mtL('次數','Count','ចំនួនដង'),data:topL.map(x=>x[1]),backgroundColor:'#8b5cf6',borderRadius:5}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{y:{beginAtZero:true,ticks:{font:{size:9},precision:0}},x:{ticks:{font:{size:9},maxRotation:45}}}}});
 
@@ -1173,7 +1297,7 @@ function renderRepairCharts(records){
   records.forEach(r=>{ const e=(r[4]||'—').toString().trim(); costBy[e]=(costBy[e]||0)+GA.num(r[11]); });
   const topC=Object.entries(costBy).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,8);
   GA.chart('rep-ch-cost',{type:'bar',
-    data:{labels:topC.map(x=>x[0]),datasets:[{label:'金額 $',data:topC.map(x=>Math.round(x[1]*100)/100),backgroundColor:'#f59e0b',borderRadius:5}]},
+    data:{labels:topC.map(x=>x[0]),datasets:[{label:mtL('金額 $','Amount $','ទឹកប្រាក់ $'),data:topC.map(x=>Math.round(x[1]*100)/100),backgroundColor:'#f59e0b',borderRadius:5}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
       scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}});
 
@@ -1182,9 +1306,9 @@ function renderRepairCharts(records){
   const repeat=Object.values(byEquip).filter(v=>v>1).length;
   const el=document.getElementById('rep-extra-kpi');
   if(el) el.innerHTML=
-    '<div class="ga-kpi" style="--kc:#f59e0b"><div class="ga-kpi-l">維修總成本</div><div class="ga-kpi-v">'+GA.money(totalCost,2)+'</div></div>'+
-    '<div class="ga-kpi" style="--kc:#0d9488"><div class="ga-kpi-l">平均每筆</div><div class="ga-kpi-v">'+GA.money(records.length?totalCost/records.length:0,2)+'</div></div>'+
-    '<div class="ga-kpi" style="--kc:#ef4444"><div class="ga-kpi-l">重複故障設備</div><div class="ga-kpi-v">'+repeat+'</div></div>';
+    '<div class="ga-kpi" style="--kc:#f59e0b"><div class="ga-kpi-l">'+mtL('維修總成本','Total repair cost','ថ្លៃជួសជុលសរុប')+'</div><div class="ga-kpi-v">'+GA.money(totalCost,2)+'</div></div>'+
+    '<div class="ga-kpi" style="--kc:#0d9488"><div class="ga-kpi-l">'+mtL('平均每筆','Average per request','មធ្យមក្នុងមួយសំណើ')+'</div><div class="ga-kpi-v">'+GA.money(records.length?totalCost/records.length:0,2)+'</div></div>'+
+    '<div class="ga-kpi" style="--kc:#ef4444"><div class="ga-kpi-l">'+mtL('重複故障設備','Repeat-failure equipment','ឧបករណ៍ខូចម្តងទៀត')+'</div><div class="ga-kpi-v">'+repeat+'</div></div>';
 }
 
 /* ── Excel 匯出（與 GAS Sheet 的單價／總額欄位對齊）── */
@@ -1231,10 +1355,10 @@ function mtImport(){
       // Include existing imported drafts, and update by source fingerprint instead of concatenating.
       try{
         const key='mt_import_draft',cur=JSON.parse(localStorage.getItem(key)||'{}');let changed=0;
-        [['repair',rep],['temppo',tpo]].forEach(function(pair){const type=pair[0],list=cur[type]||[],index=new Map();list.forEach(function(r,i){index.set(r._fp||GA.smartImport.fingerprintOf(type,r),i);});pair[1].forEach(function(r){const fp=r._fp||GA.smartImport.fingerprintOf(type,r),i=index.get(fp);if(i!==undefined){list[i]=Object.assign({},r,{recordId:list[i].recordId||r.recordId});}else{index.set(fp,list.length);list.push(r);}changed++;});cur[type]=list;});
+        [['repair',rep],['temppo',tpo]].forEach(function(pair){const type=pair[0],list=cur[type]||[],index=new Map();list.forEach(function(r,i){index.set(r._fp||GA.smartImport.fingerprintOf(type,r),i);});pair[1].forEach(function(r){const fp=r._fp||GA.smartImport.fingerprintOf(type,r),i=index.get(fp),now=new Date().toISOString();/* v3.9.25 updatedAt for newest-wins merge */if(i!==undefined){list[i]=Object.assign({},r,{_fp:fp,recordId:list[i].recordId||r.recordId,updatedAt:now});}else{index.set(fp,list.length);list.push(Object.assign({},r,{_fp:fp,updatedAt:now}));}changed++;});cur[type]=list;});
         localStorage.setItem(key,JSON.stringify(cur));if(window.mtDraftBadge)mtDraftBadge();
-        showToast((lang==='zh'?'已保存匯入草稿：':'Imported drafts saved: ')+(cur.repair||[]).length+' / '+(cur.temppo||[]).length);
-      }catch(e){showToast('❌ '+(lang==='zh'?'本機儲存失敗：':'Local save failed: ')+e.message);throw e;}
+        showToast(mtL('已保存匯入草稿：','Imported drafts saved: ','បានរក្សាទុកព្រាងនាំចូល៖ ')+(cur.repair||[]).length+' / '+(cur.temppo||[]).length);
+      }catch(e){showToast('❌ '+mtL('本機儲存失敗：','Local save failed: ','រក្សាទុកក្នុងឧបករណ៍បរាជ័យ៖ ')+e.message);throw e;}
       scheduleMaintenanceAutoSync('import');
     }
   });
@@ -1278,7 +1402,7 @@ function mtTelegram(){
          .concat(top.map(([d,n])=>({zh:'部門·'+d,en:'dept·'+d,km:'ផ្នែក·'+d,v:n})))
          .concat(inspectors.length?['-']:[{zh:'🔎 檢查人',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ',v:0}])
          .concat(inspectors.map(([n,c])=>({zh:'🔎 '+(n==='—'?'未填':n),en:'🔎 '+(n==='—'?'Not entered':n),km:'🔎 '+(n==='—'?'មិនបានបំពេញ':n),v:c}))),
-        footer:'🕐 '+GA.ymd(new Date())+(rows.length?'':'（'+(lang==='zh'?'請先查詢':'query first')+'）')
+        footer:'🕐 '+GA.ymd(new Date())+(rows.length?'':mtL('（請先查詢）',' (query first)',' (សូមស្វែងរកជាមុន)'))
       });
     }
   });
@@ -1336,12 +1460,12 @@ function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.sc
   function reqItems(sys,g){return g.rows.map(function(r){var q=sys==='rep'?GA.num(r[17]||1):GA.num(r[7]||1);return (r[4]||'—')+(q>1?' ×'+q:'')}).join(' · ')}
   function reqDetail(sys,g){var r=g.first;return sys==='rep'?(r[7]||r[8]||'—'):(r[9]||'—')}
   function cls(s){return s==='已核可'?'approved':s==='已作廢'?'voided':(s==='已退件'||s==='已退回')?'rejected':'pending'}
-  window.renderRecords=function(sys,records){var wrap=document.getElementById(sys+'-rec-wrap'),gs=Array.isArray(records)&&records.length&&records[0]&&records[0].rows?records:groupRows(records||[]);if(!gs.length){wrap.innerHTML='<div class="empty-state"><div class="ei">🔎</div><div>'+T('noRecord')+'</div></div>';return}var cards=gs.map(function(g){var r=g.first,amt=reqAmount(sys,g),approver=r[14]||'—',approvedAt=r[15]||'',inspector=r[16]||'—';return '<div class="mt-request-card '+cls(g.status)+'"><div class="mt-request-head"><div><div class="mt-request-ref">'+esc2(sys==='rep'?'🔧 ':'🛒 ')+esc2(r[3]||'—')+'</div><div style="font-size:10px;color:#64748b">'+esc2(String(r[0]||'').slice(0,16))+'</div></div><div class="mt-request-status">'+(g.status==='已核可'?'✅ ':g.status==='待審核'?'⏳ ':'❌ ')+esc2(g.status)+'</div></div><div class="mt-request-body"><div class="mt-request-field"><small>'+L('申請人','Applicant','អ្នកស្នើ')+'</small><b>'+esc2(r[1]||'—')+'</b></div><div class="mt-request-field"><small>'+L('部門','Department','ផ្នែក')+'</small><b>'+esc2(r[2]||'—')+'</b></div><div class="mt-request-field"><small>'+L('金額','Amount','ទឹកប្រាក់')+'</small><b>'+GA.money(amt,2)+'</b></div><div class="mt-request-field"><small>'+L('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</small><b>'+esc2(inspector)+'</b></div><div class="mt-request-field mt-request-wide"><small>'+L('品項／設備','Items / Equipment','ទំនិញ / ឧបករណ៍')+'</small><b>'+esc2(reqItems(sys,g))+'</b></div><div class="mt-request-field mt-request-wide"><small>'+L('用途／故障','Purpose / Issue','គោលបំណង / បញ្ហា')+'</small><b>'+esc2(reqDetail(sys,g))+'</b></div>'+(g.status==='已核可'?'<div class="mt-request-field"><small>'+L('核可人','Approver','អ្នកអនុម័ត')+'</small><b>'+esc2(approver)+'</b></div><div class="mt-request-field"><small>'+L('核可時間','Approved at','ពេលអនុម័ត')+'</small><b>'+esc2(approvedAt||'—')+'</b></div>':'')+'</div><div class="mt-request-foot"><button class="mt-edit-btn" onclick="mtOpenEdit(\''+sys+'\','+(Number(r[21])||0)+')">✏️ '+L('編輯','Edit','កែ')+'</button></div></div>'}).join('');var oldTable='<div class="mt-request-table rec-scroll"><table class="rtable"><thead><tr>'+HDRS[sys].map(function(h){return'<th>'+esc2(h)+'</th>'}).join('')+'</tr></thead><tbody>'+flatGroups(gs).map(function(row){return'<tr>'+row.slice(0,21).map(function(c,i){return i===13?'<td>'+esc2(mtStatus(c))+'</td>':'<td>'+esc2(c||'—')+'</td>'}).join('')+'<td><button class="mt-edit-btn" onclick="mtOpenEdit(\''+sys+'\','+(Number(row[21])||0)+')">✏️</button></td></tr>'}).join('')+'</tbody></table></div>';wrap.innerHTML='<div class="rec-head">'+L('申請列表','Request list','បញ្ជីសំណើ')+' — '+gs.length+'</div><div class="mt-request-cards">'+cards+'</div>'+oldTable;var ex=document.getElementById(sys+'-export-btn');if(ex)ex.classList.add('show')}
+  window.renderRecords=function(sys,records){var wrap=document.getElementById(sys+'-rec-wrap'),gs=Array.isArray(records)&&records.length&&records[0]&&records[0].rows?records:groupRows(records||[]);if(!gs.length){wrap.innerHTML='<div class="empty-state"><div class="ei">🔎</div><div>'+T('noRecord')+'</div></div>';return}var cards=gs.map(function(g){var r=g.first,amt=reqAmount(sys,g),approver=r[14]||'—',approvedAt=r[15]||'',inspector=r[16]||'—';return '<div class="mt-request-card '+cls(g.status)+'"><div class="mt-request-head"><div><div class="mt-request-ref">'+esc2(sys==='rep'?'🔧 ':'🛒 ')+esc2(r[3]||'—')+'</div><div style="font-size:10px;color:#64748b">'+esc2(String(r[0]||'').slice(0,16))+'</div></div><div class="mt-request-status">'+(g.status==='已核可'?'✅ ':g.status==='待審核'?'⏳ ':'❌ ')+esc2(mtStatusLabel(g.status))+'</div></div><div class="mt-request-body"><div class="mt-request-field"><small>'+L('申請人','Applicant','អ្នកស្នើ')+'</small><b>'+esc2(r[1]||'—')+'</b></div><div class="mt-request-field"><small>'+L('部門','Department','ផ្នែក')+'</small><b>'+esc2(mtDeptLabel(r[2])||'—')+'</b></div><div class="mt-request-field"><small>'+L('金額','Amount','ទឹកប្រាក់')+'</small><b>'+GA.money(amt,2)+'</b></div><div class="mt-request-field"><small>'+L('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</small><b>'+esc2(inspector)+'</b></div><div class="mt-request-field mt-request-wide"><small>'+L('品項／設備','Items / Equipment','ទំនិញ / ឧបករណ៍')+'</small><b>'+esc2(reqItems(sys,g))+'</b></div><div class="mt-request-field mt-request-wide"><small>'+L('用途／故障','Purpose / Issue','គោលបំណង / បញ្ហា')+'</small><b>'+esc2(reqDetail(sys,g))+'</b></div>'+(g.status==='已核可'?'<div class="mt-request-field"><small>'+L('核可人','Approver','អ្នកអនុម័ត')+'</small><b>'+esc2(approver)+'</b></div><div class="mt-request-field"><small>'+L('核可時間','Approved at','ពេលអនុម័ត')+'</small><b>'+esc2(approvedAt||'—')+'</b></div>':'')+'</div><div class="mt-request-foot"><button class="mt-edit-btn" onclick="mtOpenEdit(\''+sys+'\','+(Number(r[21])||0)+')">✏️ '+L('編輯','Edit','កែ')+'</button></div></div>'}).join('');var oldTable='<div class="mt-request-table rec-scroll"><table class="rtable"><thead><tr>'+mtHdrs(sys).map(function(h){return'<th>'+esc2(h)+'</th>'}).join('')+'</tr></thead><tbody>'+flatGroups(gs).map(function(row){return'<tr>'+row.slice(0,21).map(function(c,i){return i===13?'<td>'+esc2(mtStatusLabel(mtStatus(c)))+'</td>':'<td>'+esc2((i===2?mtDeptLabel(c):i===9&&sys==='rep'?mtUrgLabel(c):c)||'—')+'</td>'}).join('')+'<td><button class="mt-edit-btn" onclick="mtOpenEdit(\''+sys+'\','+(Number(row[21])||0)+')">✏️</button></td></tr>'}).join('')+'</tbody></table></div>';wrap.innerHTML='<div class="rec-head">'+L('申請列表','Request list','បញ្ជីសំណើ')+' — '+gs.length+'</div><div class="mt-request-cards">'+cards+'</div>'+oldTable;var ex=document.getElementById(sys+'-export-btn');if(ex)ex.classList.add('show')}
   window.renderStats=function(sys,records){var gs=Array.isArray(records)&&records.length&&records[0]&&records[0].rows?records:groupRows(records||[]),flat=flatGroups(gs),amount=gs.reduce(function(a,g){return a+reqAmount(sys,g)},0);document.getElementById(sys+'-sv-total').textContent=gs.length;document.getElementById(sys+'-sv-amount').textContent=GA.money(amount,2);document.getElementById(sys+'-sv-approved').textContent=gs.filter(function(g){return g.status==='已核可'}).length;document.getElementById(sys+'-sv-pending').textContent=gs.filter(function(g){return g.status==='待審核'}).length;document.getElementById(sys+'-sv-rejected').textContent=gs.filter(function(g){return g.status==='已退件'||g.status==='已退回'}).length;document.getElementById(sys+'-stats').style.display='grid'}
   window.renderFiltered=function(sys){var gs=rawFiltered(sys),flat=flatGroups(gs);renderRecords(sys,gs);renderStats(sys,gs);renderRecCharts(sys,flat);var ex=document.getElementById(sys+'-export-btn');if(ex)ex.style.display=gs.length?'inline-flex':'none';var c=document.getElementById('mtc-count-'+sys);if(c)c.textContent=gs.length+' '+L('筆','requests','សំណើ')}
   async function loadAll(sys,force){if(MT.loading[sys])return;if(MT.loaded[sys]&&!force){renderFiltered(sys);return}MT.loading[sys]=true;var wrap=document.getElementById(sys+'-rec-wrap');if(wrap)wrap.innerHTML='<div class="mt-v3912-loading">⏳ '+T('loading')+'</div>';try{var d=await GA.gasGet('exportRecords',{sys:sys,year:'',month:'',status:'',search:''}),recs=(d.records)||(d.data&&d.data.records)||[];currentData[sys]=recs.map(function(r){if(Array.isArray(r)){var x=r.slice();x[13]=mtStatus(x[13]);return x}return r});MT.loaded[sys]=true;if(MT.pc[sys])MT.pc[sys].refresh();renderFiltered(sys)}catch(e){if(wrap)wrap.innerHTML='<div class="empty-state">⚠️ '+esc2(e.message||'Network error')+'</div>'}finally{MT.loading[sys]=false}}
   window.queryRecords=function(sys){return loadAll(sys,true)};
-  function toolHtml(sys){return '<div class="mt-v3912-tools"><div id="'+sys+'-period" class="mt-compact-period"></div><div class="mt-minirow"><select id="mtc-status-'+sys+'"><option value="">'+L('全部狀態','All statuses','ស្ថានភាពទាំងអស់')+'</option><option value="待審核">⏳ '+L('待審核','Pending','រង់ចាំ')+'</option><option value="已核可">✅ '+L('已核可','Approved','អនុម័ត')+'</option><option value="已退件">❌ '+L('已退件','Rejected','បដិសេធ')+'</option><option value="已作廢">🗄 '+L('已作廢','Voided','បានបិទ')+'</option></select><input class="mt-search" id="mtc-search-'+sys+'" placeholder="'+(sys==='rep'?L('設備／申請人／地點','Equipment / applicant / location','ឧបករណ៍ / អ្នកស្នើ / ទីតាំង'):L('品項／申請人／部門','Item / applicant / department','ទំនិញ / អ្នកស្នើ / ផ្នែក'))+'"><button class="btn-xl show" id="mtc-export-'+sys+'">⬇ Excel</button></div><div class="mt-v3912-statusstrip"><span>☁ '+L('自動載入','Auto load','ផ្ទុកស្វ័យប្រវត្តិ')+'</span><span>↻ '+L('切換期間即更新','Period changes refresh','ប្តូររយៈពេល = ផ្ទុកថ្មី')+'</span><span id="mtc-count-'+sys+'">0</span></div></div>'}
+  function toolHtml(sys){return '<div class="mt-v3912-tools"><div id="'+sys+'-period" class="mt-compact-period"></div><div class="mt-minirow"><select id="mtc-status-'+sys+'"><option value="" data-mt="mtc_all">'+L('全部狀態','All statuses','ស្ថានភាពទាំងអស់')+'</option><option value="待審核" data-mt="mtc_pending">⏳ '+L('待審核','Pending','រង់ចាំ')+'</option><option value="已核可" data-mt="mtc_approved">✅ '+L('已核可','Approved','អនុម័ត')+'</option><option value="已退件" data-mt="mtc_rejected">❌ '+L('已退件','Rejected','បដិសេធ')+'</option><option value="已作廢" data-mt="mtc_voided">🗄 '+L('已作廢','Voided','បានបិទ')+'</option></select><input class="mt-search" id="mtc-search-'+sys+'" data-mt-ph="mtc_ph_'+sys+'" placeholder="'+(sys==='rep'?L('設備／申請人／地點','Equipment / applicant / location','ឧបករណ៍ / អ្នកស្នើ / ទីតាំង'):L('品項／申請人／部門','Item / applicant / department','ទំនិញ / អ្នកស្នើ / ផ្នែក'))+'"><button class="btn-xl show" id="mtc-export-'+sys+'">⬇ Excel</button></div><div class="mt-v3912-statusstrip"><span data-mt="mtc_auto">☁ '+L('自動載入','Auto load','ផ្ទុកស្វ័យប្រវត្តិ')+'</span><span data-mt="mtc_period">↻ '+L('切換期間即更新','Period changes refresh','ប្តូររយៈពេល = ផ្ទុកថ្មី')+'</span><span id="mtc-count-'+sys+'">0</span></div></div>'}
   function initSys(sys){var old=document.getElementById(sys+'-period');if(!old)return;var holder=document.createElement('div');holder.innerHTML=toolHtml(sys);var tools=holder.firstChild;old.parentNode.insertBefore(tools,old);old.remove();MT.pc[sys]=GA.periodControl('#'+sys+'-period',{id:'mt3912_'+sys,type:'month',dates:function(){return(currentData[sys]||[]).map(function(r){return String(r[0]||'').slice(0,10)})},onChange:function(){renderFiltered(sys)}});document.getElementById('mtc-status-'+sys).onchange=function(){renderFiltered(sys)};document.getElementById('mtc-search-'+sys).oninput=function(){clearTimeout(MT.timer[sys]);MT.timer[sys]=setTimeout(function(){renderFiltered(sys)},220)};document.getElementById('mtc-export-'+sys).onclick=function(){exportExcel(sys)}}
   var oldSwitch=switchTab;window.switchTab=function(t){oldSwitch(t);if(t==='reprec')loadAll('rep',false);if(t==='porec')loadAll('po',false)};
   window.exportExcel=function(sys){var gs=rawFiltered(sys),data=flatGroups(gs);if(!data.length){showToast(T('noData'));return}var hdrs=sys==='rep'?['時間戳記','申請人','部門','維修號','設備名稱','規格/編號','地點/房間','故障描述','處理方式','緊急程度','供應商','項目總額','備註','狀態','核可人','核可時間','檢查人','數量','預估單價','項目總額','報告連結']:['時間戳記','申請人','部門','PO號','品項名稱','品牌/規格','尺寸','數量','庫存','用途','供應商','項目總額','備註','狀態','核可人','核可時間','檢查人','預估單價','項目總額','報告連結'];var ws=XLSX.utils.aoa_to_sheet([hdrs].concat(data.map(function(r){return r.slice(0,21)}))),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sys==='rep'?'Repair_Records':'Temp_PO');var st=MT.pc[sys]?MT.pc[sys].state():{key:'ALL'};XLSX.writeFile(wb,'AC_GA_EXP_'+(sys==='rep'?'Repair':'TempPO')+'_'+st.key+'.xlsx')}
@@ -1362,18 +1486,18 @@ function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.sc
   window.mtMergeRows=function(localRows,cloudRows){var map={},order=[];[].concat(localRows||[],cloudRows||[]).forEach(function(r){if(!Array.isArray(r))return;var k=mtRowKey(r),old=map[k];if(!old){map[k]=r;order.push(k);return}var ro=rank(old[13]),rn=rank(r[13]),ou=String(old[20]||''),nu=String(r[20]||'');if(rn>ro||(rn===ro&&!ou&&nu))map[k]=r});return order.map(function(k){return map[k]})};
   var _mStatus=window.mtStatus;window.mtStatus=function(v){var s=String(v==null?'':v).trim(),u=s.toUpperCase();if(u==='VOIDED'||u==='VOID'||s==='已作廢'||s==='作廢')return'已作廢';return _mStatus(v)};
   function payloadKey(sys){var name=getV(sys+'-name'),dept=getV(sys+'-dept'),ref=getV(sys==='rep'?'rep-no':'po-no'),items=[];for(var i=0;i<4;i++){var n=getV(sys+'-item'+i);if(n)items.push([n,getV(sys+'-qty'+i)||'1'])}return GA.fingerprint([sys,currentDate,name,dept,ref,JSON.stringify(items)])}
-  var _mSubmitRep=window.submitRepair;window.submitRepair=async function(){var b=document.getElementById('rep-submit-btn');if(b&&b.dataset.submitting==='1')return;var k=payloadKey('rep'),last=JSON.parse(localStorage.getItem('mt_last_submit')||'{}');if(last[k]&&Date.now()-last[k]<300000&&!confirm(M('⚠️ 5 分鐘內已送過相同維修內容，仍要再送？','⚠️ The same repair was submitted in the last 5 minutes. Submit again?','⚠️ បានផ្ញើការជួសជុលដូចគ្នាក្នុង 5 នាទី។ ផ្ញើម្ដងទៀត?')))return;if(b)b.dataset.submitting='1';var orig=postGAS;window.postGAS=async function(p){if(p&&p.action==='repairSubmit')p.requestUid=window._mtReqUid.rep;return orig(p)};try{var r=await _mSubmitRep();last[k]=Date.now();localStorage.setItem('mt_last_submit',JSON.stringify(last));return r}finally{window.postGAS=orig;if(b)b.dataset.submitting='0'}};
-  var _mSubmitPo=window.submitTempPo;window.submitTempPo=async function(){var b=document.getElementById('po-submit-btn');if(b&&b.dataset.submitting==='1')return;var k=payloadKey('po'),last=JSON.parse(localStorage.getItem('mt_last_submit')||'{}');if(last[k]&&Date.now()-last[k]<300000&&!confirm(M('⚠️ 5 分鐘內已送過相同臨採內容，仍要再送？','⚠️ The same Temp PO was submitted in the last 5 minutes. Submit again?','⚠️ បានផ្ញើការទិញបន្ទាន់ដូចគ្នាក្នុង 5 នាទី។ ផ្ញើម្ដងទៀត?')))return;if(b)b.dataset.submitting='1';var orig=postGAS;window.postGAS=async function(p){if(p&&p.action==='tempSubmit')p.requestUid=window._mtReqUid.po;return orig(p)};try{var r=await _mSubmitPo();last[k]=Date.now();localStorage.setItem('mt_last_submit',JSON.stringify(last));return r}finally{window.postGAS=orig;if(b)b.dataset.submitting='0'}};
+  var _mSubmitRep=window.submitRepair;window.submitRepair=async function(){var b=document.getElementById('rep-submit-btn');if(b&&b.dataset.submitting==='1')return;var k=payloadKey('rep'),last=JSON.parse(localStorage.getItem('mt_last_submit')||'{}');if(last[k]&&Date.now()-last[k]<300000&&!confirm(M('⚠️ 5 分鐘內已送過相同維修內容，仍要再送？','⚠️ The same repair was submitted in the last 5 minutes. Submit again?','⚠️ បានផ្ញើការជួសជុលដូចគ្នាក្នុង 5 នាទី។ ផ្ញើម្ដងទៀត?')))return;if(b)b.dataset.submitting='1';var orig=postGAS,sentOk=false;window.postGAS=async function(p){if(p&&p.action==='repairSubmit')p.requestUid=window._mtReqUid.rep;var res=await orig(p);if(p&&p.action==='repairSubmit'&&res&&res.ok)sentOk=true;return res};try{var r=await _mSubmitRep();if(sentOk){last[k]=Date.now();try{localStorage.setItem('mt_last_submit',JSON.stringify(last))}catch(_){}}/* v3.9.25 remember only a confirmed submit */return r}finally{window.postGAS=orig;if(b)b.dataset.submitting='0'}};
+  var _mSubmitPo=window.submitTempPo;window.submitTempPo=async function(){var b=document.getElementById('po-submit-btn');if(b&&b.dataset.submitting==='1')return;var k=payloadKey('po'),last=JSON.parse(localStorage.getItem('mt_last_submit')||'{}');if(last[k]&&Date.now()-last[k]<300000&&!confirm(M('⚠️ 5 分鐘內已送過相同臨採內容，仍要再送？','⚠️ The same Temp PO was submitted in the last 5 minutes. Submit again?','⚠️ បានផ្ញើការទិញបន្ទាន់ដូចគ្នាក្នុង 5 នាទី។ ផ្ញើម្ដងទៀត?')))return;if(b)b.dataset.submitting='1';var orig=postGAS,sentOk=false;window.postGAS=async function(p){if(p&&p.action==='tempSubmit')p.requestUid=window._mtReqUid.po;var res=await orig(p);if(p&&p.action==='tempSubmit'&&res&&res.ok)sentOk=true;return res};try{var r=await _mSubmitPo();if(sentOk){last[k]=Date.now();try{localStorage.setItem('mt_last_submit',JSON.stringify(last))}catch(_){}}/* v3.9.25 remember only a confirmed submit */return r}finally{window.postGAS=orig;if(b)b.dataset.submitting='0'}};
   function drafts(){try{return JSON.parse(localStorage.getItem('mt_import_draft')||'{}')}catch(e){return{}}}
   function saveDrafts(d){localStorage.setItem('mt_import_draft',JSON.stringify(d));scheduleMaintenanceAutoSync('draft-change');mtDraftBadge()}
   window.mtDraftBadge=function(){var d=drafts(),n=(d.repair||[]).length+(d.temppo||[]).length,btn=document.getElementById('mt-draft-btn');if(!btn){var host=document.querySelector('#content-reprec .rec-filter-card,#content-porec .rec-filter-card');if(host){btn=document.createElement('button');btn.id='mt-draft-btn';btn.className='query-btn';btn.style.cssText='margin-top:8px;background:#475569';btn.onclick=mtOpenDrafts;host.appendChild(btn)}}if(btn)btn.textContent='📥 '+M('匯入草稿','Imported drafts','ព្រាងនាំចូល')+' ('+n+')'};
   function pick(o,names){for(var i=0;i<names.length;i++)if(o[names[i]]!=null&&o[names[i]]!=='')return o[names[i]];return''}
   window.mtLoadDraft=function(type,idx){var d=drafts(),arr=d[type]||[],r=arr[idx];if(!r)return;var sys=type==='repair'?'rep':'po';switchTab(sys);var set=function(id,v){var e=document.getElementById(id);if(e)e.value=v==null?'':v};set(sys+'-name',pick(r,['applicant','name','requester']));set(sys+'-dept',pick(r,['dept','department']));if(sys==='rep'){set('rep-no',pick(r,['repairNo','ref']));set('rep-item0',pick(r,['item','itemName','issue']));set('rep-spec0',pick(r,['spec']));set('rep-loc0',pick(r,['location']));set('rep-iss0',pick(r,['issue','remarks']));set('rep-act0',pick(r,['action']));set('rep-qty0',pick(r,['qty'])||1);set('rep-sup0',pick(r,['supplier']));set('rep-prc0',pick(r,['price','unitPrice']));}else{set('po-no',pick(r,['poNo','poNumber','ref']));set('po-item0',pick(r,['item','itemName']));set('po-bs0',pick(r,['brand','spec']));set('po-size0',pick(r,['size']));set('po-qty0',pick(r,['qty'])||1);set('po-pur0',pick(r,['remarks','purpose']));set('po-sup0',pick(r,['supplier']));set('po-prc0',pick(r,['price','unitPrice']));}mtCloseDrafts();showToast(M('✅ 草稿已載入線上表單，可修改後送出','✅ Draft loaded into the online form; edit and submit','✅ បានផ្ទុកព្រាងទៅទម្រង់អនឡាញ'))};
-  window.mtDeleteDraft=function(type,idx){var d=drafts(),arr=d[type]||[];if(!arr[idx])return;if(!confirm(M('刪除此匯入草稿？','Delete this imported draft?','លុបព្រាងនេះ?')))return;arr.splice(idx,1);d[type]=arr;saveDrafts(d);mtOpenDrafts()};
+  window.mtDeleteDraft=function(type,idx){var d=drafts(),arr=d[type]||[];if(!arr[idx])return;if(!confirm(M('刪除此匯入草稿？','Delete this imported draft?','លុបព្រាងនេះ?')))return;mtMarkDraftDeleted(type,arr[idx]);/* v3.9.25 tombstone so the cloud copy cannot bring it back */arr.splice(idx,1);d[type]=arr;saveDrafts(d);mtOpenDrafts()};
   window.mtCloseDrafts=function(){var x=document.getElementById('mt-draft-modal');if(x)x.remove()};
   window.mtOpenDrafts=function(){mtCloseDrafts();var d=drafts(),ov=document.createElement('div');ov.id='mt-draft-modal';ov.style.cssText='position:fixed;inset:0;background:#0008;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';var rows=[];[['repair','🔧'],['temppo','🛒']].forEach(function(a){(d[a[0]]||[]).forEach(function(r,i){rows.push('<div style="border:1px solid #dbe3ef;border-radius:10px;padding:10px;margin:7px 0"><b>'+a[1]+' '+GA.esc(pick(r,['item','itemName','issue'])||'—')+'</b><div style="font-size:11px;color:#64748b">'+GA.esc(pick(r,['date'])||'')+' · '+GA.esc(pick(r,['dept','department'])||'')+' · Qty '+GA.num(pick(r,['qty'])||1)+'</div><div style="display:flex;gap:6px;margin-top:7px"><button class="mt-edit-btn" onclick="mtLoadDraft(\''+a[0]+'\','+i+')">✏️ '+M('載入表單','Load form','ផ្ទុកទម្រង់')+'</button><button class="mt-edit-btn" onclick="mtDeleteDraft(\''+a[0]+'\','+i+')">🗑</button></div></div>')})});ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:620px;width:100%;max-height:85vh;overflow:auto;padding:14px"><div style="display:flex;justify-content:space-between"><b>📥 '+M('匯入草稿','Imported drafts','ព្រាងនាំចូល')+'</b><button onclick="mtCloseDrafts()">✕</button></div>'+(rows.join('')||'<p>'+M('沒有草稿','No drafts','គ្មានព្រាង')+'</p>')+'</div>';document.body.appendChild(ov)};
   var _mRender=window.renderRecords;window.renderRecords=function(sys,records){_mRender(sys,records);document.querySelectorAll('#'+sys+'-rec-wrap tbody tr').forEach(function(tr){var eb=tr.querySelector('.mt-edit-btn');if(!eb)return;var m=(eb.getAttribute('onclick')||'').match(/,(\d+)\)/);if(!m)return;var b=document.createElement('button');b.className='mt-edit-btn';b.style.marginLeft='4px';b.textContent='🗄';b.title=M('作廢／封存','Void / archive','បិទ');b.onclick=function(){mtArchiveRecord(sys,Number(m[1]))};eb.parentNode.appendChild(b)});mtDraftBadge()};
-  window.mtArchiveRecord=async function(sys,rowNumber){if(!confirm(M('作廢這筆記錄？資料與核可歷史會保留。','Void this record? Data and approval history will be preserved.','បិទកំណត់ត្រានេះ? ប្រវត្តិនឹងរក្សាទុក។')))return;try{var d=await GA.gasPost('recordArchive',{sys:sys,rowNumber:rowNumber});if(!d||d.ok===false)throw new Error((d&&d.error)||'archive failed');var idx=(currentData[sys]||[]).findIndex(function(r){return Number(r[21])===Number(rowNumber)});if(idx>=0&&Array.isArray(d.row))currentData[sys][idx]=d.row;renderFiltered(sys);scheduleMaintenanceAutoSync('archive');showToast(M('✅ 已作廢，歷史保留','✅ Voided; history preserved','✅ បានបិទ និងរក្សាប្រវត្តិ'))}catch(e){showToast('❌ '+e.message)}};
+  window.mtArchiveRecord=async function(sys,rowNumber){if(!confirm(M('作廢這筆記錄？資料與核可歷史會保留。','Void this record? Data and approval history will be preserved.','បិទកំណត់ត្រានេះ? ប្រវត្តិនឹងរក្សាទុក។')))return;try{var _o=(currentData[sys]||[]).find(function(r){return Number(r[21])===Number(rowNumber)});var d=await GA.gasPost('recordArchive',{sys:sys,rowNumber:rowNumber,expect:_o?{ref:_o[3],item:_o[4],applicant:_o[1],timestamp:_o[0]}:null});if(!d||d.ok===false)throw new Error((d&&d.error)||'archive failed');var idx=(currentData[sys]||[]).findIndex(function(r){return Number(r[21])===Number(rowNumber)});if(idx>=0&&Array.isArray(d.row))currentData[sys][idx]=d.row;renderFiltered(sys);scheduleMaintenanceAutoSync('archive');showToast(M('✅ 已作廢，歷史保留','✅ Voided; history preserved','✅ បានបិទ និងរក្សាប្រវត្តិ'))}catch(e){showToast('❌ '+e.message)}};
   setTimeout(mtDraftBadge,500);
   document.documentElement.setAttribute('data-maintenance-integrity','v3.9.14');
 })();
@@ -1393,7 +1517,8 @@ function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.sc
 
 <script id="mt-v3914c-ui-guard">
 (function(){
-  function f(){var s=document.getElementById('mt-edit-status');if(!s)return;var o=s.querySelector('option[value="已核可"]');if(o){o.disabled=true;o.textContent='✅ 已核可（只能由核可流程設定）';}s.title='核可狀態不能在編輯表單自行設為 Approved';}
+  function f(){var s=document.getElementById('mt-edit-status');if(!s)return;var o=s.querySelector('option[value="已核可"]');if(o){o.disabled=true;o.textContent=mtL('✅ 已核可（只能由核可流程設定）','✅ Approved (set only by the approval flow)','✅ បានអនុម័ត (កំណត់បានតែតាមដំណើរការអនុម័ត)');}s.title=mtL('核可狀態不能在編輯表單自行設為 Approved','Status cannot be set to Approved in the edit form','មិនអាចកំណត់ស្ថានភាពជា បានអនុម័ត ក្នុងទម្រង់កែបានទេ');}
+  window.mtApprovalGuard=f;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',f);else f();
   document.documentElement.setAttribute('data-maintenance-approval-guard','v3.9.14c');
 })();

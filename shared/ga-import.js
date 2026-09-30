@@ -16,6 +16,8 @@
 var GA = global.GA; if (!GA) { console.error('ga-import.js 需要先載入 ga-core.js'); return; }
 
 var SI = GA.smartImport = {};
+/* v3.9.26: one text per language (zh / en / km) */
+function L3(zh, en, km) { return GA.lang === 'en' ? en : GA.lang === 'km' ? km : zh; }
 
 /* ═══════════ 1. 類型定義 ═══════════ */
 /* 每個 type：關鍵字（工作表名／檔名）、必要表頭、canonical 轉換 */
@@ -148,8 +150,8 @@ SI.detect = function (ctx) {
 
     (d.nameHints || []).forEach(function (h) {
       var nh = norm(h);
-      if (nh && sn.indexOf(nh) >= 0) { s += 3; why.push('工作表名含「' + h + '」'); }
-      else if (nh && fn.indexOf(nh) >= 0) { s += 2; why.push('檔名含「' + h + '」'); }
+      if (nh && sn.indexOf(nh) >= 0) { s += 3; why.push(L3('工作表名含「' + h + '」', 'sheet name contains "' + h + '"', 'ឈ្មោះសន្លឹកមាន "' + h + '"')); }
+      else if (nh && fn.indexOf(nh) >= 0) { s += 2; why.push(L3('檔名含「' + h + '」', 'file name contains "' + h + '"', 'ឈ្មោះឯកសារមាន "' + h + '"')); }
     });
     (d.negHints || []).forEach(function (h) {
       var nh = norm(h);
@@ -157,13 +159,13 @@ SI.detect = function (ctx) {
     });
     (d.headHints || []).forEach(function (grp) {
       var hit = grp.some(function (h) { return headStr.indexOf(norm(h)) >= 0; });
-      if (hit) { s += 2; why.push('表頭含「' + grp[0] + '」'); }
+      if (hit) { s += 2; why.push(L3('表頭含「' + grp[0] + '」', 'header contains "' + grp[0] + '"', 'ក្បាលតារាងមាន "' + grp[0] + '"')); }
     });
 
     if (CUSTOM[t] && CUSTOM[t].detect) {
       try {
         var cs = CUSTOM[t].detect(ctx);
-        if (cs > 0) { s += cs * 12; why.push('專用格式解析器辨識'); }   // 專用格式優先於一般關鍵字
+        if (cs > 0) { s += cs * 12; why.push(L3('專用格式解析器辨識', 'recognised by the special-format reader', 'ស្គាល់ដោយកម្មវិធីអានទម្រង់ពិសេស')); }   // 專用格式優先於一般關鍵字
       } catch (e) {}
     }
     scores[t] = s; reasons[t] = why;
@@ -180,7 +182,7 @@ SI.detect = function (ctx) {
     module: bestS >= 3 ? TYPES[best].module : null,
     confidence: Math.min(1, bestS / 8),
     score: bestS,
-    reason: bestS >= 3 ? (reasons[best] || []).join('、') : '無法判定，需人工配對',
+    reason: bestS >= 3 ? (reasons[best] || []).join(L3('、', ', ', ', ')) : L3('無法判定，需人工配對', 'Type not recognised — please choose it', 'មិនស្គាល់ប្រភេទ — សូមជ្រើសរើស'),
     isMonthSheet: isMonthSheet,
     candidates: Object.keys(scores).sort(function (a, b) { return scores[b] - scores[a]; }).slice(0, 4)
   };
@@ -270,7 +272,7 @@ SI.parseLong = function (ctx, type) {
     });
 
     // 公式殘留（SheetJS raw 讀到 formula 物件）
-    if (rec.item && /^=/.test(rec.item)) { errs.push({ row: i + 1, msg: '公式未計算' }); continue; }
+    if (rec.item && /^=/.test(rec.item)) { errs.push({ row: i + 1, msg: L3('公式未計算', 'formula not calculated', 'រូបមន្តមិនទាន់គណនា') }); continue; }
 
     var keyField = (type === 'repair') ? (rec.item || rec.issue)
                  : (type === 'expense') ? (rec.category || rec.item)
@@ -315,10 +317,10 @@ SI.fingerprintOf = function (type, r) {
 SI.readFile = function (file) {
   return new Promise(function (resolve, reject) {
     var rd = new FileReader();
-    rd.onerror = function () { reject(new Error('讀取失敗：' + file.name)); };
+    rd.onerror = function () { reject(new Error(L3('讀取失敗：', 'Could not read file: ', 'មិនអាចអានឯកសារ៖ ') + file.name)); };
     rd.onload = function (e) {
       try {
-        if (typeof XLSX === 'undefined') throw new Error('SheetJS 未載入，無法解析 Excel');
+        if (typeof XLSX === 'undefined') throw new Error(L3('SheetJS 未載入，無法解析 Excel', 'The Excel reader (SheetJS) did not load — check the internet and reload', 'កម្មវិធីអាន Excel (SheetJS) មិនបានផ្ទុក — សូមពិនិត្យអ៊ីនធឺណិត ហើយផ្ទុកទំព័រឡើងវិញ'));
         var wb = XLSX.read(new Uint8Array(e.target.result), {
           type: 'array', cellDates: false, raw: true      // 日期不受時區影響
         });
@@ -430,7 +432,7 @@ SI.openModal = function (opt) {
   ov.innerHTML =
     '<div class="ga-modal" style="max-width:860px">' +
       '<div class="ga-modal-h">' +
-        '<b>📥 ' + GA.T('imp') + ' Smart Import</b>' +
+        '<b>📥 ' + GA.T('imp') + (GA.lang === 'zh' ? ' Smart Import' : '') + '</b>' +
         '<button class="ga-x" data-close>&times;</button>' +
       '</div>' +
       '<div class="ga-modal-b" id="si-body">' +
@@ -440,7 +442,7 @@ SI.openModal = function (opt) {
           '<div class="ga-dz-t">' +
             (GA.lang === 'zh' ? '拖放或點選：可一次選多個檔案<br><small>xlsx / xlsb / xls / xlsm / csv — 不必先分成 PO、維修、燃油、費用</small>'
              : GA.lang === 'km' ? 'អូសទម្លាក់ ឬចុចដើម្បីជ្រើសរើសឯកសារច្រើន<br><small>xlsx / xlsb / xls / xlsm / csv</small>'
-             : 'Drag & drop or click — select multiple files at once<br><small>xlsx / xlsb / xls / xlsm / csv — no need to split by type first</small>') +
+             : 'Drag & drop or tap — you can pick several files at once<br><small>xlsx / xlsb / xls / xlsm / csv — no need to split by type first</small>') +
           '</div>' +
         '</div>' +
         '<div id="si-result"></div>' +
@@ -489,9 +491,9 @@ SI.openModal = function (opt) {
 
     res.innerHTML =
       '<div class="ga-si-sum">' +
-        '<span>📄 ' + r.sheets.length + ' ' + (GA.lang === 'zh' ? '張工作表' : 'sheets') + '</span>' +
-        '<span>✅ ' + known.length + ' ' + (GA.lang === 'zh' ? '已辨識' : 'detected') + '</span>' +
-        '<span>❓ ' + unknown.length + ' ' + (GA.lang === 'zh' ? '待配對' : 'need mapping') + '</span>' +
+        '<span>📄 ' + r.sheets.length + ' ' + L3('張工作表', 'sheets', 'សន្លឹក') + '</span>' +
+        '<span>✅ ' + known.length + ' ' + L3('已辨識', 'detected', 'បានស្គាល់') + '</span>' +
+        '<span>❓ ' + unknown.length + ' ' + L3('待配對', 'need mapping', 'ត្រូវជ្រើសប្រភេទ') + '</span>' +
         '<span>📊 ' + totalRec + ' ' + GA.T('records') + '</span>' +
       '</div>' +
       r.sheets.map(function (s, si) {
@@ -499,30 +501,30 @@ SI.openModal = function (opt) {
         var st = s.stat || { add: 0, update: 0, dup: 0, warn: 0 };
         return '<div class="ga-si-card' + (d.type ? '' : ' unk') + '">' +
           '<div class="ga-si-hd">' +
-            '<b>' + (d.type ? TYPES[d.type].icon + ' ' + SI.typeLabel(d.type) : '❓ ' + (GA.lang === 'zh' ? '無法判定' : 'Unknown')) + '</b>' +
+            '<b>' + (d.type ? TYPES[d.type].icon + ' ' + SI.typeLabel(d.type) : '❓ ' + L3('無法判定', 'Unknown', 'មិនស្គាល់')) + '</b>' +
             '<span class="ga-si-src">' + GA.esc(s.file) + ' › ' + GA.esc(s.sheet) + '</span>' +
           '</div>' +
-          '<div class="ga-si-why">' + (GA.lang === 'zh' ? '判定理由：' : 'Reason: ') + GA.esc(d.reason || '-') +
+          '<div class="ga-si-why">' + L3('判定理由：', 'Reason: ', 'មូលហេតុ៖ ') + GA.esc(d.reason || '-') +
             (d.confidence ? '　(' + Math.round(d.confidence * 100) + '%)' : '') + '</div>' +
           (d.type
             ? '<div class="ga-si-stat">' +
-                '<span class="add">+' + st.add + ' ' + (GA.lang === 'zh' ? '新增' : 'add') + '</span>' +
-                '<span class="upd">↻' + st.update + ' ' + (GA.lang === 'zh' ? '更新' : 'update') + '</span>' +
-                '<span class="dup">=' + st.dup + ' ' + (GA.lang === 'zh' ? '重複' : 'dup') + '</span>' +
-                (st.warn ? '<span class="warn">⚠' + st.warn + ' ' + (GA.lang === 'zh' ? '待確認' : 'check') + '</span>' : '') +
-                (s.errors.length ? '<span class="err">✕' + s.errors.length + ' ' + (GA.lang === 'zh' ? '錯誤' : 'error') + '</span>' : '') +
-                '<span class="tot">' + (GA.lang === 'zh' ? '總列數 ' : 'rows ') + s.totalRows + '</span>' +
+                '<span class="add">+' + st.add + ' ' + L3('新增', 'add', 'ថ្មី') + '</span>' +
+                '<span class="upd">↻' + st.update + ' ' + L3('更新', 'update', 'កែ') + '</span>' +
+                '<span class="dup">=' + st.dup + ' ' + L3('重複', 'dup', 'ស្ទួន') + '</span>' +
+                (st.warn ? '<span class="warn">⚠' + st.warn + ' ' + L3('待確認', 'check', 'ត្រូវពិនិត្យ') + '</span>' : '') +
+                (s.errors.length ? '<span class="err">✕' + s.errors.length + ' ' + L3('錯誤', 'error', 'កំហុស') + '</span>' : '') +
+                '<span class="tot">' + L3('總列數 ', 'rows ', 'ជួរសរុប ') + s.totalRows + '</span>' +
               '</div>' +
               preview(s)
             : '<div class="ga-si-map">' +
-                '<label>' + (GA.lang === 'zh' ? '請指定類型：' : 'Assign type: ') + '</label>' +
+                '<label>' + L3('請指定類型：', 'Assign type: ', 'ជ្រើសប្រភេទ៖ ') + '</label>' +
                 '<select data-si="' + si + '">' +
-                  '<option value="">— ' + (GA.lang === 'zh' ? '略過此表' : 'skip') + ' —</option>' +
+                  '<option value="">— ' + L3('略過此表', 'skip', 'រំលងសន្លឹកនេះ') + ' —</option>' +
                   Object.keys(TYPES).map(function (t) {
                     return '<option value="' + t + '">' + TYPES[t].icon + ' ' + SI.typeLabel(t) + '</option>';
                   }).join('') +
                 '</select>' +
-                '<div class="ga-si-heads">' + (GA.lang === 'zh' ? '偵測表頭：' : 'Headers: ') +
+                '<div class="ga-si-heads">' + L3('偵測表頭：', 'Headers: ', 'ក្បាលតារាង៖ ') +
                   GA.esc((s.headers || []).filter(Boolean).slice(0, 12).join(', ') || '(none)') + '</div>' +
               '</div>') +
         '</div>';
@@ -534,7 +536,7 @@ SI.openModal = function (opt) {
         if (!this.value) { s.detect.type = null; return; }
         s.detect.type = this.value;
         s.detect.module = TYPES[this.value].module;
-        s.detect.reason = GA.lang === 'zh' ? '使用者指定' : 'user assigned';
+        s.detect.reason = L3('使用者指定', 'set by user', 'កំណត់ដោយអ្នកប្រើ');
         try {
           var p = (CUSTOM[this.value] && CUSTOM[this.value].parse)
             ? { records: CUSTOM[this.value].parse(s.rawCtx) || [] }

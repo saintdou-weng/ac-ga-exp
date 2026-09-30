@@ -7,14 +7,13 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>AC-GA-EXP Platform · 總務費用管理平台</title>
-<script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
-<script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
-<link rel="stylesheet" href="shared/ga.css?v=3.6-20260824" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.6-20260824'">
-<script src="shared/ga-core.js?v=3.9.24"></script>
+<!-- v3.9.25: SheetJS / Chart.js not loaded here (dashboard never uses them) -->
+<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
+<script src="shared/ga-core.js?v=3.9.26"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
-<script src="shared/ga-data.js?v=3.9.23"></script>
+<script src="shared/ga-data.js?v=3.9.26"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.24"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.23"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');}
 </script>
 
 <style>
@@ -93,7 +92,7 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   <div>
     <span class="logo-tag">AC · Admin Center</span>
     <h1 class="plat">AC-GA-EXP <span>Platform</span></h1>
-    <div class="h-sub">General Affairs &amp; Expense Management · 總務費用管理平台 · Vantage River Textiles</div>
+    <div class="h-sub" data-t="platSub">General Affairs &amp; Expense Management · 總務費用管理平台 · Vantage River Textiles</div>
   </div>
   <div class="h-actions">
     <span id="ga-cloud" class="ga-cloud idle"></span>
@@ -107,86 +106,86 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   </div>
 </header>
 
-<div class="sect">📊 Dashboard · <span data-t="liveOverview">即時概況</span></div>
+<div class="sect">📊 <span data-t="dashSect">Dashboard</span> · <span data-t="liveOverview">即時概況</span></div>
 <div class="kpi-row">
-  <a class="kpi" href="procurement.html" style="--kc:var(--ga-sky)"><div class="kpi-l">Monthly PO</div><div class="kpi-v" id="k-po">—</div><div class="kpi-s" id="k-po-s">—</div></a>
-  <a class="kpi" href="maintenance.html?form=po" style="--kc:var(--ga-warn)"><div class="kpi-l">Temp PO 臨採</div><div class="kpi-v" id="k-tpo">—</div><div class="kpi-s" id="k-tpo-s">—</div></a>
-  <a class="kpi" href="maintenance.html" style="--kc:var(--ga-ok)"><div class="kpi-l">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">—</div></a>
-  <a class="kpi" href="damage.html" style="--kc:#dc2626"><div class="kpi-l">Damage 損壞/遺失</div><div class="kpi-v" id="k-dmg">—</div><div class="kpi-s" id="k-dmg-s">—</div></a>
-  <a class="kpi" href="receiving.html" style="--kc:#0891b2"><div class="kpi-l">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">—</div></a>
-<a class="kpi" href="fuel.html?v=3.9.19" style="--kc:#8b5cf6"><div class="kpi-l">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
-  <a class="kpi" href="expense.html" style="--kc:var(--ga-bad)"><div class="kpi-l">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">—</div></a>
+  <a class="kpi" href="procurement.html" style="--kc:var(--ga-sky)"><div class="kpi-l" data-t="kpiPo">Monthly PO</div><div class="kpi-v" id="k-po">—</div><div class="kpi-s" id="k-po-s">—</div></a>
+  <a class="kpi" href="maintenance.html?form=po" style="--kc:var(--ga-warn)"><div class="kpi-l" data-t="kpiTpo">Temp PO 臨採</div><div class="kpi-v" id="k-tpo">—</div><div class="kpi-s" id="k-tpo-s">—</div></a>
+  <a class="kpi" href="maintenance.html" style="--kc:var(--ga-ok)"><div class="kpi-l" data-t="kpiRep">Repair 維修</div><div class="kpi-v" id="k-rep">—</div><div class="kpi-s" id="k-rep-s">—</div></a>
+  <a class="kpi" href="damage.html" style="--kc:#dc2626"><div class="kpi-l" data-t="kpiDmg">Damage 損壞/遺失</div><div class="kpi-v" id="k-dmg">—</div><div class="kpi-s" id="k-dmg-s">—</div></a>
+  <a class="kpi" href="receiving.html" style="--kc:#0891b2"><div class="kpi-l" data-t="kpiRecv">Receiving 收貨</div><div class="kpi-v" id="k-recv">—</div><div class="kpi-s" id="k-recv-s">—</div></a>
+<a class="kpi" href="fuel.html?v=3.9.19" style="--kc:#8b5cf6"><div class="kpi-l" data-t="kpiDsl">Diesel 柴油</div><div class="kpi-v" id="k-dsl">—</div><div class="kpi-s" id="k-dsl-s">—</div></a>
+  <a class="kpi" href="expense.html" style="--kc:var(--ga-bad)"><div class="kpi-l" data-t="kpiExp">Expense YTD</div><div class="kpi-v" id="k-exp">—</div><div class="kpi-s" id="k-exp-s">—</div></a>
 </div>
 
-<div class="sect">🗂 Modules · <span data-t="platModules">平台模組</span></div>
+<div class="sect">🗂 <span data-t="modSect">Modules</span> · <span data-t="platModules">平台模組</span></div>
 <div class="grid">
 
   <a class="card" style="--cc:var(--ga-sky);--cc-l:var(--ga-sky-l)" href="procurement.html">
-    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdCloud">☁️ Cloud</span><span class="cbadge" data-t="bdExcel">📊 Excel</span></div>
     <div class="card-top"><div class="card-ico">📋</div>
-      <div><div class="card-en">Procurement Center</div><div class="card-name">採購中心</div></div></div>
-    <div class="card-desc">月度採購申請、三段審批（Nin→Phea→Paul）、庫存管理、收貨/領用紀錄、安全庫存警示、分析圖表。</div>
-    <div class="card-flow">Request → Verify → Approve → Receiving → Completed</div>
+      <div><div class="card-en" data-t="procNameEn">Procurement Center</div><div class="card-name" data-t="procName">採購中心</div></div></div>
+    <div class="card-desc" data-t="procDesc">月度採購申請、三段審批（Nin→Phea→Paul）、庫存管理、收貨/領用紀錄、安全庫存警示、分析圖表。</div>
+    <div class="card-flow" data-t="procFlow">Request → Verify → Approve → Receiving → Completed</div>
   </a>
 
   <a class="card" style="--cc:var(--ga-ok);--cc-l:var(--ga-ok-l)" href="receiving.html">
-    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📥 Import</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdCloud">☁️ Cloud</span><span class="cbadge" data-t="bdImport">📥 Import</span></div>
     <div class="card-top"><div class="card-ico">📦</div>
-      <div><div class="card-en">Receiving Report</div><div class="card-name">收貨報告</div></div></div>
-    <div class="card-desc">收貨/領用明細、日週月年期間分析、庫存水位圖表、刪除自動反沖庫存、智慧匯入、Telegram 摘要。</div>
-    <div class="card-flow">Receive → Issue → Stock Analysis</div>
+      <div><div class="card-en" data-t="recvNameEn">Receiving Report</div><div class="card-name" data-t="recvName">收貨報告</div></div></div>
+    <div class="card-desc" data-t="recvDesc">收貨/領用明細、日週月年期間分析、庫存水位圖表、刪除自動反沖庫存、智慧匯入、Telegram 摘要。</div>
+    <div class="card-flow" data-t="recvFlow">Receive → Issue → Stock Analysis</div>
   </a>
 
   <a class="card" style="--cc:#0d9488;--cc-l:#f0fdfa" href="maintenance.html">
-    <div class="card-badges"><span class="cbadge">✈️ Bot</span><span class="cbadge">📷 Photo</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdBot">✈️ Bot</span><span class="cbadge" data-t="bdPhoto">📷 Photo</span></div>
     <div class="card-top"><div class="card-ico">🔧</div>
-      <div><div class="card-en">Maintenance Center</div><div class="card-name">維修中心</div></div></div>
-    <div class="card-desc">維修申請（含現場照片）＋臨時採購合併，Telegram 一鍵審批、期間分析、歷史查詢與匯出。</div>
-    <div class="card-flow">Repair Request → Approval → Temp PO → Record</div>
+      <div><div class="card-en" data-t="mtNameEn">Maintenance Center</div><div class="card-name" data-t="mtName">維修中心</div></div></div>
+    <div class="card-desc" data-t="mtDesc">維修申請（含現場照片）＋臨時採購合併，Telegram 一鍵審批、期間分析、歷史查詢與匯出。</div>
+    <div class="card-flow" data-t="mtFlow">Repair Request → Approval → Temp PO → Record</div>
   </a>
 
   <a class="card" style="--cc:#dc2626;--cc-l:#fff1f2" href="damage.html">
-    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">📷 Evidence</span><span class="cbadge">✅ Online Approval</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdAuto">☁️ Auto Sync</span><span class="cbadge" data-t="bdEvid">📷 Evidence</span><span class="cbadge" data-t="bdOnline">✅ Online Approval</span></div>
     <div class="card-top"><div class="card-ico">⚠️</div>
-      <div><div class="card-en">Damage / Lost Property</div><div class="card-name">損壞／遺失財物</div></div></div>
-    <div class="card-desc">線上新增、修改、更正、Phea Review、Paul 核可、照片證據、核可 PDF/Excel/Sheet、日週月年與自動雲端同步。</div>
-    <div class="card-flow">Create → Phea Review → Paul Approve → Document / Repair</div>
+      <div><div class="card-en" data-t="dmgNameEn">Damage / Lost Property</div><div class="card-name" data-t="dmgName">損壞／遺失財物</div></div></div>
+    <div class="card-desc" data-t="dmgDesc">線上新增、修改、更正、Phea Review、Paul 核可、照片證據、核可 PDF/Excel/Sheet、日週月年與自動雲端同步。</div>
+    <div class="card-flow" data-t="dmgFlow">Create → Phea Review → Paul Approve → Document / Repair</div>
   </a>
 
   <a class="card" style="--cc:#8b5cf6;--cc-l:#f5f3ff" href="fuel.html?v=3.9.19">
-    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📊 Excel</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdCloud">☁️ Cloud</span><span class="cbadge" data-t="bdExcel">📊 Excel</span></div>
     <div class="card-top"><div class="card-ico">🛢️</div>
-      <div><div class="card-en">Fuel Center</div><div class="card-name">燃油中心</div></div></div>
-    <div class="card-desc">司機／叉車／發電機柴油記錄，日週月年趨勢、L/100km 效率分析、雲端同步與 Telegram 摘要。</div>
-    <div class="card-flow">Driver · Forklift · Generator → Analysis</div>
+      <div><div class="card-en" data-t="fuelNameEn">Fuel Center</div><div class="card-name" data-t="fuelName">燃油中心</div></div></div>
+    <div class="card-desc" data-t="fuelDesc">司機／叉車／發電機柴油記錄，日週月年趨勢、L/100km 效率分析、雲端同步與 Telegram 摘要。</div>
+    <div class="card-flow" data-t="fuelFlow">Driver · Forklift · Generator → Analysis</div>
   </a>
 
   <a class="card" style="--cc:var(--ga-bad);--cc-l:var(--ga-bad-l)" href="expense.html">
-    <div class="card-badges"><span class="cbadge">☁️ Cloud</span><span class="cbadge">📥 Import</span></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdCloud">☁️ Cloud</span><span class="cbadge" data-t="bdImport">📥 Import</span></div>
     <div class="card-top"><div class="card-ico">💰</div>
-      <div><div class="card-en">Expense Center</div><div class="card-name">費用中心</div></div></div>
-    <div class="card-desc">逐筆費用帳、分類彙總、月度趨勢、預算管控與超支警示、明細下鑽，可線上編輯與雲端同步。</div>
-    <div class="card-flow">PO · Repair · Diesel · Manual → Budget Control</div>
+      <div><div class="card-en" data-t="expNameEn">Expense Center</div><div class="card-name" data-t="expName">費用中心</div></div></div>
+    <div class="card-desc" data-t="expDesc">逐筆費用帳、分類彙總、月度趨勢、預算管控與超支警示、明細下鑽，可線上編輯與雲端同步。</div>
+    <div class="card-flow" data-t="expFlow">PO · Repair · Diesel · Manual → Budget Control</div>
   </a>
 
   <a class="card" id="module-transportation" style="--cc:#1d4ed8;--cc-l:#dbeafe" href="transportation.html?v=3.9.19">
-    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">D / W / M / Y</span></div>
-    <div class="card-top"><div class="card-ico">🚐</div><div><div class="card-en">Transportation Center</div><div class="card-name" data-t="transportTitle">行車紀錄中心</div></div></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdAuto">☁️ Auto Sync</span><span class="cbadge" data-t="bdDwmy">D / W / M / Y</span></div>
+    <div class="card-top"><div class="card-ico">🚐</div><div><div class="card-en" data-t="transportEn">Transportation Center</div><div class="card-name" data-t="transportTitle">行車紀錄中心</div></div></div>
     <div class="card-desc" data-t="transportDesc">獨立記錄司機、用車原因及里程；日週月年查詢、司機排名、線上新增編輯、匯入匯出與 Telegram 摘要。</div>
-    <div class="card-flow">Journey → Driver / Distance → Analysis</div>
+    <div class="card-flow" data-t="transportFlow">Journey → Driver / Distance → Analysis</div>
   </a>
   <a class="card" id="module-etc" style="--cc:#b45309;--cc-l:#fef3c7" href="etc.html?v=3.9.19">
-    <div class="card-badges"><span class="cbadge">☁️ Auto Sync</span><span class="cbadge">D / W / M / Y</span></div>
-    <div class="card-top"><div class="card-ico">🛣️</div><div><div class="card-en">ETC Toll Center</div><div class="card-name" data-t="etcTitle">ETC 通行費中心</div></div></div>
+    <div class="card-badges"><span class="cbadge" data-t="bdAuto">☁️ Auto Sync</span><span class="cbadge" data-t="bdDwmy">D / W / M / Y</span></div>
+    <div class="card-top"><div class="card-ico">🛣️</div><div><div class="card-en" data-t="etcEn">ETC Toll Center</div><div class="card-name" data-t="etcTitle">ETC 通行費中心</div></div></div>
     <div class="card-desc" data-t="etcDesc">通行費、儲值分開記錄；日週月年分析，用車人、司機與車牌趟數排名，逐日費用及 Telegram 摘要。</div>
-    <div class="card-flow">Tolls / Top-ups → Users / Drivers → Ranking</div>
+    <div class="card-flow" data-t="etcFlow">Tolls / Top-ups → Users / Drivers → Ranking</div>
   </a>
 
   <div class="card" style="--cc:var(--ga-mut);--cc-l:var(--ga-line2)" onclick="openSettings()">
     <div class="card-top"><div class="card-ico">⚙️</div>
-      <div><div class="card-en">Settings</div><div class="card-name">設定中心</div></div></div>
-    <div class="card-desc">GAS 後端網址、預設語言、Telegram 通知群組管理（新增／修改／刪除／模組指定），設定同步至所有模組。</div>
-    <div class="card-flow">GAS URL · Language · Telegram Groups</div>
+      <div><div class="card-en" data-t="setNameEn">Settings</div><div class="card-name" data-t="setName">設定中心</div></div></div>
+    <div class="card-desc" data-t="setDesc">GAS 後端網址、預設語言、Telegram 通知群組管理（新增／修改／刪除／模組指定），設定同步至所有模組。</div>
+    <div class="card-flow" data-t="setFlow">GAS URL · Language · Telegram Groups</div>
   </div>
 
 </div>
@@ -202,15 +201,15 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
   <div class="ga-modal" style="max-width:520px">
     <div class="ga-modal-h"><b>⚙️ <span data-t="setTitle">平台設定中心</span></b><button class="ga-x" onclick="closeSettings()">&times;</button></div>
     <div class="ga-modal-b">
-      <div class="ga-fld"><label>Google Apps Script URL（AC_GA_EXP /exec）</label>
+      <div class="ga-fld"><label data-t="gasUrlLbl">Google Apps Script URL（AC_GA_EXP /exec）</label>
         <input id="set-gas" placeholder="https://script.google.com/macros/s/.../exec"></div>
       <div class="ga-fld"><label data-t="defLang">預設語言 Default Language</label>
         <select id="set-lang"><option value="zh">繁體中文</option><option value="en">English</option><option value="km">ភាសាខ្មែរ</option></select></div>
-      <pre id="gas-diagnostic" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#edf2f7;color:#173453;border-radius:8px">按「測試連線」查看實際雲端版本及缺少能力。</pre>
+      <pre id="gas-diagnostic" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#edf2f7;color:#173453;border-radius:8px" data-t="diagHint">按「測試連線」查看實際雲端版本及缺少能力。</pre>
       <p class="m-note">
-        💡 Bot Token 僅存放於 GAS 後端（CONFIG），瀏覽器端不儲存。<br>
-        💡 各模組自動沿用此 GAS URL，無需在各頁重填。<br>
-        更新同一 GAS 部署：管理部署 → 編輯 → 新版本 → 部署；原有觸發器存在時不需重跑 setupPolling。
+        💡 <span data-t="setNote1">Bot Token 僅存放於 GAS 後端（CONFIG），瀏覽器端不儲存。</span><br>
+        💡 <span data-t="setNote2">各模組自動沿用此 GAS URL，無需在各頁重填。</span><br>
+        <span data-t="setNote3">更新同一 GAS 部署：管理部署 → 編輯 → 新版本 → 部署；原有觸發器存在時不需重跑 setupPolling。</span>
       </p>
     </div>
     <div class="ga-modal-f">
@@ -227,13 +226,13 @@ code{font-size:10px;background:var(--ga-line2);padding:1px 5px;border-radius:4px
     <div class="ga-modal-h"><b>✈️ <span data-t="tgTitle">Telegram 通知群組管理</span></b><button class="ga-x" onclick="closeTgModal()">&times;</button></div>
     <div class="ga-modal-b">
       <table class="gtable">
-        <thead><tr><th style="width:32%">名稱 Name</th><th style="width:28%">Chat ID</th><th style="width:24%">模組 Modules</th><th style="width:8%">啟用</th><th></th></tr></thead>
+        <thead><tr><th style="width:32%" data-t="thName">名稱 Name</th><th style="width:28%">Chat ID</th><th style="width:24%" data-t="thModules">模組 Modules</th><th style="width:8%" data-t="thEnabled">啟用</th><th></th></tr></thead>
         <tbody id="tg-tbody"></tbody>
       </table>
       <button class="ga-btn" onclick="addGroupRow()" style="margin-bottom:8px">➕ <span data-t="addGroup">新增群組</span></button>
-      <p class="m-note">模組欄填 <code>all</code> 或以逗號列出：procurement, damage, repair, recv, diesel, expense, transportation, etc。預設群組 -5271842001。</p>
+      <p class="m-note"><span data-t="modNote1">模組欄填</span> <code>all</code> <span data-t="modNote2">或以逗號列出：procurement, damage, repair, recv, diesel, expense, transportation, etc。預設群組 -5271842001。</span></p>
       <div class="ga-fld"><label>📢 <span data-t="testMsg">測試通知訊息</span></label>
-        <input id="tg-test-msg" placeholder="送至所有啟用群組" value="AC-GA-EXP Platform 通知測試 Test"></div>
+        <input id="tg-test-msg" placeholder="送至所有啟用群組" data-t-ph="tgMsgPh" value="AC-GA-EXP Platform 通知測試 Test"></div>
     </div>
     <div class="ga-modal-f">
       <button class="ga-btn" onclick="sendTestNotify()">📤 <span data-t="sendTest">發送測試</span></button>
@@ -258,12 +257,19 @@ GA.addDict({
     setTitle:'Platform Settings',defLang:'Default Language',testConn:'Test',saveSet:'Save',cancel:'Cancel',
     tgTitle:'Telegram Groups',addGroup:'Add Group',testMsg:'Test message',sendTest:'Send Test',
     loadCloud:'Load from cloud',close:'Close',saveCloud:'Save to cloud' },
-  km:{ refresh:'ធ្វើបច្ចុប្បន្នភាព',anomaly:'ខុសប្រក្រតី',groups:'ក្រុម',settings:'ការកំណត់',liveOverview:'ទិដ្ឋភាពទូទៅ',platModules:'ម៉ូឌុល',
+  km:{ refresh:'ធ្វើបច្ចុប្បន្នភាព',anomaly:'ខុសប្រក្រតី',groups:'ក្រុម',settings:'ការកំណត់',liveOverview:'ទិដ្ឋភាពទូទៅ',platModules:'ម៉ូឌុលវេទិកា',
     setTitle:'ការកំណត់វេទិកា',defLang:'ភាសាលំនាំដើម',testConn:'សាកល្បង',saveSet:'រក្សាទុក',cancel:'បោះបង់',
     tgTitle:'ក្រុម Telegram',addGroup:'បន្ថែមក្រុម',testMsg:'សារសាកល្បង',sendTest:'ផ្ញើសាកល្បង',
     loadCloud:'ផ្ទុកពីពពក',close:'បិទ',saveCloud:'រក្សាទុកទៅពពក' }
 });
 
+/* v3.9.26 i18n: module cards, dashboard labels, settings/Telegram notes */
+GA.addDict({
+ zh:{platSub:'General Affairs & Expense Management · 總務費用管理平台 · Vantage River Textiles',dashSect:'Dashboard',modSect:'Modules',kpiPo:'Monthly PO',kpiTpo:'Temp PO 臨採',kpiRep:'Repair 維修',kpiDmg:'Damage 損壞/遺失',kpiRecv:'Receiving 收貨',kpiDsl:'Diesel 柴油',kpiExp:'Expense YTD',bdCloud:'☁️ Cloud',bdExcel:'📊 Excel',bdImport:'📥 Import',bdBot:'✈️ Bot',bdPhoto:'📷 Photo',bdAuto:'☁️ Auto Sync',bdEvid:'📷 Evidence',bdOnline:'✅ Online Approval',bdDwmy:'D / W / M / Y',procNameEn:'Procurement Center',procName:'採購中心',recvNameEn:'Receiving Report',recvName:'收貨報告',mtNameEn:'Maintenance Center',mtName:'維修中心',dmgNameEn:'Damage / Lost Property',dmgName:'損壞／遺失財物',fuelNameEn:'Fuel Center',fuelName:'燃油中心',expNameEn:'Expense Center',expName:'費用中心',setNameEn:'Settings',setName:'設定中心',transportEn:'Transportation Center',etcEn:'ETC Toll Center',procDesc:'月度採購申請、三段審批（Nin→Phea→Paul）、庫存管理、收貨/領用紀錄、安全庫存警示、分析圖表。',recvDesc:'收貨/領用明細、日週月年期間分析、庫存水位圖表、刪除自動反沖庫存、智慧匯入、Telegram 摘要。',mtDesc:'維修申請（含現場照片）＋臨時採購合併，Telegram 一鍵審批、期間分析、歷史查詢與匯出。',dmgDesc:'線上新增、修改、更正、Phea Review、Paul 核可、照片證據、核可 PDF/Excel/Sheet、日週月年與自動雲端同步。',fuelDesc:'司機／叉車／發電機柴油記錄，日週月年趨勢、L/100km 效率分析、雲端同步與 Telegram 摘要。',expDesc:'逐筆費用帳、分類彙總、月度趨勢、預算管控與超支警示、明細下鑽，可線上編輯與雲端同步。',setDesc:'GAS 後端網址、預設語言、Telegram 通知群組管理（新增／修改／刪除／模組指定），設定同步至所有模組。',procFlow:'Request → Verify → Approve → Receiving → Completed',recvFlow:'Receive → Issue → Stock Analysis',mtFlow:'Repair Request → Approval → Temp PO → Record',dmgFlow:'Create → Phea Review → Paul Approve → Document / Repair',fuelFlow:'Driver · Forklift · Generator → Analysis',expFlow:'PO · Repair · Diesel · Manual → Budget Control',transportFlow:'Journey → Driver / Distance → Analysis',etcFlow:'Tolls / Top-ups → Users / Drivers → Ranking',setFlow:'GAS URL · Language · Telegram Groups',gasUrlLbl:'Google Apps Script URL（AC_GA_EXP /exec）',diagHint:'按「測試連線」查看實際雲端版本及缺少能力。',setNote1:'Bot Token 僅存放於 GAS 後端（CONFIG），瀏覽器端不儲存。',setNote2:'各模組自動沿用此 GAS URL，無需在各頁重填。',setNote3:'更新同一 GAS 部署：管理部署 → 編輯 → 新版本 → 部署；原有觸發器存在時不需重跑 setupPolling。',thName:'名稱 Name',thModules:'模組 Modules',thEnabled:'啟用',modNote1:'模組欄填',modNote2:'或以逗號列出：procurement, damage, repair, recv, diesel, expense, transportation, etc。預設群組 -5271842001。',tgMsgPh:'送至所有啟用群組',verTag:'v3.9.19 · Transportation / ETC Analysis',pageTitle:'AC-GA-EXP Platform · 總務費用管理平台'},
+ en:{platSub:'General Affairs & Expense Management · Vantage River Textiles',dashSect:'Dashboard',modSect:'Modules',kpiPo:'Monthly PO',kpiTpo:'Temp PO',kpiRep:'Repair',kpiDmg:'Damage / Lost',kpiRecv:'Receiving',kpiDsl:'Diesel',kpiExp:'Expense YTD',bdCloud:'☁️ Cloud',bdExcel:'📊 Excel',bdImport:'📥 Import',bdBot:'✈️ Bot',bdPhoto:'📷 Photo',bdAuto:'☁️ Auto Sync',bdEvid:'📷 Evidence',bdOnline:'✅ Online Approval',bdDwmy:'D / W / M / Y',procNameEn:'Procurement Center',procName:'Procurement Center',recvNameEn:'Receiving Report',recvName:'Receiving Report',mtNameEn:'Maintenance Center',mtName:'Maintenance Center',dmgNameEn:'Damage / Lost Property',dmgName:'Damage / Lost Property',fuelNameEn:'Fuel Center',fuelName:'Fuel Center',expNameEn:'Expense Center',expName:'Expense Center',setNameEn:'Settings',setName:'Settings Center',transportEn:'Transportation Center',etcEn:'ETC Toll Center',procDesc:'Monthly purchase requests, three-step approval (Nin → Phea → Paul), inventory management, receiving/issue records, safety-stock alerts and analysis charts.',recvDesc:'Receiving/issue details, day/week/month/year analysis, stock-level charts, automatic stock reversal on delete, smart import and Telegram summaries.',mtDesc:'Repair requests (with site photos) merged with temporary purchasing, one-tap Telegram approval, period analysis, history search and export.',dmgDesc:'Create, edit and correct online, Phea review, Paul approval, photo evidence, approved PDF/Excel/Sheet, day/week/month/year views and automatic cloud sync.',fuelDesc:'Diesel records for drivers, forklifts and generators; day/week/month/year trends, L/100km efficiency analysis, cloud sync and Telegram summaries.',expDesc:'Itemised expense ledger, category totals, monthly trends, budget control with overspend alerts and drill-down details; editable online with cloud sync.',setDesc:'GAS backend URL, default language, Telegram notification groups (add / edit / delete / assign modules); settings apply to all modules.',procFlow:'Request → Verify → Approve → Receiving → Completed',recvFlow:'Receive → Issue → Stock Analysis',mtFlow:'Repair Request → Approval → Temp PO → Record',dmgFlow:'Create → Phea Review → Paul Approve → Document / Repair',fuelFlow:'Driver · Forklift · Generator → Analysis',expFlow:'PO · Repair · Diesel · Manual → Budget Control',transportFlow:'Journey → Driver / Distance → Analysis',etcFlow:'Tolls / Top-ups → Users / Drivers → Ranking',setFlow:'GAS URL · Language · Telegram Groups',gasUrlLbl:'Google Apps Script URL (AC_GA_EXP /exec)',diagHint:'Press "Test" to see the actual cloud version and any missing capabilities.',setNote1:'The Bot Token is stored only in the GAS backend (CONFIG), never in the browser.',setNote2:'Every module reuses this GAS URL automatically; no need to enter it on each page.',setNote3:'To update the same GAS deployment: Manage deployments → Edit → New version → Deploy. If the existing triggers are in place, there is no need to rerun setupPolling.',thName:'Name',thModules:'Modules',thEnabled:'Enabled',modNote1:'Modules column: enter',modNote2:'or a comma-separated list: procurement, damage, repair, recv, diesel, expense, transportation, etc. Default group: -5271842001.',tgMsgPh:'Sent to all enabled groups',verTag:'v3.9.19 · Transportation / ETC Analysis',pageTitle:'AC-GA-EXP Platform · General Affairs & Expense Management'},
+ km:{platSub:'ការគ្រប់គ្រងកិច្ចការទូទៅ និងចំណាយ · Vantage River Textiles',dashSect:'ផ្ទាំងសង្ខេប',modSect:'ម៉ូឌុល',kpiPo:'PO ប្រចាំខែ',kpiTpo:'PO បណ្ដោះអាសន្ន',kpiRep:'ជួសជុល',kpiDmg:'ខូចខាត / បាត់បង់',kpiRecv:'ទទួលទំនិញ',kpiDsl:'ម៉ាស៊ូត',kpiExp:'ចំណាយតាំងពីដើមឆ្នាំ',bdCloud:'☁️ ពពក',bdExcel:'📊 Excel',bdImport:'📥 នាំចូល',bdBot:'✈️ Bot',bdPhoto:'📷 រូបថត',bdAuto:'☁️ សមកាលកម្មស្វ័យប្រវត្តិ',bdEvid:'📷 ភស្តុតាង',bdOnline:'✅ អនុម័តតាមអនឡាញ',bdDwmy:'ថ្ងៃ / សប្តាហ៍ / ខែ / ឆ្នាំ',procNameEn:'មជ្ឈមណ្ឌលលទ្ធកម្ម',procName:'មជ្ឈមណ្ឌលលទ្ធកម្ម',recvNameEn:'របាយការណ៍ទទួលទំនិញ',recvName:'របាយការណ៍ទទួលទំនិញ',mtNameEn:'មជ្ឈមណ្ឌលជួសជុល',mtName:'មជ្ឈមណ្ឌលជួសជុល',dmgNameEn:'ទ្រព្យសម្បត្តិខូចខាត / បាត់បង់',dmgName:'ទ្រព្យសម្បត្តិខូចខាត / បាត់បង់',fuelNameEn:'មជ្ឈមណ្ឌលប្រេងឥន្ធនៈ',fuelName:'មជ្ឈមណ្ឌលប្រេងឥន្ធនៈ',expNameEn:'មជ្ឈមណ្ឌលចំណាយ',expName:'មជ្ឈមណ្ឌលចំណាយ',setNameEn:'ការកំណត់',setName:'មជ្ឈមណ្ឌលការកំណត់',transportEn:'មជ្ឈមណ្ឌលកំណត់ត្រាធ្វើដំណើរ',etcEn:'មជ្ឈមណ្ឌលថ្លៃផ្លូវ ETC',procDesc:'សំណើទិញប្រចាំខែ ការអនុម័តបីជំហាន (Nin → Phea → Paul) ការគ្រប់គ្រងស្តុក កំណត់ត្រាទទួល/បញ្ចេញ ការជូនដំណឹងស្តុកសុវត្ថិភាព និងក្រាហ្វវិភាគ។',recvDesc:'ព័ត៌មានលម្អិតទទួល/បញ្ចេញ វិភាគថ្ងៃ/សប្តាហ៍/ខែ/ឆ្នាំ ក្រាហ្វកម្រិតស្តុក ការត្រឡប់ស្តុកស្វ័យប្រវត្តិពេលលុប ការនាំចូលឆ្លាតវៃ និងសេចក្តីសង្ខេប Telegram។',mtDesc:'សំណើជួសជុល (មានរូបថតនៅកន្លែង) រួមជាមួយការទិញបណ្ដោះអាសន្ន ការអនុម័តតាម Telegram មួយចុច វិភាគតាមរយៈពេល ស្វែងរកប្រវត្តិ និងនាំចេញ។',dmgDesc:'បង្កើត កែប្រែ និងកែតម្រូវតាមអនឡាញ ការត្រួតពិនិត្យដោយ Phea ការអនុម័តដោយ Paul ភស្តុតាងរូបថត PDF/Excel/Sheet ដែលបានអនុម័ត ទិដ្ឋភាពថ្ងៃ/សប្តាហ៍/ខែ/ឆ្នាំ និងសមកាលកម្មពពកស្វ័យប្រវត្តិ។',fuelDesc:'កំណត់ត្រាម៉ាស៊ូតសម្រាប់អ្នកបើកបរ រថយន្តលើកទំនិញ និងម៉ាស៊ីនភ្លើង និន្នាការថ្ងៃ/សប្តាហ៍/ខែ/ឆ្នាំ វិភាគប្រសិទ្ធភាព L/100km សមកាលកម្មពពក និងសេចក្តីសង្ខេប Telegram។',expDesc:'បញ្ជីចំណាយលម្អិត សរុបតាមប្រភេទ និន្នាការប្រចាំខែ ការគ្រប់គ្រងថវិកា និងការជូនដំណឹងចំណាយលើស ព័ត៌មានលម្អិត អាចកែតាមអនឡាញ និងធ្វើសមកាលកម្មពពក។',setDesc:'URL ផ្នែកខាងក្រោយ GAS ភាសាលំនាំដើម ការគ្រប់គ្រងក្រុមជូនដំណឹង Telegram (បន្ថែម / កែ / លុប / កំណត់ម៉ូឌុល) ការកំណត់អនុវត្តចំពោះគ្រប់ម៉ូឌុល។',procFlow:'សំណើ → ផ្ទៀងផ្ទាត់ → អនុម័ត → ទទួលទំនិញ → បានបញ្ចប់',recvFlow:'ទទួល → បញ្ចេញ → វិភាគស្តុក',mtFlow:'សំណើជួសជុល → អនុម័ត → PO បណ្ដោះអាសន្ន → កំណត់ត្រា',dmgFlow:'បង្កើត → Phea ត្រួតពិនិត្យ → Paul អនុម័ត → ឯកសារ / ជួសជុល',fuelFlow:'អ្នកបើកបរ · រថយន្តលើកទំនិញ · ម៉ាស៊ីនភ្លើង → វិភាគ',expFlow:'PO · ជួសជុល · ម៉ាស៊ូត · បញ្ចូលដោយដៃ → គ្រប់គ្រងថវិកា',transportFlow:'ដំណើរ → អ្នកបើកបរ / ចម្ងាយ → វិភាគ',etcFlow:'ថ្លៃផ្លូវ / បញ្ចូលប្រាក់ → អ្នកប្រើ / អ្នកបើកបរ → ចំណាត់ថ្នាក់',setFlow:'GAS URL · ភាសា · ក្រុម Telegram',gasUrlLbl:'Google Apps Script URL (AC_GA_EXP /exec)',diagHint:'ចុច «សាកល្បង» ដើម្បីមើលកំណែពពកពិតប្រាកដ និងសមត្ថភាពដែលខ្វះ។',setNote1:'Bot Token រក្សាទុកតែក្នុងផ្នែកខាងក្រោយ GAS (CONFIG) ប៉ុណ្ណោះ មិនរក្សាទុកក្នុងកម្មវិធីរុករកទេ។',setNote2:'គ្រប់ម៉ូឌុលប្រើ GAS URL នេះដោយស្វ័យប្រវត្តិ មិនចាំបាច់បញ្ចូលម្តងទៀតនៅទំព័រនីមួយៗទេ។',setNote3:'ដើម្បីធ្វើបច្ចុប្បន្នភាព GAS ដដែល៖ Manage deployments → Edit → New version → Deploy។ បើ trigger ដើមនៅមាន មិនចាំបាច់ដំណើរការ setupPolling ម្តងទៀតទេ។',thName:'ឈ្មោះ',thModules:'ម៉ូឌុល',thEnabled:'បើក',modNote1:'ជួរម៉ូឌុល៖ បញ្ចូល',modNote2:'ឬរាយបញ្ជីដោយក្បៀស៖ procurement, damage, repair, recv, diesel, expense, transportation, etc។ ក្រុមលំនាំដើម៖ -5271842001។',tgMsgPh:'ផ្ញើទៅក្រុមដែលបានបើកទាំងអស់',verTag:'v3.9.19 · វិភាគការធ្វើដំណើរ / ETC',pageTitle:'AC-GA-EXP Platform · ការគ្រប់គ្រងកិច្ចការទូទៅ និងចំណាយ'}
+});
+const L3=(zh,en,km)=>GA.lang==='en'?en:GA.lang==='km'?km:zh;
 let groups = Array.isArray(GA.cfg().tgGroups) ? GA.cfg().tgGroups : [];
 
 /* ── Settings ── */
@@ -279,22 +285,27 @@ function saveSettings(){
   if(GA.backend)GA.backend.clear();
   GA.setLang(document.getElementById('set-lang').value);
   closeSettings();
-  GA.toast('✅ 設定已儲存，所有模組自動套用');
+  GA.toast(L3('✅ 設定已儲存，所有模組自動套用','✅ Settings saved and applied to all modules','✅ បានរក្សាទុកការកំណត់ ហើយអនុវត្តចំពោះគ្រប់ម៉ូឌុល'));
   refreshDashboard();
 }
 async function testGAS(){
   const url=document.getElementById('set-gas').value.trim();
-  if(!url){ GA.toast('請先輸入 GAS URL'); return; }
-  GA.toast('⏳ 測試中...');
-  document.getElementById('gas-diagnostic').textContent='正在檢查目前設定的 GAS…';
+  if(!url){ GA.toast(L3('請先輸入 GAS URL','Please enter the GAS URL first','សូមបញ្ចូល GAS URL ជាមុនសិន')); return; }
+  GA.toast(L3('⏳ 測試中...','⏳ Testing...','⏳ កំពុងសាកល្បង...'));
+  const diagEl=document.getElementById('gas-diagnostic');diagEl.removeAttribute('data-t');
+  diagEl.textContent=L3('正在檢查目前設定的 GAS…','Checking the configured GAS…','កំពុងពិនិត្យ GAS ដែលបានកំណត់…');
   try{
     const info=await GA.backend.probe(url), required=['strictActionErrors','procStateToken','dashboardV2','mobilitySync','tgSummaryReceipt','smartSync','smartCommitToken','monthlyPoReceiptGuard'];
     const missing=required.filter(x=>info.capabilities.indexOf(x)<0);
-    document.getElementById('gas-diagnostic').textContent='前端版本：'+GA.PLATFORM_VERSION+'\n雲端實際版本：'+(info.version||'未回報（舊版或不同程式）')+'\n缺少能力：'+(missing.join(', ')||'無')+'\n目前連線：'+info.url+'\n'+(missing.length?'請更新同一 Apps Script 專案，再從管理部署選擇新版本發布；僅儲存程式不會更新 /exec。':'前後端能力檢查通過，可再測同步與摘要回執。');
+    const verTxt=info.version||L3('未回報（舊版或不同程式）','not reported (old or different script)','មិនបានរាយការណ៍ (កំណែចាស់ ឬស្គ្រីបផ្សេង)'),missTxt=missing.join(', ')||L3('無','none','គ្មាន');
+    document.getElementById('gas-diagnostic').textContent=L3(
+      '前端版本：'+GA.PLATFORM_VERSION+'\n雲端實際版本：'+verTxt+'\n缺少能力：'+missTxt+'\n目前連線：'+info.url+'\n'+(missing.length?'請更新同一 Apps Script 專案，再從管理部署選擇新版本發布；僅儲存程式不會更新 /exec。':'前後端能力檢查通過，可再測同步與摘要回執。'),
+      'Front-end version: '+GA.PLATFORM_VERSION+'\nActual cloud version: '+verTxt+'\nMissing capabilities: '+missTxt+'\nCurrent connection: '+info.url+'\n'+(missing.length?'Update the same Apps Script project, then publish a new version from Manage deployments; saving the code alone does not update /exec.':'Front-end and back-end capability check passed; you can now test sync and summary receipts.'),
+      'កំណែផ្នែកខាងមុខ៖ '+GA.PLATFORM_VERSION+'\nកំណែពពកពិតប្រាកដ៖ '+verTxt+'\nសមត្ថភាពដែលខ្វះ៖ '+missTxt+'\nការតភ្ជាប់បច្ចុប្បន្ន៖ '+info.url+'\n'+(missing.length?'សូមធ្វើបច្ចុប្បន្នភាពគម្រោង Apps Script ដដែល រួចបោះពុម្ពកំណែថ្មីពី Manage deployments។ ការរក្សាទុកកូដតែម្នាក់ឯងមិនធ្វើបច្ចុប្បន្នភាព /exec ទេ។':'ការពិនិត្យសមត្ថភាពផ្នែកខាងមុខ និងខាងក្រោយបានជោគជ័យ អាចសាកល្បងសមកាលកម្ម និងបង្កាន់ដៃសេចក្តីសង្ខេបបន្ត។'));
     if(missing.length){const e=new Error(GA.backendMessage(missing[0],info.version));e.code='BACKEND_OUTDATED';e.capability=missing[0];e.backend=info;throw e;}
-    GA.toast('✅ 完整雲端功能已確認 · GS '+info.version+' · '+required.length+' checks');
+    GA.toast(L3('✅ 完整雲端功能已確認','✅ Full cloud features confirmed','✅ បានបញ្ជាក់មុខងារពពកពេញលេញ')+' · GS '+info.version+' · '+required.length+' checks');
     if(url===GA.gasUrl()){GA.backend.clear();const alert=document.getElementById('ga-backend-alert');if(alert)alert.remove();await refreshDashboard();}
-    else document.getElementById('gas-diagnostic').textContent+='\n測試成功，網址尚未套用；請確認是原資料庫後按儲存。';
+    else document.getElementById('gas-diagnostic').textContent+='\n'+L3('測試成功，網址尚未套用；請確認是原資料庫後按儲存。','Test succeeded, but the URL is not applied yet; confirm it is the original database, then press Save.','សាកល្បងជោគជ័យ ប៉ុន្តែ URL មិនទាន់អនុវត្តទេ។ សូមបញ្ជាក់ថាជាមូលដ្ឋានទិន្នន័យដើម រួចចុចរក្សាទុក។');
   }catch(e){GA.normalizeCloudError(e,'platform cloud');if(!e.backend)document.getElementById('gas-diagnostic').textContent=e.message;GA.toast('❌ '+e.message,'err');}
 }
 
@@ -313,9 +324,15 @@ function dashboardSet(id,value,sub){
 }
 function refreshDashboard(){
   if(dashboardRequest)return dashboardRequest;
-  if(!GA.gasUrl()){ GA.cloud.set('idle','未設定 GAS'); return; }
+  if(!GA.gasUrl()){ GA.cloud.set('idle',L3('未設定 GAS','GAS not set','មិនទាន់កំណត់ GAS')); return; }
   GA.cloud.set('sync');
-  dashboardRequest=GA.gasGet('dashboard',{_t:Date.now()}).then(d=>{
+  dashboardRequest=GA.gasGet('dashboard',{_t:Date.now()}).then(d=>{lastDashboard=d;renderDashboard(d);
+  }).catch(e=>{ GA.cloud.set('err',GA.isBackendCompatibilityError(e)?L3('GAS 版本待更新；請到設定測試連線','GAS version needs updating; test the connection in Settings','កំណែ GAS ត្រូវធ្វើបច្ចុប្បន្នភាព សូមសាកល្បងការតភ្ជាប់នៅក្នុងការកំណត់'):e.message); if(!GA.isBackendCompatibilityError(e))GA.toast(L3('❌ Dashboard：','❌ Dashboard: ','❌ ផ្ទាំងសង្ខេប៖ ')+e.message,'err'); }).finally(()=>{dashboardRequest=null;});
+  return dashboardRequest;
+}
+let lastDashboard=null;
+function renderDashboard(d){
+    const NA=L3('此 GAS 未提供此欄位','Not provided by this GAS','GAS នេះមិនផ្ដល់វាលនេះទេ');
     const raw=d&&d.data&&typeof d.data==='object'?Object.assign({},d,d.data):d||{};
     const po=dashboardPart(raw,'po',{total:0,pending:0,latest:''});
     const tpo=dashboardPart(raw,'tempPo',{total:0,pending:0,approved:0});
@@ -324,27 +341,25 @@ function refreshDashboard(){
     const recv=dashboardPart(raw,'recv',{items:0,lowStock:0,records:0});
     const diesel=dashboardPart(raw,'diesel',{liters:0,records:0});
     const expense=dashboardPart(raw,'expense',{ytd:0,months:0});
-    dashboardSet('k-po',po.available?po.value.total:'—',po.available?`待審 ${po.value.pending} · 最新 ${po.value.latest||'—'}`:'此 GAS 未提供此欄位');
-    dashboardSet('k-tpo',tpo.available?tpo.value.total:'—',tpo.available?`待審 ${tpo.value.pending} · 核可 ${tpo.value.approved}`:'此 GAS 未提供此欄位');
-    dashboardSet('k-rep',rep.available?rep.value.total:'—',rep.available?`待審 ${rep.value.pending} · 緊急 ${rep.value.urgent}`:'此 GAS 未提供此欄位');
-    dashboardSet('k-dmg',dmg.available?dmg.value.total:'—',dmg.available?`待 Phea ${dmg.value.pending} · 待 Paul ${dmg.value.reviewed} · 核可 ${dmg.value.approved}`:'此 GAS 未提供此欄位');
-    dashboardSet('k-recv',recv.available?recv.value.items:'—',recv.available?`低庫存 ${recv.value.lowStock} · 紀錄 ${recv.value.records}`:'此 GAS 未提供此欄位');
-    dashboardSet('k-dsl',diesel.available?Number(diesel.value.liters||0).toLocaleString(undefined,{maximumFractionDigits:2})+'L':'—',diesel.available?`${diesel.value.records} 筆記錄`:'此 GAS 未提供此欄位');
-    dashboardSet('k-exp',expense.available?fmtMoney(expense.value.ytd):'—',expense.available?`${expense.value.months} 個活躍月`:'此 GAS 未提供此欄位');
+    dashboardSet('k-po',po.available?po.value.total:'—',po.available?L3(`待審 ${po.value.pending} · 最新 ${po.value.latest||'—'}`,`Pending ${po.value.pending} · Latest ${po.value.latest||'—'}`,`រង់ចាំ ${po.value.pending} · ចុងក្រោយ ${po.value.latest||'—'}`):NA);
+    dashboardSet('k-tpo',tpo.available?tpo.value.total:'—',tpo.available?L3(`待審 ${tpo.value.pending} · 核可 ${tpo.value.approved}`,`Pending ${tpo.value.pending} · Approved ${tpo.value.approved}`,`រង់ចាំ ${tpo.value.pending} · បានអនុម័ត ${tpo.value.approved}`):NA);
+    dashboardSet('k-rep',rep.available?rep.value.total:'—',rep.available?L3(`待審 ${rep.value.pending} · 緊急 ${rep.value.urgent}`,`Pending ${rep.value.pending} · Urgent ${rep.value.urgent}`,`រង់ចាំ ${rep.value.pending} · បន្ទាន់ ${rep.value.urgent}`):NA);
+    dashboardSet('k-dmg',dmg.available?dmg.value.total:'—',dmg.available?L3(`待 Phea ${dmg.value.pending} · 待 Paul ${dmg.value.reviewed} · 核可 ${dmg.value.approved}`,`Awaiting Phea ${dmg.value.pending} · Awaiting Paul ${dmg.value.reviewed} · Approved ${dmg.value.approved}`,`រង់ចាំ Phea ${dmg.value.pending} · រង់ចាំ Paul ${dmg.value.reviewed} · បានអនុម័ត ${dmg.value.approved}`):NA);
+    dashboardSet('k-recv',recv.available?recv.value.items:'—',recv.available?L3(`低庫存 ${recv.value.lowStock} · 紀錄 ${recv.value.records}`,`Low stock ${recv.value.lowStock} · Records ${recv.value.records}`,`ស្តុកទាប ${recv.value.lowStock} · កំណត់ត្រា ${recv.value.records}`):NA);
+    dashboardSet('k-dsl',diesel.available?Number(diesel.value.liters||0).toLocaleString(undefined,{maximumFractionDigits:2})+'L':'—',diesel.available?L3(`${diesel.value.records} 筆記錄`,`${diesel.value.records} records`,`កំណត់ត្រា ${diesel.value.records}`):NA);
+    dashboardSet('k-exp',expense.available?fmtMoney(expense.value.ytd):'—',expense.available?L3(`${expense.value.months} 個活躍月`,`${expense.value.months} active months`,`${expense.value.months} ខែសកម្ម`):NA);
     const parts={po,tpo,rep,dmg,recv,diesel,expense},labels={po:'Procurement',tpo:'Temp PO',rep:'Maintenance',dmg:'Damage',recv:'Receiving',diesel:'Fuel',expense:'Expense'};
     const missing=Object.keys(parts).filter(k=>!parts[k].available).map(k=>labels[k]);
     if(missing.length){
-      const msg='Dashboard 已載入可用資料；目前 GAS 少了 '+missing.join(', ')+' 欄位，請更新同一個現有部署。';
-      GA.cloud.set('conflict','部分資料 · '+missing.join(', '));
+      const miss=missing.join(', '),msg=L3('Dashboard 已載入可用資料；目前 GAS 少了 '+miss+' 欄位，請更新同一個現有部署。','Dashboard loaded the available data; the current GAS is missing the '+miss+' fields. Please update the same existing deployment.','ផ្ទាំងសង្ខេបបានផ្ទុកទិន្នន័យដែលមាន។ GAS បច្ចុប្បន្នខ្វះវាល '+miss+'។ សូមធ្វើបច្ចុប្បន្នភាពការដាក់ឱ្យប្រើដដែល។');
+      GA.cloud.set('conflict',L3('部分資料 · ','Partial data · ','ទិន្នន័យមួយផ្នែក · ')+miss);
       GA.showBackendIssue('dashboardV2',msg);
-      if(dashboardSchemaWarning!==msg){dashboardSchemaWarning=msg;GA.toast('⚠️ '+msg,'err');}
+      if(dashboardSchemaWarning!==miss){dashboardSchemaWarning=miss;GA.toast('⚠️ '+msg,'err');}
     }else{
       dashboardSchemaWarning='';
       const old=document.getElementById('ga-backend-alert');if(old&&old.getAttribute('data-capability')==='dashboardV2')old.remove();
-      GA.cloud.set('down','已連線 '+(raw.ts||d.ts||''));
+      GA.cloud.set('down',L3('已連線 ','Connected ','បានតភ្ជាប់ ')+(raw.ts||d.ts||''));
     }
-  }).catch(e=>{ GA.cloud.set('err',GA.isBackendCompatibilityError(e)?'GAS 版本待更新；請到設定測試連線':e.message); if(!GA.isBackendCompatibilityError(e))GA.toast('❌ Dashboard：'+e.message,'err'); }).finally(()=>{dashboardRequest=null;});
-  return dashboardRequest;
 }
 
 /* ── Telegram groups ── */
@@ -367,47 +382,49 @@ function renderGroups(){
 }
 function addGroupRow(){ groups.push({name:'',chatId:'',modules:'all',enabled:true}); renderGroups(); }
 function delGroupRow(i){
-  GA.confirm('刪除群組「'+(groups[i].name||groups[i].chatId)+'」？').then(ok=>{
+  GA.confirm(L3('刪除群組「'+(groups[i].name||groups[i].chatId)+'」？','Delete group "'+(groups[i].name||groups[i].chatId)+'"?','លុបក្រុម «'+(groups[i].name||groups[i].chatId)+'»?')).then(ok=>{
     if(!ok)return; groups.splice(i,1); renderGroups();
   });
 }
 function loadGroups(){
-  if(!GA.gasUrl()){ GA.toast('請先在設定中心填 GAS URL'); return; }
-  GA.toast('⏳ 載入群組...');
+  if(!GA.gasUrl()){ GA.toast(L3('請先在設定中心填 GAS URL','Please enter the GAS URL in Settings first','សូមបញ្ចូល GAS URL នៅក្នុងការកំណត់ជាមុនសិន')); return; }
+  GA.toast(L3('⏳ 載入群組...','⏳ Loading groups...','⏳ កំពុងផ្ទុកក្រុម...'));
   GA.gasGet('getGroups').then(d=>{
     const gs=(d.data&&d.data.groups)||d.groups||[];
-    if(gs.length){ groups=gs; GA.saveCfg({tgGroups:groups}); renderGroups(); GA.toast('✅ 已載入 '+groups.length+' 個群組'); }
-    else GA.toast('☁️ 雲端尚無群組設定');
+    if(gs.length){ groups=gs; GA.saveCfg({tgGroups:groups}); renderGroups(); GA.toast(L3('✅ 已載入 '+groups.length+' 個群組','✅ Loaded '+groups.length+' groups','✅ បានផ្ទុកក្រុម '+groups.length)); }
+    else GA.toast(L3('☁️ 雲端尚無群組設定','☁️ No groups configured in the cloud yet','☁️ មិនទាន់មានការកំណត់ក្រុមនៅលើពពកទេ'));
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
 function saveGroups(){
-  if(!GA.gasUrl()){ GA.toast('請先在設定中心填 GAS URL'); return; }
+  if(!GA.gasUrl()){ GA.toast(L3('請先在設定中心填 GAS URL','Please enter the GAS URL in Settings first','សូមបញ្ចូល GAS URL នៅក្នុងការកំណត់ជាមុនសិន')); return; }
   const valid=groups.filter(g=>String(g.chatId||'').trim());
-  GA.toast('⏳ 儲存群組...');
+  GA.toast(L3('⏳ 儲存群組...','⏳ Saving groups...','⏳ កំពុងរក្សាទុកក្រុម...'));
   GA.gasPost('saveGroups', valid).then(d=>{
     groups=valid; GA.saveCfg({tgGroups:groups}); renderGroups();
-    GA.toast('✅ 已儲存 '+((d.data&&d.data.count)||valid.length)+' 個群組至雲端');
+    const n=(d.data&&d.data.count)||valid.length;
+    GA.toast(L3('✅ 已儲存 '+n+' 個群組至雲端','✅ Saved '+n+' groups to the cloud','✅ បានរក្សាទុកក្រុម '+n+' ទៅពពក'));
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
 function sendTestNotify(){
-  if(!GA.gasUrl()){ GA.toast('請先在設定中心填 GAS URL'); return; }
+  if(!GA.gasUrl()){ GA.toast(L3('請先在設定中心填 GAS URL','Please enter the GAS URL in Settings first','សូមបញ្ចូល GAS URL នៅក្នុងការកំណត់ជាមុនសិន')); return; }
   const text=document.getElementById('tg-test-msg').value.trim();
-  if(!text){ GA.toast('請輸入測試訊息'); return; }
-  GA.toast('⏳ 發送中...');
+  if(!text){ GA.toast(L3('請輸入測試訊息','Please enter a test message','សូមបញ្ចូលសារសាកល្បង')); return; }
+  GA.toast(L3('⏳ 發送中...','⏳ Sending...','⏳ កំពុងផ្ញើ...'));
   GA.gasPost('notify', null, {text}).then(d=>{
-    GA.toast('✅ 已發送至 '+((d.data&&d.data.sent)||d.sent||1)+' 個群組');
+    const n=(d.data&&d.data.sent)||d.sent||1;
+    GA.toast(L3('✅ 已發送至 '+n+' 個群組','✅ Sent to '+n+' groups','✅ បានផ្ញើទៅក្រុម '+n));
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
 
 /* ── 異常報告 ── */
 function pushAnomaly(){
-  if(!GA.gasUrl()){ GA.toast('請先在設定中心填 GAS URL'); return; }
-  GA.toast('⏳ 檢查異常中...');
+  if(!GA.gasUrl()){ GA.toast(L3('請先在設定中心填 GAS URL','Please enter the GAS URL in Settings first','សូមបញ្ចូល GAS URL នៅក្នុងការកំណត់ជាមុនសិន')); return; }
+  GA.toast(L3('⏳ 檢查異常中...','⏳ Checking for anomalies...','⏳ កំពុងពិនិត្យភាពមិនប្រក្រតី...'));
   GA.gasPost('anomalyReport', {}).then(d=>{
-    if(d.data&&d.data.disabled){ GA.toast('⏹ 異常推送目前已停止 / Anomaly pushes are stopped'); return; }
+    if(d.data&&d.data.disabled){ GA.toast(L3('⏹ 異常推送目前已停止 / Anomaly pushes are stopped','⏹ Anomaly pushes are stopped','⏹ ការផ្ញើភាពមិនប្រក្រតីត្រូវបានបញ្ឈប់')); return; }
     const c=(d.data&&d.data.counts)||{};
     const total=(c.lowStock||0)+(c.overBudget||0)+(c.overdue||0)+(c.fuelAbnormal||0)+(c.futureDated||0);
-    GA.toast(total? ('⚠️ 發現 '+total+' 項異常，已推送群組') : '✅ 目前無異常');
+    GA.toast(total? L3('⚠️ 發現 '+total+' 項異常，已推送群組','⚠️ Found '+total+' anomalies; pushed to groups','⚠️ រកឃើញភាពមិនប្រក្រតី '+total+' ហើយបានផ្ញើទៅក្រុម') : L3('✅ 目前無異常','✅ No anomalies right now','✅ បច្ចុប្បន្នគ្មានភាពមិនប្រក្រតីទេ'));
   }).catch(e=>GA.toast('❌ '+e.message,'err'));
 }
 
@@ -431,7 +448,16 @@ GA.addDict({
  km:{transportTitle:'មជ្ឈមណ្ឌលកំណត់ត្រាធ្វើដំណើរ',etcTitle:'មជ្ឈមណ្ឌលថ្លៃផ្លូវ ETC',transportDesc:'កំណត់ត្រាអ្នកបើកបរ គោលបំណង និងចម្ងាយ។ វិភាគថ្ងៃ សប្តាហ៍ ខែ ឆ្នាំ និងចំណាត់ថ្នាក់។',etcDesc:'ថ្លៃផ្លូវ និងបញ្ចូលប្រាក់ដាច់ដោយឡែក។ វិភាគថ្ងៃ សប្តាហ៍ ខែ ឆ្នាំ និងចំណាត់ថ្នាក់អ្នកប្រើ។'}
 });
 /* ── init ── */
+const TG_TEST_DEFAULT={zh:'AC-GA-EXP Platform 通知測試 Test',en:'AC-GA-EXP Platform notification test',km:'AC-GA-EXP Platform សាកល្បងការជូនដំណឹង'};
+function applyIndexLang(){
+  document.title=GA.T('pageTitle');
+  const tm=document.getElementById('tg-test-msg');
+  if(tm&&Object.values(TG_TEST_DEFAULT).indexOf(tm.value)>=0)tm.value=TG_TEST_DEFAULT[GA.lang]||TG_TEST_DEFAULT.zh;
+  document.querySelectorAll('.card-top').forEach(t=>{const en=t.querySelector('.card-en'),nm=t.querySelector('.card-name');if(en&&nm)en.style.display=GA.lang!=='zh'&&en.textContent.trim()===nm.textContent.trim()?'none':'';});
+}
+GA.on('lang',()=>{applyIndexLang();if(lastDashboard)renderDashboard(lastDashboard);});
 GA.boot();
+applyIndexLang();
 applyModuleDeepLinks();
 GA.cloud.mount('#ga-cloud');
 document.querySelectorAll('[data-lg]').forEach(b=>{
@@ -442,6 +468,6 @@ refreshDashboard();
 window.addEventListener('focus',()=>{if(!document.hidden)refreshDashboard();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDashboard();});
 </script>
-<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2">v3.9.19 · Transportation / ETC Analysis</div>
+<div style="position:fixed;right:6px;bottom:4px;font-size:9px;color:#94a3b8;z-index:2" data-t="verTag">v3.9.19 · Transportation / ETC Analysis</div>
 </body>
 </html>

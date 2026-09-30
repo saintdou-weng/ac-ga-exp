@@ -137,14 +137,14 @@
   function guardedSave(type, original) {
     return function () {
       if (savingBatch || !validate(type)) return false;
-      savingBatch = true;
+      savingBatch = true; window._recvStrictSave = (window._recvStrictSave || 0) + 1; /* v3.9.25: saveLocal throws here so the batch rolls back */
       const snapshot = JSON.stringify({ items, records }), draft = lines(type).slice();
       try { const result = original.apply(this, arguments); return result === false ? false : !lines(type).length; }
       catch (e) {
         const old = JSON.parse(snapshot); items = old.items; records = old.records;
         if (type === 'receive') _recvBatchLines = draft; else _recvIssueLines = draft;
         render(type); toast(T('尚未儲存，請保留此頁並重試：', 'Not saved. Keep this page open and retry: ', 'មិនទាន់រក្សាទុក។ សូមទុកទំព័រនេះ ហើយសាកម្ដងទៀត៖ ')+e.message, 'error'); return false;
-      } finally { savingBatch = false; }
+      } finally { savingBatch = false; window._recvStrictSave = Math.max(0, (window._recvStrictSave || 1) - 1); }
     };
   }
   window.saveReceiveBatchLines = guardedSave('receive', window.saveReceiveBatchLines);
@@ -184,7 +184,7 @@
     if (savingItem) return false;
     const unit = ($('f-unit').value || '').trim(), price = Number($('f-unit-price').value);
     if (!unit || !Number.isFinite(price) || price < 0) { toast(T('請填計量單位及有效的非負單價。', 'Enter a unit and a valid non-negative unit price.', 'សូមបំពេញឯកតា និងតម្លៃមិនអវិជ្ជមាន។'), 'error'); return false; }
-    savingItem = true; const target = itemTarget, ids = new Set(items.map(it => it.id)), editId = $('edit-id').value;
+    savingItem = true; window._recvStrictSave = (window._recvStrictSave || 0) + 1; const target = itemTarget, ids = new Set(items.map(it => it.id)), editId = $('edit-id').value;
     try {
       await priorSaveItem();
       if ($('item-form').classList.contains('show')) { formHelp(); return false; }
@@ -195,14 +195,15 @@
       const created = items.find(x => !ids.has(x.id)); if (created) $('edit-id').value = created.id;
       itemTarget = target; $('item-form').classList.add('show');
       toast(T('物品尚未儲存，請重試：', 'Item not saved. Retry: ', 'ទំនិញមិនទាន់រក្សាទុក។ សាកម្ដងទៀត៖ ')+e.message, 'error'); return false;
-    } finally { savingItem = false; }
+    } finally { savingItem = false; window._recvStrictSave = Math.max(0, (window._recvStrictSave || 1) - 1); }
   };
   window.recvCatalogArchive = function (id, restore) {
     const it = recvItemById(id); if (!it) return false;
     if (!confirm(restore ? T('重新啟用此物品？', 'Restore this item?', 'បើកទំនិញនេះឡើងវិញ?') :
       T('停用後不再出現在新增收發的選單；歷史與庫存保留。確定停用？', 'Archive this item from new receipt/issue choices? History and stock remain.', 'បិទទំនិញនេះពីជម្រើសទទួល/ចេញថ្មី? ប្រវត្តិ និងស្តុកនៅដដែល។'))) return false;
     const old = { archived: it.archived, updatedAt: it.updatedAt }; it.archived = !restore; it.updatedAt = new Date().toISOString();
-    try { saveLocal(); } catch (e) { Object.assign(it, old); toast(T('尚未儲存：', 'Not saved: ', 'មិនទាន់រក្សាទុក៖ ')+e.message, 'error'); return false; }
+    window._recvStrictSave = (window._recvStrictSave || 0) + 1;
+    try { saveLocal(); } catch (e) { Object.assign(it, old); toast(T('尚未儲存：', 'Not saved: ', 'មិនទាន់រក្សាទុក៖ ')+e.message, 'error'); return false; } finally { window._recvStrictSave = Math.max(0, (window._recvStrictSave || 1) - 1); }
     scheduleReceivingAutoUpload(restore ? 'item-restore' : 'item-archive'); filterItems(); renderReceiveContent(); return true;
   };
   window.deleteItem = id => recvCatalogArchive(id, false);

@@ -211,17 +211,17 @@ tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .recv-photo-strip { display:flex; gap:7px; flex-wrap:wrap; align-items:center; padding:9px; border:1px dashed var(--border); border-radius:8px; background:var(--bg); margin:8px 0 12px; }
 .recv-photo-strip img { width:58px; height:58px; object-fit:cover; border-radius:6px; border:1px solid var(--border); }
 </style>
-<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.24"></script>
+<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
+<script src="shared/ga-core.js?v=3.9.26"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
-<script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js?v=3.9.21"></script>
-<script src="shared/ga-telegram.js?v=3.9.19"></script>
+<script src="shared/ga-data.js?v=3.9.26"></script>
+<script src="shared/ga-import.js?v=3.9.26"></script>
+<script src="shared/ga-telegram.js?v=3.9.26"></script>
 <script src="shared/ga-smart-sync.js?v=3.9.23"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.25"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.24"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.23"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.23"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.23"></scr'+'ipt>');}
 </script>
 
 <link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
@@ -230,20 +230,20 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <button class="topbar-icon" onclick="location.href='index.html'" title="AC-GA-EXP Platform">🏠</button>
-  <div class="topbar-logo">AC-GA-EXP <span>Receiving Report 收貨報告</span></div>
+  <button class="topbar-icon" onclick="location.href='index.html'" title="AC-GA-EXP Platform" data-i-title="t_home">🏠</button>
+  <div class="topbar-logo">AC-GA-EXP <span data-i="logo_sub">Receiving Report 收貨報告</span></div>
   <div class="topbar-spacer"></div>
   <button class="lang-btn active" onclick="setLang('en')" id="lb-en">EN</button>
   <button class="lang-btn" onclick="setLang('zh')" id="lb-zh">中</button>
   <button class="lang-btn" onclick="setLang('km')" id="lb-km">ខ្មែរ</button>
   <div class="tb-sep"></div>
   <div id="ga-cloud" class="ga-cloud idle" style="margin:0 4px"></div>
-  <button class="topbar-icon" onclick="cloudUpload()" title="上傳雲端 Upload" id="cloud-up-btn">⬆️</button>
-  <button class="topbar-icon" onclick="cloudDownload()" title="下載雲端 Download" id="cloud-dn-btn">⬇️</button>
-  <button class="topbar-icon" onclick="recvSmartImport()" title="Smart Import 智慧匯入" id="smart-imp-btn">📥</button>
-  <button class="topbar-icon" onclick="recvDataPanel()" title="資料管理 Data">🗂️</button>
-  <button class="topbar-icon" onclick="sendTelegram()" title="Send to Telegram">✈️</button>
-  <button class="topbar-icon" onclick="showPage('settings')" title="Settings">⚙️</button>
+  <button class="topbar-icon" onclick="cloudUpload()" title="上傳雲端 Upload" data-i-title="t_up" id="cloud-up-btn">⬆️</button>
+  <button class="topbar-icon" onclick="cloudDownload()" title="下載雲端 Download" data-i-title="t_down" id="cloud-dn-btn">⬇️</button>
+  <button class="topbar-icon" onclick="recvSmartImport()" title="Smart Import 智慧匯入" data-i-title="t_smart" id="smart-imp-btn">📥</button>
+  <button class="topbar-icon" onclick="recvDataPanel()" title="資料管理 Data" data-i-title="t_data">🗂️</button>
+  <button class="topbar-icon" onclick="sendTelegram()" title="Send to Telegram" data-i-title="t_tg">✈️</button>
+  <button class="topbar-icon" onclick="showPage('settings')" title="Settings" data-i-title="t_settings">⚙️</button>
 </div>
 
 <!-- TOOLBAR -->
@@ -259,10 +259,10 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <span class="period-label" id="period-label" onclick="jumpToToday()">May 2026</span>
     <button class="period-btn" onclick="nextPeriod()">▶</button>
     <select class="period-select" id="period-mode" onchange="changePeriodMode(this.value)">
-      <option value="day">Day</option>
-      <option value="week">Week</option>
-      <option value="month" selected>Month</option>
-      <option value="year">Year</option>
+      <option value="day" data-i="period_day">Day</option>
+      <option value="week" data-i="period_week">Week</option>
+      <option value="month" selected data-i="period_month">Month</option>
+      <option value="year" data-i="period_year">Year</option>
     </select>
   </div>
   <div class="tb-sep"></div>
@@ -273,8 +273,8 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
   
   <div style="margin-left:auto" class="view-toggle">
-    <button class="vt-btn active" id="vt-table" onclick="setView('table')" title="Table view">☰</button>
-    <button class="vt-btn" id="vt-card" onclick="setView('card')" title="Card view">⊞</button>
+    <button class="vt-btn active" id="vt-table" onclick="setView('table')" title="Table view" data-i-title="t_table">☰</button>
+    <button class="vt-btn" id="vt-card" onclick="setView('card')" title="Card view" data-i-title="t_card">⊞</button>
   </div>
 </div>
 
@@ -288,16 +288,16 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   
   <div class="table-wrap">
     <div class="table-header">
-      <input class="search-box" id="search-items" placeholder="🔍 Search item..." oninput="filterItems()">
+      <input class="search-box" id="search-items" placeholder="🔍 Search item..." data-i-ph="ph_search" oninput="filterItems()">
       <select class="filter-sel" id="filter-cat" onchange="filterItems()">
-        <option value="">All Categories</option>
-        <option value="Stationary">Stationary</option>
-        <option value="Cleaning">Cleaning</option>
+        <option value="" data-i="f_allcat">All Categories</option>
+        <option value="Stationary" data-i="cat_stationary">Stationary</option>
+        <option value="Cleaning" data-i="cat_cleaning">Cleaning</option>
       </select>
       <select class="filter-sel" id="filter-stock" onchange="filterItems()">
-        <option value="">All Stock</option>
-        <option value="low">Low Stock</option>
-        <option value="ok">OK</option>
+        <option value="" data-i="f_allstock">All Stock</option>
+        <option value="low" data-i="stat_low">Low Stock</option>
+        <option value="ok" data-i="f_ok">OK</option>
       </select>
     </div>
     <div id="items-view-container">
@@ -325,7 +325,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- PAGE: RECEIVE -->
 <div class="page" id="page-receive">
-  <div class="section-title" id="st-receive">Monthly Receive & Issue Records</div>
+  <div class="section-title" id="st-receive" data-i="st_receive">Monthly Receive & Issue Records</div>
   
   <div class="tabs">
     <div class="tab active" id="rt-receive" onclick="setReceiveTab('receive')"><span data-i="tab_receive">Receive / Purchase</span></div>
@@ -339,7 +339,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- PAGE: ANALYSIS -->
 <div class="page" id="page-analysis">
-  <div class="section-title" id="st-analysis">Analysis & Reports</div>
+  <div class="section-title" id="st-analysis" data-i="st_analysis">Analysis & Reports</div>
   <div class="charts-row" id="charts-row">
     <div class="chart-card">
       <div class="chart-title" data-i="chart1">Monthly Usage by Category</div>
@@ -383,11 +383,11 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       <h3 data-i="set_general">General</h3>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label" data-i="set_factory">Factory / Company</label>
-        <input class="form-input" id="set-factory" value="Vantage River Textiles Co., Ltd." placeholder="Company name">
+        <input class="form-input" id="set-factory" value="Vantage River Textiles Co., Ltd." placeholder="Company name" data-i-ph="ph_company">
       </div>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label" data-i="set_dept">Default Department</label>
-        <input class="form-input" id="set-dept" value="GA/Admin" placeholder="Dept name">
+        <input class="form-input" id="set-dept" value="GA/Admin" placeholder="Dept name" data-i-ph="ph_dept">
       </div>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label" data-i="set_low">Low Stock Alert Threshold</label>
@@ -407,7 +407,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
         <div class="import-drop" id="drop-area" onclick="triggerImport()">
           <div style="font-size:32px">📁</div>
           <p data-i="drop_hint">Drop Excel file here or click to import</p>
-          <p style="font-size:11px;margin-top:4px;color:#aaa">.xlsx / .xls — Receive__Report format</p>
+          <p style="font-size:11px;margin-top:4px;color:#aaa" data-i="drop_fmt">.xlsx / .xls — Receive__Report format</p>
         </div>
       </div>
     </div>
@@ -427,23 +427,23 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <div class="form-grid">
       <div class="form-group">
         <label class="form-label" data-i="fl_name">Item Name</label>
-        <input class="form-input" id="f-name" placeholder="e.g. A4 Paper">
+        <input class="form-input" id="f-name" placeholder="e.g. A4 Paper" data-i-ph="ph_fname">
       </div>
       <div class="form-group">
         <label class="form-label" data-i="fl_cat">Category</label>
         <select class="form-input" id="f-cat">
-          <option value="Stationary">Stationary</option>
-          <option value="Cleaning">Cleaning</option>
-          <option value="Other">Other</option>
+          <option value="Stationary" data-i="cat_stationary">Stationary</option>
+          <option value="Cleaning" data-i="cat_cleaning">Cleaning</option>
+          <option value="Other" data-i="cat_other">Other</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label" data-i="fl_brand">Brand</label>
-        <input class="form-input" id="f-brand" placeholder="Brand name">
+        <input class="form-input" id="f-brand" placeholder="Brand name" data-i-ph="ph_brand">
       </div>
       <div class="form-group">
         <label class="form-label" data-i="fl_size">Size / Unit</label>
-        <input class="form-input" id="f-size" placeholder="e.g. 500sheet/pcs">
+        <input class="form-input" id="f-size" placeholder="e.g. 500sheet/pcs" data-i-ph="ph_size">
       </div>
       <div class="form-group">
         <label class="form-label" data-i="fl_unit_price">Unit Price</label>
@@ -473,12 +473,12 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       </div>
       <div class="form-group full">
         <label class="form-label" data-i="fl_remarks">Remarks</label>
-        <input class="form-input" id="f-remarks" placeholder="Any notes...">
+        <input class="form-input" id="f-remarks" placeholder="Any notes..." data-i-ph="ph_notes">
       </div>
     </div>
     <div class="form-row">
-      <button class="nav-btn" onclick="closeForm()">Cancel</button>
-      <button class="nav-btn success" onclick="saveItem()">💾 Save Item</button>
+      <button class="nav-btn" onclick="closeForm()" data-i="cancel">Cancel</button>
+      <button class="nav-btn success" onclick="saveItem()">💾 <span data-i="save_item">Save Item</span></button>
     </div>
   </div>
 </div>
@@ -493,44 +493,44 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     <input type="hidden" id="rf-id">
     <div class="form-grid">
       <div class="form-group">
-        <label class="form-label">Date</label>
+        <label class="form-label" data-i="lbl_date">Date</label>
         <input class="form-input" type="date" id="rf-date">
       </div>
       <div class="form-group">
-        <label class="form-label">Type</label>
+        <label class="form-label" data-i="lbl_type">Type</label>
         <select class="form-input" id="rf-type">
-          <option value="receive">Receive / Purchase</option>
-          <option value="issue">Issue / Give Out</option>
+          <option value="receive" data-i="opt_receive">Receive / Purchase</option>
+          <option value="issue" data-i="opt_issue">Issue / Give Out</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Item</label>
+        <label class="form-label" data-i="lbl_item">Item</label>
         <select class="form-input" id="rf-item"></select>
       </div>
       <div class="form-group">
-        <label class="form-label">Quantity</label>
+        <label class="form-label" data-i="lbl_qty">Quantity</label>
         <input class="form-input" type="number" id="rf-qty" value="1">
       </div>
       <div class="form-group">
-        <label class="form-label">Department / From</label>
-        <input class="form-input" id="rf-dept" placeholder="e.g. HR, GA, QC">
+        <label class="form-label" data-i="lbl_deptfrom">Department / From</label>
+        <input class="form-input" id="rf-dept" placeholder="e.g. HR, GA, QC" data-i-ph="ph_depts">
       </div>
       <div class="form-group">
-        <label class="form-label">Requester</label>
-        <input class="form-input" id="rf-req" placeholder="Name">
+        <label class="form-label" data-i="lbl_req">Requester</label>
+        <input class="form-input" id="rf-req" placeholder="Name" data-i-ph="ph_name">
       </div>
       <div class="form-group">
         <label class="form-label" data-i="inspector">Inspector</label>
-        <input class="form-input" id="rf-inspector" placeholder="Name">
+        <input class="form-input" id="rf-inspector" placeholder="Name" data-i-ph="ph_name">
       </div>
       <div class="form-group full">
-        <label class="form-label">Remarks</label>
-        <input class="form-input" id="rf-remarks" placeholder="Notes...">
+        <label class="form-label" data-i="fl_remarks">Remarks</label>
+        <input class="form-input" id="rf-remarks" placeholder="Notes..." data-i-ph="ph_notes">
       </div>
     </div>
     <div class="form-row">
-      <button class="nav-btn" onclick="document.getElementById('receive-form').classList.remove('show')">Cancel</button>
-      <button class="nav-btn success" onclick="saveReceiveRecord()">💾 Save</button>
+      <button class="nav-btn" onclick="document.getElementById('receive-form').classList.remove('show')" data-i="cancel">Cancel</button>
+      <button class="nav-btn success" onclick="saveReceiveRecord()">💾 <span data-i="save">Save</span></button>
     </div>
   </div>
 </div>
@@ -614,6 +614,15 @@ const I18N = {
     period_day: "ថ្ងៃ", period_week: "សប្តាហ៍", period_month: "ខែ", period_year: "ឆ្នាំ", inspector: "អ្នកត្រួតពិនិត្យ",
   }
 };
+
+/* v3.9.26 i18n: static labels, tooltips, placeholders (data-i / data-i-title / data-i-ph / data-i-aria) */
+Object.assign(I18N.zh,{logo_sub: "Receiving Report 收貨報告", page_title: "AC-GA-EXP · Receiving Report 收貨報告", t_home: "AC-GA-EXP Platform", t_up: "上傳雲端 Upload", t_down: "下載雲端 Download", t_smart: "Smart Import 智慧匯入", t_data: "資料管理 Data", t_tg: "傳送至 Telegram", t_settings: "設定", t_table: "表格檢視", t_card: "卡片檢視", ph_search: "🔍 搜尋品項...", f_allcat: "全部類別", cat_stationary: "文具", cat_cleaning: "清潔用品", cat_other: "其他", f_allstock: "全部庫存", f_ok: "正常", plat_note: "GAS 網址、Bot Token、群組皆由「平台設定中心」統一管理，各模組自動沿用，無需在此重填。", open_platform_set: "開啟平台設定中心", ph_company: "公司名稱", ph_dept: "部門名稱", drop_fmt: ".xlsx / .xls — Receive__Report 格式", form_add_item: "新增物品", ph_fname: "例：A4 紙", ph_brand: "品牌名稱", ph_size: "例：500張/包", ph_notes: "備註...", ph_unit: "pcs / 盒 / 捲 / 令", ph_depts: "例：HR、GA、QC", ph_name: "姓名", cancel: "取消", save_item: "儲存品項", rf_title: "新增收發紀錄", lbl_date: "日期", lbl_type: "類型", lbl_item: "品項", lbl_qty: "數量", lbl_deptfrom: "部門 / 來源", lbl_req: "領用人", opt_receive: "收貨 / 採購", opt_issue: "領用 / 發放"});
+Object.assign(I18N.en,{logo_sub: "Receiving Report", page_title: "AC-GA-EXP · Receiving Report", t_home: "AC-GA-EXP Platform", t_up: "Upload to cloud", t_down: "Download from cloud", t_smart: "Smart Import", t_data: "Data management", t_tg: "Send to Telegram", t_settings: "Settings", t_table: "Table view", t_card: "Card view", ph_search: "🔍 Search item...", f_allcat: "All Categories", cat_stationary: "Stationary", cat_cleaning: "Cleaning", cat_other: "Other", f_allstock: "All Stock", f_ok: "OK", plat_note: "The GAS URL, Bot Token and groups are managed centrally in Platform Settings; every module reuses them, so there is no need to enter them here.", open_platform_set: "Open Platform Settings", ph_company: "Company name", ph_dept: "Department name", drop_fmt: ".xlsx / .xls — Receive__Report format", form_add_item: "Add item", ph_fname: "e.g. A4 Paper", ph_brand: "Brand name", ph_size: "e.g. 500 sheets/pack", ph_notes: "Notes...", ph_unit: "pcs / box / roll / ream", ph_depts: "e.g. HR, GA, QC", ph_name: "Name", cancel: "Cancel", save_item: "Save Item", rf_title: "Add Receive / Issue Record", lbl_date: "Date", lbl_type: "Type", lbl_item: "Item", lbl_qty: "Quantity", lbl_deptfrom: "Department / From", lbl_req: "Requester", opt_receive: "Receive / Purchase", opt_issue: "Issue / Give Out"});
+Object.assign(I18N.km,{logo_sub: "របាយការណ៍ទទួលទំនិញ", page_title: "AC-GA-EXP · របាយការណ៍ទទួលទំនិញ", t_home: "វេទិកា AC-GA-EXP", t_up: "ផ្ទុកឡើងទៅពពក", t_down: "ទាញយកពីពពក", t_smart: "នាំចូលឆ្លាតវៃ", t_data: "គ្រប់គ្រងទិន្នន័យ", t_tg: "ផ្ញើទៅ Telegram", t_settings: "ការកំណត់", t_table: "បង្ហាញជាតារាង", t_card: "បង្ហាញជាកាត", ph_search: "🔍 ស្វែងរកមុខទំនិញ...", f_allcat: "គ្រប់ប្រភេទ", cat_stationary: "សម្ភារៈការិយាល័យ", cat_cleaning: "សម្ភារៈអនាម័យ", cat_other: "ផ្សេងៗ", f_allstock: "ស្តុកទាំងអស់", f_ok: "ធម្មតា", plat_note: "GAS URL, Bot Token និងក្រុម ត្រូវបានគ្រប់គ្រងនៅក្នុងការកំណត់វេទិកា ហើយគ្រប់ម៉ូឌុលប្រើដោយស្វ័យប្រវត្តិ មិនចាំបាច់បញ្ចូលនៅទីនេះទេ។", open_platform_set: "បើកការកំណត់វេទិកា", ph_company: "ឈ្មោះក្រុមហ៊ុន", ph_dept: "ឈ្មោះផ្នែក", drop_fmt: ".xlsx / .xls — ទម្រង់ Receive__Report", form_add_item: "បន្ថែមទំនិញ", ph_fname: "ឧ. ក្រដាស A4", ph_brand: "ឈ្មោះម៉ាក", ph_size: "ឧ. 500 សន្លឹក/កញ្ចប់", ph_notes: "កំណត់ចំណាំ...", ph_unit: "pcs / ប្រអប់ / ដុំ / រាម", ph_depts: "ឧ. HR, GA, QC", ph_name: "ឈ្មោះ", cancel: "បោះបង់", save_item: "រក្សាទុកមុខទំនិញ", rf_title: "បន្ថែមកំណត់ត្រាទទួល/ចេញ", lbl_date: "កាលបរិច្ឆេទ", lbl_type: "ប្រភេទ", lbl_item: "មុខទំនិញ", lbl_qty: "បរិមាណ", lbl_deptfrom: "ផ្នែក / មកពី", lbl_req: "អ្នកស្នើ", opt_receive: "ទទួល / ទិញ", opt_issue: "បើកចេញ / ប្រគល់"});
+I18N.km.set_cloud="សមកាលកម្មពពក (GAS)";
+Object.assign(I18N.zh,{mf_all: "全部來源", mf_monthly: "固定月購", mf_adhoc: "臨時／追加", mf_both: "月購＋追加", mf_archived: "已停用", pm_label: "採購屬性", pm_unknown: "待確認", pm_adhoc: "臨時／追加", pm_both: "月購＋可追加", pm_help: "Item Master 只標記物品屬性；每月計畫數量仍留在 Monthly Purchase。", unit_label: "計量單位"});
+Object.assign(I18N.en,{mf_all: "All sourcing", mf_monthly: "Monthly", mf_adhoc: "Ad-hoc", mf_both: "Monthly + extra", mf_archived: "Archived", pm_label: "Purchase type", pm_unknown: "Unclassified", pm_adhoc: "Ad-hoc / extra", pm_both: "Monthly + extra", pm_help: "Item Master stores the item identity only; monthly planned quantity stays in Monthly Purchase.", unit_label: "Unit"});
+Object.assign(I18N.km,{mf_all: "ប្រភពទាំងអស់", mf_monthly: "ប្រចាំខែ", mf_adhoc: "បន្ថែម", mf_both: "ខែ + បន្ថែម", mf_archived: "បិទ", pm_label: "ប្រភេទទិញ", pm_unknown: "មិនទាន់កំណត់", pm_adhoc: "បន្ថែម", pm_both: "ខែ + បន្ថែម", pm_help: "Item Master រក្សាអត្តសញ្ញាណទំនិញ; បរិមាណផែនការប្រចាំខែនៅ Monthly Purchase។", unit_label: "ឯកតា"});
 let lang = (typeof GA !== 'undefined' && GA.lang) || 'zh';
 function setLang(l){
   lang = ['zh','en','km'].includes(l) ? l : 'zh';
@@ -623,6 +632,12 @@ function setLang(l){
     const key = el.getAttribute('data-i');
     if(I18N[lang] && I18N[lang][key]) el.textContent = I18N[lang][key];
   });
+  [['data-i-title','title'],['data-i-ph','placeholder'],['data-i-aria','aria-label']].forEach(([a,attr])=>{
+    document.querySelectorAll('['+a+']').forEach(el=>{const v=I18N[lang]&&I18N[lang][el.getAttribute(a)];if(v)el.setAttribute(attr,v);});
+  });
+  document.title = I18N[lang].page_title;
+  [['item-form','form-title-text','form_add_item'],['receive-form','rf-title','rf_title']].forEach(([f,t,k])=>{const fe=document.getElementById(f),te=document.getElementById(t);if(fe&&te&&!fe.classList.contains('show'))te.textContent=I18N[lang][k];});
+  try{ recvRenderGasStatus(); }catch(e){}
   renderStats(); renderItemsTable(); renderReceiveContent(); renderAnalysis();
   try{ updatePeriodLabel(); }catch(e){}
 }
@@ -679,24 +694,40 @@ function loadLocal(){
     loadSettingsForm();
   } catch(e){}
 }
+function recvIsQuotaError(e){return !!e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014||/quota|storage.*full|exceeded/i.test(String(e.message||'')));}
+function recvStorageFullText(){return recvI('本機儲存空間已滿 — 資料仍保留在本次畫面，請勿關閉；請先雲端同步或清除舊照片','Storage full — data kept in this session only; please sync to cloud / clear old photos before closing','ទំហំផ្ទុកពេញ — ទិន្នន័យនៅក្នុងវគ្គនេះប៉ុណ្ណោះ សូមធ្វើសមកាលកម្ម / លុបរូបចាស់');}
 function saveLocal(){
   // Catalog, ledger and settings commit together. The legacy settings mirror
   // is optional once the complete snapshot has been written successfully.
-  localStorage.setItem('vrt_receive_data', JSON.stringify({items,records,inventoryImportMeta,deletedRecords:receivingDeletedRecords,settings}));
+  /* v3.9.25: a full storage never loses the in-memory data. Transactional callers (window._recvStrictSave>0:
+     batch save / item save / archive) still get an exception so they can roll back and offer a retry. */
+  try { localStorage.setItem('vrt_receive_data', JSON.stringify({items,records,inventoryImportMeta,deletedRecords:receivingDeletedRecords,settings})); }
+  catch (e) {
+    var err = recvIsQuotaError(e) ? new Error(recvStorageFullText()) : e;
+    if (window._recvStrictSave > 0) throw err;
+    window._recvUnsavedLocal = true;
+    try { var now = Date.now(); if (!window._recvQuotaToastAt || now - window._recvQuotaToastAt > 8000) { window._recvQuotaToastAt = now; toast('⚠️ ' + (recvIsQuotaError(e) ? recvStorageFullText() : recvI('本機儲存失敗：', 'Local save failed: ', 'រក្សាទុកបរាជ័យ៖ ') + (e && e.message || e)), 'error'); } } catch (_) {}
+    return false;
+  }
+  window._recvUnsavedLocal = false;
   try { localStorage.setItem('vrt_receive_settings', JSON.stringify(settings)); } catch (_) {}
+  return true;
 }
 function loadSettingsForm(){
   document.getElementById('set-factory').value = settings.factory||'Vantage River Textiles Co., Ltd.';
   document.getElementById('set-dept').value = settings.dept||'GA/Admin';
   document.getElementById('set-low-threshold').value = settings.lowThreshold||5;
   // 顯示平台 GAS 設定狀態
+  recvRenderGasStatus();
+}
+function recvRenderGasStatus(){
   const el=document.getElementById('plat-gas-status');
   if(el){
     const u=(GA.gasUrl()||'');
     const isDefault = u===GA.DEFAULT_GAS;
     el.innerHTML = u
-      ? '✅ GAS: <code style="font-size:10px;word-break:break-all">'+u.slice(0,52)+'…</code>'+(isDefault?'<br><span style="color:var(--text3)">(平台預設)</span>':'')
-      : '⚠️ 尚未設定 GAS（請至平台設定中心）';
+      ? '✅ GAS: <code style="font-size:10px;word-break:break-all">'+u.slice(0,52)+'…</code>'+(isDefault?'<br><span style="color:var(--text3)">'+recvI('(平台預設)','(platform default)','(លំនាំដើមវេទិកា)')+'</span>':'')
+      : recvI('⚠️ 尚未設定 GAS（請至平台設定中心）','⚠️ GAS is not set (go to Platform Settings)','⚠️ មិនទាន់កំណត់ GAS (សូមចូលទៅការកំណត់វេទិកា)');
   }
 }
 function saveAll(){
@@ -704,7 +735,7 @@ function saveAll(){
   settings.dept = document.getElementById('set-dept').value;
   settings.lowThreshold = +document.getElementById('set-low-threshold').value||5;
   saveLocal();
-  toast('Data saved!', 'success');
+  toast(recvI('資料已儲存！','Data saved!','បានរក្សាទុកទិន្នន័យ!'), 'success');
 }
 
 // =========== ID ===========
@@ -803,9 +834,9 @@ function importExcel(input){
       inventoryImportMeta={file:file.name,importedAt:new Date().toISOString(),itemMasterCount:importedItemIds.size,itemSheets:parsedSheets,issueRecords:importedIssue,purchaseRecords:importedReceive,
         mapping:{chart:'Item master: name/category/brand/size',department:'Department rows → Issue / Distribution by month',purchase:'Monthly purchase → Receive / Purchase by month',balance:'Balance 12/2025 → Opening stock',stock:'Opening + Purchase - TTL use → Current stock'}};
       saveLocal(); renderAll(); scheduleReceivingAutoUpload('inventory-import');
-      toast(`✅ Inventory mapped: ${importedItemIds.size} items · ${importedReceive} monthly receipts · ${importedIssue} department issues`,'success');
+      toast(recvI(`✅ 庫存對應完成：${importedItemIds.size} 個品項 · ${importedReceive} 筆月收貨 · ${importedIssue} 筆部門領用`,`✅ Inventory mapped: ${importedItemIds.size} items · ${importedReceive} monthly receipts · ${importedIssue} department issues`,`✅ បានផ្គូផ្គងស្តុក៖ ទំនិញ ${importedItemIds.size} · ការទទួលប្រចាំខែ ${importedReceive} · ការចេញតាមផ្នែក ${importedIssue}`),'success');
       input.value='';
-    } catch(err){ console.error(err); toast('Import error: '+err.message,'error'); input.value=''; }
+    } catch(err){ console.error(err); toast(recvI('匯入錯誤：','Import error: ','នាំចូលមានកំហុស៖ ')+err.message,'error'); input.value=''; }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -823,7 +854,7 @@ function exportExcel(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rRows), 'Records');
   
   XLSX.writeFile(wb, `VRT_Receive_Report_${localYMD()}.xlsx`);
-  toast('Exported!', 'success');
+  toast(recvI('已匯出！','Exported!','បាននាំចេញ!'), 'success');
 }
 function exportAll(){ exportExcel(); }
 
@@ -890,7 +921,7 @@ function renderItemsTable(){
         return `<div style="background:var(--bg);border:1.5px solid var(--border2);border-radius:8px;padding:12px;cursor:pointer" onclick="editItem('${x.id}')">
           <div style="margin-bottom:6px">${photo}</div>
           <div style="font-weight:700;font-size:13px;margin-bottom:4px">${x.name}</div>
-          <div style="font-size:11px;color:var(--text3)">${x.category} · ${(ver&&ver.brand)||x.brand||'-'}</div>
+          <div style="font-size:11px;color:var(--text3)">${recvCatLabel(x.category)} · ${(ver&&ver.brand)||x.brand||'-'}</div>
           <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${(ver&&ver.size)||x.size||''}</div>
           <div style="font-size:11px;color:var(--accent);margin-bottom:8px">${lang==='zh'?'單價':lang==='km'?'តម្លៃឯកតា':'Unit price'}: ${GA.num(ver&&ver.unitPrice).toFixed(2)}</div>
           <div style="display:flex;align-items:center;justify-content:space-between">
@@ -927,7 +958,7 @@ function renderItemsTable(){
         return `<tr id="row-${x.id}">
           <td style="color:var(--text3);font-size:11px">${x.no}</td>
           <td style="font-weight:600;font-size:13px">${x.name}</td>
-          <td><span class="badge ${x.category==='Cleaning'?'clean':'stat'}">${x.category}</span></td>
+          <td><span class="badge ${x.category==='Cleaning'?'clean':'stat'}">${recvCatLabel(x.category)}</span></td>
           <td>${photo}</td>
           <td class="hide-xs" style="color:var(--text2);font-size:12px">${(ver&&ver.brand)||x.brand||'-'}</td>
           <td class="hide-sm" style="color:var(--text3);font-size:11px">${(ver&&ver.size)||x.size||'-'}</td>
@@ -949,11 +980,11 @@ function renderItemsTable(){
 function renderPagination(){
   const total = Math.ceil(filteredItems.length/pageSize);
   const pg = document.getElementById('items-pagination');
-  if(total<=1){ pg.innerHTML=`<span class="pg-info">${filteredItems.length} items</span>`; return; }
+  if(total<=1){ pg.innerHTML=`<span class="pg-info">${recvI(filteredItems.length+' 項',filteredItems.length+' items',filteredItems.length+' មុខ')}</span>`; return; }
   let html = '';
   for(let i=1;i<=Math.min(total,8);i++) html+=`<button class="pg-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
   if(total>8) html+=`<span style="color:var(--text3);padding:0 4px">...</span><button class="pg-btn ${total===currentPage?'active':''}" onclick="goPage(${total})">${total}</button>`;
-  html+=`<span class="pg-info">${filteredItems.length} items</span>`;
+  html+=`<span class="pg-info">${recvI(filteredItems.length+' 項',filteredItems.length+' items',filteredItems.length+' មុខ')}</span>`;
   pg.innerHTML=html;
 }
 function goPage(p){ currentPage=p; renderItemsTable(); }
@@ -966,11 +997,11 @@ function renderStats(){
   const low = items.filter(x=>x.stock<(settings.lowThreshold||5)).length;
   const periodLbl = getPeriodLabel();
   document.getElementById('stats-row').innerHTML = `
-    <div class="stat-card blue"><div class="stat-card-label">${I18N[lang].stat_items}</div><div class="stat-card-val">${items.length}</div><div class="stat-card-sub">supply items</div></div>
+    <div class="stat-card blue"><div class="stat-card-label">${I18N[lang].stat_items}</div><div class="stat-card-val">${items.length}</div><div class="stat-card-sub">${recvI('物資品項','supply items','មុខទំនិញ')}</div></div>
     <div class="stat-card green"><div class="stat-card-label">${I18N[lang].stat_receive}</div><div class="stat-card-val">${received}</div><div class="stat-card-sub">${periodLbl}</div></div>
     <div class="stat-card orange"><div class="stat-card-label">${I18N[lang].stat_issue}</div><div class="stat-card-val">${issued}</div><div class="stat-card-sub">${periodLbl}</div></div>
-    <div class="stat-card ${low>0?'red':''}"><div class="stat-card-label">${I18N[lang].stat_low}</div><div class="stat-card-val">${low}</div><div class="stat-card-sub">items need reorder</div></div>
-    <div class="stat-card"><div class="stat-card-label">Total Stock</div><div class="stat-card-val">${items.reduce((s,x)=>s+x.stock,0)}</div><div class="stat-card-sub">units on hand</div></div>
+    <div class="stat-card ${low>0?'red':''}"><div class="stat-card-label">${I18N[lang].stat_low}</div><div class="stat-card-val">${low}</div><div class="stat-card-sub">${recvI('項需補貨','items need reorder','មុខត្រូវបញ្ជាទិញបន្ថែម')}</div></div>
+    <div class="stat-card"><div class="stat-card-label">${recvI('總庫存','Total Stock','ស្តុកសរុប')}</div><div class="stat-card-val">${items.reduce((s,x)=>s+x.stock,0)}</div><div class="stat-card-sub">${recvI('現有數量','units on hand','ឯកតាក្នុងស្តុក')}</div></div>
   `;
 }
 
@@ -1022,11 +1053,11 @@ function _legacy_saveItem_1(){
   closeForm(); saveLocal(); filteredItems=[...items]; renderItemsTable();
 }
 function deleteItem(id){
-  if(!confirm('Delete this item?')) return;
+  if(!confirm(recvI('刪除此品項？','Delete this item?','លុបមុខទំនិញនេះ?'))) return;
   items = items.filter(x=>x.id!==id);
   records = records.filter(r=>r.itemId!==id);
   saveLocal(); filteredItems=[...items]; renderItemsTable();
-  toast('Deleted','success');
+  toast(recvI('已刪除','Deleted','បានលុប'),'success');
 }
 
 // =========== RECEIVE ===========
@@ -1187,7 +1218,7 @@ function deleteRecord(id){
   }
   records = records.filter(r=>r.id!==id);
   saveLocal(); renderStats(); renderItemsTable(); renderReceiveContent();
-  toast(lang==='zh'?'已刪除並還原庫存':'Deleted & stock reversed','success');
+  toast(recvI('已刪除並還原庫存','Deleted & stock reversed','បានលុប ហើយបានត្រឡប់ស្តុកវិញ'),'success');
 }
 
 function getRecordsForPeriod(){
@@ -1202,7 +1233,7 @@ function renderAnalysis(){
   const periodLbl = getPeriodLabel();
   // Category chart（期間內領用）
   const catData = {};
-  P.forEach(r=>{ if(r.type==='issue'){ const item=items.find(x=>x.id===r.itemId); const cat=item?item.category:'Other'; catData[cat]=(catData[cat]||0)+r.qty; }});
+  P.forEach(r=>{ if(r.type==='issue'){ const item=items.find(x=>x.id===r.itemId); const cat=item?item.category:recvI('其他','Other','ផ្សេងៗ'); catData[cat]=(catData[cat]||0)+r.qty; }});
   renderChart('chart-category', 'doughnut', Object.keys(catData), Object.values(catData), ['#c47a3c','#3c6dc4','#3c8c5c','#7c3cc4']);
   
   // Top 10（期間內領用）
@@ -1212,7 +1243,7 @@ function renderAnalysis(){
   renderChart('chart-top10','bar',top10.map(x=>x[0]),top10.map(x=>x[1]),['#c47a3c']);
   
   // Monthly trend
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const months=recvI(['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ']);
   const monthPurchase = new Array(12).fill(0);
   const monthIssue = new Array(12).fill(0);
   records.filter(r=>r.date&&new Date(r.date).getFullYear()===periodDate.getFullYear()).forEach(r=>{
@@ -1220,11 +1251,12 @@ function renderAnalysis(){
     if(r.type==='receive') monthPurchase[m]+=r.qty;
     else monthIssue[m]+=r.qty;
   });
-  renderChartMulti('chart-trend','line',months,[{label:'Purchase',data:monthPurchase,color:'#3c8c5c'},{label:'Issue',data:monthIssue,color:'#c47a3c'}]);
+  renderChartMulti('chart-trend','line',months,[{label:recvI('採購','Purchase','ទិញ'),data:monthPurchase,color:'#3c8c5c'},{label:recvI('領用','Issue','ចេញ'),data:monthIssue,color:'#c47a3c'}]);
   
   // Dept chart（期間內領用）
   const deptData={};
-  P.filter(r=>r.type==='issue').forEach(r=>{ deptData[r.dept||'Unknown']=(deptData[r.dept||'Unknown']||0)+r.qty; });
+  const unkDept=recvI('未填部門','Unknown','មិនស្គាល់');
+  P.filter(r=>r.type==='issue').forEach(r=>{ deptData[r.dept||unkDept]=(deptData[r.dept||unkDept]||0)+r.qty; });
   const top8dept = Object.entries(deptData).sort((a,b)=>b[1]-a[1]).slice(0,8);
   renderChart('chart-dept','bar',top8dept.map(x=>x[0]),top8dept.map(x=>x[1]),['#3c6dc4']);
   
@@ -1272,10 +1304,10 @@ function renderDeptBreakdown(deptData, total){
   if(!el) return;
   const sorted = Object.entries(deptData).sort((a,b)=>b[1]-a[1]);
   el.innerHTML = `<table style="width:100%;font-size:12px"><thead><tr>
-    <th>Department</th><th class="num">Total Used</th><th>Share</th><th style="width:200px">Bar</th>
+    <th>${recvI('部門','Department','ផ្នែក')}</th><th class="num">${recvI('總使用量','Total Used','ប្រើសរុប')}</th><th>${recvI('占比','Share','ភាគរយ')}</th><th style="width:200px">${recvI('比例','Bar','ក្រាហ្វ')}</th>
   </tr></thead><tbody>${sorted.map(([d,v])=>{
     const pct = total>0?Math.round(v/total*100):0;
-    return `<tr><td style="font-weight:600">${d||'Unknown'}</td><td class="num">${v}</td>
+    return `<tr><td style="font-weight:600">${d||recvI('未填部門','Unknown','មិនស្គាល់')}</td><td class="num">${v}</td>
     <td class="num" style="color:var(--text3)">${pct}%</td>
     <td><div class="dept-bar-wrap"><div class="dept-bar" style="width:${pct*1.5}px;max-width:150px"></div><span style="font-size:11px;color:var(--text3)">${pct}%</span></div></td></tr>`;
   }).join('')}</tbody></table>`;
@@ -1335,8 +1367,8 @@ async function testCloud(){
   try{
     const info=await GA.backend.require('smartSync',{action:'Receiving smart sync',force:true});
     await GA.backend.require('strictActionErrors',{action:'Receiving cloud'});
-    toast((lang==='zh'?'✅ Receiving 雲端功能已確認 · GS ':'Receiving cloud confirmed · GS ')+(info.version||''),'success');
-  } catch(e){ toast('Failed: '+e.message,'error'); }
+    toast(recvI('✅ Receiving 雲端功能已確認 · GS ','✅ Receiving cloud features confirmed · GS ','✅ បានបញ្ជាក់មុខងារពពក Receiving · GS ')+(info.version||''),'success');
+  } catch(e){ toast(recvI('失敗：','Failed: ','បរាជ័យ៖ ')+e.message,'error'); }
 }
 function recvDataPanel(){
   GA.dataPanel({
@@ -1356,7 +1388,7 @@ function recvDataPanel(){
       saveLocal();
     },
     clear:()=>{ items=[]; records=[]; saveLocal(); },
-    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast('請用分頁的匯出鈕','err'); } },
+    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast(recvI('請用分頁的匯出鈕','Use the export button on each tab','សូមប្រើប៊ូតុងនាំចេញនៅផ្ទាំងនីមួយៗ'),'err'); } },
     onChange:()=>{ filteredItems=[...items]; filterItems(); renderAll(); }
   });
 }
@@ -1397,7 +1429,7 @@ function recvSmartImport(){
       });
       if(typeof recvMigrateCatalog==='function') recvMigrateCatalog();
       saveLocal(); renderAll();
-      toast((lang==='zh'?'匯入完成：收發 +':'Imported: recs +')+addRec+(addItem?(lang==='zh'?'，品項 +':', items +')+addItem:''),'success');
+      toast(recvI('匯入完成：收發 +'+addRec+(addItem?'，品項 +'+addItem:''),'Imported: records +'+addRec+(addItem?', items +'+addItem:''),'នាំចូលរួចរាល់៖ កំណត់ត្រា +'+addRec+(addItem?', មុខទំនិញ +'+addItem:'')),'success');
     }
   });
 }
@@ -1507,9 +1539,9 @@ dropArea.addEventListener('drop',e=>{
 
 // =========== CLEAR ===========
 function clearAllData(){
-  if(!confirm('Clear ALL data? This cannot be undone.')) return;
+  if(!confirm(recvI('清除所有資料？此動作無法復原。','Clear ALL data? This cannot be undone.','លុបទិន្នន័យទាំងអស់? មិនអាចត្រឡប់វិញបានទេ។'))) return;
   items=[]; records=[]; saveLocal(); renderAll();
-  toast('All data cleared','warning');
+  toast(recvI('已清除所有資料','All data cleared','បានលុបទិន្នន័យទាំងអស់'),'warning');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1519,6 +1551,8 @@ function clearAllData(){
 var _recvPoCache=[], _recvPoFlat=[], _recvPoLoadedYear=0, _recvPoLoading=false;
 var _recvBatchLines=[], _recvPhotos=[], _recvPhotoBatchId='';
 function recvI(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en;}
+/* v3.9.26: display label for the built-in category values (stored value unchanged) */
+function recvCatLabel(c){var k={Stationary:'cat_stationary',Cleaning:'cat_cleaning',Other:'cat_other'}[c];return k&&I18N[lang]&&I18N[lang][k]||c;}
 function recvEsc(v){return String(v===undefined||v===null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
 function recvEnsureItem(name,cat){var n=String(name||'').trim(),found=items.find(function(x){return String(x.name||'').trim().toLowerCase()===n.toLowerCase();});if(found)return found;if(!n)return null;var x={id:newId(),no:items.length+1,name:n,category:cat||'PO',brand:'',size:'',stock:0,minStock:settings.lowThreshold||5,remarks:'',ytdPurchased:0,ytdUsed:0,monthData:{}};items.push(x);return x;}
 function recvPoKey(po,idx){return String(po.poId||po.poNumber||'po')+'::'+idx;}
@@ -1526,15 +1560,20 @@ function loadRecvPoApproved(force){var year=new Date().getFullYear();if(!force&&
 function _legacy_recvPoRows_1(){var out=[];(_recvPoCache||[]).forEach(function(po){(po.items||[]).forEach(function(it,idx){if(GA.num(it.remainingQty)>0)out.push({po:po,item:it,index:idx,key:recvPoKey(po,idx)});});});return out;}
 function _legacy_renderPoReceiveTab_1(){var el=document.getElementById('receive-content');if(!el)return;_recvPoFlat=recvPoRows();var html='<div class="recv-po-note">📋 '+recvI('這裡只列出已核可、尚有剩餘量的 Monthly PO。收貨月份以收貨日期計算；PO 只作為核對依據。','Only approved Monthly PO lines with remaining quantity are shown. The receiving date determines the receiving month.','បង្ហាញតែបន្ទាត់ Monthly PO ដែលបានអនុម័ត និងនៅសល់។ ខែទទួលយកតាមថ្ងៃទទួល។')+'</div>';html+='<div class="recv-batch-toolbar"><button class="nav-btn" onclick="loadRecvPoApproved(true).then(renderPoReceiveTab)">↻ '+recvI('重新整理 PO','Refresh PO','ផ្ទុក PO ឡើងវិញ')+'</button><button class="nav-btn" onclick="applyPoReceiveDefaults()">☑️ '+recvI('全部套用剩餘量／日期','Apply remaining & date to all','អនុវត្តចំនួននៅសល់/កាលបរិច្ឆេទ')+'</button><button class="nav-btn success" onclick="savePoReceiveBatch()">💾 '+recvI('儲存勾選收貨','Save selected receipts','រក្សាទុកការទទួលដែលបានជ្រើស')+'</button><input type="date" id="po-batch-date" value="'+localYMD()+'"><label class="nav-btn">📷 '+recvI('照片','Photos','រូបថត')+' <input id="po-photo-input" type="file" accept="image/*" multiple style="display:none" onchange="loadRecvPhotos(this)"></label><button class="nav-btn" onclick="sendRecvPhotos()">✈️ '+recvI('發送照片','Send photos','ផ្ញើរូបថត')+'</button></div>';html+='<div id="recv-photo-preview" class="recv-photo-strip"><span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span></div>';html+='<div class="recv-po-table"><table><thead><tr><th>✓</th><th>'+recvI('PO／月份','PO / Period','PO / ខែ')+'</th><th>'+recvI('品項','Item','ទំនិញ')+'</th><th>'+recvI('核可量','Approved','អនុម័ត')+'</th><th>'+recvI('已收','Received','បានទទួល')+'</th><th>'+recvI('剩餘','Remaining','នៅសល់')+'</th><th>'+recvI('收貨日期','Receive date','ថ្ងៃទទួល')+'</th><th>'+recvI('本次數量','Qty','បរិមាណ')+'</th></tr></thead><tbody>';if(!_recvPoFlat.length)html+='<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:28px">'+recvI('目前沒有可收貨的核可 PO','No approved PO quantity is waiting to be received','មិនមានបរិមាណ PO ដែលបានអនុម័តរង់ចាំទទួល')+'</td></tr>';_recvPoFlat.forEach(function(x,i){var p=x.po,it=x.item;html+='<tr data-po-row="'+i+'"><td><input type="checkbox" id="po-check-'+i+'" checked></td><td><b>'+recvEsc(p.poNumber||p.poId)+'</b><br><small>'+recvEsc(p.period||'')+'</small></td><td><b>'+recvEsc(it.name)+'</b>'+(it.unit?' · '+recvEsc(it.unit):'')+'</td><td class="num">'+GA.num(it.approvedQty)+'</td><td class="num">'+GA.num(it.receivedQty)+'</td><td class="num remaining">'+GA.num(it.remainingQty)+'</td><td><input type="date" id="po-date-'+i+'" value="'+localYMD()+'"></td><td><input class="qty-input" type="number" min="0" max="'+GA.num(it.remainingQty)+'" id="po-qty-'+i+'" value="'+GA.num(it.remainingQty)+'"></td></tr>';});html+='</tbody></table></div>';html+='<div style="margin:14px 0 8px;font-weight:700">🧾 '+recvI('本期收貨紀錄','Receipts in current period','កំណត់ត្រាទទួលក្នុងរយៈពេលនេះ')+'</div><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('品項','Item','ទំនិញ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>'+recvI('PO','PO','PO')+'</th></tr></thead><tbody>';var current=getRecordsForPeriod().filter(function(r){return r.type==='receive';});if(!current.length)html+='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">—</td></tr>';current.forEach(function(r){html+='<tr><td>'+recvEsc(r.date)+'</td><td>'+recvEsc(r.itemName)+'</td><td class="num">'+GA.num(r.qty)+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td></tr>';});html+='</tbody></table></div>';el.innerHTML=html;if(_recvPoLoading)el.insertAdjacentHTML('afterbegin','<div class="recv-po-note">⏳ '+recvI('載入核可 PO…','Loading approved PO…','កំពុងផ្ទុក PO…')+'</div>');if(window.recvPoEnsureLoaded)recvPoEnsureLoaded();}
 function applyPoReceiveDefaults(){var d=(document.getElementById('po-batch-date')||{}).value||localYMD();_recvPoFlat.forEach(function(x,i){var de=document.getElementById('po-date-'+i),q=document.getElementById('po-qty-'+i),c=document.getElementById('po-check-'+i);if(de)de.value=d;if(q)q.value=GA.num(x.item.remainingQty);if(c)c.checked=true;});}
-function loadRecvPhotos(input){var fs=Array.prototype.slice.call(input&&input.files||[]).slice(0,12);_recvPhotos=[];_recvPhotoBatchId='recvphoto_'+Date.now();Promise.all(fs.map(function(f){return new Promise(function(resolve){var rd=new FileReader();rd.onload=function(){resolve({name:f.name,data:rd.result});};rd.readAsDataURL(f);});})).then(function(a){_recvPhotos=a;var el=document.getElementById('recv-photo-preview');if(el)el.innerHTML=a.length?a.map(function(x){return'<img src="'+x.data+'" title="'+recvEsc(x.name)+'">';}).join(''):'<span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span>';});}
+function loadRecvPhotos(input){var fs=Array.prototype.slice.call(input&&input.files||[]).slice(0,12);_recvPhotos=[];_recvPhotoBatchId='recvphoto_'+Date.now();Promise.all(fs.map(function(f){return recvCompressImage(f).then(function(c){return c&&c.data?{name:c.name,data:c.data}:null;});/* v3.9.25 compressed */})).then(function(a){a=a.filter(Boolean);_recvPhotos=a;var el=document.getElementById('recv-photo-preview');if(el)el.innerHTML=a.length?a.map(function(x){return'<img src="'+x.data+'" title="'+recvEsc(x.name)+'">';}).join(''):'<span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span>';});}
 function sendRecvPhotos(){
   if(!_recvPhotos.length){toast(recvI('請先選擇照片','Choose photos first','សូមជ្រើសរូបថតជាមុន'),'error');return;}
-  var expected=_recvPhotos.length;
-  GA.gasPost('recvPhotoBatch',{batchId:_recvPhotoBatchId,photos:_recvPhotos.map(function(x){return x.data;}),caption:'📦 AC-GA-EXP Receiving 收貨照片 · '+localYMD()}).then(function(r){
-    var d=r.data||r,receipts=Array.isArray(d.receipts)?d.receipts:[],confirmed=receipts.filter(function(x){return x&&x.chatId&&x.messageId;}).length;
-    if(Number(d.sent)!==expected||confirmed!==expected)throw new Error(recvI('Telegram 未回傳全部照片的 Message ID','Telegram did not return Message IDs for every photo','Telegram មិនបានបញ្ជាក់រូបថតទាំងអស់'));
-    toast(recvI('照片已確認送達：'+confirmed+' 張','Photos confirmed: '+confirmed,'បានបញ្ជាក់រូបថត៖ '+confirmed),'success');_recvPhotos=[];loadRecvPhotos({files:[]});
-  }).catch(function(e){toast('❌ '+e.message,'error');});
+  /* v3.9.25: one compressed photo per request; a failure keeps only the unsent photos for retry */
+  if(window._recvPhotoSending)return;window._recvPhotoSending=true;
+  var list=_recvPhotos.slice(),total=list.length,caption='📦 AC-GA-EXP Receiving 收貨照片 · '+localYMD(),confirmed=0,batch=_recvPhotoBatchId;
+  (async function(){for(var i=0;i<list.length;i++){
+      var r=await GA.gasPost('recvPhotoBatch',{batchId:batch+'_'+i,photos:[list[i].data],caption:caption+(total>1?' · '+(i+1)+'/'+total:'')});
+      var d=r&&r.data||r||{},receipts=Array.isArray(d.receipts)?d.receipts:[],ok=receipts.filter(function(x){return x&&x.chatId&&x.messageId;}).length;
+      if(Number(d.sent)!==1||ok!==1)throw new Error(recvI('Telegram 未回傳照片的 Message ID','Telegram did not return a Message ID for the photo','Telegram មិនបានបញ្ជាក់រូបថត'));
+      confirmed++;_recvPhotos=list.slice(i+1);}
+  })().then(function(){toast(recvI('照片已確認送達：'+confirmed+' 張','Photos confirmed: '+confirmed,'បានបញ្ជាក់រូបថត៖ '+confirmed),'success');_recvPhotos=[];loadRecvPhotos({files:[]});
+  }).catch(function(e){toast('❌ '+(confirmed?recvI('已送出 '+confirmed+'/'+total+' 張；','Sent '+confirmed+'/'+total+'; ','បានផ្ញើ '+confirmed+'/'+total+'; '):'')+e.message+' · '+recvI('再按一次只會重送未送出的照片','Press again to resend only the unsent photos','ចុចម្ដងទៀតដើម្បីផ្ញើតែរូបដែលមិនទាន់ផ្ញើ'),'error');
+  }).then(function(){window._recvPhotoSending=false;});
 }
 function receiveBatchItemOptions(selected){return items.map(function(x){return'<option value="'+recvEsc(x.id)+'" '+(String(x.id)===String(selected)?'selected':'')+'>'+recvEsc(x.name)+' · '+recvEsc(x.category||'')+'</option>';}).join('');}
 function receiveBatchPoOptions(selected){var s='<option value="">— '+recvI('無 PO','No PO','គ្មាន PO')+' —</option>';_recvPoFlat.forEach(function(x,i){s+='<option value="'+i+'" '+(String(selected)===String(i)?'selected':'')+'>'+recvEsc(x.po.poNumber||x.po.poId)+' · '+recvEsc(x.item.name)+' · '+GA.num(x.item.remainingQty)+'</option>';});return s;}
@@ -1568,7 +1607,7 @@ function recvSetLedgerCategory(v){_recvLedgerCategory=v||'';_recvLedgerItemId=''
 function recvSetLedgerItem(v){_recvLedgerItemId=v||'';renderReceiveBatchTab();}
 function recvLedgerRecords(itemId){return records.filter(function(r){return String(r.itemId)===String(itemId)&&r.date;}).sort(function(a,b){return String(a.date).localeCompare(String(b.date))||String(a.id).localeCompare(String(b.id));});}
 function _legacy_recvLedgerSummary_1(itemId){var rs=recvLedgerRecords(itemId),months={},running=GA.num((recvItemById(itemId)||{}).openingStock||0),allIn=0,allOut=0,dept={};rs.forEach(function(r){var k=String(r.date).slice(0,7),g=months[k]||(months[k]={month:k,opening:running,received:0,issued:0,closing:running,departments:{}}),q=GA.num(r.qty);if(r.type==='issue'){g.issued+=q;allOut+=q;var d=String(r.dept||'未填部門').trim()||'未填部門';g.departments[d]=(g.departments[d]||0)+q;dept[d]=(dept[d]||0)+q;}else{g.received+=q;allIn+=q;}running=running+(r.type==='issue'?-q:q);g.closing=running;});return{records:rs,months:Object.keys(months).sort().reverse().map(function(k){return months[k];}),allIn:allIn,allOut:allOut,calculated:running,departments:dept};}
-function _legacy_recvLedgerHtml_1(item){if(!item)return '<div class="recv-empty">'+recvI('尚未建立品項，請先從物品主檔或新增列建立。','No item exists yet. Add an item first.','មិនទាន់មានទំនិញទេ។ សូមបន្ថែមទំនិញជាមុន។')+'</div>';var s=recvLedgerSummary(item.id),period=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=period.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=period.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),deptRows=Object.keys(s.departments).sort(function(a,b){return s.departments[b]-s.departments[a];}).map(function(d){return '<tr><td>'+recvEsc(d)+'</td><td class="num">'+s.departments[d]+'</td></tr>';}).join('');var monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+'</td><td class="num out">'+(m.issued?'-'+m.issued:'—')+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join('');var detail=s.records.slice().reverse().map(function(r){var isOut=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+ (isOut?'📤 '+recvI('發出','Issue','ចេញ'):'📥 '+recvI('收貨','Receive','ទទួល'))+'</td><td class="num '+(isOut?'out':'in')+'">'+(isOut?'-':'+')+GA.num(r.qty)+'</td><td>'+recvEsc(isOut?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+'</td></tr>';}).join('');return '<div class="recv-ledger-head"><div><b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span></div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('目前期間收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('目前期間發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史總收貨','All received','ទទួលសរុប')+'</small><b>'+s.allIn+'</b></div><div><small>'+recvI('歷史總發出','All issued','ចេញសរុប')+'</small><b>'+s.allOut+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><div class="recv-ledger-grid"><div><h4>📅 '+recvI('每月進出與結存','Monthly movement and balance','ចលនា និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th class="num">'+recvI('期初','Opening','ដើម')+'</th><th class="num">'+recvI('收貨','Received','ទទួល')+'</th><th class="num">'+recvI('發出','Issued','ចេញ')+'</th><th>'+recvI('發給部門／數量','Departments / Qty','ផ្នែក / បរិមាណ')+'</th><th class="num">'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div></div><div><h4>🏢 '+recvI('發出部門總量','Issued by department','ចេញតាមផ្នែក')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('部門','Department','ផ្នែក')+'</th><th class="num">'+recvI('數量','Qty','បរិមាណ')+'</th></tr></thead><tbody>'+(deptRows||'<tr><td colspan="2">—</td></tr>')+'</tbody></table></div></div></div><h4>🧾 '+recvI('完整物品流水帳','Full item ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th class="num">'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('進出來源／部門','Source / Department','ប្រភព / ផ្នែក')+'</th><th>'+recvI('經手人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(detail||'<tr><td colspan="8">—</td></tr>')+'</tbody></table></div>'}
+function _legacy_recvLedgerHtml_1(item){if(!item)return '<div class="recv-empty">'+recvI('尚未建立品項，請先從物品主檔或新增列建立。','No item exists yet. Add an item first.','មិនទាន់មានទំនិញទេ។ សូមបន្ថែមទំនិញជាមុន។')+'</div>';var s=recvLedgerSummary(item.id),period=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=period.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=period.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),deptRows=Object.keys(s.departments).sort(function(a,b){return s.departments[b]-s.departments[a];}).map(function(d){return '<tr><td>'+recvEsc(d)+'</td><td class="num">'+s.departments[d]+'</td></tr>';}).join('');var monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+'</td><td class="num out">'+(m.issued?'-'+m.issued:'—')+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join('');var detail=s.records.slice().reverse().map(function(r){var isOut=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+ (isOut?'📤 '+recvI('發出','Issue','ចេញ'):'📥 '+recvI('收貨','Receive','ទទួល'))+'</td><td class="num '+(isOut?'out':'in')+'">'+(isOut?'-':'+')+GA.num(r.qty)+'</td><td>'+recvEsc(isOut?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+'</td></tr>';}).join('');return '<div class="recv-ledger-head"><div><b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(recvCatLabel(item.category||'Other'))+'</span></div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('目前期間收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('目前期間發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史總收貨','All received','ទទួលសរុប')+'</small><b>'+s.allIn+'</b></div><div><small>'+recvI('歷史總發出','All issued','ចេញសរុប')+'</small><b>'+s.allOut+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><div class="recv-ledger-grid"><div><h4>📅 '+recvI('每月進出與結存','Monthly movement and balance','ចលនា និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th class="num">'+recvI('期初','Opening','ដើម')+'</th><th class="num">'+recvI('收貨','Received','ទទួល')+'</th><th class="num">'+recvI('發出','Issued','ចេញ')+'</th><th>'+recvI('發給部門／數量','Departments / Qty','ផ្នែក / បរិមាណ')+'</th><th class="num">'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div></div><div><h4>🏢 '+recvI('發出部門總量','Issued by department','ចេញតាមផ្នែក')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('部門','Department','ផ្នែក')+'</th><th class="num">'+recvI('數量','Qty','បរិមាណ')+'</th></tr></thead><tbody>'+(deptRows||'<tr><td colspan="2">—</td></tr>')+'</tbody></table></div></div></div><h4>🧾 '+recvI('完整物品流水帳','Full item ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th class="num">'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('進出來源／部門','Source / Department','ប្រភព / ផ្នែក')+'</th><th>'+recvI('經手人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(detail||'<tr><td colspan="8">—</td></tr>')+'</tbody></table></div>'}
 function recvLedgerCss(){if(document.getElementById('recv-v3-css'))return;var s=document.createElement('style');s.id='recv-v3-css';s.textContent='.recv-ledger-toolbar,.recv-po-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}.recv-ledger-toolbar select,.recv-po-toolbar select{min-width:150px}.recv-ledger-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;background:#f6f9fc;border:1px solid var(--line);border-radius:10px;margin:12px 0}.recv-ledger-cat{display:inline-block;margin-left:10px;padding:3px 8px;border-radius:12px;background:#e7f1fb;color:#28608d;font-size:11px}.recv-ledger-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin:10px 0}.recv-ledger-kpis>div{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}.recv-ledger-kpis small{display:block;color:var(--text3);font-size:11px}.recv-ledger-kpis b{display:block;font-size:20px;margin-top:5px}.recv-ledger-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:12px}.recv-ledger-grid h4,.recv-ledger-html h4{margin:12px 0 7px}.recv-po-summary{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.recv-po-summary b{padding:8px 12px;border-radius:8px;background:#f6f9fc;border:1px solid var(--line)}.recv-po-status{font-size:11px;padding:3px 7px;border-radius:12px}.recv-po-status.pending{background:#fff3cd;color:#8a5a00}.recv-po-status.partial{background:#e7f1fb;color:#28608d}.recv-po-status.full{background:#e7f7ed;color:#18733e}.in{color:var(--green)!important}.out{color:var(--red)!important}.recv-empty{padding:22px;color:var(--text3)}@media(max-width:720px){.recv-ledger-grid{grid-template-columns:1fr}.recv-ledger-head{align-items:flex-start;flex-direction:column}}';document.head.appendChild(s);}
 function renderReceiveBatchTab(){recvLedgerCss();var el=document.getElementById('receive-content');if(!_recvBatchLines.length)_recvBatchLines=[{date:localYMD(),type:'receive',itemId:items[0]&&items[0].id||'',poIndex:'',qty:1,dept:settings.dept||'',requester:'',inspector:'',remarks:''}];var item=recvItemById(_recvLedgerItemId)||recvItemById(_recvBatchLines[0]&&_recvBatchLines[0].itemId)||items[0]||null;if(item)_recvLedgerItemId=item.id;var html='<div class="recv-ledger-toolbar"><label>'+recvI('分類','Category','ប្រភេទ')+' <select onchange="recvSetLedgerCategory(this.value)">'+recvCategoryOptions()+'</select></label><label>'+recvI('物品帳本','Item ledger','បញ្ជីទំនិញ')+' <select onchange="recvSetLedgerItem(this.value)">'+recvLedgerItemOptions()+'</select></label><button class="nav-btn success" onclick="addReceiveBatchLine()">➕ '+recvI('新增收貨列','Add receipt line','បន្ថែមជួរទទួល')+'</button><button class="nav-btn" onclick="applyBatchDate()">📅 '+recvI('日期套用全部','Apply date to all','អនុវត្តកាលបរិច្ឆេទទាំងអស់')+'</button><button class="nav-btn success" onclick="saveReceiveBatchLines()">💾 '+recvI('儲存全部收貨','Save all receipts','រក្សាទុកការទទួលទាំងអស់')+'</button><button class="nav-btn" onclick="addReceiveItemPrompt()">＋ '+recvI('新增物品','New item','បន្ថែមទំនិញ')+'</button><input type="date" id="recv-batch-date" value="'+recvEsc(_recvBatchLines[0].date||localYMD())+'"><label class="nav-btn">📷 '+recvI('照片','Photos','រូបថត')+' <input type="file" accept="image/*" multiple style="display:none" onchange="loadRecvPhotos(this)"></label><button class="nav-btn" onclick="sendRecvPhotos()">✈️ '+recvI('一次發送照片','Send photos','ផ្ញើរូបថត')+'</button></div><div id="recv-photo-preview" class="recv-photo-strip"><span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span></div><div class="recv-note">📌 '+recvI('上方先選分類與物品；下方帳本會顯示每月何時收貨、何時發出、發給哪個部門及剩餘量。','Choose a category and item above. The ledger below shows when it was received, issued, to which department, and what remains.','ជ្រើសប្រភេទ និងទំនិញខាងលើ។ បញ្ជីខាងក្រោមបង្ហាញពេលទទួល ពេលចេញ ផ្នែកអ្នកទទួល និងចំនួននៅសល់។')+'</div><div class="recv-batch-table"><table><thead><tr><th>'+recvI('物品','Item','ទំនិញ')+'</th><th>'+recvI('分類','Category','ប្រភេទ')+'</th><th>'+recvI('收貨日期','Receive date','ថ្ងៃទទួល')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>PO</th><th>'+recvI('給到部門／來源','Department / Source','ផ្នែក / ប្រភព')+'</th><th>'+recvI('經手人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th><th></th></tr></thead><tbody>';_recvBatchLines.forEach(function(r,i){var ri=recvItemById(r.itemId);html+='<tr><td><select onchange="recvBatchItemChange('+i+',this.value)">'+receiveBatchItemOptions(r.itemId)+'</select></td><td>'+recvEsc(ri&&ri.category||'Other')+'</td><td><input type="date" value="'+recvEsc(r.date||localYMD())+'" onchange="recvBatchSet('+i+',\'date\',this.value)"></td><td><input class="qty-input" type="number" min="1" value="'+GA.num(r.qty||1)+'" onchange="recvBatchSet('+i+',\'qty\',this.value)"></td><td><select onchange="recvBatchPoChange('+i+',this.value)">'+receiveBatchPoOptions(r.poIndex)+'</select></td><td><input value="'+recvEsc(r.dept||'')+'" placeholder="'+recvI('收貨來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'" onchange="recvBatchSet('+i+',\'dept\',this.value)"></td><td><input value="'+recvEsc(r.requester||'')+'" onchange="recvBatchSet('+i+',\'requester\',this.value)"></td><td><input value="'+recvEsc(r.inspector||'')+'" onchange="recvBatchSet('+i+',\'inspector\',this.value)"></td><td><input value="'+recvEsc(r.remarks||'')+'" onchange="recvBatchSet('+i+',\'remarks\',this.value)"></td><td><button class="row-btn del" onclick="removeReceiveBatchLine('+i+')">🗑️</button></td></tr>';});html+='</tbody></table></div>'+(item?'<div class="recv-ledger-html">'+recvLedgerHtml(item)+'</div>':'<div class="recv-empty">—</div>');el.innerHTML=html;}
 var _recvIssueLines=[];
@@ -1591,7 +1630,7 @@ function recvPoRows(){var out=[];(_recvPoCache||[]).filter(function(po){return !
 function setRecvPoView(v){_recvPoView=v||'all';renderPoReceiveTab();}
 function selectRecvPoRows(mode){_recvPoFlat.forEach(function(x,i){var c=document.getElementById('po-check-'+i);if(c)c.checked=mode==='all'?x.status!=='full':x.status===mode;});}
 function receivePoFull(i){var x=_recvPoFlat[i];if(!x)return;var de=document.getElementById('po-date-'+i),q=document.getElementById('po-qty-'+i),c=document.getElementById('po-check-'+i);if(de)de.value=(document.getElementById('po-batch-date')||{}).value||localYMD();if(q)q.value=GA.num(x.item.remainingQty);if(c)c.checked=true;}
-function renderPoReceiveTab(){recvLedgerCss();var el=document.getElementById('receive-content');if(!el)return;_recvPoFlat=recvPoRows();var all=recvPoRows.call({_recvPoView:'all'});/* 直接重建統計，不依賴目前篩選 */var raw=[];(_recvPoCache||[]).filter(function(po){return !window.recvPoInPeriod||recvPoInPeriod(po)}).forEach(function(po){(po.items||[]).forEach(function(it,idx){if(GA.num(it.approvedQty)||GA.num(it.remainingQty))raw.push({po:po,item:it,index:idx,status:GA.num(it.remainingQty)<=0?'full':GA.num(it.receivedQty)<=0?'pending':'partial'});});});var counts={all:raw.length,pending:raw.filter(function(x){return x.status==='pending';}).length,partial:raw.filter(function(x){return x.status==='partial';}).length,full:raw.filter(function(x){return x.status==='full';}).length};var html='<div class="recv-note">📋 '+recvI('Monthly PO 對帳：先看核可量，再看已收、待收與本次要入帳的數量。全收只會套用剩餘量，不會超過 PO。','Monthly PO reconciliation: compare approved, received, remaining, and this receipt. Full receive applies only the remaining quantity.','ការផ្ទៀងផ្ទាត់ PO ប្រចាំខែ៖ ប្រៀបធៀបចំនួនអនុម័ត បានទទួល នៅសល់ និងលើកនេះ។ ទទួលទាំងអស់ប្រើតែចំនួននៅសល់។')+'</div><div class="recv-po-toolbar"><button class="nav-btn" onclick="loadRecvPoApproved(true).then(renderPoReceiveTab)">↻ '+recvI('重新整理','Refresh','ផ្ទុកឡើងវិញ')+'</button><button class="nav-btn '+(_recvPoView==='all'?'active':'')+'" onclick="setRecvPoView(\'all\')">'+recvI('全部','All','ទាំងអស់')+' ('+counts.all+')</button><button class="nav-btn '+(_recvPoView==='pending'?'active':'')+'" onclick="setRecvPoView(\'pending\')">'+recvI('未收','Not received','មិនទាន់ទទួល')+' ('+counts.pending+')</button><button class="nav-btn '+(_recvPoView==='partial'?'active':'')+'" onclick="setRecvPoView(\'partial\')">'+recvI('部分收貨','Partial','ទទួលខ្លះ')+' ('+counts.partial+')</button><button class="nav-btn '+(_recvPoView==='full'?'active':'')+'" onclick="setRecvPoView(\'full\')">'+recvI('已全收','Fully received','ទទួលគ្រប់')+' ('+counts.full+')</button><button class="nav-btn" onclick="selectRecvPoRows(\'pending\')">☑️ '+recvI('選未收','Select pending','ជ្រើសមិនទាន់ទទួល')+'</button><button class="nav-btn" onclick="selectRecvPoRows(\'all\')">☑️ '+recvI('選待收','Select outstanding','ជ្រើសនៅសល់')+'</button><button class="nav-btn" onclick="applyPoReceiveDefaults()">📅 '+recvI('套用日期／剩餘量','Apply date / remaining','អនុវត្តថ្ងៃ / នៅសល់')+'</button><button class="nav-btn success" onclick="receiveAllPoNow()">✅ '+recvI('全部全收並儲存','Receive all and save','ទទួលទាំងអស់ និងរក្សាទុក')+'</button><button class="nav-btn success" onclick="savePoReceiveBatch()">💾 '+recvI('儲存勾選','Save selected','រក្សាទុកដែលបានជ្រើស')+'</button><input type="date" id="po-batch-date" value="'+localYMD()+'"><input id="po-batch-inspector" class="qty-input" type="text" placeholder="'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'"><label class="nav-btn">📷 '+recvI('照片','Photos','រូបថត')+' <input id="po-photo-input" type="file" accept="image/*" multiple style="display:none" onchange="loadRecvPhotos(this)"></label><button class="nav-btn" onclick="sendRecvPhotos()">✈️ '+recvI('發送照片','Send photos','ផ្ញើរូបថត')+'</button></div><div id="recv-photo-preview" class="recv-photo-strip"><span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span></div><div class="recv-po-summary"><b>PO lines '+counts.all+'</b><b class="pending">'+recvI('未收','Pending','មិនទាន់ទទួល')+' '+counts.pending+'</b><b class="partial">'+recvI('部分','Partial','ខ្លះ')+' '+counts.partial+'</b><b class="full">'+recvI('全收','Full','គ្រប់')+' '+counts.full+'</b></div><div class="recv-po-table"><table><thead><tr><th>✓</th><th>'+recvI('PO／月份','PO / Period','PO / ខែ')+'</th><th>'+recvI('分類／品項','Category / Item','ប្រភេទ / ទំនិញ')+'</th><th>'+recvI('核可量','Approved','អនុម័ត')+'</th><th>'+recvI('已收','Received','បានទទួល')+'</th><th>'+recvI('本次收貨','This receipt','ទទួលលើកនេះ')+'</th><th>'+recvI('收後剩餘','Remaining after','នៅសល់ក្រោយ')+'</th><th>'+recvI('收貨日期','Date','ថ្ងៃ')+'</th><th>'+recvI('動作','Action','សកម្មភាព')+'</th></tr></thead><tbody>';
+function renderPoReceiveTab(){recvLedgerCss();var el=document.getElementById('receive-content');if(!el)return;_recvPoFlat=recvPoRows();var all=recvPoRows.call({_recvPoView:'all'});/* 直接重建統計，不依賴目前篩選 */var raw=[];(_recvPoCache||[]).filter(function(po){return !window.recvPoInPeriod||recvPoInPeriod(po)}).forEach(function(po){(po.items||[]).forEach(function(it,idx){if(GA.num(it.approvedQty)||GA.num(it.remainingQty))raw.push({po:po,item:it,index:idx,status:GA.num(it.remainingQty)<=0?'full':GA.num(it.receivedQty)<=0?'pending':'partial'});});});var counts={all:raw.length,pending:raw.filter(function(x){return x.status==='pending';}).length,partial:raw.filter(function(x){return x.status==='partial';}).length,full:raw.filter(function(x){return x.status==='full';}).length};var html='<div class="recv-note">📋 '+recvI('Monthly PO 對帳：先看核可量，再看已收、待收與本次要入帳的數量。全收只會套用剩餘量，不會超過 PO。','Monthly PO reconciliation: compare approved, received, remaining, and this receipt. Full receive applies only the remaining quantity.','ការផ្ទៀងផ្ទាត់ PO ប្រចាំខែ៖ ប្រៀបធៀបចំនួនអនុម័ត បានទទួល នៅសល់ និងលើកនេះ។ ទទួលទាំងអស់ប្រើតែចំនួននៅសល់។')+'</div><div class="recv-po-toolbar"><button class="nav-btn" onclick="loadRecvPoApproved(true).then(renderPoReceiveTab)">↻ '+recvI('重新整理','Refresh','ផ្ទុកឡើងវិញ')+'</button><button class="nav-btn '+(_recvPoView==='all'?'active':'')+'" onclick="setRecvPoView(\'all\')">'+recvI('全部','All','ទាំងអស់')+' ('+counts.all+')</button><button class="nav-btn '+(_recvPoView==='pending'?'active':'')+'" onclick="setRecvPoView(\'pending\')">'+recvI('未收','Not received','មិនទាន់ទទួល')+' ('+counts.pending+')</button><button class="nav-btn '+(_recvPoView==='partial'?'active':'')+'" onclick="setRecvPoView(\'partial\')">'+recvI('部分收貨','Partial','ទទួលខ្លះ')+' ('+counts.partial+')</button><button class="nav-btn '+(_recvPoView==='full'?'active':'')+'" onclick="setRecvPoView(\'full\')">'+recvI('已全收','Fully received','ទទួលគ្រប់')+' ('+counts.full+')</button><button class="nav-btn" onclick="selectRecvPoRows(\'pending\')">☑️ '+recvI('選未收','Select pending','ជ្រើសមិនទាន់ទទួល')+'</button><button class="nav-btn" onclick="selectRecvPoRows(\'all\')">☑️ '+recvI('選待收','Select outstanding','ជ្រើសនៅសល់')+'</button><button class="nav-btn" onclick="applyPoReceiveDefaults()">📅 '+recvI('套用日期／剩餘量','Apply date / remaining','អនុវត្តថ្ងៃ / នៅសល់')+'</button><button class="nav-btn success" onclick="receiveAllPoNow()">✅ '+recvI('全部全收並儲存','Receive all and save','ទទួលទាំងអស់ និងរក្សាទុក')+'</button><button class="nav-btn success" onclick="savePoReceiveBatch()">💾 '+recvI('儲存勾選','Save selected','រក្សាទុកដែលបានជ្រើស')+'</button><input type="date" id="po-batch-date" value="'+localYMD()+'"><input id="po-batch-inspector" class="qty-input" type="text" placeholder="'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'"><label class="nav-btn">📷 '+recvI('照片','Photos','រូបថត')+' <input id="po-photo-input" type="file" accept="image/*" multiple style="display:none" onchange="loadRecvPhotos(this)"></label><button class="nav-btn" onclick="sendRecvPhotos()">✈️ '+recvI('發送照片','Send photos','ផ្ញើរូបថត')+'</button></div><div id="recv-photo-preview" class="recv-photo-strip"><span>'+recvI('尚未選擇照片','No photos selected','មិនទាន់ជ្រើសរូបថត')+'</span></div><div class="recv-po-summary"><b>'+recvI('PO 明細 ','PO lines ','ជួរ PO ')+counts.all+'</b><b class="pending">'+recvI('未收','Pending','មិនទាន់ទទួល')+' '+counts.pending+'</b><b class="partial">'+recvI('部分','Partial','ខ្លះ')+' '+counts.partial+'</b><b class="full">'+recvI('全收','Full','គ្រប់')+' '+counts.full+'</b></div><div class="recv-po-table"><table><thead><tr><th>✓</th><th>'+recvI('PO／月份','PO / Period','PO / ខែ')+'</th><th>'+recvI('分類／品項','Category / Item','ប្រភេទ / ទំនិញ')+'</th><th>'+recvI('核可量','Approved','អនុម័ត')+'</th><th>'+recvI('已收','Received','បានទទួល')+'</th><th>'+recvI('本次收貨','This receipt','ទទួលលើកនេះ')+'</th><th>'+recvI('收後剩餘','Remaining after','នៅសល់ក្រោយ')+'</th><th>'+recvI('收貨日期','Date','ថ្ងៃ')+'</th><th>'+recvI('動作','Action','សកម្មភាព')+'</th></tr></thead><tbody>';
 if(!_recvPoFlat.length)html+='<tr><td colspan="9" class="recv-empty">'+recvI('此篩選沒有資料','No lines in this filter','គ្មានបន្ទាត់ក្នុងការជ្រើសនេះ')+'</td></tr>';_recvPoFlat.forEach(function(x,i){var p=x.po,it=x.item,st=x.status,rem=GA.num(it.remainingQty);html+='<tr><td><input type="checkbox" id="po-check-'+i+'" '+(st!=='full'?'checked':'')+'></td><td><b>'+recvEsc(p.poNumber||p.poId)+'</b><br><small>'+recvEsc(p.period||'')+'</small></td><td>'+recvEsc(it.category||p.category||'PO')+'<br><b>'+recvEsc(it.name)+'</b></td><td class="num">'+GA.num(it.approvedQty)+'</td><td class="num">'+GA.num(it.receivedQty)+'</td><td><input class="qty-input" type="number" min="0" max="'+rem+'" id="po-qty-'+i+'" value="'+rem+'" '+(st==='full'?'disabled':'')+'></td><td class="num">'+rem+'</td><td><input type="date" id="po-date-'+i+'" value="'+localYMD()+'" '+(st==='full'?'disabled':'')+'></td><td><span class="recv-po-status '+st+'">'+(st==='pending'?recvI('未收','Pending','មិនទាន់ទទួល'):st==='partial'?recvI('部分','Partial','ខ្លះ'):recvI('已全收','Full','គ្រប់'))+'</span> '+(st!=='full'?'<button class="nav-btn" type="button" onclick="receivePoFull('+i+')">✅ '+recvI('全收','Full','គ្រប់')+'</button>':'')+'</td></tr>';});html+='</tbody></table></div><div class="table-wrap"><div class="table-header"><b>🧾 '+recvI('目前期間收貨紀錄','Receipts in selected period','កំណត់ត្រាទទួលក្នុងរយៈពេល')+'</b></div><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('品項','Item','ទំនិញ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th></tr></thead><tbody>';var current=getRecordsForPeriod().filter(function(r){return r.type==='receive';});if(!current.length)html+='<tr><td colspan="5" class="recv-empty">—</td></tr>';current.forEach(function(r){html+='<tr><td>'+recvEsc(r.date)+'</td><td>'+recvEsc(r.itemName)+'</td><td class="num">'+GA.num(r.qty)+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td></tr>';});html+='</tbody></table></div>';el.innerHTML=html;if(_recvPoLoading)el.insertAdjacentHTML('afterbegin','<div class="recv-note">⏳ '+recvI('載入核可 PO…','Loading approved PO…','កំពុងផ្ទុក PO…')+'</div>');if(window.recvPoEnsureLoaded)recvPoEnsureLoaded();}
 
 var _recvRenderLedger=renderReceiveContent;
@@ -1624,19 +1663,50 @@ function recvFileData(f){return new Promise(function(resolve,reject){var rd=new 
 function recvFileHash(f){return [f.name||'',f.size||0,f.lastModified||0,f.type||''].join('|');}
 function recvSame(a,b){try{return JSON.stringify(a||{})===JSON.stringify(b||{});}catch(e){return false;}}
 function recvEvidenceReuse(old,hash){return (old||[]).find(function(x){return x&&x.hash===hash;})||null;}
+/* v3.9.25 photos: compress on the phone (max 1280px, JPEG 0.7) before upload; a record NEVER stores a dataURL.
+   A failed upload waits in IndexedDB ('ga_recv_pending_photos') with status "not uploaded" and is retried automatically. */
+var _recvPendingMem={},_recvPhotoPreview={},_recvPhotoRetrying=false;
+function recvPhotoIDB(){return new Promise(function(res,rej){try{if(!window.indexedDB)return rej(new Error('IndexedDB unavailable'));var q=indexedDB.open('ga_recv_pending_photos',1);q.onupgradeneeded=function(){q.result.createObjectStore('p');};q.onsuccess=function(){res(q.result);};q.onerror=function(){rej(q.error);};}catch(e){rej(e);}});}
+function recvPendingPut(id,v){_recvPendingMem[id]=v;return recvPhotoIDB().then(function(db){return new Promise(function(res,rej){var t=db.transaction('p','readwrite');t.objectStore('p').put(v,id);t.oncomplete=function(){db.close();res(true);};t.onerror=function(){db.close();rej(t.error);};});}).catch(function(){return false;});}
+function recvPendingGet(id){if(_recvPendingMem[id])return Promise.resolve(_recvPendingMem[id]);return recvPhotoIDB().then(function(db){return new Promise(function(res){var t=db.transaction('p','readonly'),g=t.objectStore('p').get(id);g.onsuccess=function(){db.close();res(g.result||null);};g.onerror=function(){db.close();res(null);};});}).catch(function(){return null;});}
+function recvPendingDel(id){delete _recvPendingMem[id];return recvPhotoIDB().then(function(db){return new Promise(function(res){var t=db.transaction('p','readwrite');t.objectStore('p').delete(id);t.oncomplete=function(){db.close();res(true);};t.onerror=function(){db.close();res(false);};});}).catch(function(){return false;});}
+function recvCompressImage(f,max,q){max=max||1280;q=q||0.7;return new Promise(function(resolve){var rd=new FileReader();rd.onerror=function(){resolve(null);};rd.onload=function(){var src=String(rd.result||''),type=String(f.type||''),keep={data:src,mime:type||'application/octet-stream',name:f.name||'photo'};if(!/^image\/(jpe?g|png|webp|heic|heif|bmp)$/i.test(type)){resolve(keep);return;}var done=false,im=new Image(),to=setTimeout(function(){if(!done){done=true;resolve(keep);}},4000);im.onload=function(){if(done)return;done=true;clearTimeout(to);try{var sc=Math.min(1,max/Math.max(im.naturalWidth||im.width||1,im.naturalHeight||im.height||1)),c=document.createElement('canvas');c.width=Math.max(1,Math.round((im.naturalWidth||im.width)*sc));c.height=Math.max(1,Math.round((im.naturalHeight||im.height)*sc));var ctx=c.getContext&&c.getContext('2d');if(!ctx)throw new Error('canvas unavailable');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);var out=c.toDataURL('image/jpeg',q);if(!/^data:image\/jpeg/.test(out)||(sc===1&&out.length>=src.length&&/jpe?g/i.test(type))){resolve(keep);return;}resolve({data:out,mime:'image/jpeg',name:String(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg'});}catch(e){resolve(keep);}};im.onerror=function(){if(done)return;done=true;clearTimeout(to);resolve(keep);};im.src=src;};rd.readAsDataURL(f);});}
 async function recvUploadItemEvidence(files,itemId,effectiveFrom,existing){
-  var out=(existing||[]).slice();
+  var out=(existing||[]).slice(),pending=0;
   for(var i=0;i<(files||[]).length;i++){
     var f=files[i],hash=recvFileHash(f),known=recvEvidenceReuse(out,hash);if(known)continue;
-    var data=await recvFileData(f),raw=data.replace(/^data:[^;]+;base64,/,'');
-    var e={fileName:f.name,mimeType:f.type||'application/octet-stream',effectiveFrom:effectiveFrom,hash:hash,createdAt:new Date().toISOString()};
-    try{var r=await GA.gasPost('recvItemAttachment',{itemId:itemId,effectiveFrom:effectiveFrom,fileName:f.name,mimeType:f.type||'application/octet-stream',data:raw,hash:hash});var d=r&&r.data||r;if(d&&d.url){e=Object.assign(e,d);}}
-    catch(err){if(data.length<=1800000){e.dataUrl=data;e.previewUrl=data;}else{toast(recvI('照片上傳失敗，檔案過大：'+f.name,'Photo upload failed; file too large: '+f.name,'បរាជ័យផ្ទុករូបថត ឯកសារធំពេក៖ '+f.name),'error');continue;}}
+    var c=await recvCompressImage(f);if(!c||!c.data){toast(recvI('無法讀取照片：'+f.name,'Cannot read photo: '+f.name,'មិនអាចអានរូបថត៖ '+f.name),'error');continue;}
+    var raw=c.data.replace(/^data:[^;]+;base64,/,'');
+    var e={fileName:c.name,mimeType:c.mime,effectiveFrom:effectiveFrom,hash:hash,createdAt:new Date().toISOString()};
+    try{var r=await GA.gasPost('recvItemAttachment',{itemId:itemId,effectiveFrom:effectiveFrom,fileName:c.name,mimeType:c.mime,data:raw,hash:hash});var d=r&&r.data||r;if(!(d&&d.url))throw new Error('no file URL');e=Object.assign(e,d);}
+    catch(err){e.pendingId='rp_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);e.uploadStatus='pending';_recvPhotoPreview[e.pendingId]=c.data;await recvPendingPut(e.pendingId,{data:c.data,fileName:c.name,mimeType:c.mime,itemId:itemId,effectiveFrom:effectiveFrom,hash:hash});pending++;}
     out.push(e);
   }
+  if(pending)toast(recvI('⚠️ '+pending+' 張照片尚未上傳（網路問題），已暫存本機並會自動重試','⚠️ '+pending+' photo(s) not uploaded (network); kept on this device and will retry automatically','⚠️ រូបថត '+pending+' មិនទាន់ផ្ទុក — រក្សាទុកក្នុងឧបករណ៍ ហើយនឹងសាកម្ដងទៀត'),'warning');
   return out;
 }
-function recvRenderPhoto(e){if(!e)return '';var u=e.previewUrl||e.url||e.dataUrl;if(!u)return '📎';return '<a href="'+recvEsc(e.url||u)+'" target="_blank" rel="noopener"><img src="'+recvEsc(u)+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)" alt="'+recvEsc(e.fileName||'')+'"></a>';}
+async function recvRetryPendingPhotos(){
+  if(_recvPhotoRetrying)return 0;_recvPhotoRetrying=true;var done=0,changed=false;
+  try{
+    var groups={},lists=[];
+    (items||[]).forEach(function(x){[x.evidence].concat((x.versions||[]).map(function(v){return v&&v.evidence;})).forEach(function(arr){(arr||[]).forEach(function(e){if(e&&!e.url&&(e.pendingId||e.dataUrl))lists.push({x:x,e:e});});});});
+    for(var i=0;i<lists.length;i++){var x=lists[i].x,e=lists[i].e;
+      if(e.dataUrl&&!e.pendingId){var pid='rp_'+String(x.id)+'_'+String(e.hash||e.fileName||i).replace(/[^\w.-]+/g,'_').slice(0,80);
+        if(!_recvPendingMem[pid]&&!(await recvPendingPut(pid,{data:e.dataUrl,fileName:e.fileName,mimeType:e.mimeType,itemId:x.id,effectiveFrom:e.effectiveFrom,hash:e.hash})))continue;/* keep legacy copy if IndexedDB is unavailable */
+        _recvPhotoPreview[pid]=e.dataUrl;if(e.previewUrl===e.dataUrl)delete e.previewUrl;delete e.dataUrl;e.pendingId=pid;e.uploadStatus='pending';changed=true;}
+      if(e.pendingId)(groups[e.pendingId]=groups[e.pendingId]||[]).push(e);}
+    var online=!(typeof navigator!=='undefined'&&navigator.onLine===false)&&GA.gasUrl&&GA.gasUrl();
+    for(var pid2 in groups){if(!online)break;var v=await recvPendingGet(pid2);if(!v||!v.data)continue;
+      try{var r=await GA.gasPost('recvItemAttachment',{itemId:v.itemId,effectiveFrom:v.effectiveFrom,fileName:v.fileName,mimeType:v.mimeType,data:String(v.data).replace(/^data:[^;]+;base64,/,''),hash:v.hash});var d=r&&r.data||r;if(!(d&&d.url))throw new Error('no file URL');
+        groups[pid2].forEach(function(e){Object.assign(e,d);delete e.pendingId;delete e.uploadStatus;delete e.dataUrl;});delete _recvPhotoPreview[pid2];await recvPendingDel(pid2);done++;changed=true;}
+      catch(err){break;}}
+    if(changed){try{saveLocal();}catch(_){}try{if(done)scheduleReceivingAutoUpload('photo-retry');}catch(_){}try{renderItemsTable();}catch(_){}}
+    if(done)toast(recvI('✅ 已補傳照片 '+done+' 張','✅ Uploaded '+done+' pending photo(s)','✅ បានផ្ទុករូបថត '+done),'success');
+  }finally{_recvPhotoRetrying=false;}
+  return done;
+}
+(function(){var t=0;function kick(ms){clearTimeout(t);t=setTimeout(function(){recvRetryPendingPhotos();},ms);}window.addEventListener('online',function(){kick(1500);});document.addEventListener('visibilitychange',function(){if(!document.hidden)kick(2500);});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){kick(4000);});else kick(4000);})();
+function recvRenderPhoto(e){if(!e)return '';if(e.pendingId&&!e.url){var pv=_recvPhotoPreview[e.pendingId];return '<span title="'+recvEsc(recvI('照片尚未上傳，會自動重試','Photo not uploaded — will retry','រូបថតមិនទាន់ផ្ទុក'))+'" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;color:#b45309">'+(pv?'<img src="'+recvEsc(pv)+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;opacity:.55;border:1px dashed #f59e0b" alt="">':'📷')+'⏳</span>';}var u=e.previewUrl||e.url||e.dataUrl;if(!u)return '📎';return '<a href="'+recvEsc(e.url||u)+'" target="_blank" rel="noopener"><img src="'+recvEsc(u)+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)" alt="'+recvEsc(e.fileName||'')+'"></a>';}
 function recvItemFormVersion(x){return recvItemVersionFor(x,document.getElementById('f-effective').value||recvCurrentMonth());}
 function showAddForm(){
   recvBindItemFiles();_recvItemPendingFiles=[];document.getElementById('edit-id').value='';document.getElementById('f-name').value='';document.getElementById('f-cat').value='Stationary';document.getElementById('f-brand').value='';document.getElementById('f-size').value='';document.getElementById('f-unit-price').value='0';document.getElementById('f-effective').value=recvCurrentMonth();document.getElementById('f-stock').value='0';document.getElementById('f-min').value='5';document.getElementById('f-remarks').value='';document.getElementById('f-photo').value='';document.getElementById('f-camera').value='';document.getElementById('f-version-history').innerHTML='';recvPhotoLabel();document.getElementById('form-title-text').textContent=recvI('新增物品','Add item','បន្ថែមទំនិញ');document.getElementById('item-form').classList.add('show');
@@ -1679,33 +1749,33 @@ function recvApplySync(rows,meta){
   if(ni.length||nr.length||Object.keys(deleted).length){items=ni;receivingDeletedRecords=deleted;records=nr.filter(function(r){return !deleted[String(r.id)]});recvMigrateCatalog();if(meta&&meta.settings)Object.assign(settings,meta.settings);if(window.recvRebuildAllStocks)recvRebuildAllStocks();saveLocal();filteredItems=[...items];if(document.getElementById('items-tbody'))renderAll();}
 }
 function recvSyncStatus(msg,type){try{GA.cloud.mount('#ga-cloud');GA.cloud.set(type||'sync',msg||'');}catch(e){}}
-function recvCloudPull(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧下載：比對雲端差異…','sync');return GASmartSync.pull({url:url,tool:RECV_SMART_TOOL,allowDeletes:true,localRecords:recvSyncRows(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,apply:recvApplySync,onStatus:recvSyncStatus}).then(function(r){recvSyncStatus(r&&r.noCloud?'雲端尚無 Receiving 資料':'下載完成｜本機與雲端資料已保留','down');if(!opts.silent)toast(r&&r.noCloud?recvI('雲端尚無資料','No cloud data','មិនមានទិន្នន័យ Cloud'):recvI('已同步雲端資料，舊資料保留','Cloud synced; existing data preserved','បានធ្វើសមកាលកម្ម Cloud; ទិន្នន័យចាស់នៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('下載失敗：'+e.message,'Download failed: '+e.message,'បរាជ័យទាញយក៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
-function recvCloudPush(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error('GAS URL 尚未設定 / GAS URL is not configured'));window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧同步：比對雲端差異…','sync');var makeCfg=function(){return{url:url,tool:RECV_SMART_TOOL,allowDeletes:true,records:recvSyncRows(),meta:recvSyncMeta(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,autoMerge:false,onStatus:recvSyncStatus,summary:{items:items.length,records:records.length}};};return GASmartSync.push(makeCfg()).then(function(r){if(r&&r.needsPull&&!opts.silent){return recvCloudPull({silent:false}).then(function(){return GASmartSync.push(makeCfg());});}if(r&&r.needsPull&&opts.silent){recvSyncStatus('雲端有新資料，自動合併後再上傳','sync');return recvCloudPull({silent:true}).then(function(){return GASmartSync.push(makeCfg());});}try{GA.saveCfg({sync_recv:new Date().toISOString()});}catch(e){}recvSyncStatus(r&&r.skipped?'雲端已是最新，不需重傳':'上傳完成｜只上傳變更並保留歷史','up');if(!opts.silent)toast(r&&r.skipped?recvI('雲端已是最新','Cloud is already up to date','Cloud មានទិន្នន័យថ្មីរួចហើយ'):recvI('已上傳變更並保留舊資料','Changes uploaded; history preserved','បានផ្ទុកការផ្លាស់ប្តូរ; ប្រវត្តិនៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('上傳失敗：'+e.message,'Upload failed: '+e.message,'បរាជ័យផ្ទុកឡើង៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
+function recvCloudPull(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error(recvI('GAS URL 尚未設定','GAS URL is not configured','មិនទាន់កំណត់ GAS URL')));window._recvSyncSilent=!!opts.silent;recvSyncStatus(recvI('智慧下載：比對雲端差異…','Smart download: comparing with cloud…','ទាញយកឆ្លាតវៃ៖ កំពុងប្រៀបធៀបជាមួយពពក…'),'sync');return GASmartSync.pull({url:url,tool:RECV_SMART_TOOL,allowDeletes:true,localRecords:recvSyncRows(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,apply:recvApplySync,onStatus:recvSyncStatus}).then(function(r){recvSyncStatus(r&&r.noCloud?recvI('雲端尚無 Receiving 資料','No Receiving data in the cloud yet','មិនទាន់មានទិន្នន័យ Receiving នៅលើពពក'):recvI('下載完成｜本機與雲端資料已保留','Download complete | local and cloud data kept','ទាញយករួចរាល់ | រក្សាទិន្នន័យក្នុងឧបករណ៍ និងពពក'),'down');if(!opts.silent)toast(r&&r.noCloud?recvI('雲端尚無資料','No cloud data','មិនមានទិន្នន័យ Cloud'):recvI('已同步雲端資料，舊資料保留','Cloud synced; existing data preserved','បានធ្វើសមកាលកម្ម Cloud; ទិន្នន័យចាស់នៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('下載失敗：'+e.message,'Download failed: '+e.message,'បរាជ័យទាញយក៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
+function recvCloudPush(opts){opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();if(!url)return Promise.reject(new Error(recvI('GAS URL 尚未設定','GAS URL is not configured','មិនទាន់កំណត់ GAS URL')));window._recvSyncSilent=!!opts.silent;recvSyncStatus(recvI('智慧同步：比對雲端差異…','Smart sync: comparing with cloud…','សមកាលកម្មឆ្លាតវៃ៖ កំពុងប្រៀបធៀបជាមួយពពក…'),'sync');var makeCfg=function(){return{url:url,tool:RECV_SMART_TOOL,allowDeletes:true,records:recvSyncRows(),meta:recvSyncMeta(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,autoMerge:false,onStatus:recvSyncStatus,summary:{items:items.length,records:records.length}};};return GASmartSync.push(makeCfg()).then(function(r){if(r&&r.needsPull&&!opts.silent){return recvCloudPull({silent:false}).then(function(){return GASmartSync.push(makeCfg());});}if(r&&r.needsPull&&opts.silent){recvSyncStatus(recvI('雲端有新資料，自動合併後再上傳','Cloud has newer data; merging automatically before upload','ពពកមានទិន្នន័យថ្មី កំពុងបញ្ចូលគ្នាមុនផ្ទុកឡើង'),'sync');return recvCloudPull({silent:true}).then(function(){return GASmartSync.push(makeCfg());});}try{GA.saveCfg({sync_recv:new Date().toISOString()});}catch(e){}recvSyncStatus(r&&r.skipped?recvI('雲端已是最新，不需重傳','Cloud is already up to date; nothing to upload','ពពកទាន់សម័យហើយ មិនចាំបាច់ផ្ទុកឡើងទេ'):recvI('上傳完成｜只上傳變更並保留歷史','Upload complete | only changes uploaded, history kept','ផ្ទុកឡើងរួចរាល់ | ផ្ទុកតែការផ្លាស់ប្ដូរ និងរក្សាប្រវត្តិ'),'up');if(!opts.silent)toast(r&&r.skipped?recvI('雲端已是最新','Cloud is already up to date','Cloud មានទិន្នន័យថ្មីរួចហើយ'):recvI('已上傳變更並保留舊資料','Changes uploaded; history preserved','បានផ្ទុកការផ្លាស់ប្តូរ; ប្រវត្តិនៅដដែល'),'success');return r;}).catch(function(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('上傳失敗：'+e.message,'Upload failed: '+e.message,'បរាជ័យផ្ទុកឡើង៖ '+e.message),'error');throw e;}).finally(function(){window._recvSyncSilent=false;});}
 /* v3.9.19: only a confirmed smart-sync result may turn the status green.
    If cloud changed first, pull and merge, then validate the second push too. */
 recvCloudPull=async function(opts){
   opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();
-  if(!url)throw new Error('GAS URL 尚未設定 / GAS URL is not configured');
-  window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧下載：比對雲端差異…','sync');
+  if(!url)throw new Error(recvI('GAS URL 尚未設定','GAS URL is not configured','មិនទាន់កំណត់ GAS URL'));
+  window._recvSyncSilent=!!opts.silent;recvSyncStatus(recvI('智慧下載：比對雲端差異…','Smart download: comparing with cloud…','ទាញយកឆ្លាតវៃ៖ កំពុងប្រៀបធៀបជាមួយពពក…'),'sync');
   try{
     var r=await GASmartSync.pull({url:url,tool:RECV_SMART_TOOL,allowDeletes:true,localRecords:recvSyncRows(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,apply:recvApplySync,onStatus:recvSyncStatus});
-    if(r&&r.noCloud){recvSyncStatus('雲端尚無 Receiving 資料','idle');if(!opts.silent)toast(recvI('雲端尚無資料','No cloud data','មិនមានទិន្នន័យ Cloud'),'warning');return r;}
+    if(r&&r.noCloud){recvSyncStatus(recvI('雲端尚無 Receiving 資料','No Receiving data in the cloud yet','មិនទាន់មានទិន្នន័យ Receiving នៅលើពពក'),'idle');if(!opts.silent)toast(recvI('雲端尚無資料','No cloud data','មិនមានទិន្នន័យ Cloud'),'warning');return r;}
     if(!r||r.ok!==true||r.cancelled)throw new Error('Receiving cloud download was not confirmed');
-    recvSyncStatus('下載完成｜本機與雲端資料已保留','down');if(!opts.silent)toast(recvI('已同步雲端資料，舊資料保留','Cloud synced; existing data preserved','បានធ្វើសមកាលកម្ម Cloud; ទិន្នន័យចាស់នៅដដែល'),'success');return r;
+    recvSyncStatus(recvI('下載完成｜本機與雲端資料已保留','Download complete | local and cloud data kept','ទាញយករួចរាល់ | រក្សាទិន្នន័យក្នុងឧបករណ៍ និងពពក'),'down');if(!opts.silent)toast(recvI('已同步雲端資料，舊資料保留','Cloud synced; existing data preserved','បានធ្វើសមកាលកម្ម Cloud; ទិន្នន័យចាស់នៅដដែល'),'success');return r;
   }catch(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('下載失敗：'+e.message,'Download failed: '+e.message,'បរាជ័យទាញយក៖ '+e.message),'error');throw e;}
   finally{window._recvSyncSilent=false;}
 };
 recvCloudPush=async function(opts){
   opts=opts||{};var url=GA.gasUrl&&GA.gasUrl();
-  if(!url)throw new Error('GAS URL 尚未設定 / GAS URL is not configured');
-  window._recvSyncSilent=!!opts.silent;recvSyncStatus('智慧同步：比對雲端差異…','sync');
+  if(!url)throw new Error(recvI('GAS URL 尚未設定','GAS URL is not configured','មិនទាន់កំណត់ GAS URL'));
+  window._recvSyncSilent=!!opts.silent;recvSyncStatus(recvI('智慧同步：比對雲端差異…','Smart sync: comparing with cloud…','សមកាលកម្មឆ្លាតវៃ៖ កំពុងប្រៀបធៀបជាមួយពពក…'),'sync');
   var makeCfg=function(){return{url:url,tool:RECV_SMART_TOOL,allowDeletes:true,records:recvSyncRows(),meta:recvSyncMeta(),legacyToRecords:recvLegacyToSync,mergeRecords:recvMergeRecords,autoMerge:false,onStatus:recvSyncStatus,summary:{items:items.length,records:records.length}};};
   try{
     var r=await GASmartSync.push(makeCfg());
-    if(r&&r.needsPull){recvSyncStatus('雲端有新資料，合併後再確認上傳','sync');var pulled=await recvCloudPull({silent:true});if(!pulled||pulled.ok!==true)throw new Error('Cloud merge was not confirmed');r=await GASmartSync.push(makeCfg());}
+    if(r&&r.needsPull){recvSyncStatus(recvI('雲端有新資料，合併後再確認上傳','Cloud has newer data; merge, then confirm the upload','ពពកមានទិន្នន័យថ្មី សូមបញ្ចូលគ្នា រួចបញ្ជាក់ការផ្ទុកឡើង'),'sync');var pulled=await recvCloudPull({silent:true});if(!pulled||pulled.ok!==true)throw new Error('Cloud merge was not confirmed');r=await GASmartSync.push(makeCfg());}
     if(!r||r.ok!==true||r.needsPull||r.cancelled)throw new Error('Receiving cloud upload was not confirmed');
     try{GA.saveCfg({sync_recv:new Date().toISOString()});}catch(e){}
-    recvSyncStatus(r.skipped?'雲端已是最新，不需重傳':'上傳完成｜只上傳變更並保留歷史','up');if(!opts.silent)toast(r.skipped?recvI('雲端已是最新','Cloud is already up to date','Cloud មានទិន្នន័យថ្មីរួចហើយ'):recvI('已上傳變更並保留舊資料','Changes uploaded; history preserved','បានផ្ទុកការផ្លាស់ប្តូរ; ប្រវត្តិនៅដដែល'),'success');return r;
+    recvSyncStatus(r.skipped?recvI('雲端已是最新，不需重傳','Cloud is already up to date; nothing to upload','ពពកទាន់សម័យហើយ មិនចាំបាច់ផ្ទុកឡើងទេ'):recvI('上傳完成｜只上傳變更並保留歷史','Upload complete | only changes uploaded, history kept','ផ្ទុកឡើងរួចរាល់ | ផ្ទុកតែការផ្លាស់ប្ដូរ និងរក្សាប្រវត្តិ'),'up');if(!opts.silent)toast(r.skipped?recvI('雲端已是最新','Cloud is already up to date','Cloud មានទិន្នន័យថ្មីរួចហើយ'):recvI('已上傳變更並保留舊資料','Changes uploaded; history preserved','បានផ្ទុកការផ្លាស់ប្តូរ; ប្រវត្តិនៅដដែល'),'success');return r;
   }catch(e){recvSyncStatus(e.message,'err');if(!opts.silent)toast(recvI('上傳失敗：'+e.message,'Upload failed: '+e.message,'បរាជ័យផ្ទុកឡើង៖ '+e.message),'error');throw e;}
   finally{window._recvSyncSilent=false;}
 };
@@ -1773,7 +1843,7 @@ function sendTelegram(){
   });
 }
 function recvLedgerSummary(itemId){var rs=recvLedgerRecords(itemId),months={},item=recvItemById(itemId),running=GA.num(item&&item.openingStock),allIn=0,allOut=0,inAmt=0,outAmt=0,dept={};rs.forEach(function(r){var k=String(r.date).slice(0,7),g=months[k]||(months[k]={month:k,opening:running,received:0,issued:0,receivedAmount:0,issuedAmount:0,closing:running,departments:{}}),q=GA.num(r.qty),c=recvRecordCost(r);if(r.type==='issue'){g.issued+=q;g.issuedAmount+=c.amount;outAmt+=c.amount;allOut+=q;var d=String(r.dept||'未填部門').trim()||'未填部門';g.departments[d]=(g.departments[d]||0)+q;dept[d]=(dept[d]||0)+q;}else{g.received+=q;g.receivedAmount+=c.amount;inAmt+=c.amount;allIn+=q;}running+=r.type==='issue'?-q:q;g.closing=running;});return{records:rs,months:Object.keys(months).sort().reverse().map(function(k){return months[k];}),allIn:allIn,allOut:allOut,inAmt:inAmt,outAmt:outAmt,calculated:running,departments:dept};}
-function recvLedgerHtml(item){if(!item)return '<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),ev=recvItemEvidenceFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=P.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=P.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+' / '+m.receivedAmount.toFixed(2)+'</td><td class="num out">-'+m.issued+' / '+m.issuedAmount.toFixed(2)+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join(''),details=s.records.slice().reverse().map(function(r){var c=recvRecordCost(r),out=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+(out?'📤 ':'📥 ')+(out?recvI('發出','Issue','ចេញ'):recvI('收貨','Receive','ទទួល'))+'</td><td class="num">'+GA.num(r.qty)+'</td><td class="num">'+c.unitPrice.toFixed(2)+'</td><td class="num">'+c.amount.toFixed(2)+'</td><td>'+recvEsc(out?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+(r.sourceSheet?'<div style="font-size:10px;color:var(--text3);margin-top:2px">📚 '+recvEsc(r.sourceSheet)+' · '+recvEsc(r.sourceKind||'Inventory')+'</div>':'')+'</td></tr>';}).join('');var invSrc=item.inventorySource?'<div style="font-size:10px;color:var(--text3);margin-top:3px">📚 '+recvI('來源對應','Mapped from','ប្រភព')+': '+recvEsc(item.inventorySource.file||'')+' → '+recvEsc(item.inventorySource.sheet||'')+'</div>':'';return '<div class="recv-ledger-head"><div>'+recvRenderPhoto(ev)+' <b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:11px;color:var(--text3)">'+recvI('目前版本生效','Current version','កំណែបច្ចុប្បន្ន')+' '+recvEsc(v.effectiveFrom)+' · '+recvI('單價','Unit price','តម្លៃឯកតា')+' '+GA.num(v.unitPrice).toFixed(2)+'</div>'+invSrc+'</div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('本期收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('本期發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史收貨金額','Received amount','ចំនួនទឹកប្រាក់ទទួល')+'</small><b>'+s.inAmt.toFixed(2)+'</b></div><div><small>'+recvI('歷史發出金額','Issued reference','តម្លៃចេញយោង')+'</small><b>'+s.outAmt.toFixed(2)+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><h4>📅 '+recvI('每月進出、單價與結存','Monthly movement, price and balance','ចលនា តម្លៃ និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th>'+recvI('期初','Opening','ដើម')+'</th><th>'+recvI('收貨 數量／金額','Received qty / amount','ទទួល បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('發出 數量／金額','Issued qty / amount','ចេញ បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('給到部門／數量','Departments / qty','ផ្នែក / បរិមាណ')+'</th><th>'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div><h4>🧾 '+recvI('完整物品收發流水帳','Complete item movement ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('單價','Unit price','តម្លៃឯកតា')+'</th><th>'+recvI('總價','Line total','សរុប')+'</th><th>'+recvI('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</th><th>'+recvI('領用人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(details||'<tr><td colspan="10">—</td></tr>')+'</tbody></table></div>'+recvVersionHistoryHtml(item);}
+function recvLedgerHtml(item){if(!item)return '<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),ev=recvItemEvidenceFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id);}),pin=P.filter(function(r){return r.type==='receive';}).reduce(function(a,r){return a+GA.num(r.qty);},0),pout=P.filter(function(r){return r.type==='issue';}).reduce(function(a,r){return a+GA.num(r.qty);},0),monthRows=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d];}).join(' · ')||'—';return '<tr><td><b>'+recvEsc(m.month)+'</b></td><td class="num">'+m.opening+'</td><td class="num in">+'+m.received+' / '+m.receivedAmount.toFixed(2)+'</td><td class="num out">-'+m.issued+' / '+m.issuedAmount.toFixed(2)+'</td><td>'+ds+'</td><td class="num"><b>'+m.closing+'</b></td></tr>';}).join(''),details=s.records.slice().reverse().map(function(r){var c=recvRecordCost(r),out=r.type==='issue';return '<tr><td>'+recvEsc(r.date)+'</td><td>'+(out?'📤 ':'📥 ')+(out?recvI('發出','Issue','ចេញ'):recvI('收貨','Receive','ទទួល'))+'</td><td class="num">'+GA.num(r.qty)+'</td><td class="num">'+c.unitPrice.toFixed(2)+'</td><td class="num">'+c.amount.toFixed(2)+'</td><td>'+recvEsc(out?(r.dept||'未填部門'):(r.poNumber||r.dept||'—'))+'</td><td>'+recvEsc(r.requester||'—')+'</td><td>'+recvEsc(r.inspector||'—')+'</td><td>'+recvEsc(r.poNumber||'—')+'</td><td>'+recvEsc(r.remarks||'—')+(r.sourceSheet?'<div style="font-size:10px;color:var(--text3);margin-top:2px">📚 '+recvEsc(r.sourceSheet)+' · '+recvEsc(r.sourceKind||'Inventory')+'</div>':'')+'</td></tr>';}).join('');var invSrc=item.inventorySource?'<div style="font-size:10px;color:var(--text3);margin-top:3px">📚 '+recvI('來源對應','Mapped from','ប្រភព')+': '+recvEsc(item.inventorySource.file||'')+' → '+recvEsc(item.inventorySource.sheet||'')+'</div>':'';return '<div class="recv-ledger-head"><div>'+recvRenderPhoto(ev)+' <b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(recvCatLabel(item.category||'Other'))+'</span><div style="font-size:11px;color:var(--text3)">'+recvI('目前版本生效','Current version','កំណែបច្ចុប្បន្ន')+' '+recvEsc(v.effectiveFrom)+' · '+recvI('單價','Unit price','តម្លៃឯកតា')+' '+GA.num(v.unitPrice).toFixed(2)+'</div>'+invSrc+'</div><div>'+recvI('目前結存','Current balance','សមតុល្យបច្ចុប្បន្ន')+'：<strong>'+GA.num(item.stock)+'</strong></div></div><div class="recv-ledger-kpis"><div><small>'+recvI('本期收貨','Receive in period','ទទួលក្នុងរយៈពេល')+'</small><b class="in">+'+pin+'</b></div><div><small>'+recvI('本期發出','Issue in period','ចេញក្នុងរយៈពេល')+'</small><b class="out">-'+pout+'</b></div><div><small>'+recvI('歷史收貨金額','Received amount','ចំនួនទឹកប្រាក់ទទួល')+'</small><b>'+s.inAmt.toFixed(2)+'</b></div><div><small>'+recvI('歷史發出金額','Issued reference','តម្លៃចេញយោង')+'</small><b>'+s.outAmt.toFixed(2)+'</b></div><div><small>'+recvI('帳本結存','Ledger balance','សមតុល្យក្នុងបញ្ជី')+'</small><b>'+s.calculated+'</b></div></div><h4>📅 '+recvI('每月進出、單價與結存','Monthly movement, price and balance','ចលនា តម្លៃ និងសមតុល្យប្រចាំខែ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('月份','Month','ខែ')+'</th><th>'+recvI('期初','Opening','ដើម')+'</th><th>'+recvI('收貨 數量／金額','Received qty / amount','ទទួល បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('發出 數量／金額','Issued qty / amount','ចេញ បរិមាណ / ទឹកប្រាក់')+'</th><th>'+recvI('給到部門／數量','Departments / qty','ផ្នែក / បរិមាណ')+'</th><th>'+recvI('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+(monthRows||'<tr><td colspan="6">—</td></tr>')+'</tbody></table></div><h4>🧾 '+recvI('完整物品收發流水帳','Complete item movement ledger','បញ្ជីចលនាទំនិញពេញលេញ')+'</h4><div class="table-wrap"><table><thead><tr><th>'+recvI('日期','Date','កាលបរិច្ឆេទ')+'</th><th>'+recvI('類型','Type','ប្រភេទ')+'</th><th>'+recvI('數量','Qty','បរិមាណ')+'</th><th>'+recvI('單價','Unit price','តម្លៃឯកតា')+'</th><th>'+recvI('總價','Line total','សរុប')+'</th><th>'+recvI('來源／部門','Source / Dept','ប្រភព / ផ្នែក')+'</th><th>'+recvI('領用人','Requester','អ្នកស្នើ')+'</th><th>'+recvI('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+'</th><th>PO</th><th>'+recvI('備註','Remarks','កំណត់ចំណាំ')+'</th></tr></thead><tbody>'+(details||'<tr><td colspan="10">—</td></tr>')+'</tbody></table></div>'+recvVersionHistoryHtml(item);}
 var _recvLoadLocalLatest=loadLocal;loadLocal=function(){_recvLoadLocalLatest();recvMigrateCatalog();};
 setTimeout(recvBindItemFiles,0);
 
@@ -1799,6 +1869,30 @@ if(window.GAAutoSync)GAAutoSync.install({key:'receiving',pull:recvCloudPull,push
 @media(max-width:720px){
   .tabs{display:grid!important;grid-template-columns:repeat(2,1fr)!important;overflow:visible!important;gap:5px!important}.tabs .tab{padding:8px 5px!important;text-align:center!important;font-size:12px!important}.recv-v3912-guide{grid-template-columns:1fr}.recv-v3912-guide button{display:flex;align-items:center;gap:8px}.recv-v3912-guide button b,.recv-v3912-guide button small{display:inline}.recv-edit-card .grid{grid-template-columns:1fr 1fr}.recv-edit-card .grid .itemfield{grid-column:1/-1}.recv-edit-card .adv{grid-template-columns:1fr}.recv-batch-table,.recv-po-table{display:none!important}.recv-desktop-ledger{display:none!important}.recv-mobile-ledger,.recv-mobile-balance{display:grid!important;gap:7px}.recv-month-card,.recv-balance-card{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:9px}.recv-month-card .top,.recv-balance-card .top{display:flex;justify-content:space-between;gap:8px;font-weight:800}.recv-month-card .nums,.recv-balance-card .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:7px}.recv-month-card .nums div,.recv-balance-card .nums div{background:#f8fafc;border-radius:7px;padding:6px;text-align:center}.recv-month-card small,.recv-balance-card small{display:block;color:#64748b;font-size:9px}.recv-month-card b,.recv-balance-card b{font-size:13px}.table-wrap{max-width:100%}.recv-ledger-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important}.recv-ledger-toolbar label{min-width:0}.recv-ledger-toolbar select{min-width:0!important;width:100%}.recv-ledger-kpis{grid-template-columns:repeat(2,1fr)!important}.recv-ledger-kpis>div:nth-child(n+5){display:none}.recv-po-toolbar{display:grid!important;grid-template-columns:1fr 1fr!important}.recv-po-toolbar input{min-width:0;width:100%}#items-table th:nth-child(7),#items-table td:nth-child(7),#items-table th:nth-child(8),#items-table td:nth-child(8){display:none}.view-toggle{display:none!important}}
 </style>
+<script id="recv-v3925-import-js">
+/* v3.9.25: shared Excel-movement import helpers.
+   - dates: workbook read with cellDates:false; serials → GA.excelDate (validated); invalid/blank dates are listed, never replaced by today
+   - dedupe includes receiver + remarks; rows in the same file never dedupe each other (each existing record is matched once)
+   - legacy: movements imported before v3.9.25 were stored one day early (SheetJS cellDates timezone bug); re-importing the same file corrects that record's date instead of adding a duplicate */
+(function(){
+  function nv(v){return String(v==null?'':v).trim().toLowerCase().replace(/\s+/g,' ')}
+  function fileBase(s){return String(s||'').toLowerCase().replace(/\.(xlsx|xlsm|xlsb|xls|csv)$/i,'').replace(/(?:\s*\(\d+\))+\s*$/,'').trim()}
+  function prevDay(d){var m=String(d||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return '';return localYMD(new Date(+m[1],+m[2]-1,+m[3]-1))}
+  function hasDateCol(rows){return !!(rows&&rows[0])&&Object.keys(rows[0]).some(function(k){var x=nv(k);return x==='date'||x.indexOf('date')===0||x.indexOf('日期')>=0})}
+  function date(raw,hasCol){if(!hasCol)return {date:localYMD()};if(raw===''||raw==null)return {date:'',bad:'(blank)'};var d=GA.excelDate(raw);return d?{date:d,num:typeof raw==='number'}:{date:'',bad:String(raw)}}
+  function same(r,c,extra){return r&&r.type===c.type&&String(r.itemId)===String(c.itemId)&&GA.num(r.qty)===GA.num(c.qty)&&nv(r.dept)===nv(c.dept)&&nv(r.requester)===nv(c.requester)&&nv(r.remarks)===nv(c.remarks)&&(!extra||extra(r,c))}
+  function session(){var used=new Set();return {
+    match:function(c,extra,allowLegacy){var list=records||[],i,r;
+      /* v3.9.26: only numeric Excel date cells were ever shifted a day; text dates were stored correctly */
+      if(allowLegacy)for(i=0;i<list.length;i++){r=list[i];if(!used.has(r)&&!r.excelDateV&&r.sourceKind==='movement_excel'&&fileBase(r.sourceFile)===fileBase(c.sourceFile)&&r.date===prevDay(c.date)&&same(r,c,extra)){used.add(r);return {kind:'legacy',rec:r}}}
+      for(i=0;i<list.length;i++){r=list[i];if(!used.has(r)&&r.date===c.date&&same(r,c,extra)){used.add(r);return {kind:'exact',rec:r}}}
+      return null},
+    fix:function(r,c){r.date=c.date;r.excelDateV=2;r.updatedAt=new Date().toISOString()},
+    claim:function(r){if(r)used.add(r)}}}
+  function badNote(bad){if(!bad.length)return '';var L=function(z,e,k){return lang==='zh'?z:lang==='km'?k:e};return ' · '+L('日期無效已略過 ','invalid dates skipped ','កាលបរិច្ឆេទមិនត្រឹមត្រូវ ')+bad.length+' ('+bad.slice(0,6).join(', ')+(bad.length>6?' …':'')+')'}
+  window.RecvImp25={date:date,hasDateCol:hasDateCol,session:session,badNote:badNote,prevDay:prevDay,fileBase:fileBase};
+})();
+</script>
 <script id="recv-v3912-js">
 (function(){
   function L(zh,en,km){return lang==='zh'?zh:lang==='km'?km:en}
@@ -1821,13 +1915,13 @@ if(window.GAAutoSync)GAAutoSync.install({key:'receiving',pull:recvCloudPull,push
   window.saveReceiveBatchLines=function(){var valid=(_recvBatchLines||[]).filter(function(r){return r.itemId&&n(r.qty)>0&&r.date});if(!valid.length){toast(L('請填品項、日期、數量','Enter item, date and quantity','បំពេញទំនិញ ថ្ងៃ និងបរិមាណ'),'error');return}for(var i=0;i<valid.length;i++){var c=Object.assign({},valid[i],{type:'receive'});if(!confirmReceive(c))return}recvSaveReceiptLines(valid.map(function(x){return Object.assign({},x,{periodGranularity:'day'})}),'batch-receive');_recvBatchLines=[];renderAll();toast(L('✅ 收貨已儲存並排程同步','✅ Receipts saved and sync queued','✅ បានរក្សាទុក និង Sync'),'success')}
   window.saveIssueBatchLines=function(){var valid=(_recvIssueLines||[]).filter(function(r){return r.itemId&&r.date&&n(r.qty)>0&&String(r.dept||'').trim()}),shadow={};if(!valid.length){toast(L('請填品項、日期、數量與部門','Fill item, date, quantity and department','បំពេញទំនិញ ថ្ងៃ បរិមាណ និងផ្នែក'),'error');return}for(var i=0;i<valid.length;i++){var it=recvItemById(valid[i].itemId),q=n(valid[i].qty),c=Object.assign({},valid[i],{type:'issue'});if(!it||q>n(it.stock)){toast(L('發放量不可超過目前結存','Issue qty cannot exceed stock','បរិមាណចេញមិនអាចលើសស្តុក'),'error');return}if(dupExact(c).length&&!confirm(L('⚠️ 相同日期／品項／部門／數量的發放已存在，仍要新增？','⚠️ Identical issue already exists. Add again?','⚠️ ការចេញដូចគ្នាមានរួចហើយ។ បន្ថែមទៀត?')))return;shadow[it.id]=(shadow[it.id]||0)+q;if(shadow[it.id]>n(it.stock)){toast(L('同批發放合計超過庫存','Batch issue exceeds stock','ការចេញសរុបលើសស្តុក'),'error');return}}valid.forEach(function(d){var it=recvItemById(d.itemId),r=recvAddRecord({date:d.date,type:'issue',itemId:it.id,itemName:it.name,qty:n(d.qty),dept:String(d.dept||'').trim(),requester:d.requester||'',inspector:d.inspector||'',remarks:d.remarks||'',periodGranularity:'day'});recvAdjustStock(it,'issue',r.qty)});saveLocal();scheduleReceivingAutoUpload('batch-issue');_recvIssueLines=[];renderAll();toast(L('✅ 發放已儲存並排程同步','✅ Issues saved and sync queued','✅ បានរក្សាទុក និង Sync'),'success')}
   var oldGet=getRecordsForPeriod;window.getRecordsForPeriod=function(){ensureOpening();var key=_pkey();return(records||[]).filter(function(r){if(!r.date||!GA.inPeriod(r.date,key,periodMode))return false;if((periodMode==='day'||periodMode==='week')&&r.periodGranularity==='month')return false;return true})}
-  var oldLedger=recvLedgerHtml;window.recvLedgerHtml=function(item){ensureOpening();if(!item)return'<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id)}),pin=P.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),pout=P.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0),cards=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d]}).join(' · ')||'—';return'<div class="recv-month-card"><div class="top"><span>📅 '+recvEsc(m.month)+'</span><span>'+L('期末','Closing','ចុង')+' '+m.closing+'</span></div><div class="nums"><div><small>'+L('期初','Opening','ដើម')+'</small><b>'+m.opening+'</b></div><div><small>'+L('收貨','Received','ទទួល')+'</small><b class="in">+'+m.received+'</b></div><div><small>'+L('發放','Issued','ចេញ')+'</small><b class="out">-'+m.issued+'</b></div></div><div style="font-size:10px;color:#64748b;margin-top:6px">🏢 '+ds+'</div></div>'}).join('');var desktop=oldLedger(item);return '<div class="recv-ledger-head"><div><b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(item.category||'Other')+'</span><div style="font-size:10px;color:#64748b">'+L('目前結存','Current balance','សមតុល្យ')+' <b>'+n(item.stock)+'</b> · '+L('本期收','In','ទទួល')+' +'+pin+' · '+L('本期發','Out','ចេញ')+' -'+pout+'</div></div></div><div class="recv-mobile-ledger">'+(cards||'<div class="recv-empty">—</div>')+'</div><div class="recv-desktop-ledger">'+desktop+'</div>'}
+  var oldLedger=recvLedgerHtml;window.recvLedgerHtml=function(item){ensureOpening();if(!item)return'<div class="recv-empty">—</div>';var s=recvLedgerSummary(item.id),v=recvItemVersionFor(item,recvCurrentMonth()),P=getRecordsForPeriod().filter(function(r){return String(r.itemId)===String(item.id)}),pin=P.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),pout=P.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0),cards=s.months.map(function(m){var ds=Object.keys(m.departments).map(function(d){return recvEsc(d)+' '+m.departments[d]}).join(' · ')||'—';return'<div class="recv-month-card"><div class="top"><span>📅 '+recvEsc(m.month)+'</span><span>'+L('期末','Closing','ចុង')+' '+m.closing+'</span></div><div class="nums"><div><small>'+L('期初','Opening','ដើម')+'</small><b>'+m.opening+'</b></div><div><small>'+L('收貨','Received','ទទួល')+'</small><b class="in">+'+m.received+'</b></div><div><small>'+L('發放','Issued','ចេញ')+'</small><b class="out">-'+m.issued+'</b></div></div><div style="font-size:10px;color:#64748b;margin-top:6px">🏢 '+ds+'</div></div>'}).join('');var desktop=oldLedger(item);return '<div class="recv-ledger-head"><div><b>📦 '+recvEsc(item.name)+'</b><span class="recv-ledger-cat">'+recvEsc(recvCatLabel(item.category||'Other'))+'</span><div style="font-size:10px;color:#64748b">'+L('目前結存','Current balance','សមតុល្យ')+' <b>'+n(item.stock)+'</b> · '+L('本期收','In','ទទួល')+' +'+pin+' · '+L('本期發','Out','ចេញ')+' -'+pout+'</div></div></div><div class="recv-mobile-ledger">'+(cards||'<div class="recv-empty">—</div>')+'</div><div class="recv-desktop-ledger">'+desktop+'</div>'}
   function balanceHtml(){ensureOpening();var P=getRecordsForPeriod(),rows=items.map(function(it){var rr=(records||[]).filter(function(r){return String(r.itemId)===String(it.id)}),before=rr.filter(function(r){return r.date&&String(r.date)<String((periodMode==='month'?_pkey()+'-01':periodMode==='year'?_pkey()+'-01-01':GA.weekRange(_pkey())?GA.weekRange(_pkey()).start:_pkey()))}),br=before.filter(function(r){return r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),bo=before.filter(function(r){return r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0),op=n(it.openingStock)+br-bo,inc=P.filter(function(r){return String(r.itemId)===String(it.id)&&r.type==='receive'}).reduce(function(a,r){return a+n(r.qty)},0),out=P.filter(function(r){return String(r.itemId)===String(it.id)&&r.type==='issue'}).reduce(function(a,r){return a+n(r.qty)},0);return{it:it,open:op,inc:inc,out:out,close:op+inc-out}}).filter(function(x){return x.open||x.inc||x.out||x.close});return guideHtml('balance')+ruleHtml()+qualityHtml()+'<div class="recv-mobile-balance">'+rows.map(function(x){return'<div class="recv-balance-card"><div class="top"><span>'+recvEsc(x.it.name)+'</span><span>'+recvEsc(x.it.category||'')+'</span></div><div class="nums"><div><small>'+L('期初','Opening','ដើម')+'</small><b>'+x.open+'</b></div><div><small>'+L('收貨／發放','In / Out','ទទួល / ចេញ')+'</small><b><span class="in">+'+x.inc+'</span> / <span class="out">-'+x.out+'</span></b></div><div><small>'+L('期末','Closing','ចុង')+'</small><b>'+x.close+'</b></div></div></div>'}).join('')+'</div><div class="recv-desktop-ledger"><div class="table-wrap"><table><thead><tr><th>'+L('品項','Item','ទំនិញ')+'</th><th>'+L('分類','Category','ប្រភេទ')+'</th><th>'+L('期初','Opening','ដើម')+'</th><th>+ '+L('收貨','Received','ទទួល')+'</th><th>- '+L('發放','Issued','ចេញ')+'</th><th>= '+L('期末','Closing','ចុង')+'</th></tr></thead><tbody>'+rows.map(function(x){return'<tr><td><b>'+recvEsc(x.it.name)+'</b></td><td>'+recvEsc(x.it.category||'')+'</td><td>'+x.open+'</td><td class="in">+'+x.inc+'</td><td class="out">-'+x.out+'</td><td><b>'+x.close+'</b></td></tr>'}).join('')+'</tbody></table></div></div>'}
   var oldDispatch=renderReceiveContent;window.renderReceiveContent=function(){if(receiveTab==='receive')return renderReceiveBatchTab();if(receiveTab==='issue')return renderIssueBatchTab();if(receiveTab==='balance'){document.getElementById('receive-content').innerHTML=balanceHtml();return}if(receiveTab==='po')return renderPoReceiveTab();return oldDispatch()}
   var oldSaveItem=saveItem;window.saveItem=async function(){var id=document.getElementById('edit-id').value,name=norm(document.getElementById('f-name').value),size=norm(document.getElementById('f-size').value);if(!id){var ex=(items||[]).find(function(x){var v=recvItemVersionFor(x,recvCurrentMonth());return norm(x.name)===name&&norm(v.size||x.size)===size});if(ex){toast(L('⚠️ 同品名／規格已存在，已開啟原品項，避免重複。','⚠️ Same item/spec already exists. Opening existing item.','⚠️ ទំនិញ/លក្ខណៈដូចគ្នាមានរួចហើយ។'),'error');editItem(ex.id);return}}if(id){var it=recvItemById(id);if(it)document.getElementById('f-stock').value=n(it.stock)}else document.getElementById('f-stock').value=0;return oldSaveItem()}
   function simplifyItemForm(){var fs=document.getElementById('f-stock');if(fs){var g=fs.closest('.form-group');if(g)g.style.display='none'}var page=document.getElementById('page-items');if(page&&!page.querySelector('.recv-item-master-note')){var nte=document.createElement('div');nte.className='recv-item-master-note';nte.innerHTML='📌 '+L('物品主檔只管理：品名、分類、品牌／規格、單價版本、最低庫存、照片。數量不要在這裡改；數量只從「收貨」增加、從「發放」扣除。','Item master only manages name, category, spec, price version, minimum stock and photos. Do not edit quantities here; quantities increase through Receive and decrease through Issue.','បញ្ជីទំនិញគ្រប់គ្រងតែឈ្មោះ ប្រភេទ លក្ខណៈ តម្លៃ ស្តុកអប្បបរមា និងរូបថត។ បរិមាណកែតាម Receive/Issue ប៉ុណ្ណោះ។');var st=page.querySelector('.section-title');if(st)st.insertAdjacentElement('afterend',nte)}}
   window.recvDownloadMovementTemplate=function(){var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([['Date','Type','Item','Qty','Department','Receiver','Inspector','Remarks'],[localYMD(),'Receive','A4 Paper',10,'GA/Admin','','Phea','New delivery'],[localYMD(),'Issue','A4 Paper',2,'HR','Srey Oun','Phea','']]);XLSX.utils.book_append_sheet(wb,ws,'Movement');XLSX.writeFile(wb,'AC_GA_EXP_Receiving_Movement_Template.xlsx')}
-  var oldImport=importExcel;window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){oldImport(input);return}var h=Object.keys(rows[0]).map(norm),hasItem=h.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0}),hasQty=h.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0});if(!hasItem||!hasQty){oldImport(input);return}var newItems=0,added=0,skipped=0;rows.forEach(function(x){function get(keys){for(var k in x){var nk=norm(k);if(keys.some(function(q){return nk===q||nk.indexOf(q)>=0}))return x[k]}return''}var name=String(get(['item','name','品項','物品'])||'').trim(),qty=n(get(['qty','quantity','數量'])),date=GA.excelDate(get(['date','日期']))||localYMD(),typ=norm(get(['type','類型'])),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',dept=String(get(['department','dept','部門'])||'').trim(),requester=String(get(['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(['inspector','檢查人'])||'').trim(),remarks=String(get(['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}var it=(items||[]).find(function(i){return norm(i.name)===norm(name)});if(!it){it=recvEnsureItem(name,String(get(['category','分類'])||'Other'));newItems++}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel'};if(type==='issue'&&!dept){skipped++;return}if(dupExact(c).length){skipped++;return}if(type==='receive'&&sameMonthReceipts(c).length&&!confirmReceive(c)){skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var r=recvAddRecord(c);recvAdjustStock(it,type,qty);added++});saveLocal();filteredItems=[].concat(items);scheduleReceivingAutoUpload('movement-excel');renderAll();toast(L('✅ Excel 已更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(newItems?' · '+L('新品項 ','new items ','ទំនិញថ្មី ')+newItems:''),'success');input.value=''}).catch(function(){oldImport(input)})}
+  var oldImport=importExcel;window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:false,raw:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){oldImport(input);return}var h=Object.keys(rows[0]).map(norm),hasItem=h.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0}),hasQty=h.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0});if(!hasItem||!hasQty){oldImport(input);return}var newItems=0,added=0,skipped=0,fixed=0,bad=[],hasDate=RecvImp25.hasDateCol(rows),S=RecvImp25.session();rows.forEach(function(x,ri){function get(keys){for(var k in x){var nk=norm(k);if(keys.some(function(q){return nk===q||nk.indexOf(q)>=0}))return x[k]}return''}var name=String(get(['item','name','品項','物品'])||'').trim(),qty=n(get(['qty','quantity','數量'])),dq=RecvImp25.date(get(['date','日期']),hasDate),date=dq.date,typ=norm(get(['type','類型'])),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',dept=String(get(['department','dept','部門'])||'').trim(),requester=String(get(['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(['inspector','檢查人'])||'').trim(),remarks=String(get(['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}if(!date){skipped++;bad.push('#'+(ri+2)+' '+dq.bad);return}var it=(items||[]).find(function(i){return norm(i.name)===norm(name)});if(!it){it=recvEnsureItem(name,String(get(['category','分類'])||'Other'));newItems++}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel',excelDateV:2};if(type==='issue'&&!dept){skipped++;return}var mm=S.match(c,null,dq.num);if(mm){if(mm.kind==='legacy'){S.fix(mm.rec,c);fixed++}else skipped++;return}if(type==='receive'&&sameMonthReceipts(c).length&&!confirmReceive(c)){skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var r=recvAddRecord(c);S.claim(r);recvAdjustStock(it,type,qty);added++});saveLocal();filteredItems=[].concat(items);scheduleReceivingAutoUpload('movement-excel');renderAll();toast(L('✅ Excel 已更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(fixed?' · '+L('日期已修正 ','dates corrected ','បានកែកាលបរិច្ឆេទ ')+fixed:'')+(newItems?' · '+L('新品項 ','new items ','ទំនិញថ្មី ')+newItems:'')+RecvImp25.badNote(bad),bad.length?'warning':'success');input.value=''}).catch(function(){oldImport(input)})}
   var oldSend=sendTelegram;window.sendTelegram=function(){try{GA.setLang(lang)}catch(e){}GA.telegram.open({module:'receiving',canApprove:false,scopes:[{v:'both',zh:'收發全部',en:'Receive + Issue',km:'ទាំងអស់'},{v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},{v:'issue',zh:'發放',en:'Issue',km:'ចេញ'}],periods:function(type){return Array.from(new Set((records||[]).map(function(r){return GA.periodKey(r.date,type)})))},summary:function(st){var P=(records||[]).filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype)&&(st.scope==='both'||r.type===st.scope)}),rows=[{zh:'總筆數',en:'Records',km:'កំណត់ត្រា',v:P.length}];P.slice(0,18).forEach(function(r,i){var c=recvRecordCost(r),it=recvItemById(r.itemId),typ=r.type==='receive'?'📥':'📤';rows.push('-');rows.push({zh:typ+' #'+(i+1)+' '+r.itemName,en:typ+' #'+(i+1)+' '+r.itemName,km:typ+' #'+(i+1)+' '+r.itemName,v:r.date});rows.push({zh:'數量／單價／總額',en:'Qty / Unit / Total',km:'បរិមាណ / តម្លៃ / សរុប',v:n(r.qty)+' / '+c.unitPrice.toFixed(2)+' / '+c.amount.toFixed(2)});rows.push({zh:r.type==='issue'?'部門／領用人':'來源／PO',en:r.type==='issue'?'Dept / Receiver':'Source / PO',km:'ផ្នែក / អ្នកទទួល',v:r.type==='issue'?((r.dept||'—')+' / '+(r.requester||'—')):((r.dept||'—')+' / '+(r.poNumber||'—'))});rows.push({zh:'檢查人／備註',en:'Inspector / Note',km:'អ្នកត្រួតពិនិត្យ / កំណត់ចំណាំ',v:(r.inspector||'—')+' / '+(r.remarks||'—')})});if(P.length>18)rows.push({zh:'其餘未列',en:'More not shown',km:'មិនបង្ហាញបន្ថែម',v:P.length-18});var q=quality();rows.push('-');rows.push({zh:'資料檢查',en:'Data check',km:'ពិនិត្យទិន្នន័យ',v:(q.dups||q.missingDept||q.mismatch)?('dup '+q.dups+' / dept '+q.missingDept+' / balance '+q.mismatch):'OK'});return GA.telegram.buildSummary({icon:'📦',titleZh:'收發摘要',titleEn:'Receiving / Issue Summary',titleKm:'សង្ខេបទទួល / ចេញ',lang:st.lang,period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),rows:rows})}})}
   function init(){ensureOpening();simplifyItemForm();if(window.innerWidth<=720&&typeof setView==='function')try{setView('card')}catch(e){};if(document.getElementById('page-receive')&&document.getElementById('page-receive').classList.contains('active'))renderReceiveContent()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,180)});else setTimeout(init,180);
@@ -1857,10 +1951,10 @@ window.RecvUI={guide:guideHtml,rule:ruleHtml,qualityHtml:qualityHtml,actions:act
   function migrateMeta(){var changed=false;(items||[]).forEach(function(it){var before=JSON.stringify([it.purchaseMode,it.purchaseSources,it.unit,it.archived]);var ss=itemSources(it);it.purchaseSources=ss;it.purchaseMode=deriveMode(it);if(it.unit==null)it.unit='';if(it.archived==null)it.archived=false;if(JSON.stringify([it.purchaseMode,it.purchaseSources,it.unit,it.archived])!==before)changed=true});if(changed){try{saveLocal()}catch(e){}}return changed}
   function tagHtml(it){var m=deriveMode(it),ss=itemSources(it),h='<div class="recv-master-tags">';h+='<span class="recv-src-tag '+(m==='monthly'?'monthly':m==='adhoc'?'adhoc':m==='both'?'both':'')+'">'+modeLabel(m)+'</span>';ss.forEach(function(s){h+='<span class="recv-src-tag">'+sourceLabel(s)+'</span>'});if(it.archived)h+='<span class="recv-src-tag archived">'+L('停用','Archived','បិទ')+'</span>';return h+'</div>'}
   function decorateMaster(){migrateMeta();var page=(filteredItems||[]).slice((currentPage-1)*pageSize,(currentPage-1)*pageSize+pageSize);if(currentView==='card'){var cards=document.querySelectorAll('#items-view-container>div>div');cards.forEach(function(card,i){var it=page[i];if(!it||card.querySelector('.recv-master-tags'))return;var name=card.querySelector('div[style*="font-weight:700"]');if(name)name.insertAdjacentHTML('afterend',tagHtml(it))})}else page.forEach(function(it){var tr=document.getElementById('row-'+it.id);if(!tr)return;var td=tr.children[1];if(td&&!td.querySelector('.recv-master-tags'))td.insertAdjacentHTML('beforeend',tagHtml(it))})}
-  function injectMasterFilter(){var h=document.querySelector('#page-items .table-header');if(!h||document.getElementById('filter-master-type'))return;var s=document.createElement('select');s.className='filter-sel';s.id='filter-master-type';s.innerHTML='<option value="">'+L('全部來源','All sourcing','ប្រភពទាំងអស់')+'</option><option value="monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc">'+L('臨時／追加','Ad-hoc','បន្ថែម')+'</option><option value="both">'+L('月購＋追加','Monthly + extra','ខែ + បន្ថែម')+'</option><option value="archived">'+L('已停用','Archived','បិទ')+'</option>';s.onchange=function(){filterItems()};h.appendChild(s)}
+  function injectMasterFilter(){var h=document.querySelector('#page-items .table-header');if(!h||document.getElementById('filter-master-type'))return;var s=document.createElement('select');s.className='filter-sel';s.id='filter-master-type';s.innerHTML='<option value="" data-i="mf_all">'+L('全部來源','All sourcing','ប្រភពទាំងអស់')+'</option><option value="monthly" data-i="mf_monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc" data-i="mf_adhoc">'+L('臨時／追加','Ad-hoc','បន្ថែម')+'</option><option value="both" data-i="mf_both">'+L('月購＋追加','Monthly + extra','ខែ + បន្ថែម')+'</option><option value="archived" data-i="mf_archived">'+L('已停用','Archived','បិទ')+'</option>';s.onchange=function(){filterItems()};h.appendChild(s)}
   var prevRender=window.renderItemsTable;window.renderItemsTable=function(){migrateMeta();if(prevRender)prevRender();decorateMaster()}
   var prevFilter=window.filterItems;window.filterItems=function(){migrateMeta();var q=(document.getElementById('search-items')||{}).value||'',cat=(document.getElementById('filter-cat')||{}).value||'',stock=(document.getElementById('filter-stock')||{}).value||'',mt=(document.getElementById('filter-master-type')||{}).value||'',th=settings.lowThreshold||5;q=q.toLowerCase();filteredItems=(items||[]).filter(function(x){var mode=deriveMode(x);if(mt==='archived'){if(!x.archived)return false}else if(x.archived)return false;if(mt&&mt!=='archived'&&mode!==mt)return false;if(q&&!String(x.name||'').toLowerCase().includes(q)&&!String(x.brand||'').toLowerCase().includes(q)&&!String(x.size||'').toLowerCase().includes(q))return false;if(cat&&x.category!==cat)return false;if(stock==='low'&&n(x.stock)>=th)return false;if(stock==='ok'&&n(x.stock)<th)return false;return true});sortItems();currentPage=1;renderItemsTable()}
-  function injectItemForm(){var grid=document.querySelector('#item-form .form-grid');if(!grid||document.getElementById('f-purchase-mode'))return;var brand=document.getElementById('f-brand'),group=brand&&brand.closest('.form-group');var g1=document.createElement('div');g1.className='form-group';g1.innerHTML='<label class="form-label">'+L('採購屬性','Purchase type','ប្រភេទទិញ')+'</label><select class="form-input" id="f-purchase-mode"><option value="unknown">'+L('待確認','Unclassified','មិនទាន់កំណត់')+'</option><option value="monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc">'+L('臨時／追加','Ad-hoc / extra','បន្ថែម')+'</option><option value="both">'+L('月購＋可追加','Monthly + extra','ខែ + បន្ថែម')+'</option></select><div class="recv-source-help">'+L('Item Master 只標記物品屬性；每月計畫數量仍留在 Monthly Purchase。','Item Master stores the item identity only; monthly planned quantity stays in Monthly Purchase.','Item Master រក្សាអត្តសញ្ញាណទំនិញ; បរិមាណផែនការប្រចាំខែនៅ Monthly Purchase។')+'</div>';var g2=document.createElement('div');g2.className='form-group';g2.innerHTML='<label class="form-label">'+L('計量單位','Unit','ឯកតា')+'</label><input class="form-input" id="f-unit" placeholder="pcs / box / roll / ream">';if(group){group.insertAdjacentElement('beforebegin',g1);group.insertAdjacentElement('beforebegin',g2)}else{grid.appendChild(g1);grid.appendChild(g2)}}
+  function injectItemForm(){var grid=document.querySelector('#item-form .form-grid');if(!grid||document.getElementById('f-purchase-mode'))return;var brand=document.getElementById('f-brand'),group=brand&&brand.closest('.form-group');var g1=document.createElement('div');g1.className='form-group';g1.innerHTML='<label class="form-label" data-i="pm_label">'+L('採購屬性','Purchase type','ប្រភេទទិញ')+'</label><select class="form-input" id="f-purchase-mode"><option value="unknown" data-i="pm_unknown">'+L('待確認','Unclassified','មិនទាន់កំណត់')+'</option><option value="monthly" data-i="mf_monthly">'+L('固定月購','Monthly','ប្រចាំខែ')+'</option><option value="adhoc" data-i="pm_adhoc">'+L('臨時／追加','Ad-hoc / extra','បន្ថែម')+'</option><option value="both" data-i="pm_both">'+L('月購＋可追加','Monthly + extra','ខែ + បន្ថែម')+'</option></select><div class="recv-source-help" data-i="pm_help">'+L('Item Master 只標記物品屬性；每月計畫數量仍留在 Monthly Purchase。','Item Master stores the item identity only; monthly planned quantity stays in Monthly Purchase.','Item Master រក្សាអត្តសញ្ញាណទំនិញ; បរិមាណផែនការប្រចាំខែនៅ Monthly Purchase។')+'</div>';var g2=document.createElement('div');g2.className='form-group';g2.innerHTML='<label class="form-label" data-i="unit_label">'+L('計量單位','Unit','ឯកតា')+'</label><input class="form-input" id="f-unit" data-i-ph="ph_unit" placeholder="'+L('pcs / 盒 / 捲 / 令','pcs / box / roll / ream','pcs / ប្រអប់ / ដុំ / រាម')+'">';if(group){group.insertAdjacentElement('beforebegin',g1);group.insertAdjacentElement('beforebegin',g2)}else{grid.appendChild(g1);grid.appendChild(g2)}}
   var prevAdd=window.showAddForm;window.showAddForm=function(){if(prevAdd)prevAdd();injectItemForm();var pm=document.getElementById('f-purchase-mode'),u=document.getElementById('f-unit');if(pm)pm.value=window._recvNewItemMode||'unknown';if(u)u.value='';window._recvNewItemMode=''}
   var prevEdit=window.editItem;window.editItem=function(id){if(prevEdit)prevEdit(id);injectItemForm();var it=(items||[]).find(function(x){return String(x.id)===String(id)}),pm=document.getElementById('f-purchase-mode'),u=document.getElementById('f-unit');if(it&&pm)pm.value=deriveMode(it);if(it&&u)u.value=it.unit||''}
   function exactDup(name,size,brand,unit,exclude){return(items||[]).find(function(x){if(String(x.id)===String(exclude))return false;var v=recvItemVersionFor(x,recvCurrentMonth());return norm(x.name)===norm(name)&&norm((v&&v.size)||x.size)===norm(size)&&norm((v&&v.brand)||x.brand)===norm(brand)&&norm(x.unit)===norm(unit)})}
@@ -1882,8 +1976,9 @@ window.RecvUI={guide:guideHtml,rule:ruleHtml,qualityHtml:qualityHtml,actions:act
   window.savePoReceiveBatch=function(){var dateDefault=(document.getElementById('po-batch-date')||{}).value||localYMD(),inspector=(document.getElementById('po-batch-inspector')||{}).value||'',selected=[];_recvPoFlat.forEach(function(x,i){var c=document.getElementById('po-check-'+i),d=(document.getElementById('po-date-'+i)||{}).value||dateDefault,q=n((document.getElementById('po-qty-'+i)||{}).value);if(c&&c.checked&&q>0)selected.push({x:x,date:d,qty:q})});if(!selected.length){toast(L('請勾選要收貨的項目','Select at least one PO line','សូមជ្រើស PO'),'error');return}var bad=selected.find(function(s){return s.qty>n(s.x.item.remainingQty)});if(bad){toast(L('數量不可超過剩餘量','Quantity exceeds remaining PO quantity','បរិមាណលើសចំនួននៅសល់'),'error');return}var valid=[];for(var i=0;i<selected.length;i++){var s=selected[i],x=s.x,spec=x.item.size||x.item.spec||'',brand=x.item.brand||'',unit=x.item.unit||'',it=resolveMaster(x.item.name,spec,brand,unit,true,'monthly_po');if(!it){toast(L('⚠️ '+x.item.name+' 對到多個 Item Master，請先確認規格／合併重複品項。','⚠️ '+x.item.name+' matches multiple master items. Resolve the spec/duplicates first.','⚠️ '+x.item.name+' ត្រូវនឹងទំនិញច្រើន។'),'error');return}var c={date:s.date,type:'receive',itemId:it.id,itemName:it.name,qty:s.qty,dept:settings.dept||'GA/Admin',requester:'',inspector:inspector,remarks:'Monthly PO '+(x.po.poNumber||''),purchaseSource:'monthly_po',sourceRef:x.po.poNumber||x.po.poId||'',poId:x.po.poId,poNumber:x.po.poNumber,poPeriod:x.po.period,poItemIndex:x.index,poSourceItemId:window.recvPoSourceItemId?recvPoSourceItemId(x):(x.item.itemId||x.item.id||''),unit:unit,periodGranularity:'day'};var exact=(records||[]).some(function(r){return r.type==='receive'&&String(r.itemId)===String(c.itemId)&&r.date===c.date&&n(r.qty)===n(c.qty)&&sourceFromRecord(r)==='monthly_po'&&String(r.poNumber||'')===String(c.poNumber||'')&&Number(r.poItemIndex)===Number(c.poItemIndex)});if(exact){toast(L('⚠️ 相同 Monthly PO 收貨已存在：','⚠️ Identical Monthly PO receipt exists: ','⚠️ មានការទទួលដូចគ្នា៖ ')+it.name,'error');return}valid.push(c)}valid.forEach(function(c){var it=recvItemById(c.itemId),r=recvAddRecord(c);recvAdjustStock(it,'receive',r.qty);markItemSource(it,'monthly_po')});selected.forEach(function(s){s.x.item.receivedQty=n(s.x.item.receivedQty)+s.qty;s.x.item.remainingQty=Math.max(0,n(s.x.item.approvedQty)-s.x.item.receivedQty)});migrateMeta();saveLocal();scheduleReceivingAutoUpload('monthly-po-receive-v3913');renderPoReceiveTab();try{renderItemsTable()}catch(e){}toast(L('Monthly PO 收貨已存本機，正在確認雲端保存','Monthly PO receipts saved locally; cloud confirmation pending','បានរក្សាទុក និងភ្ជាប់ Item Master'),'success')}
   var prevImport=window.importExcel;window.recvDownloadMovementTemplate=function(){var wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([['Date','Type','Source','Order Ref','Item','Spec','Brand','Unit','Qty','Department','Receiver','Inspector','Remarks'],[localYMD(),'Receive','Monthly PO','PO-EXAMPLE','A4 Paper','','','ream',10,'GA/Admin','','Phea',''],[localYMD(),'Receive','Temp PO','TMP-EXAMPLE','A4 Paper','','','ream',5,'GA/Admin','','Phea','Supplemental purchase'],[localYMD(),'Issue','','','A4 Paper','','','ream',2,'HR','Srey Oun','Phea','']]);XLSX.utils.book_append_sheet(wb,ws,'Movement');XLSX.writeFile(wb,'AC_GA_EXP_Receiving_Movement_Template_v3.9.14.xlsx')}
   function parseSource(v){var s=String(v||'').toLowerCase();if(/monthly|month|月購|ប្រចាំខែ/.test(s))return'monthly_po';if(/temp|temporary|臨採|追加|បន្ទាន់/.test(s))return'temp_po';if(/repair|維修|ជួសជុល/.test(s))return'repair';return'other'}
-  window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){prevImport(input);return}var keys=Object.keys(rows[0]).map(norm),movement=keys.some(function(x){return x==='type'||x.indexOf('類型')>=0})&&keys.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0})&&keys.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0});if(!movement){prevImport(input);setTimeout(function(){migrateMeta();filteredItems=activeItems();try{renderAll()}catch(e){};scheduleReceivingAutoUpload('inventory-master-link')},1500);return}function get(x,qs){for(var k in x){var nk=norm(k);if(qs.some(function(q){return nk===norm(q)||nk.indexOf(norm(q))>=0}))return x[k]}return''}var added=0,newItems=0,skipped=0,ambiguity=0;rows.forEach(function(x){var name=String(get(x,['item','name','品項','物品'])||'').trim(),qty=n(get(x,['qty','quantity','數量'])),date=GA.excelDate(get(x,['date','日期']))||localYMD(),typ=String(get(x,['type','類型'])||'').toLowerCase(),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',src=type==='receive'?parseSource(get(x,['source','來源','purchase source'])):'',ref=String(get(x,['order ref','po','request ref','單號','申請單'])||'').trim(),spec=String(get(x,['spec','size','規格'])||'').trim(),brand=String(get(x,['brand','品牌'])||'').trim(),unit=String(get(x,['unit','單位'])||'').trim(),dept=String(get(x,['department','dept','部門'])||'').trim(),requester=String(get(x,['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(x,['inspector','檢查人'])||'').trim(),remarks=String(get(x,['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}var it=resolveMaster(name,spec,brand,unit,false,src);if(!it){var same=activeItems().filter(function(y){return norm(y.name)===norm(name)});if(same.length>1){ambiguity++;skipped++;return}it=resolveMaster(name,spec,brand,unit,true,src);newItems++}if(type==='issue'&&!dept){skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,purchaseSource:src,sourceRef:ref,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel'};var exact=(records||[]).some(function(r){return r.type===c.type&&String(r.itemId)===String(c.itemId)&&r.date===c.date&&n(r.qty)===n(c.qty)&&norm(r.dept)===norm(c.dept)&&sourceFromRecord(r)===sourceFromRecord(c)});if(exact){skipped++;return}var rr=recvAddRecord(c);recvAdjustStock(it,type,qty);if(type==='receive')markItemSource(it,src);added++});migrateMeta();saveLocal();filteredItems=activeItems();scheduleReceivingAutoUpload('movement-excel-v3913');renderAll();toast(L('✅ Excel 更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(newItems?' · '+L('新品項 ','new master items ','ទំនិញថ្មី ')+newItems:'')+(ambiguity?' · '+L('需人工確認重複 ','ambiguous duplicates ','ត្រូវពិនិត្យស្ទួន ')+ambiguity:''),'success');input.value=''}).catch(function(e){console.error(e);prevImport(input)})}
+  window.importExcel=function(input){var f=input&&input.files&&input.files[0];if(!f)return;f.arrayBuffer().then(function(ab){var wb=XLSX.read(ab,{type:'array',cellDates:false,raw:true}),ws=wb.Sheets[wb.SheetNames[0]],rows=XLSX.utils.sheet_to_json(ws,{defval:''});if(!rows.length){prevImport(input);return}var keys=Object.keys(rows[0]).map(norm),movement=keys.some(function(x){return x==='type'||x.indexOf('類型')>=0})&&keys.some(function(x){return x==='qty'||x==='quantity'||x.indexOf('數量')>=0})&&keys.some(function(x){return x==='item'||x==='name'||x.indexOf('品項')>=0||x.indexOf('物品')>=0});if(!movement){prevImport(input);setTimeout(function(){migrateMeta();filteredItems=activeItems();try{renderAll()}catch(e){};scheduleReceivingAutoUpload('inventory-master-link')},1500);return}function get(x,qs){for(var k in x){var nk=norm(k);if(qs.some(function(q){return nk===norm(q)||nk.indexOf(norm(q))>=0}))return x[k]}return''}var added=0,newItems=0,skipped=0,ambiguity=0,fixed=0,bad=[],hasDate=RecvImp25.hasDateCol(rows),S=RecvImp25.session();rows.forEach(function(x,ri){var name=String(get(x,['item','name','品項','物品'])||'').trim(),qty=n(get(x,['qty','quantity','數量'])),dq=RecvImp25.date(get(x,['date','日期']),hasDate),date=dq.date,typ=String(get(x,['type','類型'])||'').toLowerCase(),type=/issue|out|發放|領用|ចេញ/.test(typ)?'issue':'receive',src=type==='receive'?parseSource(get(x,['source','來源','purchase source'])):'',ref=String(get(x,['order ref','po','request ref','單號','申請單'])||'').trim(),spec=String(get(x,['spec','size','規格'])||'').trim(),brand=String(get(x,['brand','品牌'])||'').trim(),unit=String(get(x,['unit','單位'])||'').trim(),dept=String(get(x,['department','dept','部門'])||'').trim(),requester=String(get(x,['receiver','requester','領用人','經手人'])||'').trim(),inspector=String(get(x,['inspector','檢查人'])||'').trim(),remarks=String(get(x,['remarks','remark','備註'])||'').trim();if(!name||qty<=0){skipped++;return}if(!date){skipped++;bad.push('#'+(ri+2)+' '+dq.bad);return}var it=resolveMaster(name,spec,brand,unit,false,src);if(!it){var same=activeItems().filter(function(y){return norm(y.name)===norm(name)});if(same.length>1){ambiguity++;skipped++;return}it=resolveMaster(name,spec,brand,unit,true,src);newItems++}if(type==='issue'&&!dept){skipped++;return}var c={date:date,type:type,itemId:it.id,itemName:it.name,qty:qty,dept:dept,requester:requester,inspector:inspector,remarks:remarks,purchaseSource:src,sourceRef:ref,periodGranularity:'day',sourceFile:f.name,sourceSheet:wb.SheetNames[0],sourceKind:'movement_excel',excelDateV:2};var mm=S.match(c,function(r,c2){return sourceFromRecord(r)===sourceFromRecord(c2)},dq.num);if(mm){if(mm.kind==='legacy'){S.fix(mm.rec,c);fixed++}else skipped++;return}if(type==='issue'&&qty>n(it.stock)){skipped++;return}var rr=recvAddRecord(c);S.claim(rr);recvAdjustStock(it,type,qty);if(type==='receive')markItemSource(it,src);added++});migrateMeta();saveLocal();filteredItems=activeItems();scheduleReceivingAutoUpload('movement-excel-v3913');renderAll();toast(L('✅ Excel 更新 ','✅ Excel updated ','✅ Excel បានធ្វើបច្ចុប្បន្នភាព ')+added+L(' 筆；略過 ',' rows; skipped ',' ជួរ; រំលង ')+skipped+(fixed?' · '+L('日期已修正 ','dates corrected ','បានកែកាលបរិច្ឆេទ ')+fixed:'')+(newItems?' · '+L('新品項 ','new master items ','ទំនិញថ្មី ')+newItems:'')+(ambiguity?' · '+L('需人工確認重複 ','ambiguous duplicates ','ត្រូវពិនិត្យស្ទួន ')+ambiguity:'')+RecvImp25.badNote(bad),bad.length?'warning':'success');input.value=''}).catch(function(e){console.error(e);prevImport(input)})}
   var prevSend=window.sendTelegram;window.sendTelegram=function(){try{GA.setLang(lang)}catch(e){}GA.telegram.open({module:'receiving',canApprove:false,scopes:[{v:'both',zh:'收發全部',en:'Receive + Issue',km:'ទាំងអស់'},{v:'receive',zh:'收貨',en:'Receive',km:'ទទួល'},{v:'issue',zh:'發放',en:'Issue',km:'ចេញ'}],periods:function(type){return Array.from(new Set((records||[]).map(function(r){return GA.periodKey(r.date,type)})))},summary:function(st){var P=(records||[]).filter(function(r){return r.date&&GA.inPeriod(r.date,st.period,st.ptype)&&(st.scope==='both'||r.type===st.scope)}),rows=[{zh:'總筆數',en:'Records',km:'កំណត់ត្រា',v:P.length}];P.slice(0,18).forEach(function(r,i){var c=recvRecordCost(r),typ=r.type==='receive'?'📥':'📤';rows.push('-');rows.push({zh:typ+' #'+(i+1)+' '+r.itemName,en:typ+' #'+(i+1)+' '+r.itemName,km:typ+' #'+(i+1)+' '+r.itemName,v:r.date});rows.push({zh:'數量／單價／總額',en:'Qty / Unit / Total',km:'បរិមាណ / តម្លៃ / សរុប',v:n(r.qty)+' / '+c.unitPrice.toFixed(2)+' / '+c.amount.toFixed(2)});if(r.type==='receive')rows.push({zh:'採購來源／單號',en:'Purchase source / Ref',km:'ប្រភព / លេខយោង',v:sourceLabel(sourceFromRecord(r))+' / '+(r.sourceRef||r.poNumber||'—')});else rows.push({zh:'部門／領用人',en:'Dept / Receiver',km:'ផ្នែក / អ្នកទទួល',v:(r.dept||'—')+' / '+(r.requester||'—')});rows.push({zh:'檢查人／備註',en:'Inspector / Note',km:'អ្នកត្រួតពិនិត្យ / កំណត់ចំណាំ',v:(r.inspector||'—')+' / '+(r.remarks||'—')})});if(P.length>18)rows.push({zh:'其餘未列',en:'More not shown',km:'មិនបង្ហាញបន្ថែម',v:P.length-18});return GA.telegram.buildSummary({icon:'📦',titleZh:'收發摘要',titleEn:'Receiving / Issue Summary',titleKm:'សង្ខេបទទួល / ចេញ',lang:st.lang,period:GA.telegram.periodLabel(st.period,st.ptype,st.lang),rows:rows})}})}
+  GA.on('lang',function(){try{updateVersionBadge()}catch(e){}});
   function updateVersionBadge(){var el=document.querySelector('.brand-title,.app-title,.section-title');document.documentElement.setAttribute('data-recv-version',V);var note=document.querySelector('.recv-item-master-note');if(note)note.innerHTML='📌 '+L('Item Master 是唯一共用物品主檔：月購、追加臨採、維修及其他購買共用同一 Item ID；每月計畫數量仍由 Monthly Purchase 管理。','Item Master is the single shared catalog. Monthly, supplemental, repair and other purchases use the same Item ID; monthly planned quantities remain in Monthly Purchase.','Item Master ជាបញ្ជីរួមតែមួយ។')}
   function init(){migrateMeta();injectMasterFilter();injectItemForm();updateVersionBadge();filteredItems=activeItems();try{filterItems()}catch(e){try{renderItemsTable()}catch(x){}}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(init,260)});else setTimeout(init,260)
@@ -2187,7 +2282,7 @@ html[data-receiving-mode="receive"] .recv-v3912-actions .nav-btn.success{backgro
 <script id="recv-v3918-ux-js">
 (function(){
   function W(zh,en,km){return lang==='en'?en:lang==='km'?km:zh;}
-  function boardHtml(){return '<div class="recv-operation-board" role="tablist" aria-label="Receive and issue operations">'+
+  function boardHtml(){return '<div class="recv-operation-board" role="tablist" aria-label="'+W('收發作業','Receive and issue operations','ប្រតិបត្តិការទទួល និងចេញ')+'">'+
     '<button type="button" class="recv-operation-choice receive" data-recv-mode="receive"><span class="ico">📥</span><span><strong>'+W('收貨入庫','Receive into stock','ទទួលចូលស្តុក')+'</strong><small>'+W('庫存增加＋｜填實際日期、品項、數量','Stock increases + | date, item, qty','ស្តុកកើន +')+'</small></span></button>'+
     '<button type="button" class="recv-operation-choice issue" data-recv-mode="issue"><span class="ico">📤</span><span><strong>'+W('發料出庫','Issue from stock','ចេញពីស្តុក')+'</strong><small>'+W('庫存減少－｜部門必填，不可超庫存','Stock decreases − | department required','ស្តុកថយ − | ត្រូវបំពេញផ្នែក')+'</small></span></button>'+
     '<button type="button" class="recv-operation-choice balance" data-recv-mode="balance"><span class="ico">📊</span><span><strong>'+W('庫存結算','Stock balance','សមតុល្យស្តុក')+'</strong><small>'+W('期初＋入庫－出庫＝期末','Opening + in − out = closing','ដើម + ចូល − ចេញ = ចុង')+'</small></span></button>'+
@@ -2210,9 +2305,9 @@ html[data-receiving-mode="receive"] .recv-v3912-actions .nav-btn.success{backgro
 </script>
 
 
-<script src="shared/ga-po-draft.js?v=3.9.20"></script>
+<script src="shared/ga-po-draft.js?v=3.9.26"></script>
 <script src="shared/ga-po-receive.js?v=3.9.24"></script>
 <link rel="stylesheet" href="shared/ga-receiving-catalog.css?v=3.9.24">
-<script src="shared/ga-receiving-catalog.js?v=3.9.24"></script>
+<script src="shared/ga-receiving-catalog.js?v=3.9.25"></script>
 </body>
 </html>

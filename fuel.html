@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>v3.9.19 · AC-GA-EXP · Fuel Center 燃油中心</title>
+<title>AC-GA-EXP · Fuel Center 燃油中心</title>
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Noto+Sans+Khmer:wght@400;600;700&display=swap" rel="stylesheet">
@@ -93,16 +93,16 @@ tr:hover td{background:#f5f8f6}
 }
 .hidden{display:none!important}
 </style>
-<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.24"></script>
+<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
+<script src="shared/ga-core.js?v=3.9.26"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
-<script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js?v=3.9.21"></script>
-<script src="shared/ga-telegram.js?v=3.9.19"></script>
-<script src="shared/ga-auto-sync.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
+<script src="shared/ga-data.js?v=3.9.26"></script>
+<script src="shared/ga-import.js?v=3.9.26"></script>
+<script src="shared/ga-telegram.js?v=3.9.26"></script>
+<script src="shared/ga-auto-sync.js?v=3.9.25"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.24"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -155,7 +155,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <input type="file" multiple accept=".xlsx,.xls" onchange="handleFiles(event)">
 <div style="font-size:36px;margin-bottom:8px">📁</div>
 <div style="font-size:15px;font-weight:700;color:#1a2332" class="tl" data-k="dropLabel">拖放 Excel 檔案到這裡</div>
-<div style="font-size:11px;color:#8b95b8;margin-top:6px">.xlsx · 多檔同時拖入 · 自動合併</div>
+<div style="font-size:11px;color:#8b95b8;margin-top:6px" class="tl" data-k="dropHint">.xlsx · 多檔同時拖入 · 自動合併</div>
 </div>
 <div id="importPreview" class="hidden" style="margin-top:16px"></div>
 </div>
@@ -363,6 +363,9 @@ kw:'\u1782\u17B8\u17A1\u17BC\u179C\u17C9\u17B6\u178F\u17CB',hours:'\u1798\u17C9\
 };
 /* Fuel-page labels are kept in one dictionary so a language switch also updates
    the buttons, filters, settings and dynamically-rendered table headings. */
+Object.assign(I18N.zh,{dropHint:'.xlsx · 多檔同時拖入 · 自動合併',addRecord:'新增記錄',docTitle:'AC-GA-EXP · Fuel Center 燃油中心',backupNoDb:'備份檔缺少 DB 陣列',exportUseTabs:'本模組匯出：請用各分頁的匯出鈕',uploadedN:'✅ 已上傳 {n} 筆 ({c} chunks)',downloadedN:'✅ 已下載 {n} 筆 ({t})',mergedN:'✅ 已合併 {n} 筆 ({t})',cloudUpOk:'☁️ 雲端上傳成功',cloudDownOk:'📥 雲端下載成功'});
+Object.assign(I18N.en,{dropHint:'.xlsx · drop several files at once · merged automatically',addRecord:'Add record',docTitle:'AC-GA-EXP · Fuel Center',backupNoDb:'Backup file has no DB list',exportUseTabs:'Export: use the export button on each tab',uploadedN:'✅ Uploaded {n} records ({c} parts)',downloadedN:'✅ Downloaded {n} records ({t})',mergedN:'✅ Merged {n} records ({t})',cloudUpOk:'☁️ Cloud upload done',cloudDownOk:'📥 Cloud download done'});
+Object.assign(I18N.km,{dropHint:'.xlsx · អូសឯកសារច្រើនក្នុងពេលតែមួយ · បញ្ចូលគ្នាដោយស្វ័យប្រវត្តិ',addRecord:'បន្ថែមកំណត់ត្រា',docTitle:'AC-GA-EXP · មជ្ឈមណ្ឌលប្រេងឥន្ធនៈ',backupNoDb:'ឯកសារបម្រុងទុកគ្មានបញ្ជី DB',exportUseTabs:'នាំចេញ៖ សូមប្រើប៊ូតុងនាំចេញនៅផ្ទាំងនីមួយៗ',uploadedN:'✅ បានផ្ទុកឡើង {n} កំណត់ត្រា ({c} ផ្នែក)',downloadedN:'✅ បានទាញយក {n} កំណត់ត្រា ({t})',mergedN:'✅ បានបញ្ចូលគ្នា {n} កំណត់ត្រា ({t})',cloudUpOk:'☁️ ផ្ទុកឡើង Cloud រួចរាល់',cloudDownOk:'📥 ទាញយកពី Cloud រួចរាល់'});
 Object.assign(I18N.zh,{
   fuelSub:'燃油中心 · 柴油管理',home:'🏠 平台首頁',uploadCloud:'上傳雲端',downloadCloud:'下載雲端',smartImport:'智慧匯入',telegramSummary:'Telegram 摘要',dataManagement:'資料管理',toolbarHint:'請使用頁首工具列的雲端上傳、下載、智慧匯入與 Telegram 按鈕。',telegramHint:'Telegram 由頁首按鈕開啟期間／語言／群組摘要視窗，Bot Token 由 GAS 統一管理。',excel:'Excel',all:'全部',category:'分類',detail:'明細',day:'日',week:'週',period:'期間',days:'天',activeDays:'有資料天數',periods:'期間',name:'名稱',percent:'百分比',gasBackend:'GAS 後端設定',gasUrlLabel:'Google Apps Script URL',gasPrompt:'請在上方輸入 GAS 部署 URL。',telegram:'Telegram',botToken:'Bot Token',chatId:'Chat ID',searchPlaceholder:'搜尋…',uploading:'上傳中',downloading:'下載中',cancelled:'已取消',noCloud:'雲端尚無資料',syncing:'同步中',synced:'已同步',invalid:'無效',error:'錯誤',noValidData:'找不到有效資料',more:'更多',duplicateSkipped:'重複資料已略過',overwriteCloud:'雲端有 {cloud} 筆資料，將覆蓋本機 {local} 筆資料。確定？',setTelegram:'請設定 Telegram Token 與 Chat ID',gasUrlMissing:'請先設定 GAS URL',syncAll:'匯入 GAS 全部資料'
 });
@@ -382,6 +385,9 @@ function applyLang(){
   document.documentElement.lang=lang==='zh'?'zh-TW':lang;
   document.querySelectorAll('.tl').forEach(el=>{const k=el.dataset.k;if(k)el.textContent=T(k)});
   document.getElementById('hTitle').textContent=T('hTitle');
+  try{document.title=T('docTitle');}catch(e){}
+  const ft=document.getElementById('formTitle');if(ft&&['新增記錄','Add record','បន្ថែមកំណត់ត្រា'].includes(ft.textContent.trim()))ft.textContent=T('addRecord');
+  const vf=document.getElementById('fuelVer');if(vf&&typeof GA!=='undefined')vf.textContent='AC-GA-EXP v'+GA.PLATFORM_VERSION;
   document.querySelectorAll('[data-fuel-title]').forEach(el=>el.title=T(el.dataset.fuelTitle));
   /* The explicit tab pass keeps older cached markup from leaving the first
      five tabs in English when only the last two were translated. */
@@ -407,7 +413,7 @@ const WEEKDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MON_MAP={jan:0,january:0,feb:1,february:1,mar:2,march:2,apr:3,april:3,may:4,jun:5,june:5,jul:6,july:6,aug:7,august:7,sep:8,september:8,oct:9,october:9,nov:10,november:10,dec:11,december:11};
 
-function save(){localStorage.setItem(LS,JSON.stringify(DB))}
+function save(){/* v3.9.25 legacy path (replaced by shared/ga-fuel-v3917.js IndexedDB save); never throws on a full storage */try{localStorage.setItem(LS,JSON.stringify(DB))}catch(e){try{toast(lang==='en'?'Storage full — data kept in this session; please sync to cloud':lang==='km'?'ទំហំផ្ទុកពេញ — សូមធ្វើសមកាលកម្ម':'本機儲存空間已滿 — 資料仍保留在本次畫面，請先雲端同步','err')}catch(_){}}}
 function load(){try{DB=JSON.parse(localStorage.getItem(LS))||[]}catch{DB=[]}}
 function saveCfg(){
   const gas=document.getElementById('gasUrl');
@@ -442,23 +448,23 @@ const st=document.getElementById('gasStatus');st.textContent='⏳ '+T('uploading
 try{
 GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();
 const d=await GA.gasPost('dieselSave',DB,{ts:Date.now()});
-if(!d.ok)throw new Error(d.error||'save failed');
-st.textContent=`✅ 已上傳 ${DB.length} 筆 (${d.chunks} chunks)`;st.className='al al-ok';toast('☁️ 雲端上傳成功');
-try{GA.cloud.set('up',DB.length+' recs');}catch(e){}
-}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err');try{GA.cloud.set('err',e.message);}catch(x){}}
+if(!d.ok)throw new Error(d.error||(lang==='zh'?'雲端儲存失敗':lang==='km'?'ការរក្សាទុក Cloud បរាជ័យ':'Cloud save failed'));
+st.textContent=T('uploadedN').replace('{n}',DB.length).replace('{c}',d.chunks);st.className='al al-ok';toast(T('cloudUpOk'));
+try{GA.cloud.set('up',DB.length+' '+GA.T('records'));}catch(e){}
+}catch(e){const em=GA.errText?GA.errText(e,false):e.message;st.textContent='❌ '+em;st.className='al al-w';toast(em,'err');try{GA.cloud.set('err',em);}catch(x){}}
 }
 async function cloudDownload(){
 const url=document.getElementById('gasUrl').value.trim();if(!url){toast(T('gasUrlMissing'),'err');document.querySelector('.tab[data-tab="settings"]')?.click();return}
 const st=document.getElementById('gasStatus');st.textContent='⏳ '+T('downloading')+'...';st.className='al al-i';
 try{
 GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();const d=await GA.gasGet('dieselLoad');
-if(!d.ok)throw new Error(d.error||'load failed');
+if(!d.ok)throw new Error(d.error||(lang==='zh'?'雲端讀取失敗':lang==='km'?'ការទាញយក Cloud បរាជ័យ':'Cloud load failed'));
 if(d.data&&Array.isArray(d.data)){
 if(DB.length&&!confirm(T('overwriteCloud').replace('{cloud}',d.data.length).replace('{local}',DB.length))){st.textContent=T('cancelled');return}
 DB=d.data;save();updateHeader();updateDBCard();
-st.textContent=`✅ 已下載 ${DB.length} 筆 (${d.ts||''})`;st.className='al al-ok';toast('📥 雲端下載成功');
+st.textContent=T('downloadedN').replace('{n}',DB.length).replace('{t}',d.ts||'');st.className='al al-ok';toast(T('cloudDownOk'));
 }else{st.textContent='☁️ '+T('noCloud');st.className='al al-i'}
-}catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
+}catch(e){const em=GA.errText?GA.errText(e,false):e.message;st.textContent='❌ '+em;st.className='al al-w';toast(em,'err')}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1214,7 +1220,7 @@ function fuelDataPanel(){
     data:()=>({DB:DB}),
     restore:(obj,mode)=>{
       const inc=obj.DB||obj.db||[];
-      if(!Array.isArray(inc)) throw new Error('備份檔缺少 DB 陣列');
+      if(!Array.isArray(inc)) throw new Error(T('backupNoDb'));
       if(mode==='replace'){ DB=inc; }
       else {
         const seen={}; DB.forEach(r=>seen[GA.fingerprint([r.cat,r.date,r.plate||r.driver,r.liters,r.km||r.hours])]=1);
@@ -1224,7 +1230,7 @@ function fuelDataPanel(){
       save();
     },
     clear:()=>{ DB=[]; save(); },
-    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast('本模組匯出：請用各分頁的匯出鈕','err'); } },
+    exportXlsx:()=>{ try{ exportExcel(); }catch(e){ GA.toast(T('exportUseTabs'),'err'); } },
     onChange:()=>{ render(); scheduleFuelAutoSync('restore'); }
   });
 }
@@ -1234,8 +1240,8 @@ function fuelDataPanel(){
 function fuelSyncKey(r){return String((r&&r.id)||GA.fingerprint([r&&r.cat,r&&r.date,r&&(r.plate||r.driver||r.forklift||r.machine),r&&r.liters,r&&(r.km||r.totalKM||r.hours)]));}
 function fuelStamp(r){var v=r&&(r.updatedAt||r.createdAt);var n=v?new Date(v).getTime():0;return isNaN(n)?0:n;}
 function fuelMergeRecords(localRows,cloudRows){var map={},order=[];(localRows||[]).forEach(function(r){var k=fuelSyncKey(r);if(!map[k])order.push(k);map[k]=r;});(cloudRows||[]).forEach(function(r){var k=fuelSyncKey(r),old=map[k];if(!old){map[k]=r;order.push(k);return;}var os=fuelStamp(old),cs=fuelStamp(r);if(cs>os)map[k]=r;else if(!os&&!cs){map[k]=Object.assign({},r,old);}});return order.map(function(k){return map[k];});}
-async function fuelCloudUploadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}try{GA.cloud.mount('#ga-cloud');GA.cloud.set('sync');}catch(e){}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('uploading')+'...';st.className='al al-i';}try{GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();const d=await GA.gasPost('dieselSave',DB,{ts:Date.now()});if(!d.ok)throw new Error(d.error||'save failed');if(st&&!opts.silent){st.textContent=`✅ 已上傳 ${DB.length} 筆 (${d.chunks||0} chunks)`;st.className='al al-ok';}if(!opts.silent)toast('☁️ '+T('synced'));try{GA.cloud.set('up',DB.length+' recs');GA.saveCfg({sync_fuel:new Date().toISOString()});}catch(e){}return true;}catch(e){if(st&&!opts.silent){st.textContent='❌ '+e.message;st.className='al al-w';}if(!opts.silent)toast(e.message,'err');try{GA.cloud.set('err',e.message);}catch(x){}return false;}}
-async function fuelCloudDownloadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('downloading')+'...';st.className='al al-i';}try{GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();const d=await GA.gasGet('dieselLoad',{_t:Date.now()});if(!d.ok)throw new Error(d.error||'load failed');if(!(d.data&&Array.isArray(d.data))){if(st&&!opts.silent){st.textContent='☁️ '+T('noCloud');st.className='al al-i';}return false;}DB=fuelMergeRecords(DB,d.data);save();updateHeader();updateDBCard();if(st&&!opts.silent){st.textContent=`✅ 已合併 ${DB.length} 筆 (${d.ts||''})`;st.className='al al-ok';}if(!opts.silent)toast('📥 '+(lang==='zh'?'雲端資料已安全合併':lang==='km'?'បានបញ្ចូលទិន្នន័យ Cloud ដោយសុវត្ថិភាព':'Cloud data safely merged'));try{GA.cloud.set('down',DB.length+' recs');}catch(e){}return true;}catch(e){if(st&&!opts.silent){st.textContent='❌ '+e.message;st.className='al al-w';}if(!opts.silent)toast(e.message,'err');return false;}}
+async function fuelCloudUploadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}try{GA.cloud.mount('#ga-cloud');GA.cloud.set('sync');}catch(e){}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('uploading')+'...';st.className='al al-i';}try{GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();const d=await GA.gasPost('dieselSave',DB,{ts:Date.now()});if(!d.ok)throw new Error(d.error||(lang==='zh'?'雲端儲存失敗':lang==='km'?'ការរក្សាទុក Cloud បរាជ័យ':'Cloud save failed'));if(st&&!opts.silent){st.textContent=T('uploadedN').replace('{n}',DB.length).replace('{c}',d.chunks||0);st.className='al al-ok';}if(!opts.silent)toast('☁️ '+T('synced'));try{GA.cloud.set('up',DB.length+' '+GA.T('records'));GA.saveCfg({sync_fuel:new Date().toISOString()});}catch(e){}return true;}catch(e){const em=GA.errText?GA.errText(e,false):e.message;if(st&&!opts.silent){st.textContent='❌ '+em;st.className='al al-w';}if(!opts.silent)toast(em,'err');try{GA.cloud.set('err',em);}catch(x){}return false;}}
+async function fuelCloudDownloadSafe(opts){opts=opts||{};const url=document.getElementById('gasUrl').value.trim();if(!url){if(!opts.silent)toast(T('gasUrlMissing'),'err');return false;}var st=document.getElementById('gasStatus');if(st&&!opts.silent){st.textContent='⏳ '+T('downloading')+'...';st.className='al al-i';}try{GA.saveCfg({gasUrl:url});if(GA.backend)GA.backend.clear();const d=await GA.gasGet('dieselLoad',{_t:Date.now()});if(!d.ok)throw new Error(d.error||(lang==='zh'?'雲端讀取失敗':lang==='km'?'ការទាញយក Cloud បរាជ័យ':'Cloud load failed'));if(!(d.data&&Array.isArray(d.data))){if(st&&!opts.silent){st.textContent='☁️ '+T('noCloud');st.className='al al-i';}return false;}DB=fuelMergeRecords(DB,d.data);save();updateHeader();updateDBCard();if(st&&!opts.silent){st.textContent=T('mergedN').replace('{n}',DB.length).replace('{t}',d.ts||'');st.className='al al-ok';}if(!opts.silent)toast('📥 '+(lang==='zh'?'雲端資料已安全合併':lang==='km'?'បានបញ្ចូលទិន្នន័យ Cloud ដោយសុវត្ថិភាព':'Cloud data safely merged'));try{GA.cloud.set('down',DB.length+' '+GA.T('records'));}catch(e){}return true;}catch(e){const em=GA.errText?GA.errText(e,false):e.message;if(st&&!opts.silent){st.textContent='❌ '+em;st.className='al al-w';}if(!opts.silent)toast(em,'err');return false;}}
 cloudUpload=fuelCloudUploadSafe;cloudDownload=fuelCloudDownloadSafe;
 function scheduleFuelAutoSync(reason){if(window.GAAutoSync){GAAutoSync.schedule('fuel',reason||'change',{},250);return;}clearTimeout(window._fuelAutoTimer);window._fuelAutoTimer=setTimeout(function(){fuelCloudUploadSafe({silent:true}).catch(function(){});},250);}
 var _fuelSaveRec=saveRec;saveRec=function(){var r=_fuelSaveRec.apply(this,arguments);scheduleFuelAutoSync('change');return r;};
@@ -1278,7 +1284,7 @@ init();
       (data.forklift&&data.forklift.rows||[]).forEach(function(r){var x={cat:'forklift',date:parseExcelDate(r[0]),dept:r[1],forklift:r[2],liters:cleanNum(r[3]),startKM:cleanNum(r[4]),arriveKM:cleanNum(r[5]),totalKM:cleanNum(r[6]),remarks:r[7]||'',inspector:r[8]||''};x.id=gasLegacyId(x);x.updatedAt=x.createdAt=new Date().toISOString();inc.push(x)});
       (data.generator&&data.generator.rows||[]).forEach(function(r){var x={cat:'generator',date:parseExcelDate(r[5]||''),kw:0,liters:cleanNum(r[2]),machine:'',hours:'',remarks:r[8]||'',inspector:r[9]||''};x.id=gasLegacyId(x);x.updatedAt=x.createdAt=new Date().toISOString();inc.push(x)});
       var before=DB.length;DB=fuelMergeRecords(DB,inc);save();scheduleFuelAutoSync('legacy-sync-safe');updateHeader();updateDBCard();initRecs();st.textContent='✅ '+F('安全合併','Safely merged','បញ្ចូលដោយសុវត្ថិភាព')+' '+(DB.length-before>=0?DB.length-before:0)+' / '+inc.length;st.className='al al-ok';toast('☁️ '+F('未重複累加','No duplicate accumulation','មិនបូកស្ទួន'));
-    }catch(e){st.textContent='❌ '+e.message;st.className='al al-w';toast(e.message,'err')}
+    }catch(e){const em=GA.errText?GA.errText(e,false):e.message;st.textContent='❌ '+em;st.className='al al-w';toast(em,'err')}
   };
   document.documentElement.setAttribute('data-fuel-integrity',V);
 })();
@@ -1307,8 +1313,9 @@ init();
   document.documentElement.setAttribute('data-fuel-duplicate-integrity','v3.9.14c');
 })();
 </script>
-<script src="shared/ga-mobility.js?v=3.9.19"></script>
-<script src="shared/ga-mobility-store.js?v=3.9.19"></script>
-<script src="shared/ga-fuel-v3917.js?v=3.9.19"></script>
+<script src="shared/ga-mobility.js?v=3.9.25"></script>
+<script src="shared/ga-mobility-store.js?v=3.9.26"></script>
+<script src="shared/ga-fuel-v3917.js?v=3.9.25"></script>
+<footer id="fuelVer" style="text-align:center;font-size:10px;color:#9aa3b5;padding:10px 0 18px"></footer>
 </body>
 </html>

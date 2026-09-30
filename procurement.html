@@ -341,16 +341,16 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 .tgl input:checked+.tk{background:var(--green)}
 .tgl input:checked+.tk+.kn{left:20px}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link rel="stylesheet" href="shared/ga.css" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css'">
-<script src="shared/ga-core.js?v=3.9.24"></script>
+<script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
+<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
+<script src="shared/ga-core.js?v=3.9.26"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
-<script src="shared/ga-data.js"></script>
-<script src="shared/ga-import.js?v=3.9.21"></script>
-<script src="shared/ga-telegram.js?v=3.9.19"></script>
-<script src="shared/ga-vrt-parsers.js?v=3.9.21"></script>
+<script src="shared/ga-data.js?v=3.9.26"></script>
+<script src="shared/ga-import.js?v=3.9.26"></script>
+<script src="shared/ga-telegram.js?v=3.9.26"></script>
+<script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.24"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.21"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.19"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');}
 </script>
 
 <link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
@@ -363,25 +363,25 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   <div class="login-box">
     <div class="login-logo">
       <span class="icon">📋</span>
-      <h1>GA Purchase Order</h1>
-      <p>General Affairs · 總務部</p>
+      <h1 data-pr="loginH1">GA Purchase Order</h1>
+      <p data-pr="loginDept">General Affairs · 總務部</p>
     </div>
-    <div class="fl">姓名 / Name</div>
+    <div class="fl" data-pr="loginName">姓名 / Name</div>
     <select class="fs" id="lu" onchange="onUserPick()"></select>
     <div id="lrow-tg" style="display:none">
-      <div class="fl" style="margin-top:6px">Telegram ID（Owner 專用）</div>
-      <input class="fi" id="ltg" type="text" inputmode="numeric" placeholder="你的 Telegram ID" maxlength="15"/>
+      <div class="fl" style="margin-top:6px" data-pr="loginTg">Telegram ID（Owner 專用）</div>
+      <input class="fi" id="ltg" type="text" inputmode="numeric" placeholder="你的 Telegram ID" data-pr-ph="loginTgPh" maxlength="15"/>
     </div>
-    <div class="fl" style="margin-top:6px">PIN 密碼</div>
-    <input class="fi" id="lp" type="password" placeholder="輸入 PIN" maxlength="10"/>
-    <button class="login-btn" onclick="doLogin()">🔐 登入 Login</button>
+    <div class="fl" style="margin-top:6px" data-pr="loginPin">PIN 密碼</div>
+    <input class="fi" id="lp" type="password" placeholder="輸入 PIN" data-pr-ph="loginPinPh" maxlength="10"/>
+    <button class="login-btn" onclick="doLogin()" data-pr="loginBtn">🔐 登入 Login</button>
     <div id="lerr"></div>
     <div class="role-hint">
-      <div class="rh-t">角色說明</div>
-      <div class="rh-row"><span>Applicant 申請人</span><span class="rh-badge" style="background:var(--blue-bg);color:var(--blue)">填寫提交</span></div>
-      <div class="rh-row"><span>Review 審查人</span><span class="rh-badge" style="background:var(--amber-bg);color:var(--amber)">審核</span></div>
-      <div class="rh-row"><span>Manager 核可人</span><span class="rh-badge" style="background:var(--orange-bg);color:var(--orange)">最終核可</span></div>
-      <div class="rh-row"><span>Paul（Owner）</span><span class="rh-badge" style="background:#dcfce7;color:#15803d">ID＋密碼</span></div>
+      <div class="rh-t" data-pr="rhT">角色說明</div>
+      <div class="rh-row"><span data-pr="rhApp">Applicant 申請人</span><span class="rh-badge" style="background:var(--blue-bg);color:var(--blue)" data-pr="rhAppB">填寫提交</span></div>
+      <div class="rh-row"><span data-pr="rhRev">Review 審查人</span><span class="rh-badge" style="background:var(--amber-bg);color:var(--amber)" data-pr="rhRevB">審核</span></div>
+      <div class="rh-row"><span data-pr="rhMgr">Manager 核可人</span><span class="rh-badge" style="background:var(--orange-bg);color:var(--orange)" data-pr="rhMgrB">最終核可</span></div>
+      <div class="rh-row"><span data-pr="rhOwn">Paul（Owner）</span><span class="rh-badge" style="background:#dcfce7;color:#15803d" data-pr="rhOwnB">ID＋密碼</span></div>
     </div>
   </div>
 </div>
@@ -390,32 +390,32 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <!-- Cloud loading overlay -->
 <div id="cloud-loading" role="status" aria-live="polite">
   <div class="cloud-spin"></div>
-  <div class="cloud-txt" id="cloud-txt">☁️ 載入資料中... Loading data...</div>
+  <div class="cloud-txt" id="cloud-txt" data-pr="cloudLoading">☁️ 載入資料中... Loading data...</div>
 </div>
 <div id="app" style="display:none">
   <!-- Page Tabs -->
   <div id="page-tabs">
-    <div class="ptab" onclick="location.href='index.html'" title="AC-GA-EXP Platform"><span>🏠 平台首頁</span></div>
+    <div class="ptab" onclick="location.href='index.html'" title="AC-GA-EXP Platform" data-pr-title="homeTitle"><span data-pr="tabHome">🏠 平台首頁</span></div>
     <div class="ptab on" onclick="showPage('po')" id="pt-po"><span id="tab-po-lbl">📋 採購申請</span></div>
     <div class="ptab" onclick="showPage('inv')" id="pt-inv"><span id="tab-inv-lbl">📦 庫存管理</span></div>
     <div class="ptab" onclick="showPage('settings')" id="pt-set"><span id="tab-set-lbl">⚙️ 設定</span></div>
     <div class="ptab" onclick="showPage('recv')" id="pt-recv"><span id="tab-recv-lbl">📋 收貨紀錄</span></div>
-    <div class="ptab" onclick="showPage('anly')" id="pt-anly"><span id="tab-anly-lbl">📊 分析</span></div>
+    <div class="ptab" onclick="showPage('anly')" id="pt-anly"><span id="tab-anly-lbl" data-pr="tabAnly">📊 分析</span></div>
   </div>
 
   <!-- Header -->
   <div id="header">
     <div class="hdr">
       <div class="hdr-l">
-        <div class="dept">AC-GA-EXP · Procurement Center 採購中心</div>
+        <div class="dept" data-pr="dept">AC-GA-EXP · Procurement Center 採購中心</div>
         <h1 id="htitle">日常用品採購單</h1>
       </div>
       <div class="hdr-r">
         <div id="ga-cloud" class="ga-cloud idle" style="margin-right:4px"></div>
-        <button class="inv-btn" onclick="procCloudUp()" title="上傳雲端 Upload">⬆️☁</button>
-        <button class="inv-btn" onclick="procCloudDown()" title="下載雲端 Download">⬇️☁</button>
-        <button class="inv-btn" onclick="procImport()" title="智慧匯入 Smart Import">📥</button>
-        <button class="inv-btn" onclick="procTelegram()" title="Telegram 摘要 Summary">✈️</button>
+        <button class="inv-btn" onclick="procCloudUp()" title="上傳雲端 Upload" data-pr-title="ttUp">⬆️☁</button>
+        <button class="inv-btn" onclick="procCloudDown()" title="下載雲端 Download" data-pr-title="ttDown">⬇️☁</button>
+        <button class="inv-btn" onclick="procImport()" title="智慧匯入 Smart Import" data-pr-title="ttImp">📥</button>
+        <button class="inv-btn" onclick="procTelegram()" title="Telegram 摘要 Summary" data-pr-title="ttTg">✈️</button>
         <div id="sel-badge"></div>
         <div class="user-chip">
           <div class="uav" id="uav"></div>
@@ -428,7 +428,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
           <button data-l="km" onclick="setL('km')">ខ្មែរ</button>
         </div>
         <select id="msel" onchange="onMonthChange(+this.value)"></select>
-        <button id="logout-btn" onclick="doLogout()">↩ Logout</button>
+        <button id="logout-btn" onclick="doLogout()" data-pr="logout">↩ Logout</button>
       </div>
     </div>
   </div>
@@ -437,14 +437,14 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   <div class="page on" id="page-po">
     <div id="swrap">
       <span id="si">🔍</span>
-      <input id="sinput" placeholder="搜尋用品名稱 / Search items..." oninput="onSrch(this.value)"/>
+      <input id="sinput" placeholder="搜尋用品名稱 / Search items..." data-pr-ph="searchPh" oninput="onSrch(this.value)"/>
       <button id="sclear" onclick="clrSrch()">×</button>
     </div>
     <div id="tabs"></div>
     <div id="grid"></div>
     <div id="btns">
-      <button class="bbtn" id="pbtn" onclick="openMod()">📋 預覽 (0)</button>
-      <button class="bbtn" id="sbtn" onclick="doSubmit()">📤 提交申請</button>
+      <button class="bbtn" id="pbtn" onclick="openMod()" data-pr="pbtn0">📋 預覽 (0)</button>
+      <button class="bbtn" id="sbtn" onclick="doSubmit()" data-pr="sbtn0">📤 提交申請</button>
     </div>
     <!-- Review/Approve banner — shown when PO is pending action -->
     <div id="review-banner" style="display:none;margin-top:12px;border-radius:12px;
@@ -478,7 +478,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       </div>
       <button class="inv-btn primary" onclick="saveInv()"><span id="inv-save-label">💾 儲存記錄</span></button>
       <button class="inv-btn" onclick="exportInvExcel()"><span id="inv-exp-label">📊 匯出 Excel</span></button>
-      <button class="inv-btn" onclick="exportYearExcel(YEAR)" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)"><span>📥 全年 Year</span></button>
+      <button class="inv-btn" onclick="exportYearExcel(YEAR)" style="background:var(--blue-bg);color:var(--blue);border-color:var(--blue-border)"><span data-pr="invYear">📥 全年 Year</span></button>
     </div>
 
     <!-- Alert bar -->
@@ -514,7 +514,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
     <!-- PO History -->
     <div style="margin-top:24px">
-      <h3 id="po-hist-title" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px">📋 採購記錄 PO History</h3>
+      <h3 id="po-hist-title" style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px" data-pr="poHist">📋 採購記錄 PO History</h3>
       <div id="po-hist-list"></div>
     </div>
   </div>
@@ -530,7 +530,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
     </div>
     <div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:10px;
       padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--blue)">
-      ${lang==="zh"?"💡 在這裡設定每個物品的<b>計量單位</b>和<b>安全庫存數量</b>。庫存低於安全庫存時顯示 ⚠️ 警告。":"💡 Set the <b>unit</b> and <b>safety stock level</b> for each item. A ⚠️ alert shows when stock falls below the safety level."}
+      <span data-pr-html="setHint">💡 在這裡設定每個物品的<b>計量單位</b>和<b>安全庫存數量</b>。庫存低於安全庫存時顯示 ⚠️ 警告。</span>
     </div>
     <div class="settings-grid" id="settings-grid"></div>
   </div>
@@ -576,7 +576,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;padding:16px">
   <div style="background:#fff;border-radius:16px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <div class="mhdr" style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)">
-      <h2 id="recv-mtitle" style="font-size:16px;font-weight:700">收貨</h2>
+      <h2 id="recv-mtitle" style="font-size:16px;font-weight:700" data-pr="recvMTitle">收貨</h2>
       <button class="mclose" onclick="closeRecvOv()" style="background:var(--bg3);border:none;border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12px;color:var(--text2)">✕</button>
     </div>
     <div style="padding:16px 18px">
@@ -612,24 +612,24 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <div id="ov" onclick="closeOv(event)">
   <div id="modal">
     <div class="mhdr">
-      <h2 id="mtitle">📋 採購清單預覽</h2>
-      <button class="mclose" onclick="closeMod()">✕ 關閉</button>
+      <h2 id="mtitle" data-pr="mTitle">📋 採購清單預覽</h2>
+      <button class="mclose" onclick="closeMod()" data-pr="mClose">✕ 關閉</button>
     </div>
     <div id="mmeta" style="font-size:11px;color:var(--text2);margin-bottom:10px"></div>
     <div id="mlist"></div>
     <div class="divider"></div>
-    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📝 簽核流程</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px" data-pr="mFlow">📝 簽核流程</div>
     <div class="apr-grid" id="apr-grid"></div>
     <div id="apr-action"></div>
     <div class="divider"></div>
-    <div style="font-size:10px;color:var(--text2);text-align:center;margin-bottom:8px">匯出格式</div>
+    <div style="font-size:10px;color:var(--text2);text-align:center;margin-bottom:8px" data-pr="mExpFmt">匯出格式</div>
     <div class="exp-row">
       <button class="ebtn" style="background:linear-gradient(135deg,#14532d,#16a34a)" onclick="exportExcel()">
-        <span style="font-size:20px">📊</span><span>下載 Excel</span><span class="sub">.xlsx</span></button>
+        <span style="font-size:20px">📊</span><span data-pr="mXls">下載 Excel</span><span class="sub">.xlsx</span></button>
       <button class="ebtn" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)" onclick="exportPDF()">
-        <span style="font-size:20px">🖨️</span><span>列印/PDF</span><span class="sub">Print</span></button>
+        <span style="font-size:20px">🖨️</span><span data-pr="mPdf">列印/PDF</span><span class="sub" data-pr="mPrint">Print</span></button>
     </div>
-    <button id="rbtn" onclick="resetAll()">🔄 清空重填</button>
+    <button id="rbtn" onclick="resetAll()" data-pr="mReset">🔄 清空重填</button>
   </div>
 </div>
 
@@ -655,13 +655,13 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 <!-- UNIT EDIT MODAL -->
 <div id="unit-ov" onclick="closeUnitOv(event)">
   <div id="unit-modal">
-    <div class="um-title" id="um-title">修改計量單位</div>
+    <div class="um-title" id="um-title" data-pr="umTitle">修改計量單位</div>
     <div class="um-hint" id="um-item-name" style="font-weight:600;color:var(--text);margin-bottom:8px"></div>
-    <div class="um-hint">輸入新的計量單位，例如：pcs、box、btl、pack、roll、kg、L</div>
-    <input class="um-input" id="um-input" placeholder="輸入單位..."/>
+    <div class="um-hint" data-pr="umHint">輸入新的計量單位，例如：pcs、box、btl、pack、roll、kg、L</div>
+    <input class="um-input" id="um-input" placeholder="輸入單位..." data-pr-ph="umPh"/>
     <div class="um-btns">
-      <button class="um-cancel" onclick="closeUnitOv()">取消</button>
-      <button class="um-save" onclick="saveUnit()">✅ 儲存</button>
+      <button class="um-cancel" onclick="closeUnitOv()" data-pr="umCancel">取消</button>
+      <button class="um-save" onclick="saveUnit()" data-pr="umSave">✅ 儲存</button>
     </div>
   </div>
 </div>
@@ -745,7 +745,7 @@ async function saveInvCloud(year, month, records){
 
 async function exportYearExcel(year){
   try{
-    showCloudLoading(lang==="zh"?`☁️ 載入 ${year} 年資料...`:`☁️ Loading ${year} data...`);
+    showCloudLoading(L3(`☁️ 載入 ${year} 年資料...`,`☁️ Loading ${year} data...`,`☁️ កំពុងផ្ទុកទិន្នន័យឆ្នាំ ${year}...`));
     const [histJson, invJson]=await Promise.all([
       GA.gasGet('getHistory',{year:year}),
       GA.gasGet('getInventory',{year:year}),
@@ -754,9 +754,9 @@ async function exportYearExcel(year){
     if(histJson.ok && invJson.ok){
       generateYearExcel(year, histJson.data||[], invJson.data||{});
     } else {
-      alert("Export failed / 匯出失敗");
+      alert(L3("Export failed / 匯出失敗","Export failed","នាំចេញបរាជ័យ"));
     }
-  }catch(e){ hideCloudLoading(); alert("Error: "+e.message); }
+  }catch(e){ hideCloudLoading(); alert(L3("Error: ","Error: ","កំហុស៖ ")+e.message); }
 }
 
 // ════════════════════════════════
@@ -771,9 +771,9 @@ const USERS = [
   {id:"u9", name:"Paul",      nameEn:"Paul",      pin:"2026", role:"owner", tgId:"5026942575"},
 ];
 const RC = {
-  applicant:{label:"申請人",en:"Applicant",color:"#2563eb",bg:"#dbeafe",border:"#93c5fd"},
-  verifier: {label:"審查人",en:"Verifier", color:"#059669",bg:"#d1fae5",border:"#6ee7b7"},
-  approver: {label:"核可人",en:"Approver", color:"#dc2626",bg:"#fee2e2",border:"#fca5a5"},
+  applicant:{label:"申請人",en:"Applicant",km:"អ្នកស្នើសុំ",color:"#2563eb",bg:"#dbeafe",border:"#93c5fd"},
+  verifier: {label:"審查人",en:"Verifier", km:"អ្នកត្រួតពិនិត្យ",color:"#059669",bg:"#d1fae5",border:"#6ee7b7"},
+  approver: {label:"核可人",en:"Approver", km:"អ្នកអនុម័ត",color:"#dc2626",bg:"#fee2e2",border:"#fca5a5"},
 };
 function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 
@@ -857,6 +857,15 @@ const CATS = {
 
 const MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const MZ=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
+const MK=["មករា","កុម្ភៈ","មីនា","មេសា","ឧសភា","មិថុនា","កក្កដា","សីហា","កញ្ញា","តុលា","វិច្ឆិកា","ធ្នូ"];
+/* v3.9.26 i18n: 3-way text picker (zh / en / km; km falls back to en) + localized month name */
+function L3(zh,en,km){return lang==="zh"?zh:(lang==="km"&&km!=null&&km!==""?km:en);}
+function MN(i){return L3(MZ[i],MO[i],MK[i]);}
+/* Item / category display names (display only; ids and stored names unchanged). */
+const ITEM_KM={4:"ម្សៅក្មេង",8:"ថង់សំរាមធំ",15:"ទឹកក្លរ",21:"ម៉ាស់",22:"សាប៊ូលាងដៃ",24:"ថ្នាំសម្លាប់សត្វល្អិត",27:"Mr. Muscle (ទឹកលាងសម្អាត)",28:"អំបោសជូតការ៉ូ",31:"ស្រោមដៃកៅស៊ូ",35:"អំបោសប្លាស្ទិក",66:"អំបោស",38:"ម្សៅសាប៊ូ",39:"ថង់សំរាមតូច",49:"ក្រដាសអនាម័យ",50:"ទឹកក្លរលាងបង្គន់",56:"ទឹកអប់បន្ទប់",58:"ក្រដាសបង្គន់",60:"ថង់ប្លាស្ទិកថ្លា",1:"ក្រដាស A4",2:"ក្រដាស A4 ពណ៌",3:"ថ្មពិល AAA",9:"ថ្មពិល AA",5:"សៀវភៅធំ",6:"ស្រោមសំបុត្រត្នោត A4",7:"ស្រោមសំបុត្រត្នោត A5",10:"ប៊ិចខៀវ",11:"ដង្កៀបក្រដាស 19mm",12:"ដង្កៀបក្រដាស 32mm",13:"ដង្កៀបក្រដាស 41mm",14:"ដង្កៀបក្រដាស 51mm",16:"ប៊ិចលុប",17:"ថតឯកសារមានដង្កៀប",18:"បង់លុប",19:"ស្កុតពីរមុខ",20:"ស្រោមសំបុត្រ",23:"ប៊ិចពណ៌គូសចំណាំ",25:"ទឹកខ្មៅត្រា",26:"ប៊ិចក្ដារស",29:"សៀវភៅកត់ត្រា",30:"ខ្មៅដៃ",32:"ដង្កៀបក្រដាសតូច",33:"ប៊ិចហ្វឺតមិនលុប (ខៀវ)",34:"ប៊ិចហ្វឺតមិនលុប (ខ្មៅ)",36:"បន្ទាត់",37:"ប៊ិចក្រហម",40:"ឃ្នាប #10",41:"ស្កុតថ្លា",65:"ស្កុតថ្លាតូច",42:"ដីសកាត់ដេរ",43:"ខ្សែម៉ែត្រវាស់",51:"ស្កុតលឿង",52:"ស្រោមកាតបុគ្គលិក",53:"កាតបុគ្គលិក",54:"ក្ដារតោងក្រដាស",55:"ស្រោមប្លាស្ទិកថ្លា",57:"ថតឯកសារមានខ្សែ",61:"ដង្កៀបក្រដាស 25mm",62:"កាវដុំ",63:"ក្រដាស A4 180g",64:"ថតឯកសារប្លាស្ទិកថ្លា",44:"ទឹកខ្មៅព្រីន (Toner) 79A",45:"ទឹកខ្មៅព្រីន (Toner) 63",46:"ទឹកខ្មៅព្រីន (Toner) 85A",47:"ទឹកខ្មៅព្រីន (Toner) 61A",48:"ទឹកខ្មៅព្រីន (Toner) A45",59:"ទឹកខ្មៅព្រីន (Toner) HP110"};
+const CAT_KM={Cleaning:"សម្ភារៈអនាម័យ",Stationery:"សម្ភារៈការិយាល័យ",Toner:"ទឹកខ្មៅព្រីន / ឧបករណ៍"};
+function IN(it){if(!it)return "";return L3(it.cn||it.name,it.name,it.nameKm||(typeof it.id==="number"?ITEM_KM[it.id]:null));}
+function CN(d){return L3(d.lz,d.le,d.lk||CAT_KM[d.le]);}
 const YEAR=new Date().getFullYear();
 
 // ════════════════════════════════
@@ -1006,17 +1015,17 @@ function onPoMonthRefChange(poMonth){
 function syncInvMonthDisplay(){
   const poM=+document.getElementById("po-month-ref").value;
   invDisplayMonth=(poM+11)%12;
-  const prevLabel=lang==="zh"?MZ[invDisplayMonth]:MO[invDisplayMonth];
-  const poLabel=lang==="zh"?MZ[poM]:MO[poM];
+  const prevLabel=MN(invDisplayMonth);
+  const poLabel=MN(poM);
   document.getElementById("inv-showing-label").textContent=
-    (lang==="zh"?`顯示 ${prevLabel} 庫存`:`Showing ${prevLabel} stock`);
+    (L3(`顯示 ${prevLabel} 庫存`,`Showing ${prevLabel} stock`,`កំពុងបង្ហាញស្តុក ${prevLabel}`));
 }
 
 // ════════════════════════════════
 // LOGIN
 // ════════════════════════════════
 function generateYearExcel(year, poHistory, invData){
-  if(typeof XLSX==="undefined"){alert("SheetJS not loaded"); return;}
+  if(typeof XLSX==="undefined"){alert(L3("SheetJS not loaded","SheetJS not loaded","មិនទាន់ផ្ទុក SheetJS")); return;}
   const wb=XLSX.utils.book_new();
   const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const monthsZh=["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"];
@@ -1108,15 +1117,15 @@ function doLogin(){
   const pin=document.getElementById("lp").value;
   const err=document.getElementById("lerr");
   err.style.display="block"; err.style.color="var(--red)";
-  if(!uid){err.textContent="請選擇姓名";return;}
+  if(!uid){err.textContent=L3("請選擇姓名","Please select your name","សូមជ្រើសឈ្មោះរបស់អ្នក");return;}
   const user=USERS.find(u=>u.id===uid);
-  if(!user){err.textContent="使用者不存在";return;}
+  if(!user){err.textContent=L3("使用者不存在","User not found","រកមិនឃើញអ្នកប្រើ");return;}
   // Owner：必須 Telegram ID + 密碼皆正確
   if(user.tgId){
     const tg=document.getElementById("ltg").value.trim();
-    if(tg!==user.tgId){err.textContent="❌ Telegram ID 不正確";return;}
+    if(tg!==user.tgId){err.textContent=L3("❌ Telegram ID 不正確","❌ Incorrect Telegram ID","❌ Telegram ID មិនត្រឹមត្រូវ");return;}
   }
-  if(user.pin!==pin){err.textContent="❌ PIN 錯誤，請重試";return;}
+  if(user.pin!==pin){err.textContent=L3("❌ PIN 錯誤，請重試","❌ Wrong PIN, please try again","❌ PIN មិនត្រឹមត្រូវ សូមព្យាយាមម្ដងទៀត");return;}
   cu={...user};
   err.style.display="none";
   // 向 GAS 換 session（供送核可用；失敗仍可離線操作與提交）
@@ -1140,7 +1149,7 @@ function doLogout(){
 // BOOT
 // ════════════════════════════════
 function showCloudLoading(msg){
-  document.getElementById("cloud-txt").textContent = msg || "☁️ 載入資料中... Loading data...";
+  document.getElementById("cloud-txt").textContent = msg || PRT("cloudLoading");
   document.getElementById("cloud-loading").classList.add("show");
 }
 function hideCloudLoading(){
@@ -1152,12 +1161,12 @@ function bootApp(){
   ensureMonthlyFlags(); // back-fill 每月/非每月 flags for items loaded from cloud
 
   const ms=document.getElementById("msel");
-  ms.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===curMonth?" selected":""}>${m} ${YEAR}</option>`).join("");
+  ms.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===curMonth?" selected":""}>${L3(m,m,MK[i])} ${YEAR}</option>`).join("");
   ms.onchange=e=>{curMonth=+e.target.value; saveState(); render();};
 
   // PO month reference selector for inventory
   const ims=document.getElementById("po-month-ref");
-  ims.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===curMonth?" selected":""}>${lang==="zh"?MZ[i]:MO[i]} ${YEAR}</option>`).join("");
+  ims.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===curMonth?" selected":""}>${MN(i)} ${YEAR}</option>`).join("");
   invDisplayMonth=(curMonth+11)%12;
   // Load inventory from Sheets
   loadInvCloud(YEAR).then(()=>renderInv());
@@ -1170,7 +1179,7 @@ function bootApp(){
   document.getElementById("header").style.borderBottom=`3px solid ${rc.color}`;
   document.getElementById("uname").textContent=cu.name;
   const rt=document.getElementById("urole");
-  rt.textContent=lang==="zh"?rc.label:rc.en;
+  rt.textContent=L3(rc.label,rc.en,rc.km);
   rt.style.background=rc.bg; rt.style.color=rc.color;
   rt.style.border=`1px solid ${rc.border}`;
 
@@ -1189,10 +1198,10 @@ function render(){
   const n=totalN();
   const sb=document.getElementById("sel-badge");
   sb.style.display=n>0?"block":"none";
-  sb.textContent=lang==="zh"?`已選 ${n} 項`:`${n} items`;
+  sb.textContent=L3(`已選 ${n} 項`,`${n} items`,`បានជ្រើស ${n} មុខ`);
   const pb=document.getElementById("pbtn"),xb=document.getElementById("sbtn");
-  pb.textContent=`📋 ${lang==="zh"?"預覽":"Preview"} (${n})`;
-  xb.textContent=`📤 ${lang==="zh"?"提交申請":"Submit"}`;
+  pb.textContent=`📋 ${L3("預覽","Preview","មើលជាមុន")} (${n})`;
+  xb.textContent=`📤 ${L3("提交申請","Submit","ដាក់ស្នើ")}`;
   const editable=poStatus==="draft";
   const canPreview=n>0||(cu.role!=="applicant"&&poStatus!=="draft");
   if(canPreview){pb.classList.add("on")}else{pb.classList.remove("on")}
@@ -1210,7 +1219,7 @@ function renderTabs(){
     const on=activeCat===key; const col=d.color;
     return `<button class="tab${on?" on":""}" style="${on?`background:${col};border-color:${col};color:#fff`:""}"
       onclick="setCat('${key}')">
-      ${d.icon} ${lang==="zh"?d.lz:d.le}
+      ${d.icon} ${CN(d)}
       ${n>0?`<span class="tc" style="background:${on?"rgba(255,255,255,0.3)":col};color:${on?"#fff":"#fff"}">${n}</span>`:""}
     </button>`;
   }).join("");
@@ -1229,8 +1238,8 @@ function renderGrid(){
     const invM=getInvMonth(curMonth);
     const curStock=invM[item.id]?.close||0;
     const isLow=curStock>0&&curStock<=safety;
-    const lb=lang==="zh"?item.cn:item.name;
-    const sb2=lang==="zh"?item.name:item.cn;
+    const lb=IN(item);
+    const sb2=""; /* v3.9.26: only the current-language name is shown */
     const cardBg=on?item.bgLight:"#fff";
     const borderCol=on?col:isLow?"#fca5a5":"#d0dce8";
     return `<div class="card${on?" on":""}${isLow?" warn":""}"
@@ -1239,13 +1248,13 @@ function renderGrid(){
         <span class="cemoji">${item.e}</span>
         <div class="cgrid"></div>
         ${on?`<div class="cbadge" style="background:${col}">${o.qty} ${unit}</div>`:""}
-        ${isLow?`<div class="warn-badge">⚠️ 庫存低</div>`:""}
+        ${isLow?`<div class="warn-badge">⚠️ ${L3("庫存低","Low stock","ស្តុកទាប")}</div>`:""}
       </div>
       <div class="cbody">
         <div>
           <div class="cname" style="color:${on?col:""}">${lb}</div>
           <div class="csub">${sb2}</div>
-          ${curStock>0?`<div class="cstock${isLow?" low":""}">${isLow?"⚠️":"📦"} 庫存: ${curStock} ${unit}</div>`:""}
+          ${curStock>0?`<div class="cstock${isLow?" low":""}">${isLow?"⚠️":"📦"} ${L3("庫存","Stock","ស្តុក")}: ${curStock} ${unit}</div>`:""}
         </div>
         ${editable?`
         <div class="qrow">
@@ -1254,9 +1263,9 @@ function renderGrid(){
             style="${on?`border-color:${col}66;color:${col}`:""}"
             step="0.0001" onchange="setQ('${item.id}',this.value)"/>
           <button class="qbtn" style="${on?`background:${col}22;border-color:${col}44`:""}" onclick="chQ('${item.id}',1)">+</button>
-          <span class="qunit" onclick="openUnitEdit('${item.id}','${item.name}')" title="點擊修改單位">${unit}</span>
+          <span class="qunit" onclick="openUnitEdit('${item.id}')" title="${L3("點擊修改單位","Tap to change unit","ចុចដើម្បីប្ដូរឯកតា")}">${unit}</span>
         </div>
-        <input class="noteinput" placeholder="${lang==="zh"?"備註...":"Note..."}" value="${o.note}" oninput="setN('${item.id}',this.value)"/>
+        <input class="noteinput" placeholder="${L3("備註...","Note...","កំណត់សម្គាល់...")}" value="${GA.esc(o.note||'')}" oninput="setN('${item.id}',this.value)"/>
         `:`<div style="font-size:12px;font-weight:700;color:${on?col:"var(--text3)"};">${on?o.qty+" "+unit:"—"}</div>`}
       </div>
     </div>`;
@@ -1313,50 +1322,48 @@ function renderPOHistory() {
   if (!container) return;
   const MO2 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const statusMap = {
-    APPROVED: {label:"✅ 已核可", color:"var(--green)"},
-    SUBMITTED: {label:"⏳ 待審查", color:"var(--amber)"},
-    VERIFIED:  {label:"🔵 待核可", color:"var(--blue)"},
-    RETURNED:  {label:"↩ 已退回", color:"var(--orange)"},
-    REJECTED:  {label:"❌ 已拒絕", color:"var(--red)"},
-    VOIDED:    {label:"🗑️ 已作廢", color:"var(--text3)"},
+    APPROVED: {label:L3("✅ 已核可","✅ Approved","✅ បានអនុម័ត"), color:"var(--green)"},
+    SUBMITTED: {label:L3("⏳ 待審查","⏳ Pending review","⏳ រង់ចាំការត្រួតពិនិត្យ"), color:"var(--amber)"},
+    VERIFIED:  {label:L3("🔵 待核可","🔵 Pending approval","🔵 រង់ចាំការអនុម័ត"), color:"var(--blue)"},
+    RETURNED:  {label:L3("↩ 已退回","↩ Returned","↩ បានបញ្ជូនត្រឡប់"), color:"var(--orange)"},
+    REJECTED:  {label:L3("❌ 已拒絕","❌ Rejected","❌ បានបដិសេធ"), color:"var(--red)"},
+    VOIDED:    {label:L3("🗑️ 已作廢","🗑️ Voided","🗑️ បានលុបចោល"), color:"var(--text3)"},
   };
   if (!poHistoryData.length) {
-    container.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:12px">── ${lang==="zh"?"今年暫無記錄":"No records this year"} ──</div>`;
+    container.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:12px">── ${L3("今年暫無記錄","No records this year","មិនទាន់មានកំណត់ត្រាក្នុងឆ្នាំនេះ")} ──</div>`;
     return;
   }
   const sorted = [...poHistoryData].reverse();
   container.innerHTML = sorted.map(po => {
     const st = statusMap[po.status] || {label: po.status, color:"var(--text2)"};
-    const canVoid = po.status === "APPROVED" && cu && cu.role === "approver";
+    const canVoid = po.status === "APPROVED" && cu && (cu.role === "approver" || cu.role === "owner");
     return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
         <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--text)">${po.poNumber||"(no#)"}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${MO2[po.month]||""} ${po.year} · ${po.applicant||""} · ${po.items.length} 項${po.receivingSummary?` · 📦 已收 ${po.receivingSummary.received} / 剩餘 ${po.receivingSummary.remaining}`:""}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${MO2[po.month]||""} ${po.year} · ${po.applicant||""} · ${po.items.length} ${L3("項","items","មុខ")}${po.receivingSummary?` · 📦 ${L3("已收","Received","បានទទួល")} ${po.receivingSummary.received} / ${L3("剩餘","Remaining","នៅសល់")} ${po.receivingSummary.remaining}`:""}</div>
       </div>
       <div style="font-size:12px;font-weight:700;color:${st.color}">${st.label}</div>
       ${canVoid ? `<button onclick="voidPO('${po.poId}','${po.poNumber||po.poId}')"
         style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:6px;
-        padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🗑️ 作廢 Void</button>` : ""}
+        padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">🗑️ ${L3("作廢 Void","Void","លុបចោល")}</button>` : ""}
     </div>`;
   }).join("");
 }
 
 async function voidPO(poId, poNum) {
-  const msg = lang==="zh"
-    ? `確定要作廢採購單 ${poNum}？\n庫存數量將自動回退。`
-    : `Void PO ${poNum}?\nInventory will be reversed automatically.`;
+  const msg = L3(`確定要作廢採購單 ${poNum}？\n庫存數量將自動回退。`,`Void PO ${poNum}?\nInventory will be reversed automatically.`,`លុបចោលបញ្ជាទិញ ${poNum}?\nបរិមាណស្តុកនឹងត្រឡប់វិញដោយស្វ័យប្រវត្តិ។`);
   if (!confirm(msg)) return;
   try {
     const json = await GA.gasGet('voidPO',{poId:poId,userName:cu.name});
     if (json.ok) {
-      alert(lang==="zh" ? "✅ 已作廢，庫存已回退！" : "✅ Voided! Inventory reversed.");
+      alert(L3("✅ 已作廢，庫存已回退！","✅ Voided! Inventory reversed.","✅ បានលុបចោល ស្តុកបានត្រឡប់វិញ!"));
       await loadPOHistory();
       await loadStateCloud();
       renderInv();
     } else {
       alert("❌ " + (json.msg || "Error"));
     }
-  } catch(e) { alert("❌ Network error"); }
+  } catch(e) { /* v3.9.26: show the real reason (e.g. login expired / no permission) */ alert("❌ " + ((GA.errText ? GA.errText(e) : (e && e.message)) || L3("網路錯誤","Network error","បញ្ហាបណ្ដាញ"))); }
 }
 
 function renderInv(){
@@ -1364,15 +1371,15 @@ function renderInv(){
   // Render thead with current lang
   const thead=document.getElementById("inv-thead");
   if(thead) thead.innerHTML=`<tr>
-    <th>${lang==="zh"?"物品":"Item"}</th>
-    <th style="text-align:right">${lang==="zh"?"期初庫存":"Opening"}</th>
-    <th style="text-align:right">${lang==="zh"?"本月採購":"Purchased"} 🟢</th>
-    <th style="text-align:right">${lang==="zh"?"本月使用":"Used"} 🟡</th>
-    <th style="text-align:right">${lang==="zh"?"期末庫存":"Closing"}</th>
-    <th style="text-align:right">⚠️ ${lang==="zh"?"安全庫存":"Safety"}</th>
-    <th style="text-align:center">${lang==="zh"?"狀態":"Status"}</th>
-    <th>${lang==="zh"?"單位":"Unit"}</th>
-    <th>${lang==="zh"?"備註":"Remarks"}</th>
+    <th>${L3("物品","Item","មុខទំនិញ")}</th>
+    <th style="text-align:right">${L3("期初庫存","Opening","ស្តុកដើមគ្រា")}</th>
+    <th style="text-align:right">${L3("本月採購","Purchased","ទិញក្នុងខែនេះ")} 🟢</th>
+    <th style="text-align:right">${L3("本月使用","Used","ប្រើក្នុងខែនេះ")} 🟡</th>
+    <th style="text-align:right">${L3("期末庫存","Closing","ស្តុកចុងគ្រា")}</th>
+    <th style="text-align:right">⚠️ ${L3("安全庫存","Safety","ស្តុកសុវត្ថិភាព")}</th>
+    <th style="text-align:center">${L3("狀態","Status","ស្ថានភាព")}</th>
+    <th>${L3("單位","Unit","ឯកតា")}</th>
+    <th>${L3("備註","Remarks","កំណត់សម្គាល់")}</th>
   </tr>`;
   const inv=getInvMonth(selM);
   const allItms=allItems();
@@ -1391,19 +1398,19 @@ function renderInv(){
   }).length;
   const totalUsed=allItms.reduce((a,i)=>a+(inv[i.id]?.used||0),0);
   document.getElementById("inv-summary").innerHTML=`
-    <div class="sum-card"><div class="sum-num" style="color:var(--blue)">${totalItems}</div><div class="sum-label">物品總數</div></div>
-    <div class="sum-card"><div class="sum-num" style="color:var(--green)">${activeItems}</div><div class="sum-label">有庫存物品</div></div>
+    <div class="sum-card"><div class="sum-num" style="color:var(--blue)">${totalItems}</div><div class="sum-label">${L3("物品總數","Total items","ចំនួនមុខទំនិញសរុប")}</div></div>
+    <div class="sum-card"><div class="sum-num" style="color:var(--green)">${activeItems}</div><div class="sum-label">${L3("有庫存物品","Items in stock","មុខទំនិញមានក្នុងស្តុក")}</div></div>
     <div class="sum-card" style="${lowCount>0?'background:var(--red-bg);border-color:var(--red-border)':''}">
-      <div class="sum-num" style="color:var(--red)">${lowCount}</div><div class="sum-label">⚠️ 庫存不足</div></div>
-    <div class="sum-card"><div class="sum-num" style="color:var(--amber)">${totalUsed}</div><div class="sum-label">本月總使用</div></div>`;
+      <div class="sum-num" style="color:var(--red)">${lowCount}</div><div class="sum-label">⚠️ ${L3("庫存不足","Low stock","ស្តុកមិនគ្រប់")}</div></div>
+    <div class="sum-card"><div class="sum-num" style="color:var(--amber)">${totalUsed}</div><div class="sum-label">${L3("本月總使用","Used this month","ប្រើប្រាស់ក្នុងខែនេះ")}</div></div>`;
 
   // Alert bar
   const ab=document.getElementById("alert-bar");
   if(lowCount>0){
     ab.classList.add("show");
     const names=allItms.filter(i=>{const s=getSafety(i.id);const c=inv[i.id]?.close||0;return c>0&&c<=s;})
-      .map(i=>lang==="zh"?i.cn:i.name).join("、");
-    const alertMsg=lang==="zh"?`以下 ${lowCount} 項庫存低於安全庫存：${names}`:`${lowCount} item(s) below safety stock: ${names}`;
+      .map(i=>IN(i)).join("、");
+    const alertMsg=L3(`以下 ${lowCount} 項庫存低於安全庫存：${names}`,`${lowCount} item(s) below safety stock: ${names}`,`មុខទំនិញ ${lowCount} មុខ ស្តុកទាបជាងកម្រិតសុវត្ថិភាព៖ ${names}`);
     document.getElementById("alert-text").textContent=alertMsg;
   } else {ab.classList.remove("show");}
 
@@ -1412,17 +1419,15 @@ function renderInv(){
   const irrCount=allItms.length-monthlyCount;
   const fqAll=document.getElementById("fq-all"), fqM=document.getElementById("fq-month"), fqI=document.getElementById("fq-irr");
   if(fqAll){
-    fqAll.textContent=(lang==="zh"?"全部":"All")+` (${allItms.length})`;
-    fqM.textContent=(lang==="zh"?"🔁 每月固定採購":"🔁 Monthly")+` (${monthlyCount})`;
-    fqI.textContent=(lang==="zh"?"📦 非每月 / 不定期":"📦 Irregular")+` (${irrCount})`;
+    fqAll.textContent=(L3("全部","All","ទាំងអស់"))+` (${allItms.length})`;
+    fqM.textContent=(L3("🔁 每月固定採購","🔁 Monthly","🔁 ទិញប្រចាំខែ"))+` (${monthlyCount})`;
+    fqI.textContent=(L3("📦 非每月 / 不定期","📦 Irregular","📦 មិនទៀងទាត់"))+` (${irrCount})`;
     fqAll.classList.toggle("on",invFreqFilter==="all");
     fqM.classList.toggle("on",invFreqFilter==="monthly");
     fqI.classList.toggle("on",invFreqFilter==="irregular");
   }
   const carryNote=document.getElementById("inv-carry-note");
-  if(carryNote) carryNote.innerHTML=lang==="zh"
-    ? `↩ 期初＝上月期末，<b>每月固定採購</b>品項的庫存會自動延續到下個月。`
-    : `↩ Opening = last month's closing. <b>Monthly</b> items carry their stock forward automatically.`;
+  if(carryNote) carryNote.innerHTML=L3(`↩ 期初＝上月期末，<b>每月固定採購</b>品項的庫存會自動延續到下個月。`,`↩ Opening = last month's closing. <b>Monthly</b> items carry their stock forward automatically.`,`↩ ស្តុកដើមគ្រា = ស្តុកចុងគ្រាខែមុន។ មុខទំនិញ<b>ទិញប្រចាំខែ</b> ស្តុកនឹងផ្ទេរទៅខែបន្ទាប់ដោយស្វ័យប្រវត្តិ។`);
 
   const passFreq=(id)=> invFreqFilter==="all" ? true : invFreqFilter==="monthly" ? getMonthly(id) : !getMonthly(id);
 
@@ -1432,38 +1437,38 @@ function renderInv(){
     const catItms=[...d.items,...customItems.filter(c=>c.catKey===catKey&&!hiddenItems[c.id])]
       .filter(it=>passFreq(it.id));
     if(!catItms.length) return;
-    html+=`<tr style="background:${d.bgLight}"><td colspan="9" style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${d.color};padding:6px 10px">${d.icon} ${lang==="zh"?d.lz:d.le}</td></tr>`;
+    html+=`<tr style="background:${d.bgLight}"><td colspan="9" style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${d.color};padding:6px 10px">${d.icon} ${CN(d)}</td></tr>`;
     catItms.forEach(item=>{
       const r=inv[item.id]; const safety=getSafety(item.id); const unit=getUnit(item.id);
       const close=r.close;
       const autoClose=r.open+r.purchase-r.used;
       const isM=getMonthly(item.id);
-      const mBadge=isM?`<span class="mbadge m1">🔁 ${lang==="zh"?"每月":"Monthly"}</span>`
-        :`<span class="mbadge m0">${lang==="zh"?"不定期":"Ad-hoc"}</span>`;
-      const missPill=(isM&&(r.purchase||0)===0)?`<span class="miss-pill">⚠ ${lang==="zh"?"本月未採購":"not bought"}</span>`:"";
-      const statusTxt=close<=0?"—":close<=safety?`<span class="stock-low">⚠️ ${lang==="zh"?"不足":"Low"}</span>`:
-        close<=safety*2?`<span class="stock-warn">⚡ ${lang==="zh"?"偏低":"Fair"}</span>`:`<span class="stock-ok">✓ ${lang==="zh"?"正常":"OK"}</span>`;
+      const mBadge=isM?`<span class="mbadge m1">🔁 ${L3("每月","Monthly","ប្រចាំខែ")}</span>`
+        :`<span class="mbadge m0">${L3("不定期","Ad-hoc","មិនទៀងទាត់")}</span>`;
+      const missPill=(isM&&(r.purchase||0)===0)?`<span class="miss-pill">⚠ ${L3("本月未採購","not bought","មិនទាន់ទិញខែនេះ")}</span>`:"";
+      const statusTxt=close<=0?"—":close<=safety?`<span class="stock-low">⚠️ ${L3("不足","Low","មិនគ្រប់")}</span>`:
+        close<=safety*2?`<span class="stock-warn">⚡ ${L3("偏低","Fair","ទាប")}</span>`:`<span class="stock-ok">✓ ${L3("正常","OK","ធម្មតា")}</span>`;
       html+=`<tr class="${close>0&&close<=safety?"low-stock":""}">
-        <td><div class="itd-name">${lang==="zh"?item.cn:item.name} ${item.e}${mBadge}${missPill}</div>
-            <div class="itd-cn">${lang==="zh"?item.name:item.cn}</div></td>
+        <td><div class="itd-name">${IN(item)} ${item.e}${mBadge}${missPill}</div>
+            <div class="itd-cn"></div></td>
         <td><input class="itd-input" type="number" min="0" value="${r.open}"
-          onchange="updateInv(invDisplayMonth,${item.id},'open',this.value)"/></td>
+          onchange="updateInv(invDisplayMonth,'${item.id}','open',this.value)"/></td>
         <td><input class="itd-input" type="number" min="0" value="${r.purchase}"
           style="border-color:var(--green-border)"
-          onchange="updateInv(invDisplayMonth,${item.id},'purchase',this.value)"/></td>
+          onchange="updateInv(invDisplayMonth,'${item.id}','purchase',this.value)"/></td>
         <td><input class="itd-input" type="number" min="0" value="${r.used}"
           style="border-color:var(--amber-border)"
-          onchange="updateInv(invDisplayMonth,${item.id},'used',this.value)"/></td>
+          onchange="updateInv(invDisplayMonth,'${item.id}','used',this.value)"/></td>
         <td><div class="itd-num" style="color:${close>0&&close<=safety?"var(--red)":"var(--text)"}">${autoClose>=0?autoClose:0}</div></td>
         <td><div class="itd-num" style="color:var(--text2)">${safety}</div></td>
         <td style="text-align:center">${statusTxt}</td>
-        <td><button class="unit-edit" onclick="openUnitEdit('${item.id}','${item.name}')">${unit} ✏️</button></td>
-        <td><input class="noteinput" style="width:100px" placeholder="備註..." value="${r.note}"
-          onchange="updateInv(${selM},${item.id},'note',this.value)"/></td>
+        <td><button class="unit-edit" onclick="openUnitEdit('${item.id}')">${unit} ✏️</button></td>
+        <td><input class="noteinput" style="width:100px" placeholder="${L3("備註...","Note...","កំណត់សម្គាល់...")}" value="${GA.esc(r.note||'')}"
+          onchange="updateInv(${selM},'${item.id}','note',this.value)"/></td>
       </tr>`;
     });
   });
-  if(!html) html=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:30px">${lang==="zh"?"此分類無品項":"No items in this filter"}</td></tr>`;
+  if(!html) html=`<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:30px">${L3("此分類無品項","No items in this filter","គ្មានមុខទំនិញក្នុងតម្រងនេះ")}</td></tr>`;
   document.getElementById("inv-tbody").innerHTML=html;
 
   // Mobile card view
@@ -1475,54 +1480,54 @@ function renderInv(){
       if(!catItems.length) return;
       mhtml+=`<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
         color:${d.color};padding:8px 0 5px;border-bottom:2px solid ${d.color}33;margin-bottom:8px">
-        ${d.icon} ${lang==="zh"?d.lz:d.le}</div>`;
+        ${d.icon} ${CN(d)}</div>`;
       catItems.forEach(item=>{
         const r=inv[item.id]||{open:0,purchase:0,used:0,close:0,note:""};
         const safety=getSafety(item.id); const unit=getUnit(item.id);
         const isLow=r.close>0&&r.close<=safety;
         const autoClose=Math.max(0,r.open+r.purchase-r.used);
         const isM=getMonthly(item.id);
-        const mBadge=isM?`<span class="mbadge m1">🔁 ${lang==="zh"?"每月":"Monthly"}</span>`
-          :`<span class="mbadge m0">${lang==="zh"?"不定期":"Ad-hoc"}</span>`;
-        const missPill=(isM&&(r.purchase||0)===0)?`<span class="miss-pill">⚠ ${lang==="zh"?"本月未採購":"not bought"}</span>`:"";
+        const mBadge=isM?`<span class="mbadge m1">🔁 ${L3("每月","Monthly","ប្រចាំខែ")}</span>`
+          :`<span class="mbadge m0">${L3("不定期","Ad-hoc","មិនទៀងទាត់")}</span>`;
+        const missPill=(isM&&(r.purchase||0)===0)?`<span class="miss-pill">⚠ ${L3("本月未採購","not bought","មិនទាន់ទិញខែនេះ")}</span>`:"";
         const statusCol=autoClose<=0?"var(--text3)":autoClose<=safety?"var(--red)":autoClose<=safety*2?"var(--amber)":"var(--green)";
         mhtml+=`<div class="inv-card${isLow?" low-stock":""}">
           <div class="inv-card-head">
             <span style="font-size:20px">${item.e}</span>
             <div style="flex:1">
-              <div style="font-size:12px;font-weight:700;color:var(--text)">${lang==="zh"?item.cn:item.name}${mBadge}${missPill}</div>
-              <div style="font-size:10px;color:var(--text2)">${lang==="zh"?item.name:item.cn}</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text)">${IN(item)}${mBadge}${missPill}</div>
+              <div style="font-size:10px;color:var(--text2)"></div>
             </div>
-            <button class="unit-edit" onclick="openUnitEdit('${item.id}','${item.name}')">${unit} ✏️</button>
+            <button class="unit-edit" onclick="openUnitEdit('${item.id}')">${unit} ✏️</button>
           </div>
           <div class="inv-card-body">
             <div class="inv-field">
-              <div class="inv-field-label">${lang==="zh"?"期初":"Opening"}</div>
+              <div class="inv-field-label">${L3("期初","Opening","ដើមគ្រា")}</div>
               <input class="itd-input" style="width:100%" type="number" min="0" value="${r.open}"
-                onchange="updateInv(invDisplayMonth,${item.id},'open',this.value)"/>
+                onchange="updateInv(invDisplayMonth,'${item.id}','open',this.value)"/>
             </div>
             <div class="inv-field">
-              <div class="inv-field-label" style="color:var(--green)">${lang==="zh"?"採購":"Purchased"} 🟢</div>
+              <div class="inv-field-label" style="color:var(--green)">${L3("採購","Purchased","ទិញ")} 🟢</div>
               <input class="itd-input" style="width:100%;border-color:var(--green-border)" type="number" min="0" value="${r.purchase}"
-                onchange="updateInv(invDisplayMonth,${item.id},'purchase',this.value)"/>
+                onchange="updateInv(invDisplayMonth,'${item.id}','purchase',this.value)"/>
             </div>
             <div class="inv-field">
-              <div class="inv-field-label" style="color:var(--amber)">${lang==="zh"?"使用":"Used"} 🟡</div>
+              <div class="inv-field-label" style="color:var(--amber)">${L3("使用","Used","ប្រើ")} 🟡</div>
               <input class="itd-input" style="width:100%;border-color:var(--amber-border)" type="number" min="0" value="${r.used}"
-                onchange="updateInv(invDisplayMonth,${item.id},'used',this.value)"/>
+                onchange="updateInv(invDisplayMonth,'${item.id}','used',this.value)"/>
             </div>
             <div class="inv-field">
-              <div class="inv-field-label">${lang==="zh"?"期末":"Closing"}</div>
+              <div class="inv-field-label">${L3("期末","Closing","ចុងគ្រា")}</div>
               <div class="inv-field-val" style="color:${statusCol};padding-top:4px">${autoClose}</div>
             </div>
             <div class="inv-field">
-              <div class="inv-field-label">⚠️ ${lang==="zh"?"安全":"Safety"}</div>
+              <div class="inv-field-label">⚠️ ${L3("安全","Safety","សុវត្ថិភាព")}</div>
               <div class="inv-field-val" style="color:var(--text2);padding-top:4px">${safety}</div>
             </div>
             <div class="inv-field">
-              <div class="inv-field-label">${lang==="zh"?"備註":"Remarks"}</div>
-              <input class="noteinput" style="margin-top:4px" placeholder="${lang==="zh"?"備註...":"Note..."}" value="${r.note}"
-                onchange="updateInv(invDisplayMonth,${item.id},'note',this.value)"/>
+              <div class="inv-field-label">${L3("備註","Remarks","កំណត់សម្គាល់")}</div>
+              <input class="noteinput" style="margin-top:4px" placeholder="${L3("備註...","Note...","កំណត់សម្គាល់...")}" value="${GA.esc(r.note||'')}"
+                onchange="updateInv(invDisplayMonth,'${item.id}','note',this.value)"/>
             </div>
           </div>
         </div>`;
@@ -1568,27 +1573,25 @@ function renderRecv(){
   const uc=periodLog.filter(r=>r.type==="issue").length;
   const ca=document.getElementById("rcf-all"), cr=document.getElementById("rcf-recv"), cu2=document.getElementById("rcf-use");
   if(ca){
-    ca.textContent=(lang==="zh"?"全部":"All")+` (${all})`;
-    cr.textContent=(lang==="zh"?"🟢 收貨":"🟢 Receive")+` (${rc})`;
-    cu2.textContent=(lang==="zh"?"🟡 領用":"🟡 Issue")+` (${uc})`;
+    ca.textContent=(L3("全部","All","ទាំងអស់"))+` (${all})`;
+    cr.textContent=(L3("🟢 收貨","🟢 Receive","🟢 ទទួល"))+` (${rc})`;
+    cu2.textContent=(L3("🟡 領用","🟡 Issue","🟡 បើកចេញ"))+` (${uc})`;
     ca.classList.toggle("on",recvFilter==="all");
     cr.classList.toggle("on",recvFilter==="receive");
     cu2.classList.toggle("on",recvFilter==="issue");
   }
   const note=document.getElementById("recv-note");
-  if(note) note.innerHTML=lang==="zh"
-    ? "💡 每筆收貨會自動加進「庫存管理」對應月份的<b>本月採購</b>，領用則加進<b>本月使用</b>。刪除紀錄會自動扣回。"
-    : "💡 Each receive auto-adds to that month's <b>Purchased</b> in Inventory; each issue adds to <b>Used</b>. Deleting a record reverses it.";
+  if(note) note.innerHTML=L3("💡 每筆收貨會自動加進「庫存管理」對應月份的<b>本月採購</b>，領用則加進<b>本月使用</b>。刪除紀錄會自動扣回。","💡 Each receive auto-adds to that month's <b>Purchased</b> in Inventory; each issue adds to <b>Used</b>. Deleting a record reverses it.","💡 ការទទួលនីមួយៗបូកចូល<b>ទិញក្នុងខែនេះ</b> ក្នុងស្តុកខែនោះ ហើយការបើកចេញបូកចូល<b>ប្រើក្នុងខែនេះ</b>។ លុបកំណត់ត្រានឹងដកត្រឡប់វិញ។");
 
   const thead=document.getElementById("recv-thead");
   if(thead) thead.innerHTML=`<tr>
-    <th>${lang==="zh"?"日期":"Date"}</th>
-    <th style="text-align:center">${lang==="zh"?"類型":"Type"}</th>
-    <th>${lang==="zh"?"品項":"Item"}</th>
-    <th style="text-align:right">${lang==="zh"?"數量":"Qty"}</th>
-    <th>${lang==="zh"?"部門/供應商":"Dept/Supplier"}</th>
-    <th>${lang==="zh"?"經手人":"By"}</th>
-    <th>${lang==="zh"?"備註":"Remarks"}</th>
+    <th>${L3("日期","Date","កាលបរិច្ឆេទ")}</th>
+    <th style="text-align:center">${L3("類型","Type","ប្រភេទ")}</th>
+    <th>${L3("品項","Item","មុខទំនិញ")}</th>
+    <th style="text-align:right">${L3("數量","Qty","បរិមាណ")}</th>
+    <th>${L3("部門/供應商","Dept/Supplier","ផ្នែក / អ្នកផ្គត់ផ្គង់")}</th>
+    <th>${L3("經手人","By","អ្នកទទួលខុសត្រូវ")}</th>
+    <th>${L3("備註","Remarks","កំណត់សម្គាល់")}</th>
     <th></th>
   </tr>`;
 
@@ -1599,15 +1602,15 @@ function renderRecv(){
   let html="";
   if(!list.length){
     html=`<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:34px">
-      ${lang==="zh"?"尚無收貨/領用紀錄，點右上角「新增收貨」開始記錄。":"No records yet. Tap “Add Receive” to start."}</td></tr>`;
+      ${L3("尚無收貨/領用紀錄，點右上角「新增收貨」開始記錄。","No records yet. Tap “Add Receive” to start.","មិនទាន់មានកំណត់ត្រាទទួល/បើកចេញ។ ចុច «បន្ថែមការទទួល» ដើម្បីចាប់ផ្តើម។")}</td></tr>`;
   } else {
     list.forEach(r=>{
       const it=allItemsLookup(r.itemId);
-      const nm=it?(lang==="zh"?(it.cn||it.name):it.name):(r.itemName||"?");
+      const nm=it?(IN(it)):(r.itemName||"?");
       const isR=r.type==="receive";
       const typeBadge=isR
-        ?`<span style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:999px;padding:2px 9px">🟢 ${lang==="zh"?"收貨":"Receive"}</span>`
-        :`<span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:999px;padding:2px 9px">🟡 ${lang==="zh"?"領用":"Issue"}</span>`;
+        ?`<span style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:999px;padding:2px 9px">🟢 ${L3("收貨","Receive","ទទួល")}</span>`
+        :`<span style="font-size:10px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:999px;padding:2px 9px">🟡 ${L3("領用","Issue","បើកចេញ")}</span>`;
       html+=`<tr>
         <td style="white-space:nowrap;color:var(--text2);font-size:12px">${r.date||""}</td>
         <td style="text-align:center">${typeBadge}</td>
@@ -1633,20 +1636,20 @@ function openRecvForm(type){
   document.getElementById("rec-req").value=cu?cu.name:"";
   document.getElementById("rec-remarks").value="";
   const sel=document.getElementById("rec-item");
-  sel.innerHTML=allItems().map(i=>`<option value="${i.id}">${lang==="zh"?(i.cn||i.name):i.name} · ${i.name}</option>`).join("");
+  sel.innerHTML=allItems().map(i=>`<option value="${i.id}">${IN(i)}</option>`).join("");
   recvFormLabels();
-  document.getElementById("recv-mtitle").textContent=(type==="issue"?(lang==="zh"?"➖ 新增領用":"➖ Add Issue"):(lang==="zh"?"➕ 新增收貨":"➕ Add Receive"));
+  document.getElementById("recv-mtitle").textContent=(type==="issue"?(L3("➖ 新增領用","➖ Add Issue","➖ បន្ថែមការបើកចេញ")):(L3("➕ 新增收貨","➕ Add Receive","➕ បន្ថែមការទទួល")));
   document.getElementById("recv-ov").style.display="flex";
 }
 function recvFormLabels(){
   const zh=lang==="zh";
   const set=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
-  set("rec-l-type",zh?"類型":"Type"); set("rec-l-date",zh?"日期":"Date");
-  set("rec-l-item",zh?"品項":"Item"); set("rec-l-qty",zh?"數量":"Qty");
-  set("rec-l-dept",zh?"部門/供應商":"Dept/Supplier"); set("rec-l-req",zh?"經手人":"Handled by");
-  set("rec-l-remarks",zh?"備註":"Remarks"); set("rec-opt-r",zh?"收貨/採購":"Receive/Purchase");
-  set("rec-opt-i",zh?"領用/發放":"Issue/Distribute");
-  const sv=document.getElementById("rec-save"); if(sv) sv.textContent=zh?"💾 儲存":"💾 Save";
+  set("rec-l-type",L3("類型","Type","ប្រភេទ")); set("rec-l-date",L3("日期","Date","កាលបរិច្ឆេទ"));
+  set("rec-l-item",L3("品項","Item","មុខទំនិញ")); set("rec-l-qty",L3("數量","Qty","បរិមាណ"));
+  set("rec-l-dept",L3("部門/供應商","Dept/Supplier","ផ្នែក / អ្នកផ្គត់ផ្គង់")); set("rec-l-req",L3("經手人","Handled by","អ្នកទទួលខុសត្រូវ"));
+  set("rec-l-remarks",L3("備註","Remarks","កំណត់សម្គាល់")); set("rec-opt-r",L3("收貨/採購","Receive/Purchase","ទទួល / ទិញ"));
+  set("rec-opt-i",L3("領用/發放","Issue/Distribute","បើកចេញ / ចែកចាយ"));
+  const sv=document.getElementById("rec-save"); if(sv) sv.textContent=L3("💾 儲存","💾 Save","💾 រក្សាទុក");
 }
 function closeRecvOv(){ document.getElementById("recv-ov").style.display="none"; }
 
@@ -1657,7 +1660,7 @@ function saveRecvRecord(){
   const type=document.getElementById("rec-type").value;
   const date=document.getElementById("rec-date").value;
   const qty=Math.max(1,parseInt(document.getElementById("rec-qty").value)||0);
-  if(!it||!date||qty<=0){ alert(lang==="zh"?"請選擇品項、日期並輸入數量":"Pick an item, date and quantity"); return; }
+  if(!it||!date||qty<=0){ alert(L3("請選擇品項、日期並輸入數量","Pick an item, date and quantity","សូមជ្រើសមុខទំនិញ កាលបរិច្ឆេទ ហើយបញ្ចូលបរិមាណ")); return; }
   const rec={id:id||("rec_"+Date.now()),date,type,itemId,itemName:it.name,qty,
     dept:document.getElementById("rec-dept").value.trim(),
     requester:document.getElementById("rec-req").value.trim(),
@@ -1676,7 +1679,7 @@ function saveRecvRecord(){
 function delRecvRecord(id){
   const r=recvLog.find(x=>x.id===id);
   if(!r) return;
-  if(!confirm(lang==="zh"?"確定刪除這筆紀錄？（會自動從庫存扣回）":"Delete this record? (inventory will be reversed)")) return;
+  if(!confirm(L3("確定刪除這筆紀錄？（會自動從庫存扣回）","Delete this record? (inventory will be reversed)","លុបកំណត់ត្រានេះ? (ស្តុកនឹងដកត្រឡប់ដោយស្វ័យប្រវត្តិ)"))) return;
   const {y,m}=recYearMonth(r.date);
   if(y===YEAR) bumpInvForRecord(m,r.itemId,r.type==="receive"?"purchase":"used",-r.qty);
   recvLog=recvLog.filter(x=>x.id!==id);
@@ -1687,7 +1690,7 @@ function delRecvRecord(id){
 }
 
 function exportRecvExcel(){
-  if(typeof XLSX==="undefined"){alert("SheetJS not loaded");return;}
+  if(typeof XLSX==="undefined"){alert(L3("SheetJS not loaded","SheetJS not loaded","មិនទាន់ផ្ទុក SheetJS"));return;}
   const wb=XLSX.utils.book_new();
   const rows=[["Date","Type","Item(EN)","Item(中)","Qty","Dept/Supplier","By","Remarks"]];
   recvLog.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).forEach(r=>{
@@ -1720,6 +1723,8 @@ function normType(v){
 }
 function excelToISO(v){
   if(v==null||v==="") return "";
+  /* v3.9.25: validated, timezone-safe (UTC serials); 2-digit years → 20yy; ambiguous/invalid → "" (row is listed as skipped) */
+  if(typeof GA!=="undefined"&&GA.excelDate){ const s2=String(v).trim().replace(/^(\d{1,2})([-\/.])(\d{1,2})\2(\d{2})$/,(m,a,sp,b,y)=>a+sp+b+sp+"20"+y); return GA.excelDate(typeof v==="number"?v:s2); }
   if(typeof v==="number"){ // Excel serial date
     const d=new Date(Math.round((v-25569)*86400*1000));
     if(isNaN(d)) return "";
@@ -1741,7 +1746,7 @@ const MONTH_MAP={'jan':0,'feb':1,'mar':2,'apr':3,'april':3,'may':4,'jun':5,'june
 
 function importRecvExcel(input){
   const f=input.files[0]; if(!f) return;
-  if(typeof XLSX==="undefined"){alert("SheetJS not loaded");input.value="";return;}
+  if(typeof XLSX==="undefined"){alert(L3("SheetJS not loaded","SheetJS not loaded","មិនទាន់ផ្ទុក SheetJS"));input.value="";return;}
   const rd=new FileReader();
   rd.onload=e=>{
     try{
@@ -1754,12 +1759,16 @@ function importRecvExcel(input){
         const hi=rows.findIndex(r=>r&&r.some(c=>/date|日期/i.test(String(c)))&&r.some(c=>/qty|數量|quantity/i.test(String(c))));
         if(hi>=0){ flat={rows,hi}; break; }
       }
-      let added=0, skipped=0, dup=0; const touched=new Set();
+      let added=0, skipped=0, dup=0, badDates=[]; const touched=new Set();
+      /* v3.9.25: receiver + remarks are part of the duplicate key; each existing log row can absorb only ONE file row,
+         so two legitimate identical issues in the same file are both kept. */
+      const usedLog=new Set(), nz=v=>String(v||"").trim().toLowerCase();
       const pushRec=(date,type,it,qty,dept,requester,remarks)=>{
-        const exists=recvLog.some(x=>x.date===date&&x.type===type&&x.itemId===it.id&&x.qty===qty&&(x.dept||"")===(dept||""));
-        if(exists){ dup++; return false; }
-        recvLog.push({id:"rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6),
-          date,type,itemId:it.id,itemName:it.name,qty,dept:dept||"",requester:requester||"",remarks:remarks||""});
+        const ex=recvLog.find(x=>!usedLog.has(x)&&x.date===date&&x.type===type&&x.itemId===it.id&&Number(x.qty)===Number(qty)&&nz(x.dept)===nz(dept)&&nz(x.requester)===nz(requester)&&nz(x.remarks)===nz(remarks));
+        if(ex){ usedLog.add(ex); dup++; return false; }
+        const rec={id:"rec_"+Date.now()+"_"+Math.random().toString(36).slice(2,6),
+          date,type,itemId:it.id,itemName:it.name,qty,dept:dept||"",requester:requester||"",remarks:remarks||""};
+        recvLog.push(rec); usedLog.add(rec);
         added++; return true;
       };
 
@@ -1771,9 +1780,10 @@ function importRecvExcel(input){
           itemZh:col("item(中)","中文","item zh","品名"),qty:col("qty","數量","quantity"),
           dept:col("dept","部門","supplier","供應商"),by:col("by","經手","requester","handled"),
           remarks:col("remark","備註","note")};
-        flat.rows.slice(flat.hi+1).forEach(r=>{
+        flat.rows.slice(flat.hi+1).forEach((r,ri)=>{
           if(!r||!r.length) return;
           const date=excelToISO(r[ci.date]); const qty=Math.max(0,parseInt(r[ci.qty])||0);
+          if(!date&&qty>0&&r[ci.date]!==undefined&&r[ci.date]!==null&&String(r[ci.date]).trim()!==""){ badDates.push("#"+(flat.hi+ri+2)+" "+String(r[ci.date])); return; }
           if(!date||qty<=0) return;
           const type=normType(ci.type>=0?r[ci.type]:"receive");
           let it=ci.itemEn>=0?findItemByName(r[ci.itemEn]):null;
@@ -1855,9 +1865,7 @@ function importRecvExcel(input){
           sheetsOk++;
         });
         if(sheetsOk===0){
-          alert(lang==="zh"
-            ?"無法辨識格式。支援：①本系統匯出的格式，②收貨報表（每品項一工作表、含 Dept./Monthly Purchase 列）。請確認工作表名稱對應品項名稱。"
-            :"Unrecognized format. Supported: (1) this app's export, (2) receive-report (one sheet per item with Dept./Monthly Purchase rows). Sheet names must match item names.");
+          alert(L3("無法辨識格式。支援：①本系統匯出的格式，②收貨報表（每品項一工作表、含 Dept./Monthly Purchase 列）。請確認工作表名稱對應品項名稱。","Unrecognized format. Supported: (1) this app's export, (2) receive-report (one sheet per item with Dept./Monthly Purchase rows). Sheet names must match item names.","មិនស្គាល់ទម្រង់ឯកសារ។ គាំទ្រ៖ ① ឯកសារនាំចេញពីប្រព័ន្ធនេះ ② របាយការណ៍ទទួល (មួយសន្លឹកសម្រាប់មុខទំនិញនីមួយៗ មានជួរ Dept./Monthly Purchase)។ សូមពិនិត្យឈ្មោះសន្លឹកឱ្យត្រូវនឹងឈ្មោះមុខទំនិញ។"));
           input.value=""; return;
         }
         skipped=sheetsUnmatched;
@@ -1869,9 +1877,12 @@ function importRecvExcel(input){
       if(document.getElementById("page-inv").classList.contains("on")) renderInv();
       const msg=lang==="zh"
         ?`✅ 匯入完成：新增 ${added} 筆`+(dup?`，略過重複 ${dup} 筆`:"")+(skipped?`，未對應 ${skipped} ${flat?"筆":"個工作表"}`:"")
+        :lang==="km"
+        ?`✅ បាននាំចូល ${added}`+(dup?`, រំលងស្ទួន ${dup}`:"")+(skipped?`, មិនត្រូវគ្នា ${skipped}`:"")
         :`✅ Imported ${added}`+(dup?`, ${dup} dup skipped`:"")+(skipped?`, ${skipped} unmatched`:"");
-      alert(msg);
-    }catch(err){ console.error(err); alert((lang==="zh"?"匯入錯誤：":"Import error: ")+err.message); }
+      const badMsg=badDates.length?(L3(`\n⚠️ 日期無效已略過 ${badDates.length} 列：`,`\n⚠️ ${badDates.length} rows skipped (invalid date): `,`\n⚠️ បានរំលង ${badDates.length} ជួរ (កាលបរិច្ឆេទមិនត្រឹមត្រូវ)៖ `))+badDates.slice(0,10).join(", ")+(badDates.length>10?" …":""):"";
+      alert(msg+badMsg);
+    }catch(err){ console.error(err); alert((L3("匯入錯誤：","Import error: ","នាំចូលមានកំហុស៖"))+err.message); }
     input.value="";
   };
   rd.readAsArrayBuffer(f);
@@ -1893,12 +1904,12 @@ async function saveInv(){
   saveState();
   const key=getMonthKey(invDisplayMonth,YEAR);
   const records=invRecords[key]||{};
-  showCloudLoading(lang==="zh"?"☁️ 儲存庫存中...":"☁️ Saving...");
+  showCloudLoading(L3("☁️ 儲存庫存中...","☁️ Saving...","☁️ កំពុងរក្សាទុកស្តុក..."));
   try{
     await saveInvCloud(YEAR,invDisplayMonth,records);
     hideCloudLoading();
-    alert(lang==="zh"?"✅ 庫存已儲存至雲端！":"✅ Inventory saved to cloud!");
-  }catch(e){ hideCloudLoading(); alert("❌ Save failed"); }
+    alert(L3("✅ 庫存已儲存至雲端！","✅ Inventory saved to cloud!","✅ បានរក្សាទុកស្តុកទៅក្លោដ!"));
+  }catch(e){ hideCloudLoading(); alert(L3("❌ Save failed","❌ Save failed","❌ រក្សាទុកបរាជ័យ")); }
 }
 
 // ════════════════════════════════
@@ -1920,7 +1931,7 @@ function renderSettings(){
     if(!catItms.length) return;
     html+=`<div style="grid-column:1/-1;font-size:12px;font-weight:700;color:${d.color};
       border-bottom:2px solid ${d.color}33;padding-bottom:6px;margin-top:8px">
-      ${d.icon} ${lang==="zh"?d.lz:d.le}</div>`;
+      ${d.icon} ${CN(d)}</div>`;
     catItms.forEach(item=>{
       const s=itemSettings[item.id]||{unit:"pcs",safetyStock:5,monthly:defaultMonthly(catKey)};
       const isM=s.monthly!==false;
@@ -1928,23 +1939,23 @@ function renderSettings(){
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <span style="font-size:20px">${item.e}</span>
           <div>
-            <div style="font-size:12px;font-weight:700;color:var(--text)">${lang==="zh"?(item.cn||item.name):item.name}</div>
-            <div style="font-size:10px;color:var(--text2)">${lang==="zh"?item.name:(item.cn||"")}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--text)">${IN(item)}</div>
+            <div style="font-size:10px;color:var(--text2)"></div>
           </div>
         </div>
         <div class="sc-row">
-          <span class="sc-label">${lang==="zh"?"計量單位":"Unit"}</span>
+          <span class="sc-label">${L3("計量單位","Unit","ឯកតា")}</span>
           <input class="sc-input" style="width:90px" value="${s.unit}"
             onchange="setSetting('${item.id}','unit',this.value)" placeholder="pcs"/>
         </div>
         <div class="sc-row">
-          <span class="sc-label">⚠️ ${lang==="zh"?"安全庫存":"Safety Stock"}<br><span style="font-size:9px;color:var(--text3)">${lang==="zh"?"低於此數量顯示警告":"Alert when below this qty"}</span></span>
+          <span class="sc-label">⚠️ ${L3("安全庫存","Safety Stock","ស្តុកសុវត្ថិភាព")}<br><span style="font-size:9px;color:var(--text3)">${L3("低於此數量顯示警告","Alert when below this qty","ជូនដំណឹងពេលទាបជាងបរិមាណនេះ")}</span></span>
           <input class="sc-input" type="number" min="0" value="${s.safetyStock}"
             onchange="setSetting('${item.id}','safetyStock',this.value)"/>
           <span class="sc-unit">${s.unit}</span>
         </div>
         <div class="sc-toggle">
-          <span class="sc-label">🔁 ${lang==="zh"?"每月固定採購":"Monthly Purchase"}<br><span style="font-size:9px;color:var(--text3)">${lang==="zh"?"結存延續到下月":"Balance carries to next month"}</span></span>
+          <span class="sc-label">🔁 ${L3("每月固定採購","Monthly Purchase","ទិញប្រចាំខែ")}<br><span style="font-size:9px;color:var(--text3)">${L3("結存延續到下月","Balance carries to next month","សមតុល្យផ្ទេរទៅខែបន្ទាប់")}</span></span>
           <label class="tgl"><input type="checkbox" ${isM?"checked":""}
             onchange="setSetting('${item.id}','monthly',this.checked)"><span class="tk"></span><span class="kn"></span></label>
         </div>
@@ -1956,11 +1967,11 @@ function renderSettings(){
 
 function saveSettings(){
   const saveLbl=document.getElementById("set-save-lbl");
-  if(saveLbl) saveLbl.textContent=lang==="zh"?"💾 儲存設定":"💾 Save Settings";
+  if(saveLbl) saveLbl.textContent=L3("💾 儲存設定","💾 Save Settings","💾 រក្សាទុកការកំណត់");
   const setTitle=document.getElementById("set-title");
-  if(setTitle) setTitle.textContent=lang==="zh"?"設定":"Settings";
+  if(setTitle) setTitle.textContent=L3("設定","Settings","ការកំណត់");
   saveState();
-  alert(lang==="zh"?"✅ 設定已儲存！":"✅ Settings saved!");
+  alert(L3("✅ 設定已儲存！","✅ Settings saved!","✅ បានរក្សាទុកការកំណត់!"));
   render(); renderInv();
 }
 
@@ -1968,9 +1979,11 @@ function saveSettings(){
 // UNIT EDIT MODAL
 // ════════════════════════════════
 function openUnitEdit(id,name){
+  /* v3.9.25: called with the id only (names with apostrophes broke the inline onclick); name is looked up here */
+  const found=[...Object.values(CATS).flatMap(c=>c.items),...(customItems||[])].find(i=>String(i.id)===String(id));
+  if(name==null) name=found?found.name:String(id);
   unitEditing={id,name};
-  document.getElementById("um-item-name").textContent=(lang==="zh"?
-    Object.values(CATS).flatMap(c=>c.items).find(i=>i.id===id)?.cn:name)||name;
+  document.getElementById("um-item-name").textContent=(found?IN(found):name)||name;
   document.getElementById("um-input").value=getUnit(id);
   document.getElementById("unit-ov").classList.add("open");
   setTimeout(()=>document.getElementById("um-input").focus(),100);
@@ -2017,29 +2030,27 @@ function renderReviewBanner(){
     banner.style.background="var(--amber-bg)";
     banner.style.borderColor="var(--amber-border)";
     if(!submitAckId){
-      title.textContent=lang==="zh"?"⚠️ 送審狀態尚未由伺服器確認":"⚠️ Submission not confirmed by server";
-      sub.textContent=lang==="zh"
-        ?`本機曾顯示 Applicant 已簽，但沒有伺服器 PO ID。這通常代表舊版先改本機狀態、送群組失敗。
-請按下方重新送審；系統會先核對雲端歷史，避免重複。`
-        :`The local page shows Applicant signed, but there is no server PO ID. This can happen when the old version changed local status before Telegram submission completed.
-Use Retry Submit below; cloud history is checked first to reduce duplicate submissions.`;
+      title.textContent=L3("⚠️ 送審狀態尚未由伺服器確認","⚠️ Submission not confirmed by server","⚠️ ម៉ាស៊ីនមេមិនទាន់បញ្ជាក់ការដាក់ស្នើទេ");
+      sub.textContent=L3(`本機曾顯示 Applicant 已簽，但沒有伺服器 PO ID。這通常代表舊版先改本機狀態、送群組失敗。
+請按下方重新送審；系統會先核對雲端歷史，避免重複。`,`The local page shows Applicant signed, but there is no server PO ID. This can happen when the old version changed local status before Telegram submission completed.
+Use Retry Submit below; cloud history is checked first to reduce duplicate submissions.`,`ទំព័រក្នុងម៉ាស៊ីនបង្ហាញថាអ្នកស្នើសុំបានចុះហត្ថលេខា ប៉ុន្តែគ្មានលេខ PO ID ពីម៉ាស៊ីនមេទេ។ ជាធម្មតាកើតឡើងពេលកំណែចាស់ប្តូរស្ថានភាពក្នុងម៉ាស៊ីនមុន ហើយការផ្ញើទៅក្រុមបរាជ័យ។
+សូមចុចខាងក្រោមដើម្បីផ្ញើពិនិត្យម្តងទៀត។ ប្រព័ន្ធនឹងពិនិត្យប្រវត្តិលើពពកជាមុន ដើម្បីជៀសវាងការស្ទួន។`);
       if(cu&&cu.role==="applicant"){
         okBtn.style.display="";
         okBtn.style.background="var(--blue)";
-        okBtn.textContent=lang==="zh"?"📤 重新送審並通知群組":"📤 Retry submit & notify group";
+        okBtn.textContent=L3("📤 重新送審並通知群組","📤 Retry submit & notify group","📤 ដាក់ស្នើម្ដងទៀត និងជូនដំណឹងក្រុម");
         okBtn.onclick=()=>doSubmit(true);
       }
     }else{
-      title.textContent=lang==="zh"?"⏳ 採購單等待 Phea 審查":"⏳ Pending Phea Review";
-      sub.textContent=lang==="zh"
-        ?`申請人：${sigs.applicant?.name||"—"}  |  共 ${n} 項  |  ${sigs.applicant?.date||""}
-伺服器與 Telegram 群組狀態已連接`
-        :`Applicant: ${sigs.applicant?.name||"—"}  |  ${n} items
-Server and Telegram workflow are linked`;
+      title.textContent=L3("⏳ 採購單等待 Phea 審查","⏳ Pending Phea Review","⏳ បញ្ជាទិញកំពុងរង់ចាំ Phea ត្រួតពិនិត្យ");
+      sub.textContent=L3(`申請人：${sigs.applicant?.name||"—"}  |  共 ${n} 項  |  ${sigs.applicant?.date||""}
+伺服器與 Telegram 群組狀態已連接`,`Applicant: ${sigs.applicant?.name||"—"}  |  ${n} items
+Server and Telegram workflow are linked`,`អ្នកស្នើសុំ៖ ${sigs.applicant?.name||"—"}  |  សរុប ${n} មុខ  |  ${sigs.applicant?.date||""}
+ស្ថានភាពម៉ាស៊ីនមេ និងក្រុម Telegram បានភ្ជាប់គ្នា`);
       if(cu&&cu.role==='verifier'){
         okBtn.style.display=''; noBtn.style.display='';
-        okBtn.style.background='var(--green)'; okBtn.textContent=lang==='zh'?'✅ Phea 審查通過':'✅ Verify';
-        noBtn.textContent=lang==='zh'?'↩ 退回修改':'↩ Return';
+        okBtn.style.background='var(--green)'; okBtn.textContent=L3('✅ Phea 審查通過','✅ Verify','✅ Phea ត្រួតពិនិត្យរួច');
+        noBtn.textContent=L3('↩ 退回修改','↩ Return','↩ បញ្ជូនត្រឡប់ឱ្យកែ');
         okBtn.onclick=()=>doVerify(true); noBtn.onclick=()=>doVerify(false);
       }
     }
@@ -2047,26 +2058,23 @@ Server and Telegram workflow are linked`;
   } else if(poStatus==="verified"){
     banner.style.background="var(--blue-bg)";
     banner.style.borderColor="var(--blue-border)";
-    title.textContent=lang==="zh"?"🔵 已審查，等待核可":"🔵 Verified, Pending Approval";
-    sub.textContent=lang==="zh"
-      ?`審查人：${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
-等待 Paul 核可；網頁與 Telegram 皆可操作`
-      :`Verifier: ${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
-Pending Paul approval; web and Telegram are both available`;
-    if(cu&&cu.role==='approver'){
+    title.textContent=L3("🔵 已審查，等待核可","🔵 Verified, Pending Approval","🔵 បានត្រួតពិនិត្យ កំពុងរង់ចាំអនុម័ត");
+    sub.textContent=L3(`審查人：${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
+等待 Paul 核可；網頁與 Telegram 皆可操作`,`Verifier: ${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
+Pending Paul approval; web and Telegram are both available`,`អ្នកត្រួតពិនិត្យ៖ ${sigs.verifier?.name||"—"}  |  ${sigs.verifier?.date||""}
+រង់ចាំ Paul អនុម័ត។ អាចធ្វើបានទាំងលើគេហទំព័រ និង Telegram`);
+    if(cu&&(cu.role==='approver'||cu.role==='owner')){
       okBtn.style.display=''; noBtn.style.display='';
-      okBtn.style.background='var(--orange)'; okBtn.textContent=lang==='zh'?'✅ Paul 核可':'✅ Approve';
-      noBtn.textContent=lang==='zh'?'❌ 拒絕':'❌ Reject';
+      okBtn.style.background='var(--orange)'; okBtn.textContent=L3('✅ Paul 核可','✅ Approve','✅ Paul អនុម័ត');
+      noBtn.textContent=L3('❌ 拒絕','❌ Reject','❌ បដិសេធ');
       okBtn.onclick=()=>doApprove(true); noBtn.onclick=()=>doApprove(false);
     }
 
   } else if(poStatus==="approved"){
     banner.style.background="var(--green-bg)";
     banner.style.borderColor="var(--green-border)";
-    title.textContent=lang==="zh"?`✅ 採購單已核可！`:`✅ Purchase Order Approved!`;
-    sub.textContent=lang==="zh"
-      ?`核可人：${sigs.approver?.name||"—"}  |  ${sigs.approver?.date||""}`
-      :`Approver: ${sigs.approver?.name||"—"}  |  ${sigs.approver?.date||""}`;
+    title.textContent=L3(`✅ 採購單已核可！`,`✅ Purchase Order Approved!`,`✅ បញ្ជាទិញត្រូវបានអនុម័ត!`);
+    sub.textContent=L3(`核可人：${sigs.approver?.name||"—"}  |  ${sigs.approver?.date||""}`,`Approver: ${sigs.approver?.name||"—"}  |  ${sigs.approver?.date||""}`,`អ្នកអនុម័ត៖ ${sigs.approver?.name||"—"}  |  ${sigs.approver?.date||""}`);
     if(poNumber){
       const pn=document.createElement("div");
       pn.style.cssText="margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;color:var(--green);background:white;border:2px solid var(--green-border);border-radius:8px;padding:6px 14px;display:inline-block";
@@ -2074,32 +2082,32 @@ Pending Paul approval; web and Telegram are both available`;
       sub.appendChild(pn);
     }
     preview.style.display="";
-    preview.textContent=lang==="zh"?"📋 查看採購單":"📋 View Order";
+    preview.textContent=L3("📋 查看採購單","📋 View Order","📋 មើលបញ្ជាទិញ");
     // New PO button for everyone
     okBtn.style.display="";
     okBtn.style.background="var(--blue)";
-    okBtn.textContent=lang==="zh"?"🆕 開始新採購單":"🆕 Start New PO";
+    okBtn.textContent=L3("🆕 開始新採購單","🆕 Start New PO","🆕 ចាប់ផ្តើមបញ្ជាទិញថ្មី");
     okBtn.onclick=()=>doStartNewPO();
 
   } else if(poStatus==="rejected"){
     banner.style.background="var(--red-bg)";
     banner.style.borderColor="var(--red-border)";
-    title.textContent=lang==="zh"?"❌ 採購單已被拒絕":"❌ Purchase Order Rejected";
-    sub.textContent=lang==="zh"?`拒絕人：${sigs.approver?.name||"—"}`:`By: ${sigs.approver?.name||"—"}`;
+    title.textContent=L3("❌ 採購單已被拒絕","❌ Purchase Order Rejected","❌ បញ្ជាទិញត្រូវបានបដិសេធ");
+    sub.textContent=L3(`拒絕人：${sigs.approver?.name||"—"}`,`By: ${sigs.approver?.name||"—"}`,`បដិសេធដោយ៖ ${sigs.approver?.name||"—"}`);
     // Edit button for everyone
     okBtn.style.display="";
     okBtn.style.background="var(--amber)";
-    okBtn.textContent=lang==="zh"?"✏️ 重新編輯":"✏️ Edit & Resubmit";
+    okBtn.textContent=L3("✏️ 重新編輯","✏️ Edit & Resubmit","✏️ កែម្ដងទៀត");
     okBtn.onclick=()=>doEditRejected();
 
   } else if(poStatus==="returned"){
     banner.style.background="var(--orange-bg)";
     banner.style.borderColor="var(--orange-border)";
-    title.textContent=lang==="zh"?"↩ 採購單已退回，請修改":"↩ Returned, Please Revise";
-    sub.textContent=lang==="zh"?`退回人：${sigs.verifier?.name||"—"}`:`By: ${sigs.verifier?.name||"—"}`;
+    title.textContent=L3("↩ 採購單已退回，請修改","↩ Returned, Please Revise","↩ បញ្ជាទិញត្រូវបានបញ្ជូនត្រឡប់ សូមកែ");
+    sub.textContent=L3(`退回人：${sigs.verifier?.name||"—"}`,`By: ${sigs.verifier?.name||"—"}`,`បញ្ជូនត្រឡប់ដោយ៖ ${sigs.verifier?.name||"—"}`);
     okBtn.style.display="";
     okBtn.style.background="var(--amber)";
-    okBtn.textContent=lang==="zh"?"✏️ 重新編輯":"✏️ Edit & Resubmit";
+    okBtn.textContent=L3("✏️ 重新編輯","✏️ Edit & Resubmit","✏️ កែម្ដងទៀត");
     okBtn.onclick=()=>doEditRejected();
   }
 }
@@ -2120,13 +2128,13 @@ function generatePONumber(){
 
 function rbAction(ok){
   if(cu.role==="verifier") doVerify(ok);
-  else if(cu.role==="approver"&&poStatus==="verified") doApprove(ok);
+  else if((cu.role==="approver"||cu.role==="owner")&&poStatus==="verified") doApprove(ok);
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="rejected"&&ok) doEditRejected();
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="approved"&&ok) doStartNewPO();
 }
 
 function doStartNewPO(){
-  if(!confirm(lang==="zh"?"確定開始新的採購單？目前已核可的記錄將會清除。":"Start a new PO? The current approved order will be cleared.")) return;
+  if(!confirm(L3("確定開始新的採購單？目前已核可的記錄將會清除。","Start a new PO? The current approved order will be cleared.","ចាប់ផ្តើមបញ្ជាទិញថ្មី? កំណត់ត្រាដែលបានអនុម័តបច្ចុប្បន្ននឹងត្រូវសម្អាត។"))) return;
   clearPOState();
   render();
   document.getElementById("page-po").scrollIntoView({behavior:"smooth",block:"start"});
@@ -2145,46 +2153,125 @@ function doEditRejected(){
   document.getElementById("grid").scrollIntoView({behavior:"smooth", block:"start"});
 }
 
+/* v3.9.26 i18n: static markup (data-pr = text, data-pr-html = markup, data-pr-title / data-pr-ph = attributes).
+   Each entry is [zh, en, km]; zh keeps the original text. */
+const PR_I18N={
+  docTitle:["AC-GA-EXP · Procurement Center 採購中心","AC-GA-EXP · Procurement Center","AC-GA-EXP · មជ្ឈមណ្ឌលលទ្ធកម្ម"],
+  loginH1:["GA Purchase Order","GA Purchase Order","ការបញ្ជាទិញ GA"],
+  loginDept:["General Affairs · 總務部","General Affairs","ផ្នែកកិច្ចការទូទៅ"],
+  loginName:["姓名 / Name","Name","ឈ្មោះ"],
+  loginTg:["Telegram ID（Owner 專用）","Telegram ID (owner only)","Telegram ID (សម្រាប់ម្ចាស់ប៉ុណ្ណោះ)"],
+  loginTgPh:["你的 Telegram ID","Your Telegram ID","Telegram ID របស់អ្នក"],
+  loginPin:["PIN 密碼","PIN","លេខ PIN"],
+  loginPinPh:["輸入 PIN","Enter PIN","បញ្ចូល PIN"],
+  loginBtn:["🔐 登入 Login","🔐 Login","🔐 ចូលប្រើ"],
+  rhT:["角色說明","Roles","តួនាទី"],
+  rhApp:["Applicant 申請人","Applicant","អ្នកស្នើសុំ"],
+  rhAppB:["填寫提交","Fill in & submit","បំពេញ និងដាក់ស្នើ"],
+  rhRev:["Review 審查人","Reviewer","អ្នកត្រួតពិនិត្យ"],
+  rhRevB:["審核","Review","ត្រួតពិនិត្យ"],
+  rhMgr:["Manager 核可人","Approver","អ្នកអនុម័ត"],
+  rhMgrB:["最終核可","Final approval","អនុម័តចុងក្រោយ"],
+  rhOwnB:["ID＋密碼","ID + PIN","ID + លេខ PIN"],
+  cloudLoading:["☁️ 載入資料中... Loading data...","☁️ Loading data...","☁️ កំពុងផ្ទុកទិន្នន័យ..."],
+  tabHome:["🏠 平台首頁","🏠 Home","🏠 ទំព័រដើម"],
+  tabAnly:["📊 分析","📊 Analysis","📊 វិភាគ"],
+  dept:["AC-GA-EXP · Procurement Center 採購中心","AC-GA-EXP · Procurement Center","AC-GA-EXP · មជ្ឈមណ្ឌលលទ្ធកម្ម"],
+  ttUp:["上傳雲端 Upload","Upload to cloud","ផ្ទុកឡើងពពក"],
+  ttDown:["下載雲端 Download","Download from cloud","ទាញយកពីពពក"],
+  ttImp:["智慧匯入 Smart Import","Smart Import","នាំចូលឆ្លាតវៃ"],
+  ttTg:["Telegram 摘要 Summary","Telegram summary","សង្ខេប Telegram"],
+  searchPh:["搜尋用品名稱 / Search items...","Search items...","ស្វែងរកមុខទំនិញ..."],
+  invYear:["📥 全年 Year","📥 Whole year","📥 ពេញមួយឆ្នាំ"],
+  poHist:["📋 採購記錄 PO History","📋 PO History","📋 ប្រវត្តិបញ្ជាទិញ"],
+  setHint:["💡 在這裡設定每個物品的<b>計量單位</b>和<b>安全庫存數量</b>。庫存低於安全庫存時顯示 ⚠️ 警告。","💡 Set the <b>unit</b> and <b>safety stock level</b> for each item. A ⚠️ alert shows when stock falls below the safety level.","💡 កំណត់<b>ឯកតា</b> និង<b>កម្រិតស្តុកសុវត្ថិភាព</b>សម្រាប់មុខទំនិញនីមួយៗនៅទីនេះ។ នឹងបង្ហាញ ⚠️ ពេលស្តុកទាបជាងកម្រិតសុវត្ថិភាព។"],
+  recvMTitle:["收貨","Receive","ទទួល"],
+  mClose:["✕ 關閉","✕ Close","✕ បិទ"],
+  mFlow:["📝 簽核流程","📝 Sign-off flow","📝 ដំណើរការចុះហត្ថលេខា"],
+  mExpFmt:["匯出格式","Export format","ទម្រង់នាំចេញ"],
+  mXls:["下載 Excel","Download Excel","ទាញយក Excel"],
+  mPdf:["列印/PDF","Print / PDF","បោះពុម្ព / PDF"],
+  mPrint:["Print","Print","បោះពុម្ព"],
+  mReset:["🔄 清空重填","🔄 Clear & start over","🔄 សម្អាត ហើយបំពេញឡើងវិញ"],
+  umTitle:["修改計量單位","Change unit","ប្ដូរឯកតា"],
+  umHint:["輸入新的計量單位，例如：pcs、box、btl、pack、roll、kg、L","Enter the new unit, e.g. pcs, box, btl, pack, roll, kg, L","បញ្ចូលឯកតាថ្មី ឧ. pcs, box, btl, pack, roll, kg, L"],
+  umPh:["輸入單位...","Enter unit...","បញ្ចូលឯកតា..."],
+  umCancel:["取消","Cancel","បោះបង់"],
+  umSave:["✅ 儲存","✅ Save","✅ រក្សាទុក"],
+  sumTitle:["✈️ Procurement Summary / 採購摘要","✈️ Procurement Summary","✈️ សង្ខេបលទ្ធកម្ម"],
+  sumLang:["Language","Language","ភាសា"],
+  sumClose:["關閉 Close","Close","បិទ"],
+  sumSend:["📤 Send to Telegram Group","📤 Send to Telegram Group","📤 ផ្ញើទៅក្រុម Telegram"],
+  recTab:["📚 PO Records","📚 PO Records","📚 កំណត់ត្រាបញ្ជាទិញ"],
+  recAll:["All status","All status","ស្ថានភាពទាំងអស់"],
+  recPendPhea:["Pending Phea","Pending Phea","រង់ចាំ Phea"],
+  recWaitPaul:["Waiting Paul","Waiting Paul","រង់ចាំ Paul"],
+  recApproved:["Approved","Approved","បានអនុម័ត"],
+  recReturned:["Returned","Returned","បានបញ្ជូនត្រឡប់"],
+  recRejected:["Rejected","Rejected","បានបដិសេធ"],
+  recRefresh:["↻ Refresh","↻ Refresh","↻ ផ្ទុកឡើងវិញ"],
+  recSummary:["✈️ Summary","✈️ Summary","✈️ សង្ខេប"],
+  rhOwn:["Paul（Owner）","Paul (Owner)","Paul (ម្ចាស់)"],
+  pbtn0:["📋 預覽 (0)","📋 Preview (0)","📋 មើលជាមុន (0)"],
+  sbtn0:["📤 提交申請","📤 Submit","📤 ដាក់ស្នើ"],
+  mTitle:["📋 採購清單預覽","📋 Order Preview","📋 មើលបញ្ជីទិញជាមុន"],
+  logout:["↩ Logout","↩ Logout","↩ ចាកចេញ"],
+  homeTitle:["AC-GA-EXP Platform","AC-GA-EXP Platform","វេទិកា AC-GA-EXP"]
+};
+function PRT(k){const v=PR_I18N[k];return v?L3(v[0],v[1],v[2]):null;}
+function procI18nStatic(){
+  const each=(sel,fn)=>document.querySelectorAll(sel).forEach(fn);
+  each('[data-pr]',el=>{const v=PRT(el.getAttribute('data-pr'));if(v!=null)el.textContent=v;});
+  each('[data-pr-html]',el=>{const v=PRT(el.getAttribute('data-pr-html'));if(v!=null)el.innerHTML=v;});
+  each('[data-pr-title]',el=>{const v=PRT(el.getAttribute('data-pr-title'));if(v!=null)el.setAttribute('title',v);});
+  each('[data-pr-ph]',el=>{const v=PRT(el.getAttribute('data-pr-ph'));if(v!=null)el.setAttribute('placeholder',v);});
+  try{document.title=PRT('docTitle');}catch(_){}
+  try{recvFormLabels();}catch(_){}
+  const act=document.querySelector('.page.on'),ht=document.getElementById('htitle');
+  if(ht&&(!act||act.id==='page-po')) ht.textContent=L3("日常用品採購單","Monthly Supplies Order","ការបញ្ជាទិញ");
+}
+document.addEventListener('DOMContentLoaded',function(){try{procI18nStatic();}catch(_){}});
 function setL(l){
   lang=['zh','en','km'].includes(l)?l:'zh';
   try{ GA.setLang(lang); }catch(e){}   // 共用平台語言唯一來源
+  try{ procI18nStatic(); }catch(e){}
   document.querySelectorAll('.lang-sw button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));
   if(cu) render();
   // Update page-specific labels
   const invTitle=document.getElementById("inv-title");
-  if(invTitle) invTitle.textContent=l==="zh"?"庫存管理":"Inventory";
+  if(invTitle) invTitle.textContent=L3("庫存管理","Inventory","ស្តុក");
   // Also update page title if currently on inv page
   const htitle=document.getElementById("htitle");
   if(htitle&&document.getElementById("page-inv").classList.contains("on"))
-    htitle.textContent=l==="zh"?"庫存管理":"Inventory";
+    htitle.textContent=L3("庫存管理","Inventory","ស្តុក");
   const invRefTxt=document.getElementById("inv-ref-txt");
-  if(invRefTxt) invRefTxt.textContent=l==="zh"?"申請月份：":"PO Month: ";
+  if(invRefTxt) invRefTxt.textContent=L3("申請月份：","PO Month: ","ខែស្នើទិញ៖");
   const invArrow=document.getElementById("inv-arrow");
   if(invArrow) invArrow.textContent=l==="zh"?"→":"→";
   const setTitle=document.getElementById("set-title");
-  if(setTitle) setTitle.textContent=l==="zh"?"設定":"Settings";
+  if(setTitle) setTitle.textContent=L3("設定","Settings","ការកំណត់");
   const invSaveLbl=document.getElementById("inv-save-label");
-  if(invSaveLbl) invSaveLbl.textContent=l==="zh"?"💾 儲存記錄":"💾 Save";
+  if(invSaveLbl) invSaveLbl.textContent=L3("💾 儲存記錄","💾 Save","💾 រក្សាទុកកំណត់ត្រា");
   const invExpLbl=document.getElementById("inv-exp-label");
-  if(invExpLbl) invExpLbl.textContent=l==="zh"?"📊 匯出 Excel":"📊 Export Excel";
+  if(invExpLbl) invExpLbl.textContent=L3("📊 匯出 Excel","📊 Export Excel","📊 នាំចេញ Excel");
   const setSaveLbl=document.getElementById("set-save-lbl");
-  if(setSaveLbl) setSaveLbl.textContent=l==="zh"?"💾 儲存設定":"💾 Save Settings";
+  if(setSaveLbl) setSaveLbl.textContent=L3("💾 儲存設定","💾 Save Settings","💾 រក្សាទុកការកំណត់");
   // Update po-month-ref options
   const pmr=document.getElementById("po-month-ref");
-  if(pmr){ const cur=+pmr.value; pmr.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===cur?" selected":""}>${l==="zh"?MZ[i]:MO[i]} ${YEAR}</option>`).join(""); }
+  if(pmr){ const cur=+pmr.value; pmr.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===cur?" selected":""}>${MN(i)} ${YEAR}</option>`).join(""); }
   syncInvMonthDisplay();
   // Update tab labels
-  const miLbl=document.getElementById("manage-items-lbl"); if(miLbl) miLbl.textContent=l==="zh"?"新增/刪除物品":"Add/Remove Items";
-  const tpo=document.getElementById("tab-po-lbl"); if(tpo) tpo.textContent=l==="zh"?"📋 採購申請":"📋 Purchase";
-  const tinv=document.getElementById("tab-inv-lbl"); if(tinv) tinv.textContent=l==="zh"?"📦 庫存管理":"📦 Inventory";
-  const tset=document.getElementById("tab-set-lbl"); if(tset) tset.textContent=l==="zh"?"⚙️ 設定":"⚙️ Settings";
-  const trecv=document.getElementById("tab-recv-lbl"); if(trecv) trecv.textContent=l==="zh"?"📋 收貨紀錄":"📋 Receive Log";
+  const miLbl=document.getElementById("manage-items-lbl"); if(miLbl) miLbl.textContent=L3("新增/刪除物品","Add/Remove Items","បន្ថែម / ដកមុខទំនិញ");
+  const tpo=document.getElementById("tab-po-lbl"); if(tpo) tpo.textContent=L3("📋 採購申請","📋 Purchase","📋 សំណើទិញ");
+  const tinv=document.getElementById("tab-inv-lbl"); if(tinv) tinv.textContent=L3("📦 庫存管理","📦 Inventory","📦 ស្តុក");
+  const tset=document.getElementById("tab-set-lbl"); if(tset) tset.textContent=L3("⚙️ 設定","⚙️ Settings","⚙️ ការកំណត់");
+  const trecv=document.getElementById("tab-recv-lbl"); if(trecv) trecv.textContent=L3("📋 收貨紀錄","📋 Receive Log","📋 កំណត់ត្រាទទួល");
   // toolbar buttons on recv page
-  const rar=document.getElementById("recv-add-r"); if(rar) rar.textContent=l==="zh"?"➕ 新增收貨":"➕ Add Receive";
-  const rai=document.getElementById("recv-add-i"); if(rai) rai.textContent=l==="zh"?"➖ 新增領用":"➖ Add Issue";
-  const rex=document.getElementById("recv-exp"); if(rex) rex.textContent=l==="zh"?"📊 匯出 Excel":"📊 Export Excel";
-  const rim=document.getElementById("recv-imp"); if(rim) rim.textContent=l==="zh"?"📥 匯入 Excel":"📥 Import Excel";
-  const rtt=document.getElementById("recv-title"); if(rtt) rtt.textContent=l==="zh"?"收貨紀錄":"Receive Records";
+  const rar=document.getElementById("recv-add-r"); if(rar) rar.textContent=L3("➕ 新增收貨","➕ Add Receive","➕ បន្ថែមការទទួល");
+  const rai=document.getElementById("recv-add-i"); if(rai) rai.textContent=L3("➖ 新增領用","➖ Add Issue","➖ បន្ថែមការបើកចេញ");
+  const rex=document.getElementById("recv-exp"); if(rex) rex.textContent=L3("📊 匯出 Excel","📊 Export Excel","📊 នាំចេញ Excel");
+  const rim=document.getElementById("recv-imp"); if(rim) rim.textContent=L3("📥 匯入 Excel","📥 Import Excel","📥 នាំចូល Excel");
+  const rtt=document.getElementById("recv-title"); if(rtt) rtt.textContent=L3("收貨紀錄","Receive Records","កំណត់ត្រាទទួល");
   // Re-render current page if inv or settings
   const activeP=document.querySelector(".page.on");
   if(cu&&activeP&&activeP.id==="page-inv") renderInv();
@@ -2269,11 +2356,11 @@ async function _procReconcileCurrentFromHistory(){
 async function doSubmit(forceRetry){
   if(submitInFlight) return;
   if(!cu||cu.role!=="applicant"){
-    try{GA.toast(lang==="zh"?"❌ 只有 Applicant 可送審":"❌ Applicant only");}catch(_){alert("Applicant only");}
+    try{GA.toast(L3("❌ 只有 Applicant 可送審","❌ Applicant only","❌ មានតែអ្នកស្នើសុំទេដែលអាចដាក់ស្នើ"));}catch(_){alert(L3("Applicant only","Applicant only","សម្រាប់តែអ្នកស្នើសុំ"));}
     return;
   }
   if(totalN()===0){
-    try{GA.toast(lang==="zh"?"⚠️ 尚未選擇採購品項":"⚠️ No purchase items selected");}catch(_){ }
+    try{GA.toast(L3("⚠️ 尚未選擇採購品項","⚠️ No purchase items selected","⚠️ មិនទាន់ជ្រើសមុខទំនិញ"));}catch(_){ }
     return;
   }
   const retryUnacked=poStatus==="submitted"&&!submitAckId;
@@ -2288,9 +2375,9 @@ async function doSubmit(forceRetry){
       let fixed=existing;
       if((String(existing.status||'').toUpperCase()==='SUBMITTED'||String(existing.status||'').toUpperCase()==='VERIFIED')&&!existing.groupMessageId){
         fixed=await _procEnsureTelegram(existing);
-        try{GA.toast(lang==="zh"?"✅ 已補發原採購單到 Telegram 群組":"✅ Missing Telegram review message restored");}catch(_){ }
+        try{GA.toast(L3("✅ 已補發原採購單到 Telegram 群組","✅ Missing Telegram review message restored","✅ បានផ្ញើបញ្ជាទិញដើមទៅក្រុម Telegram ម្ដងទៀត"));}catch(_){ }
       }else{
-        try{GA.toast(lang==="zh"?"✅ 雲端已找到原送審，沒有重複送出":"✅ Existing server submission found; no duplicate sent");}catch(_){ }
+        try{GA.toast(L3("✅ 雲端已找到原送審，沒有重複送出","✅ Existing server submission found; no duplicate sent","✅ រកឃើញការដាក់ស្នើដើមក្នុងក្លោដ មិនបានផ្ញើស្ទួនទេ"));}catch(_){ }
       }
       _procApplyServerPO(fixed);
       openMod();
@@ -2301,7 +2388,7 @@ async function doSubmit(forceRetry){
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
     const payload={name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()};
-    try{GA.toast(lang==="zh"?"📤 正在送審並通知 Telegram 群組…":"📤 Submitting and notifying Telegram group…");}catch(_){ }
+    try{GA.toast(L3("📤 正在送審並通知 Telegram 群組…","📤 Submitting and notifying Telegram group…","📤 កំពុងដាក់ស្នើ និងជូនដំណឹងក្រុម Telegram…"));}catch(_){ }
     const out=await GA.gasGet('submit',{data:JSON.stringify(payload),_:Date.now()});
     // IMPORTANT: only sign locally AFTER GAS confirms the request.
     poStatus="submitted";
@@ -2311,14 +2398,14 @@ async function doSubmit(forceRetry){
     try{await saveStateCloud();}catch(_){ }
     try{await loadPOHistory();}catch(_){ }
     render(); openMod();
-    try{GA.toast(lang==="zh"?"✅ 已送審，Telegram 群組已建立審查訊息":"✅ Submitted; Telegram review message created");}catch(_){ }
+    try{GA.toast(L3("✅ 已送審，Telegram 群組已建立審查訊息","✅ Submitted; Telegram review message created","✅ បានដាក់ស្នើ សារត្រួតពិនិត្យបានបង្កើតក្នុងក្រុម Telegram"));}catch(_){ }
   }catch(e){
     // Do not fabricate Applicant Signed when server/group submission failed.
     poStatus=oldStatus==="submitted"&&!submitAckId?"submitted":"draft";
     sigs.applicant=oldStatus==="submitted"?oldSig:null;
     render(); openMod();
     console.warn("submit error",e);
-    try{GA.toast((lang==="zh"?"❌ 送審失敗：":"❌ Submit failed: ")+(e.message||e));}catch(_){alert("Submit failed: "+(e.message||e));}
+    try{GA.toast((L3("❌ 送審失敗：","❌ Submit failed: ","❌ ដាក់ស្នើមិនបាន៖"))+(e.message||e));}catch(_){alert(L3("Submit failed: ","Submit failed: ","ដាក់ស្នើមិនបាន៖ ")+(e.message||e));}
   }finally{
     submitInFlight=false;
   }
@@ -2327,35 +2414,35 @@ async function doVerify(ok){
   if(!cu||cu.role!=="verifier"||poStatus!=="submitted") return;
   try{
     let po=await _procFindExistingServerPO();
-    if(!po||!po.poId) throw new Error(lang==='zh'?'找不到伺服器採購單':'Server PO not found');
-    try{GA.toast(lang==='zh'?'🔎 正在同步審查結果…':'🔎 Syncing review…');}catch(_){ }
+    if(!po||!po.poId) throw new Error(L3('找不到伺服器採購單','Server PO not found','រកមិនឃើញបញ្ជាទិញនៅម៉ាស៊ីនមេ'));
+    try{GA.toast(L3('🔎 正在同步審查結果…','🔎 Syncing review…','🔎 កំពុងធ្វើសមកាលកម្មលទ្ធផលត្រួតពិនិត្យ…'));}catch(_){ }
     const d=await _procPost('procDecision',{poId:po.poId,decision:ok?'verify':'return',lang:lang});
     if(d&&d.po) _procApplyServerPO(d.po);
     await loadPOHistory();
     render(); renderModalBody();
-    try{GA.toast(ok?(lang==='zh'?'✅ 已審查並更新 Telegram 群組':'✅ Reviewed and Telegram updated'):(lang==='zh'?'↩ 已退回並通知 Applicant':'↩ Returned and Applicant notified'));}catch(_){ }
+    try{GA.toast(ok?(L3('✅ 已審查並更新 Telegram 群組','✅ Reviewed and Telegram updated','✅ បានត្រួតពិនិត្យ ហើយធ្វើបច្ចុប្បន្នភាពក្រុម Telegram')):(L3('↩ 已退回並通知 Applicant','↩ Returned and Applicant notified','↩ បានបញ្ជូនត្រឡប់ ហើយជូនដំណឹងអ្នកស្នើ')));}catch(_){ }
   }catch(e){
-    console.warn('verify failed',e); try{GA.toast((lang==='zh'?'❌ 審查失敗：':'❌ Review failed: ')+(e.message||e));}catch(_){ }
+    console.warn('verify failed',e); try{GA.toast((L3('❌ 審查失敗：','❌ Review failed: ','❌ ត្រួតពិនិត្យមិនបាន៖'))+(e.message||e));}catch(_){ }
   }
 }
 async function doApprove(ok){
   // Paul may approve only after the verifier stage is completed.
-  if(!cu||cu.role!=="approver"||poStatus!=="verified") return;
+  if(!cu||(cu.role!=="approver"&&cu.role!=="owner")||poStatus!=="verified") return; /* v3.9.25: Paul is 'owner' in APPROVERS */
   try{
     let po=await _procFindExistingServerPO();
-    if(!po||!po.poId) throw new Error(lang==='zh'?'找不到伺服器採購單':'Server PO not found');
-    try{GA.toast(lang==='zh'?'✅ 正在同步核可結果…':'✅ Syncing approval…');}catch(_){ }
+    if(!po||!po.poId) throw new Error(L3('找不到伺服器採購單','Server PO not found','រកមិនឃើញបញ្ជាទិញនៅម៉ាស៊ីនមេ'));
+    try{GA.toast(L3('✅ 正在同步核可結果…','✅ Syncing approval…','✅ កំពុងធ្វើសមកាលកម្មលទ្ធផលអនុម័ត…'));}catch(_){ }
     const d=await _procPost('procDecision',{poId:po.poId,decision:ok?'approve':'reject',lang:lang});
     if(d&&d.po) _procApplyServerPO(d.po);
     await Promise.all([loadPOHistory(),loadInvCloud(YEAR)]);
     render(); renderModalBody();
-    try{GA.toast(ok?(lang==='zh'?'✅ 已核可，群組通知與正式 PO 已同步':'✅ Approved; group notification and PO synced'):(lang==='zh'?'❌ 已拒絕並通知群組':'❌ Rejected and group updated'));}catch(_){ }
+    try{GA.toast(ok?(L3('✅ 已核可，群組通知與正式 PO 已同步','✅ Approved; group notification and PO synced','✅ បានអនុម័ត ការជូនដំណឹងក្រុម និង PO ផ្លូវការបានធ្វើសមកាលកម្ម')):(L3('❌ 已拒絕並通知群組','❌ Rejected and group updated','❌ បានបដិសេធ ហើយជូនដំណឹងក្រុម')));}catch(_){ }
   }catch(e){
-    console.warn('approve failed',e); try{GA.toast((lang==='zh'?'❌ 核可失敗：':'❌ Approval failed: ')+(e.message||e));}catch(_){ }
+    console.warn('approve failed',e); try{GA.toast((L3('❌ 核可失敗：','❌ Approval failed: ','❌ អនុម័តមិនបាន៖'))+(e.message||e));}catch(_){ }
   }
 }
 function resetAll(){
-  if(confirm(lang==="zh"?"確定清空所有採購資料？":"Clear all order data?"))
+  if(confirm(L3("確定清空所有採購資料？","Clear all order data?","សម្អាតទិន្នន័យទិញទាំងអស់?")))
   {clearPOState();closeMod();render();}
 }
 
@@ -2372,23 +2459,23 @@ function closeMod(){document.getElementById("ov").classList.remove("open");}
 function closeOv(e){if(e.target===document.getElementById("ov"))closeMod();}
 
 function renderModalBody(){
-  document.getElementById("mtitle").textContent=lang==="zh"?"📋 採購清單預覽":"📋 Order Preview";
+  document.getElementById("mtitle").textContent=L3("📋 採購清單預覽","📋 Order Preview","📋 មើលបញ្ជីទិញជាមុន");
   const poTag=poNumber?`  ·  ${poNumber}`:"";
-  document.getElementById("mmeta").textContent=`${lang==="zh"?MZ[curMonth]:MO[curMonth]} ${YEAR} · ${totalN()} ${lang==="zh"?"項":"items"} · ${poStatus.toUpperCase()}${poTag}`;
+  document.getElementById("mmeta").textContent=`${MN(curMonth)} ${YEAR} · ${totalN()} ${L3("項","items","មុខ")} · ${poStatus.toUpperCase()}${poTag}`;
 
   let html="";
   Object.entries(CATS).forEach(([catKey,d])=>{
     const catItems=[...d.items,...customItems.filter(c=>c.catKey===catKey)];
     const rows=catItems.filter(i=>ords[i.id]?.qty>0);
     if(!rows.length)return;
-    html+=`<div class="mcat" style="color:${d.color};border-color:${d.color}">${d.icon} ${lang==="zh"?d.lz:d.le}</div>`;
+    html+=`<div class="mcat" style="color:${d.color};border-color:${d.color}">${d.icon} ${CN(d)}</div>`;
     rows.forEach(item=>{
       const o=ords[item.id]; const unit=getUnit(item.id);
       html+=`<div class="mrow">
         <div class="memoji" style="background:${item.bg}">${item.e}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:700;color:var(--text)">${lang==="zh"?item.cn:item.name}</div>
-          <div style="font-size:10px;color:var(--text2)">${lang==="zh"?item.name:item.cn}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">${IN(item)}</div>
+          <div style="font-size:10px;color:var(--text2)"></div>
           ${o.note?`<div style="font-size:10px;color:var(--text3)">${o.note}</div>`:""}
         </div>
         <div class="mqty" style="background:${d.color}22;border-color:${d.color}55;color:${d.color}">${o.qty} ${unit}</div>
@@ -2398,18 +2485,18 @@ function renderModalBody(){
   document.getElementById("mlist").innerHTML=html;
 
   // Approval
-  const RC2={applicant:{label:"申請人",en:"Applicant",color:"var(--blue)"},
-    verifier:{label:"審查人",en:"Verifier",color:"var(--amber)"},
-    approver:{label:"核可人",en:"Approver",color:"var(--orange)"}};
+  const RC2={applicant:{label:"申請人",en:"Applicant",km:"អ្នកស្នើសុំ",color:"var(--blue)"},
+    verifier:{label:"審查人",en:"Verifier",km:"អ្នកត្រួតពិនិត្យ",color:"var(--amber)"},
+    approver:{label:"核可人",en:"Approver",km:"អ្នកអនុម័ត",color:"var(--orange)"}};
   let ag="";
   ["applicant","verifier","approver"].forEach(role=>{
     const s=sigs[role]; const rc=RC2[role];
     ag+=`<div class="apr-box" style="${s?`border-color:${rc.color};background:${rc.color}0a`:""}">
-      <div class="apr-role" style="color:${rc.color}">${lang==="zh"?rc.label:rc.en}</div>
+      <div class="apr-role" style="color:${rc.color}">${L3(rc.label,rc.en,rc.km)}</div>
       <div class="apr-name">${s?s.name:"—"}</div>
       <div class="apr-date">${s?s.date:""}</div>
       <span class="apr-badge" style="background:${s?"var(--green-bg)":"var(--bg3)"};color:${s?"var(--green)":"var(--text3)"}">
-        ${s?(lang==="zh"?"✅ 已簽":"✅ Signed"):(lang==="zh"?"待簽":"Pending")}
+        ${s?(L3("✅ 已簽","✅ Signed","✅ បានចុះហត្ថលេខា")):(L3("待簽","Pending","មិនទាន់ចុះហត្ថលេខា"))}
       </span>
     </div>`;
   });
@@ -2420,7 +2507,7 @@ function renderModalBody(){
     poNumHtml=`<div id="proc-po-number-box" style="text-align:center;margin-top:8px;padding:8px 14px;
       background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:8px">
       <div style="font-size:10px;color:var(--green);margin-bottom:3px;letter-spacing:1px;text-transform:uppercase">
-        ${lang==="zh"?"採購單流水號":"PO Reference Number"}</div>
+        ${L3("採購單流水號","PO Reference Number","លេខបញ្ជាទិញ")}</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:var(--green)">${poNumber}</div>
     </div>`;
   }
@@ -2429,28 +2516,28 @@ function renderModalBody(){
 
   let aa="";
   if(cu.role==="applicant"&&poStatus==="draft"){
-    aa=`<button class="act-btn" style="background:var(--blue);color:#fff" onclick="doSubmit(false)">📤 ${lang==="zh"?"送審並通知 Telegram 群組":"Submit for review & notify Telegram group"}</button>
-        <div style="margin-top:8px;text-align:center;font-size:11px;color:var(--text3)">${lang==="zh"?"只有 GAS 回覆成功後才會顯示 Applicant 已簽":"Applicant is marked Signed only after GAS confirms submission"}</div>`;
+    aa=`<button class="act-btn" style="background:var(--blue);color:#fff" onclick="doSubmit(false)">📤 ${L3("送審並通知 Telegram 群組","Submit for review & notify Telegram group","ដាក់ស្នើ និងជូនដំណឹងក្រុម Telegram")}</button>
+        <div style="margin-top:8px;text-align:center;font-size:11px;color:var(--text3)">${L3("只有 GAS 回覆成功後才會顯示 Applicant 已簽","Applicant is marked Signed only after GAS confirms submission","«អ្នកស្នើបានចុះហត្ថលេខា» បង្ហាញតែពេល GAS បញ្ជាក់ជោគជ័យប៉ុណ្ណោះ")}</div>`;
   } else if(cu.role==="applicant"&&poStatus==="submitted"&&!submitAckId){
-    aa=`<button class="act-btn" style="background:var(--blue);color:#fff" onclick="doSubmit(true)">📤 ${lang==="zh"?"重新送審並確認群組":"Retry submit & confirm group"}</button>`;
+    aa=`<button class="act-btn" style="background:var(--blue);color:#fff" onclick="doSubmit(true)">📤 ${L3("重新送審並確認群組","Retry submit & confirm group","ដាក់ស្នើម្ដងទៀត និងផ្ទៀងផ្ទាត់ក្រុម")}</button>`;
   } else if(cu.role==="verifier"&&poStatus==="submitted"){
-    aa=`<button class="act-btn" style="background:var(--green);color:#fff" onclick="doVerify(true)">✅ 審查通過</button>
-        <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doVerify(false)">↩ 退回修改</button>`;
+    aa=`<button class="act-btn" style="background:var(--green);color:#fff" onclick="doVerify(true)">✅ ${L3("審查通過","Approve review","អនុម័តការត្រួតពិនិត្យ")}</button>
+        <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doVerify(false)">↩ ${L3("退回修改","Return for changes","បញ្ជូនត្រឡប់ឱ្យកែ")}</button>`;
   } else if(["approver","owner"].includes(cu.role)&&poStatus==="verified"){
-    aa=`<button class="act-btn" style="background:var(--orange);color:#fff" onclick="doApprove(true)">✅ 核可</button>
-        <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doApprove(false)">❌ 拒絕</button>`;
+    aa=`<button class="act-btn" style="background:var(--orange);color:#fff" onclick="doApprove(true)">✅ ${L3("核可","Approve","អនុម័ត")}</button>
+        <button class="act-btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)" onclick="doApprove(false)">❌ ${L3("拒絕","Reject","បដិសេធ")}</button>`;
   } else if(poStatus==="approved"){
     const ad=window.procCurrentApprovalDoc||null;
     const files=ad?`<div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:9px">
       ${ad.url?`<a class="act-btn" style="text-decoration:none;background:#eff6ff;color:#1d4ed8" target="_blank" href="${ad.url}">📊 Sheet</a>`:''}
       ${ad.pdfUrl?`<a class="act-btn" style="text-decoration:none;background:#fff1f2;color:#b91c1c" target="_blank" href="${ad.pdfUrl}">📄 PDF</a>`:''}
       ${ad.xlsxUrl?`<a class="act-btn" style="text-decoration:none;background:#ecfdf5;color:#047857" target="_blank" href="${ad.xlsxUrl}">📥 Excel</a>`:''}
-      </div>`:`<button class="act-btn" style="margin-top:9px;background:var(--blue);color:#fff" onclick="procEnsureCurrentDoc()">📄 ${lang==="zh"?"生成核可檔案並補發群組":"Generate approval files & notify group"}</button>`;
+      </div>`:`<button class="act-btn" style="margin-top:9px;background:var(--blue);color:#fff" onclick="procEnsureCurrentDoc()">📄 ${L3("生成核可檔案並補發群組","Generate approval files & notify group","បង្កើតឯកសារអនុម័ត ហើយផ្ញើទៅក្រុមម្ដងទៀត")}</button>`;
     aa=`<div style="text-align:center;padding:10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:8px;color:var(--green);font-weight:700">
-      ✅ ${lang==="zh"?"已核可 — 庫存已自動更新入帳":"Approved — Inventory updated"}</div>${files}`;
+      ✅ ${L3("已核可 — 庫存已自動更新入帳","Approved — Inventory updated","បានអនុម័ត — ស្តុកបានធ្វើបច្ចុប្បន្នភាពដោយស្វ័យប្រវត្តិ")}</div>${files}`;
   } else if(poStatus==="rejected"){
     aa=`<div style="text-align:center;padding:10px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;color:var(--red);font-weight:700">
-      ❌ ${lang==="zh"?"已退回，請修改後重新提交":"Rejected"}</div>`;
+      ❌ ${L3("已退回，請修改後重新提交","Rejected","បានបញ្ជូនត្រឡប់ — សូមកែ ហើយដាក់ស្នើម្ដងទៀត")}</div>`;
   }
   document.getElementById("apr-action").innerHTML=aa;
 }
@@ -2459,21 +2546,21 @@ function renderModalBody(){
 // EXPORT EXCEL — PO
 // ════════════════════════════════
 function exportExcel(){
-  const items=Object.values(CATS).flatMap(d=>d.items.map(i=>({...i,cat:lang==="zh"?d.lz:d.le})));
+  const items=Object.values(CATS).flatMap(d=>d.items.map(i=>({...i,cat:CN(d)})));
   const ordered=items.filter(i=>ords[i.id]?.qty>0);
-  const title=lang==="zh"?`總務部日常用品採購單 — ${MZ[curMonth]} ${YEAR}`:`GA Supplies Order — ${MO[curMonth]} ${YEAR}`;
-  const rows=[[title],[`製表日期: ${new Date().toLocaleDateString()}  |  狀態: ${poStatus.toUpperCase()}`],[],
-    ["#",lang==="zh"?"類別":"Cat",lang==="zh"?"品名":"Item",lang==="zh"?"中文":"CN","Qty",lang==="zh"?"單位":"Unit","備註"],
+  const title=L3(`總務部日常用品採購單 — ${MZ[curMonth]} ${YEAR}`,`GA Supplies Order — ${MO[curMonth]} ${YEAR}`,`បញ្ជាទិញសម្ភារៈប្រចាំថ្ងៃ ផ្នែកកិច្ចការទូទៅ — ${MK[curMonth]} ${YEAR}`);
+  const rows=[[title],[L3(`製表日期: ${new Date().toLocaleDateString()}  |  狀態: ${poStatus.toUpperCase()}`,`Date: ${new Date().toLocaleDateString()}  |  Status: ${poStatus.toUpperCase()}`,`កាលបរិច្ឆេទ: ${new Date().toLocaleDateString()}  |  ស្ថានភាព: ${poStatus.toUpperCase()}`)],[],
+    ["#",L3("類別","Cat","ប្រភេទ"),L3("品名","Item","ឈ្មោះមុខទំនិញ"),L3("中文","CN","ចិន"),"Qty",L3("單位","Unit","ឯកតា"),L3("備註","Remarks","កំណត់សម្គាល់")],
     ...ordered.map((it,i)=>[i+1,it.cat,it.name,it.cn,ords[it.id].qty,getUnit(it.id),ords[it.id].note||""]),
-    [],[,"","","總計",ordered.length,"",""],
-    [],["申請人",sigs.applicant?.name||"—","","審查人",sigs.verifier?.name||"—","","核可人"],
+    [],[,"","",L3("總計","Total","សរុប"),ordered.length,"",""],
+    [],[L3("申請人","Applicant","អ្នកស្នើសុំ"),sigs.applicant?.name||"—","",L3("審查人","Verifier","អ្នកត្រួតពិនិត្យ"),sigs.verifier?.name||"—","",L3("核可人","Approver","អ្នកអនុម័ត")],
     ["",sigs.applicant?.date||"","","",sigs.verifier?.date||"","",sigs.approver?.name||"—"],
   ];
   const ws=XLSX.utils.aoa_to_sheet(rows);
   ws["!cols"]=[{wch:5},{wch:14},{wch:22},{wch:14},{wch:7},{wch:7},{wch:18}];
   ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"採購單");
+  XLSX.utils.book_append_sheet(wb,ws,L3("採購單","PO","PO"));
   XLSX.writeFile(wb,`PO_${MO[curMonth]}_${YEAR}.xlsx`);
 }
 
@@ -2483,14 +2570,16 @@ function exportExcel(){
 function exportInvExcel(){
   const selM=invDisplayMonth;
   const inv=getInvMonth(selM);
-  const title=lang==="zh"?`庫存記錄 — ${MZ[selM]} ${YEAR}`:`Inventory Record — ${MO[selM]} ${YEAR}`;
-  const rows=[[title],[`匯出日期: ${new Date().toLocaleDateString()}`],[],
-    ["類別","品名","中文","單位","期初庫存","本月採購","本月使用","期末庫存","安全庫存","備註"],
+  const title=L3(`庫存記錄 — ${MZ[selM]} ${YEAR}`,`Inventory Record — ${MO[selM]} ${YEAR}`,`កំណត់ត្រាស្តុក — ${MK[selM]} ${YEAR}`);
+  const rows=[[title],[L3(`匯出日期: ${new Date().toLocaleDateString()}`,`Exported: ${new Date().toLocaleDateString()}`,`នាំចេញ: ${new Date().toLocaleDateString()}`)],[],
+    lang==="zh"?["類別","品名","中文","單位","期初庫存","本月採購","本月使用","期末庫存","安全庫存","備註"]
+      :lang==="km"?["ប្រភេទ","ឈ្មោះមុខទំនិញ","ឈ្មោះចិន","ឯកតា","ស្តុកដើមគ្រា","ទិញក្នុងខែនេះ","ប្រើក្នុងខែនេះ","ស្តុកចុងគ្រា","ស្តុកសុវត្ថិភាព","កំណត់សម្គាល់"]
+      :["Category","Item","Chinese","Unit","Opening","Purchased","Used","Closing","Safety stock","Remarks"],
   ];
   Object.entries(CATS).forEach(([,d])=>{
     d.items.forEach(item=>{
       const r=inv[item.id]; const s=itemSettings[item.id]||{};
-      rows.push([lang==="zh"?d.lz:d.le, item.name, item.cn, getUnit(item.id),
+      rows.push([CN(d), item.name, item.cn, getUnit(item.id),
         r.open, r.purchase, r.used, r.close, getSafety(item.id), r.note||""]);
     });
   });
@@ -2498,7 +2587,7 @@ function exportInvExcel(){
   ws["!cols"]=[{wch:12},{wch:22},{wch:14},{wch:7},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:18}];
   ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:9}},{s:{r:1,c:0},e:{r:1,c:9}}];
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,`庫存_${MO[selM]}`);
+  XLSX.utils.book_append_sheet(wb,ws,L3(`庫存_${MO[selM]}`,`Inventory_${MO[selM]}`,`Stock_${MO[selM]}`));
   XLSX.writeFile(wb,`Inventory_${MO[selM]}_${YEAR}.xlsx`);
 }
 
@@ -2508,10 +2597,10 @@ function exportInvExcel(){
 function exportPDF(){
   const ordered=ordItems();
   const groups=Object.entries(CATS).map(([catKey,d])=>({
-    color:d.color,icon:d.icon,label:lang==="zh"?d.lz:d.le,
+    color:d.color,icon:d.icon,label:CN(d),
     items:[...d.items,...customItems.filter(c=>c.catKey===catKey)].filter(i=>ords[i.id]?.qty>0)
   })).filter(g=>g.items.length>0);
-  const title=lang==="zh"?`總務部日常用品採購單 — ${MZ[curMonth]} ${YEAR}`:`GA Supplies Order — ${MO[curMonth]} ${YEAR}`;
+  const title=L3(`總務部日常用品採購單 — ${MZ[curMonth]} ${YEAR}`,`GA Supplies Order — ${MO[curMonth]} ${YEAR}`,`បញ្ជាទិញសម្ភារៈប្រចាំថ្ងៃ ផ្នែកកិច្ចការទូទៅ — ${MK[curMonth]} ${YEAR}`);
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${title}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -2528,16 +2617,16 @@ td{padding:5px 8px;border-bottom:1px solid #e8eef5}
 @media print{body{padding:14px}}
 </style></head><body>
 <h1>${title}</h1>
-<div class="meta"><span>📅 ${MO[curMonth]} ${YEAR}</span><span>製表: ${new Date().toLocaleDateString()}</span><span>${ordered.length} 項</span>${poNumber?`<span style="font-weight:700;color:#16a34a">📋 ${poNumber}</span>`:""}</div>
+<div class="meta"><span>📅 ${L3(MO[curMonth],MO[curMonth],MK[curMonth])} ${YEAR}</span><span>${L3("製表","Date","កាលបរិច្ឆេទ")}: ${new Date().toLocaleDateString()}</span><span>${ordered.length} ${L3("項","items","មុខ")}</span>${poNumber?`<span style="font-weight:700;color:#16a34a">📋 ${poNumber}</span>`:""}</div>
 ${groups.map(g=>`
 <div class="cat" style="background:${g.color}15;color:${g.color};border-color:${g.color}">${g.icon} ${g.label}</div>
-<table><thead><tr><th>#</th><th>Item</th><th>中文</th><th>Qty</th><th>Unit</th><th>Remarks</th></tr></thead><tbody>
+<table><thead><tr><th>#</th><th>${L3("Item","Item","មុខទំនិញ")}</th><th>${L3("中文","Chinese","ឈ្មោះចិន")}</th><th>${L3("Qty","Qty","បរិមាណ")}</th><th>${L3("Unit","Unit","ឯកតា")}</th><th>${L3("Remarks","Remarks","កំណត់សម្គាល់")}</th></tr></thead><tbody>
 ${g.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.name}</td><td>${it.cn}</td>
 <td><span class="badge" style="background:${g.color}">${ords[it.id].qty}</span></td>
 <td>${getUnit(it.id)}</td><td>${ords[it.id].note||"—"}</td></tr>`).join("")}
 </tbody></table>`).join("")}
 <div class="sigrow">
-  ${["applicant","verifier","approver"].map(r=>{const s=sigs[r];const lb={applicant:"申請人",verifier:"審查人",approver:"核可人"};
+  ${["applicant","verifier","approver"].map(r=>{const s=sigs[r];const lb={applicant:L3("申請人","Applicant","អ្នកស្នើសុំ"),verifier:L3("審查人","Verifier","អ្នកត្រួតពិនិត្យ"),approver:L3("核可人","Approver","អ្នកអនុម័ត")};
     return `<div class="sig"><div style="font-size:9px;font-weight:700;color:#5a7a8a;margin-bottom:4px">${lb[r]}</div>
     ${s?`<div style="font-weight:700">${s.name}</div><div style="font-size:10px;color:#8aaabb">${s.date}</div>`
       :`<div style="height:28px;border-bottom:1px solid #ccd8e8;margin-top:4px"></div>`}</div>`;}).join("")}
@@ -2546,7 +2635,7 @@ ${g.items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.name}</td><td>${it.cn}</td>
 </body></html>`;
   const blob=new Blob([html],{type:"text/html;charset=utf-8"});
   const win=window.open(URL.createObjectURL(blob),"_blank");
-  if(!win)alert("請允許彈出視窗");
+  if(!win)alert(L3("請允許彈出視窗","Please allow pop-ups","សូមអនុញ្ញាតផ្ទាំងលោតឡើង (pop-up)"));
 }
 
 // ════════════════════════════════
@@ -2564,12 +2653,12 @@ function openItemManager(){
   document.getElementById("item-ov").classList.add("open");
   // Translate labels
   const zh=lang==="zh";
-  document.getElementById("im-title").textContent=zh?"管理物品清單":"Manage Items";
-  document.getElementById("im-sub").textContent=zh?"新增、刪除或隱藏物品。隱藏的物品可以重新顯示。":"Add, hide or restore items. Hidden items can be restored.";
-  document.getElementById("imt-list-lbl").textContent=zh?"現有物品":"Current Items";
-  document.getElementById("imt-add-lbl").textContent=zh?"新增物品":"Add Item";
-  document.getElementById("im-close-lbl").textContent=zh?"關閉":"Close";
-  document.getElementById("im-save-lbl").textContent=zh?"儲存變更":"Save Changes";
+  document.getElementById("im-title").textContent=L3("管理物品清單","Manage Items","គ្រប់គ្រងបញ្ជីមុខទំនិញ");
+  document.getElementById("im-sub").textContent=L3("新增、刪除或隱藏物品。隱藏的物品可以重新顯示。","Add, hide or restore items. Hidden items can be restored.","បន្ថែម លុប ឬលាក់មុខទំនិញ។ មុខទំនិញដែលលាក់អាចបង្ហាញវិញបាន។");
+  document.getElementById("imt-list-lbl").textContent=L3("現有物品","Current Items","មុខទំនិញបច្ចុប្បន្ន");
+  document.getElementById("imt-add-lbl").textContent=L3("新增物品","Add Item","បន្ថែមមុខទំនិញ");
+  document.getElementById("im-close-lbl").textContent=L3("關閉","Close","បិទ");
+  document.getElementById("im-save-lbl").textContent=L3("儲存變更","Save Changes","រក្សាទុកការផ្លាស់ប្ដូរ");
 }
 
 function closeItemOv(e){
@@ -2593,71 +2682,71 @@ function renderImBody(){
       const catItems=[...d.items,...imPendingCustom.filter(i=>i.catKey===catKey)];
       html+=`<div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
         color:${d.color};border-bottom:2px solid ${d.color}33;padding-bottom:5px;margin:12px 0 8px">
-        ${d.icon} ${zh?d.lz:d.le}</div>`;
+        ${d.icon} ${CN(d)}</div>`;
       catItems.forEach(item=>{
         const isHidden=!!imPendingHidden[item.id];
         const isCustom=imPendingCustom.some(ci=>ci.id===item.id);
         html+=`<div class="il-row">
           <span class="il-emoji">${item.e||"📦"}</span>
           <div class="flex-1" style="flex:1">
-            <div class="il-name${isHidden?" il-hidden":""}">${zh?(item.cn||item.name):item.name}</div>
-            <div class="il-sub">${zh?item.name:(item.cn||"")}</div>
+            <div class="il-name${isHidden?" il-hidden":""}">${IN(item)}</div>
+            <div class="il-sub"></div>
           </div>
           ${isCustom?`<span style="font-size:9px;background:var(--blue-bg);color:var(--blue);
-            border-radius:4px;padding:1px 6px;font-weight:700">${zh?"自訂":"Custom"}</span>`:""}
+            border-radius:4px;padding:1px 6px;font-weight:700">${L3("自訂","Custom","កំណត់ដោយខ្លួនឯង")}</span>`:""}
           ${isHidden
             ?`<button class="il-del" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green)"
-               onclick="imToggleHide('${item.id}',false)">↩ ${zh?"恢復":"Restore"}</button>`
-            :`<button class="il-del" onclick="imToggleHide('${item.id}',true)">✕ ${zh?"隱藏":"Hide"}</button>`}
+               onclick="imToggleHide('${item.id}',false)">↩ ${L3("恢復","Restore","ស្ដារវិញ")}</button>`
+            :`<button class="il-del" onclick="imToggleHide('${item.id}',true)">✕ ${L3("隱藏","Hide","លាក់")}</button>`}
         </div>`;
       });
     });
     body.innerHTML=html;
   } else {
     // Add item form
-    const catOpts=Object.entries(CATS).map(([k,d])=>`<option value="${k}">${zh?d.lz:d.le}</option>`).join("");
+    const catOpts=Object.entries(CATS).map(([k,d])=>`<option value="${k}">${CN(d)}</option>`).join("");
     const commonEmojis=["📦","🧴","🗑️","🧪","😷","💪","🧤","🫧","🧻","📄","✏️","🖊️","📁","🔋","📎","🖇️","📌","📏","🖍️","🔏","🖨️","🪣","📔","📓"];
     const emojiOpts=commonEmojis.map(e=>`<option value="${e}">${e}</option>`).join("");
     body.innerHTML=`
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
-        ${zh?"填寫新物品資料，新增後會出現在採購申請頁面。":"Fill in details for the new item. It will appear in the Purchase page."}
+        ${L3("填寫新物品資料，新增後會出現在採購申請頁面。","Fill in details for the new item. It will appear in the Purchase page.","បំពេញព័ត៌មានមុខទំនិញថ្មី វានឹងបង្ហាញនៅទំព័រសំណើទិញ។")}
       </div>
       <div class="add-form">
         <div class="add-row">
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"英文名稱 *":"English Name *"}</div>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("英文名稱 *","English Name *","ឈ្មោះអង់គ្លេស *")}</div>
             <input class="add-input" id="ai-name" placeholder="e.g. Stapler"/>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"中文名稱 *":"Chinese Name *"}</div>
-            <input class="add-input" id="ai-cn" placeholder="e.g. 釘書機"/>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("中文名稱 *","Chinese Name *","ឈ្មោះចិន *")}</div>
+            <input class="add-input" id="ai-cn" placeholder="${L3("e.g. 釘書機","e.g. Stapler (in Chinese)","ឧ. ម៉ាស៊ីនកិបក្រដាស (ជាភាសាចិន)")}"/>
           </div>
         </div>
         <div class="add-row">
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"類別":"Category"}</div>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("類別","Category","ប្រភេទ")}</div>
             <select class="add-sel" id="ai-cat">${catOpts}</select>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"圖示 Emoji":"Emoji Icon"}</div>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("圖示 Emoji","Emoji Icon","រូបតំណាង Emoji")}</div>
             <select class="add-sel" id="ai-emoji">${emojiOpts}</select>
           </div>
         </div>
         <div class="add-row">
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"計量單位":"Unit"}</div>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("計量單位","Unit","ឯកតា")}</div>
             <input class="add-input" id="ai-unit" placeholder="pcs" value="pcs"/>
           </div>
           <div>
-            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${zh?"規格（可選）":"Size (optional)"}</div>
-            <input class="add-input" id="ai-sz" placeholder="e.g. 100pcs/box"/>
+            <div style="font-size:10px;color:var(--text2);margin-bottom:4px">${L3("規格（可選）","Size (optional)","ទំហំ (មិនចាំបាច់)")}</div>
+            <input class="add-input" id="ai-sz" placeholder="${L3("e.g. 100pcs/box","e.g. 100pcs/box","ឧ. 100pcs/box")}"/>
           </div>
         </div>
         <label class="sc-toggle" style="cursor:pointer;border-top:none;padding-top:0;margin:4px 0 8px">
-          <span class="sc-label">🔁 ${zh?"每月固定採購":"Monthly Purchase"}<br><span style="font-size:9px;color:var(--text3)">${zh?"結存延續到下月":"Balance carries to next month"}</span></span>
+          <span class="sc-label">🔁 ${L3("每月固定採購","Monthly Purchase","ទិញប្រចាំខែ")}<br><span style="font-size:9px;color:var(--text3)">${L3("結存延續到下月","Balance carries to next month","សមតុល្យផ្ទេរទៅខែបន្ទាប់")}</span></span>
           <span class="tgl"><input type="checkbox" id="ai-monthly" checked><span class="tk"></span><span class="kn"></span></span>
         </label>
-        <button class="add-btn" onclick="imAddItem()">➕ ${zh?"新增物品":"Add Item"}</button>
+        <button class="add-btn" onclick="imAddItem()">➕ ${L3("新增物品","Add Item","បន្ថែមមុខទំនិញ")}</button>
       </div>
       <div id="pending-adds" style="margin-top:12px"></div>`;
     renderPendingAdds();
@@ -2671,10 +2760,10 @@ function renderPendingAdds(){
   if(!newOnes.length){el.innerHTML="";return;}
   const zh=lang==="zh";
   el.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px">
-    ✅ ${zh?"待新增物品：":"Pending additions:"}</div>`+
+    ✅ ${L3("待新增物品：","Pending additions:","មុខទំនិញដែលត្រូវបន្ថែម៖")}</div>`+
     newOnes.map(i=>`<div class="il-row">
       <span class="il-emoji">${i.e}</span>
-      <div style="flex:1"><div class="il-name">${i.name}</div><div class="il-sub">${i.cn}</div></div>
+      <div style="flex:1"><div class="il-name">${IN(i)}</div></div>
       <button class="il-del" onclick="imRemovePending('${i.id}')">✕</button>
     </div>`).join("");
 }
@@ -2693,7 +2782,7 @@ function imAddItem(){
   const unit=document.getElementById("ai-unit").value.trim()||"pcs";
   const sz=document.getElementById("ai-sz").value.trim();
   if(!name||!cn){
-    alert(lang==="zh"?"請填寫英文名稱和中文名稱":"Please fill in both English and Chinese names");
+    alert(L3("請填寫英文名稱和中文名稱","Please fill in both English and Chinese names","សូមបំពេញឈ្មោះអង់គ្លេស និងឈ្មោះចិន"));
     return;
   }
   const id="custom_"+Date.now();
@@ -2727,7 +2816,7 @@ function saveItemChanges(){
   document.getElementById("item-ov").classList.remove("open");
   render();
   renderSettings();
-  alert(lang==="zh"?"✅ 物品清單已更新！":"✅ Item list updated!");
+  alert(L3("✅ 物品清單已更新！","✅ Item list updated!","✅ បានធ្វើបច្ចុប្បន្នភាពបញ្ជីមុខទំនិញ!"));
 }
 
 // Update setL to translate item manager button
@@ -2752,16 +2841,16 @@ GA.addDict({
 async function procCloudUp(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
   try{
-    if(await saveStateCloud()!==true) throw new Error('雲端未確認儲存 / Cloud did not confirm save');
-    GA.cloud.set('up'); GA.toast('☁️ 已上傳採購狀態');
-  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||'上傳失敗','err'); }
+    if(await saveStateCloud()!==true) throw new Error(L3('雲端未確認儲存 / Cloud did not confirm save','Cloud did not confirm save','ពពកមិនបានបញ្ជាក់ការរក្សាទុក'));
+    GA.cloud.set('up'); GA.toast(L3('☁️ 已上傳採購狀態','☁️ Procurement state uploaded','☁️ បានផ្ទុកឡើងស្ថានភាពទិញ'));
+  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||L3('上傳失敗','Upload failed','ផ្ទុកឡើងបរាជ័យ'),'err'); }
 }
 async function procCloudDown(){
   GA.cloud.mount('#ga-cloud'); GA.cloud.set('sync');
   try{
-    if(await loadStateCloud()!==true) throw new Error('雲端未回傳可用資料 / Cloud returned no usable state');
-    GA.cloud.set('down'); render(); GA.toast('📥 已下載採購狀態');
-  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||'下載失敗','err'); }
+    if(await loadStateCloud()!==true) throw new Error(L3('雲端未回傳可用資料 / Cloud returned no usable state','Cloud returned no usable state','ពពកមិនបានផ្ញើទិន្នន័យដែលអាចប្រើបាន'));
+    GA.cloud.set('down'); render(); GA.toast(L3('📥 已下載採購狀態','📥 Procurement state downloaded','📥 បានទាញយកស្ថានភាពទិញ'));
+  }catch(e){ GA.cloud.set('err',e.message); GA.toast(e.message||L3('下載失敗','Download failed','ទាញយកបរាជ័យ'),'err'); }
 }
 /* v3.9.15: startup already pulls; resume/network also refresh automatically when no unsaved local change is queued. */
 let _procAutoPullAt=0;
@@ -2785,19 +2874,19 @@ function procImport(){
     onImport:function(payload,meta){
       const po=(payload.po||[]), recv=(payload.receiving||[]), inv=(payload.inventory||[]);
       let msg=[];
-      if(recv.length){ importRecvRecords(recv); msg.push('收貨 +'+recv.length); }
-      if(inv.length){ importInvItems(inv); msg.push('品項 +'+inv.length); }
+      if(recv.length){ importRecvRecords(recv); msg.push(L3('收貨 +','Receipts +','ការទទួល +')+recv.length); }
+      if(inv.length){ importInvItems(inv); msg.push(L3('品項 +','Items +','មុខទំនិញ +')+inv.length); }
       if(po.length){
         if(meta.mode==='submitted' && canSubmit){
           // 匯入並送核可：走原有提交流程（狀態 submitted，Telegram 核可請求）
           importPoAndSubmit(po);
-          msg.push('採購 +'+po.length+'（已送核可）');
+          msg.push(L3('採購 +','PO +','បញ្ជាទិញ +')+po.length+L3('（已送核可）',' (sent for approval)',' (បានផ្ញើសុំអនុម័ត)'));
         }else{
           importPoDraft(po);
-          msg.push('採購草稿 +'+po.length);
+          msg.push(L3('採購草稿 +','PO draft +','សេចក្តីព្រាងបញ្ជាទិញ +')+po.length);
         }
       }
-      GA.toast('📥 '+(msg.join('，')||'無資料匯入'));
+      GA.toast('📥 '+(msg.join(L3('，',', ',', '))||L3('無資料匯入','Nothing imported','គ្មានទិន្នន័យនាំចូល')));
       saveState(); render();
     }
   });
@@ -3001,19 +3090,19 @@ initLogin();
 <!-- v3.9.14 integrity patch -->
 <script>
 (function(){
-  function P(zh,en){return lang==='zh'?zh:en;}
+  function P(zh,en,km){return L3(zh,en,km);}
   window.editRecvRecord=function(id){
     var r=(recvLog||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
-    openRecvForm(r.type);document.getElementById('rec-id').value=r.id;document.getElementById('rec-type').value=r.type;document.getElementById('rec-date').value=r.date||'';document.getElementById('rec-item').value=String(r.itemId);document.getElementById('rec-qty').value=r.qty||1;document.getElementById('rec-dept').value=r.dept||'';document.getElementById('rec-req').value=r.requester||'';document.getElementById('rec-remarks').value=r.remarks||'';document.getElementById('recv-mtitle').textContent='✏️ '+P('編輯收發記錄','Edit receiving record');
+    openRecvForm(r.type);document.getElementById('rec-id').value=r.id;document.getElementById('rec-type').value=r.type;document.getElementById('rec-date').value=r.date||'';document.getElementById('rec-item').value=String(r.itemId);document.getElementById('rec-qty').value=r.qty||1;document.getElementById('rec-dept').value=r.dept||'';document.getElementById('rec-req').value=r.requester||'';document.getElementById('rec-remarks').value=r.remarks||'';document.getElementById('recv-mtitle').textContent='✏️ '+P('編輯收發記錄','Edit receiving record','កែកំណត់ត្រាទទួល/បើកចេញ');
   };
   var _pRenderRecv=window.renderRecv;
   window.renderRecv=function(){_pRenderRecv();document.querySelectorAll('#recv-tbody tr').forEach(function(tr){var del=tr.querySelector('button[onclick^="delRecvRecord"]');if(!del)return;var m=(del.getAttribute('onclick')||'').match(/'([^']+)'/);if(!m)return;var b=document.createElement('button');b.className='il-del';b.style.cssText='border-color:var(--blue-border);color:var(--blue);margin-right:4px';b.textContent='✏️';b.onclick=function(){editRecvRecord(m[1])};del.parentNode.insertBefore(b,del)});};
   window.saveRecvRecord=function(){
     var id=document.getElementById('rec-id').value,itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Number(document.getElementById('rec-qty').value),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
-    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(P('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return}
-    if(type==='issue'&&!dept){alert(P('領用／發放必須填部門','Department is required for issue'));return}
+    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(P('請選擇品項、日期並輸入數量','Pick item, date and quantity','សូមជ្រើសមុខទំនិញ កាលបរិច្ឆេទ ហើយបញ្ចូលបរិមាណ'));return}
+    if(type==='issue'&&!dept){alert(P('領用／發放必須填部門','Department is required for issue','ត្រូវបំពេញផ្នែក សម្រាប់ការបើកចេញ'));return}
     var dup=(recvLog||[]).find(function(x){return String(x.id)!==String(id)&&x.date===date&&x.type===type&&String(x.itemId)===String(itemId)&&Number(x.qty)===Number(qty)&&String(x.dept||'').trim().toLowerCase()===dept.toLowerCase()});
-    if(dup&&!confirm(P('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
+    if(dup&&!confirm(P('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?','⚠️ មានកំណត់ត្រាកាលបរិច្ឆេទ / មុខទំនិញ / បរិមាណ / ផ្នែក ដូចគ្នារួចហើយ។ នៅតែរក្សាទុក?')))return;
     var old=id?(recvLog||[]).find(function(x){return String(x.id)===String(id)}):null;
     if(old){var om=recYearMonth(old.date);if(om.y===YEAR)bumpInvForRecord(om.m,old.itemId,old.type==='receive'?'purchase':'used',-Number(old.qty||0));}
     var rec={id:id||('rec_'+Date.now()),date:date,type:type,itemId:itemId,itemName:it.name,qty:qty,dept:dept,requester:requester,remarks:remarks,updatedAt:new Date().toISOString(),createdAt:(old&&old.createdAt)||new Date().toISOString()};
@@ -3028,7 +3117,7 @@ initLogin();
 <!-- v3.9.14c Procurement receive/issue stock-integrity -->
 <script id="proc-v3914c-js">
 (function(){
-  function Q(zh,en){return lang==='zh'?zh:en;}
+  function Q(zh,en,km){return L3(zh,en,km);}
   function n(v){var x=Number(v);return isFinite(x)?x:0;}
   function cloneInv(){try{return JSON.parse(JSON.stringify(invRecords||{}))}catch(e){return {}}}
   function ensureRec(db,m,itemId){var k=getMonthKey(m,YEAR);if(!db[k])db[k]={};if(!db[k][itemId])db[k][itemId]={open:0,purchase:0,used:0,close:0,note:''};return db[k][itemId];}
@@ -3041,18 +3130,18 @@ initLogin();
 
   window.saveRecvRecord=function(){
     var id=(document.getElementById('rec-id')||{}).value||'',itemId=isNaN(+document.getElementById('rec-item').value)?document.getElementById('rec-item').value:+document.getElementById('rec-item').value,it=allItemsLookup(itemId),type=document.getElementById('rec-type').value,date=document.getElementById('rec-date').value,qty=Number(document.getElementById('rec-qty').value),dept=document.getElementById('rec-dept').value.trim(),requester=document.getElementById('rec-req').value.trim(),remarks=document.getElementById('rec-remarks').value.trim();
-    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(Q('請選擇品項、日期並輸入數量','Pick item, date and quantity'));return;}
-    if(type==='issue'&&!dept){alert(Q('領用／發放必須填部門','Department is required for issue'));return;}
-    var dup=duplicate(id,date,type,itemId,qty,dept);if(dup&&!confirm(Q('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?')))return;
+    if(!it||!date||!Number.isFinite(qty)||qty<=0||Math.abs(qty-Math.round(qty*10000)/10000)>1e-10){alert(Q('請選擇品項、日期並輸入數量','Pick item, date and quantity','សូមជ្រើសមុខទំនិញ កាលបរិច្ឆេទ ហើយបញ្ចូលបរិមាណ'));return;}
+    if(type==='issue'&&!dept){alert(Q('領用／發放必須填部門','Department is required for issue','ត្រូវបំពេញផ្នែក សម្រាប់ការបើកចេញ'));return;}
+    var dup=duplicate(id,date,type,itemId,qty,dept);if(dup&&!confirm(Q('⚠️ 已有相同日期／品項／數量／部門的紀錄，仍要儲存？','⚠️ An identical record exists. Save anyway?','⚠️ មានកំណត់ត្រាកាលបរិច្ឆេទ / មុខទំនិញ / បរិមាណ / ផ្នែក ដូចគ្នារួចហើយ។ នៅតែរក្សាទុក?')))return;
     var old=id?(recvLog||[]).find(function(x){return String(x.id)===String(id)}):null,rec=Object.assign({},old||{}, {id:id||('rec_'+Date.now()),date:date,type:type,itemId:itemId,itemName:it.name,qty:qty,dept:dept,requester:requester,remarks:remarks,updatedAt:new Date().toISOString(),createdAt:(old&&old.createdAt)||new Date().toISOString()});
-    var sim=simulate(old,rec);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||it.name;alert(Q('❌ 儲存後 '+nm+' 的庫存會小於 0。請先增加收貨、減少領用，或修正日期。','❌ Saving would make '+nm+' stock negative. Add receipts, reduce issues, or correct the date.'));return;}
+    var sim=simulate(old,rec);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||it.name;alert(Q('❌ 儲存後 '+nm+' 的庫存會小於 0。請先增加收貨、減少領用，或修正日期。','❌ Saving would make '+nm+' stock negative. Add receipts, reduce issues, or correct the date.','❌ ការរក្សាទុកនឹងធ្វើឱ្យស្តុក '+nm+' តិចជាង 0។ សូមបន្ថែមការទទួល កាត់បន្ថយការបើកចេញ ឬកែកាលបរិច្ឆេទ។'));return;}
     if(old){var idx=recvLog.indexOf(old);recvLog[idx]=rec;}else recvLog.push(rec);commitSim(sim);saveState();closeRecvOv();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
   };
 
   window.delRecvRecord=function(id){
     var r=(recvLog||[]).find(function(x){return String(x.id)===String(id)});if(!r)return;
-    var sim=simulate(r,null);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||r.itemName||'Item';alert(Q('❌ 不能刪除此收貨：'+nm+' 已有後續領用依賴這筆數量。請先更正領用。','❌ This receipt cannot be deleted because later issues depend on it. Correct the issue records first.'));return;}
-    if(!confirm(Q('確定刪除此筆？庫存與後續月份結存會重新計算。','Delete this record? Stock and subsequent monthly balances will be recalculated.')))return;
+    var sim=simulate(r,null);if(!sim.ok){var er=sim.error||{},nm=(allItemsLookup(er.itemId)||{}).name||r.itemName||'Item';alert(Q('❌ 不能刪除此收貨：'+nm+' 已有後續領用依賴這筆數量。請先更正領用。','❌ This receipt cannot be deleted because later issues depend on it. Correct the issue records first.','❌ មិនអាចលុបការទទួលនេះបានទេ ព្រោះការបើកចេញក្រោយៗពឹងលើវា។ សូមកែកំណត់ត្រាបើកចេញជាមុនសិន។'));return;}
+    if(!confirm(Q('確定刪除此筆？庫存與後續月份結存會重新計算。','Delete this record? Stock and subsequent monthly balances will be recalculated.','លុបកំណត់ត្រានេះ? ស្តុក និងសមតុល្យខែបន្ទាប់ៗនឹងគណនាឡើងវិញ។')))return;
     recvLog=recvLog.filter(function(x){return String(x.id)!==String(id)});commitSim(sim);saveState();renderRecv();if(document.getElementById('page-inv').classList.contains('on'))renderInv();
   };
   document.documentElement.setAttribute('data-procurement-stock-integrity','v3.9.14c');
@@ -3084,7 +3173,7 @@ initLogin();
 
 <div id="proc-summary-ov" onclick="if(event.target===this)procSummaryClose()">
   <div class="proc3916-box">
-    <div class="proc3916-h"><b>✈️ Procurement Summary / 採購摘要</b><div style="flex:1"></div><button class="inv-btn" onclick="procSummaryClose()">✕</button></div>
+    <div class="proc3916-h"><b data-pr="sumTitle">✈️ Procurement Summary / 採購摘要</b><div style="flex:1"></div><button class="inv-btn" onclick="procSummaryClose()">✕</button></div>
     <div class="proc3916-b">
       <div class="proc3916-period">
         <div class="proc3916-modes">
@@ -3099,7 +3188,7 @@ initLogin();
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
-        <label>Language</label>
+        <label data-pr="sumLang">Language</label>
         <select id="proc-summary-lang" class="proc3916-select" onchange="procSummaryRefresh()">
           <option value="zh">中文</option><option value="en">English</option><option value="km">ខ្មែរ</option><option value="all3">中 / EN / ខ្មែរ</option>
         </select>
@@ -3108,8 +3197,8 @@ initLogin();
       <div id="proc-summary-preview"></div>
     </div>
     <div class="proc3916-f">
-      <button class="inv-btn" onclick="procSummaryClose()">關閉 Close</button>
-      <button class="inv-btn primary" id="proc-summary-send" onclick="procSummarySend()">📤 Send to Telegram Group</button>
+      <button class="inv-btn" onclick="procSummaryClose()" data-pr="sumClose">關閉 Close</button>
+      <button class="inv-btn primary" id="proc-summary-send" onclick="procSummarySend()" data-pr="sumSend">📤 Send to Telegram Group</button>
     </div>
   </div>
 </div>
@@ -3124,6 +3213,9 @@ initLogin();
 <script id="proc-v3916-js">
 (function(){
   window.PROC_V3916='3.9.16b';
+  /* v3.9.26 i18n: this layer's UI was English in zh/en; Khmer mode gets Khmer. */
+  function E3(en,km){return L3(en,en,km);}
+  function uiMonth(m,y){return lang==='km'&&MK[m]?MK[m]+' '+y:procMonthLabel(m,y);}
   var _baseShowPage=window.showPage;
   var recState={ptype:'month',anchor:(new Date()).toISOString().slice(0,10),status:'all'};
   window.procSummaryPtype='month'; window.procSummaryAnchor=(new Date()).toISOString().slice(0,10);
@@ -3153,13 +3245,13 @@ initLogin();
   function ensureRecordsPage(){
     if(document.getElementById('pt-records'))return;
     var tabs=document.getElementById('page-tabs'), before=document.getElementById('pt-set');
-    var t=document.createElement('div');t.className='ptab';t.id='pt-records';t.innerHTML='<span>📚 PO Records</span>';t.onclick=procShowRecords;tabs.insertBefore(t,before);
+    var t=document.createElement('div');t.className='ptab';t.id='pt-records';t.innerHTML='<span data-pr="recTab">'+PRT('recTab')+'</span>';t.onclick=procShowRecords;tabs.insertBefore(t,before);
     var pg=document.createElement('div');pg.className='page';pg.id='page-records';
     pg.innerHTML='<div class="proc3916-recbar">'+
       '<button data-prt="day" onclick="procRecType(\'day\')">D</button><button data-prt="week" onclick="procRecType(\'week\')">W</button><button data-prt="month" class="on" onclick="procRecType(\'month\')">M</button><button data-prt="year" onclick="procRecType(\'year\')">Y</button>'+
       '<button onclick="procRecShift(-1)">◀</button><select id="proc-rec-period" onchange="recState.anchor=this.value;procRenderRecords()"></select><button onclick="procRecShift(1)">▶</button><button onclick="procRecToday()">●</button>'+
-      '<select id="proc-rec-status" onchange="recState.status=this.value;procRenderRecords()"><option value="all">All status</option><option value="SUBMITTED">Pending Phea</option><option value="VERIFIED">Waiting Paul</option><option value="APPROVED">Approved</option><option value="RETURNED">Returned</option><option value="REJECTED">Rejected</option></select>'+
-      '<button onclick="procRecordsReload()">↻ Refresh</button><button onclick="procSummaryOpen()">✈️ Summary</button></div>'+
+      '<select id="proc-rec-status" onchange="recState.status=this.value;procRenderRecords()"><option value="all" data-pr="recAll">'+PRT('recAll')+'</option><option value="SUBMITTED" data-pr="recPendPhea">'+PRT('recPendPhea')+'</option><option value="VERIFIED" data-pr="recWaitPaul">'+PRT('recWaitPaul')+'</option><option value="APPROVED" data-pr="recApproved">'+PRT('recApproved')+'</option><option value="RETURNED" data-pr="recReturned">'+PRT('recReturned')+'</option><option value="REJECTED" data-pr="recRejected">'+PRT('recRejected')+'</option></select>'+
+      '<button onclick="procRecordsReload()" data-pr="recRefresh">'+PRT('recRefresh')+'</button><button onclick="procSummaryOpen()" data-pr="recSummary">'+PRT('recSummary')+'</button></div>'+
       '<div id="proc-rec-info" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div><div id="proc-rec-list" class="proc3916-list"></div>';
     document.getElementById('app').appendChild(pg);
   }
@@ -3167,7 +3259,7 @@ initLogin();
     ensureRecordsPage();
     document.querySelectorAll('.page').forEach(function(x){x.classList.remove('on')});document.querySelectorAll('.ptab').forEach(function(x){x.classList.remove('on')});
     document.getElementById('page-records').classList.add('on');document.getElementById('pt-records').classList.add('on');
-    document.getElementById('htitle').textContent=lang==='zh'?'採購記錄／核可文件':'PO Records / Approval Files';
+    document.getElementById('htitle').textContent=L3('採購記錄／核可文件','PO Records / Approval Files','កំណត់ត្រាបញ្ជាទិញ / ឯកសារអនុម័ត');
     await procRecordsReload();
   };
   window.procRecordsReload=async function(){try{await loadPOHistory()}catch(e){console.warn(e)}procRenderRecords()};
@@ -3183,33 +3275,33 @@ initLogin();
     document.getElementById('proc-rec-list').innerHTML=rows.map(function(po){
       var doc=po.approvalDoc||null,st=String(po.status||'');
       var files=doc?'<a target="_blank" href="'+esc2(doc.url||'#')+'">Sheet</a><a target="_blank" href="'+esc2(doc.pdfUrl||'#')+'">PDF</a><a target="_blank" href="'+esc2(doc.xlsxUrl||'#')+'">Excel</a>':
-        (st==='APPROVED'?'<button class="green" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 Generate files</button>':'');
-      return '<div class="proc3916-card"><div class="h"><div><b>'+esc2(po.poNumber||po.poId||'PO')+'</b><div class="meta">'+esc2(procMonthLabel(Number(po.month),po.year))+' · '+(po.items||[]).length+' items<br>Applicant: '+esc2(po.applicant||'—')+' · Verifier: '+esc2(po.verifier||'—')+' · Approver: '+esc2(po.approver||'—')+'</div></div><span class="proc3916-st '+esc2(st)+'">'+esc2(st)+'</span></div>'+
-      '<div class="acts"><button onclick="procDetailOpen(\''+esc2(po.poId)+'\')">👁 View</button>'+files+
-      ((st==='RETURNED'||st==='REJECTED'||st==='APPROVED')?'<button class="blue" onclick="procRevisePO(\''+esc2(po.poId)+'\')">✏️ '+(st==='APPROVED'?'Create revision':'Edit / resubmit')+'</button>':'')+
+        (st==='APPROVED'?'<button class="green" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 '+E3('Generate files','បង្កើតឯកសារ')+'</button>':'');
+      return '<div class="proc3916-card"><div class="h"><div><b>'+esc2(po.poNumber||po.poId||'PO')+'</b><div class="meta">'+esc2(uiMonth(Number(po.month),po.year))+' · '+(po.items||[]).length+' '+E3('items','មុខ')+'<br>'+E3('Applicant','អ្នកស្នើសុំ')+': '+esc2(po.applicant||'—')+' · '+E3('Verifier','អ្នកត្រួតពិនិត្យ')+': '+esc2(po.verifier||'—')+' · '+E3('Approver','អ្នកអនុម័ត')+': '+esc2(po.approver||'—')+'</div></div><span class="proc3916-st '+esc2(st)+'">'+esc2(st)+'</span></div>'+
+      '<div class="acts"><button onclick="procDetailOpen(\''+esc2(po.poId)+'\')">👁 '+E3('View','មើល')+'</button>'+files+
+      ((st==='RETURNED'||st==='REJECTED'||st==='APPROVED')?'<button class="blue" onclick="procRevisePO(\''+esc2(po.poId)+'\')">✏️ '+(st==='APPROVED'?E3('Create revision','បង្កើតការកែប្រែ'):E3('Edit / resubmit','កែ / ដាក់ស្នើម្ដងទៀត'))+'</button>':'')+
       '</div></div>';
-    }).join('')||'<div class="proc3916-card">— No records —</div>';
+    }).join('')||'<div class="proc3916-card">— '+E3('No records','គ្មានកំណត់ត្រា')+' —</div>';
   };
   window.procMonthLabel=function(m,y){var a=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return (a[m]||('M'+(m+1)))+' '+y};
   function findPO(id){return (poHistoryData||[]).find(function(x){return String(x.poId)===String(id)})}
   window.procDetailOpen=async function(id){var po=findPO(id);if(!po){await loadPOHistory();po=findPO(id)}if(!po)return;
     document.getElementById('proc-detail-title').textContent=po.poNumber||po.poId;
     var d=po.approvalDoc||null;
-    document.getElementById('proc-detail-body').innerHTML='<div class="meta">Status: <b>'+esc2(po.status)+'</b><br>Period: '+esc2(procMonthLabel(Number(po.month),po.year))+'<br>Applicant: '+esc2(po.applicant||'—')+' '+esc2(po.submitDate||'')+'<br>Verifier: '+esc2(po.verifier||'—')+' '+esc2(po.verifyDate||'')+'<br>Approver: '+esc2(po.approver||'—')+' '+esc2(po.approveDate||'')+'</div><hr>'+
-      (po.items||[]).map(function(it,i){return '<div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>#'+(i+1)+' '+esc2(it.name||it.item||'—')+'</b> · Qty '+esc2(it.qty||0)+(it.note?'<div class="meta">'+esc2(it.note)+'</div>':'')+'</div>'}).join('')+
-      (d?'<div class="acts" style="margin-top:12px"><a target="_blank" href="'+esc2(d.url||'#')+'">Google Sheet</a><a target="_blank" href="'+esc2(d.pdfUrl||'#')+'">PDF</a><a target="_blank" href="'+esc2(d.xlsxUrl||'#')+'">Excel</a></div>':(String(po.status)==='APPROVED'?'<button class="inv-btn primary" style="margin-top:12px" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 Generate approval files</button>':''));
+    document.getElementById('proc-detail-body').innerHTML='<div class="meta">'+E3('Status','ស្ថានភាព')+': <b>'+esc2(po.status)+'</b><br>'+E3('Period','រយៈពេល')+': '+esc2(uiMonth(Number(po.month),po.year))+'<br>'+E3('Applicant','អ្នកស្នើសុំ')+': '+esc2(po.applicant||'—')+' '+esc2(po.submitDate||'')+'<br>'+E3('Verifier','អ្នកត្រួតពិនិត្យ')+': '+esc2(po.verifier||'—')+' '+esc2(po.verifyDate||'')+'<br>'+E3('Approver','អ្នកអនុម័ត')+': '+esc2(po.approver||'—')+' '+esc2(po.approveDate||'')+'</div><hr>'+
+      (po.items||[]).map(function(it,i){return '<div style="padding:7px 0;border-bottom:1px solid var(--border)"><b>#'+(i+1)+' '+esc2(it.name||it.item||'—')+'</b> · '+E3('Qty','បរិមាណ')+' '+esc2(it.qty||0)+(it.note?'<div class="meta">'+esc2(it.note)+'</div>':'')+'</div>'}).join('')+
+      (d?'<div class="acts" style="margin-top:12px"><a target="_blank" href="'+esc2(d.url||'#')+'">Google Sheet</a><a target="_blank" href="'+esc2(d.pdfUrl||'#')+'">PDF</a><a target="_blank" href="'+esc2(d.xlsxUrl||'#')+'">Excel</a></div>':(String(po.status)==='APPROVED'?'<button class="inv-btn primary" style="margin-top:12px" onclick="procEnsureDoc(\''+esc2(po.poId)+'\')">📄 '+E3('Generate approval files','បង្កើតឯកសារអនុម័ត')+'</button>':''));
     document.getElementById('proc-detail-ov').classList.add('on');
   };
   window.procDetailClose=function(){document.getElementById('proc-detail-ov').classList.remove('on')};
-  window.procEnsureDoc=async function(id,send){try{GA.toast('⏳ Generating approval files…');var d=await _procPost('procEnsureApprovalDoc',{poId:id,send:send!==false});await loadPOHistory();procRenderRecords();if(d&&d.doc)GA.toast('✅ Approval files ready')}catch(e){GA.toast('❌ '+e.message,'err')}};
+  window.procEnsureDoc=async function(id,send){try{GA.toast(E3('⏳ Generating approval files…','⏳ កំពុងបង្កើតឯកសារអនុម័ត…'));var d=await _procPost('procEnsureApprovalDoc',{poId:id,send:send!==false});await loadPOHistory();procRenderRecords();if(d&&d.doc)GA.toast(E3('✅ Approval files ready','✅ ឯកសារអនុម័តរួចរាល់'))}catch(e){GA.toast('❌ '+e.message,'err')}};
 
   window.procEnsureCurrentDoc=async function(){
-    if(!submitAckId){GA.toast('❌ PO server ID missing','err');return;}
-    try{GA.toast('⏳ Generating approval files…');var d=await _procPost('procEnsureApprovalDoc',{poId:submitAckId,send:true});var x=d&&d.data?d.data:d;if(x&&x.po)_procApplyServerPO(x.po);if(x&&x.doc)window.procCurrentApprovalDoc=x.doc;await loadPOHistory();renderModalBody();GA.toast('✅ Approval files ready and group notified');}catch(e){GA.toast('❌ '+e.message,'err')}
+    if(!submitAckId){GA.toast(E3('❌ PO server ID missing','❌ គ្មានលេខ PO ID ពីម៉ាស៊ីនមេ'),'err');return;}
+    try{GA.toast(E3('⏳ Generating approval files…','⏳ កំពុងបង្កើតឯកសារអនុម័ត…'));var d=await _procPost('procEnsureApprovalDoc',{poId:submitAckId,send:true});var x=d&&d.data?d.data:d;if(x&&x.po)_procApplyServerPO(x.po);if(x&&x.doc)window.procCurrentApprovalDoc=x.doc;await loadPOHistory();renderModalBody();GA.toast(E3('✅ Approval files ready and group notified','✅ ឯកសារអនុម័តរួចរាល់ ហើយបានជូនដំណឹងក្រុម'));}catch(e){GA.toast('❌ '+e.message,'err')}
   };
   window.procRevisePO=function(id){
     var po=findPO(id);if(!po)return;
-    if(!confirm((lang==='zh'?'建立此採購單的修訂草稿？原核可記錄會保留。':'Create a revision draft? The original approved record will be preserved.')))return;
+    if(!confirm((L3('建立此採購單的修訂草稿？原核可記錄會保留。','Create a revision draft? The original approved record will be preserved.','បង្កើតសេចក្តីព្រាងកែប្រែនៃបញ្ជាទិញនេះ? កំណត់ត្រាអនុម័តដើមនឹងរក្សាទុក។'))))return;
     clearPOState();curMonth=Number(po.month)||0;ords={};(po.items||[]).forEach(function(it){var hit=allItems().find(function(x){return String(x.id)===String(it.id)||String(x.name||'').toLowerCase()===String(it.name||it.item||'').toLowerCase()});if(hit)ords[hit.id]={qty:Number(it.qty)||0,note:(it.note||'')+(po.poNumber?' [Revision of '+po.poNumber+']':'')}});
     poStatus='draft';sigs={applicant:null,verifier:null,approver:null};poNumber=null;submitAckId='';saveState();showPage('po');render();window.scrollTo({top:0,behavior:'smooth'});
   };
@@ -3252,7 +3344,7 @@ initLogin();
     try{var L=document.getElementById('proc-summary-lang').value||'zh',R=pRange(procSummaryPtype,procSummaryAnchor),label=pLabel(procSummaryPtype,procSummaryAnchor);var d=await _procPost('procSendSummary',{ptype:procSummaryPtype,start:R[0],end:R[1],label:label,lang:L});
       var x=d&&d.data?d.data:d,result=GA.telegram.deliveryResult(x);if(!result.ok)throw new Error(result.text+(result.errors.length?' · '+result.errors.join(' | '):''));GA.toast((result.duplicate?'☑ ':'✅ ')+result.text+' · '+((x&&x.count)||0)+' PO');
       procSummaryClose();
-    }catch(e){GA.toast('❌ Summary send failed: '+e.message,'err')}finally{b.disabled=false}
+    }catch(e){GA.toast(E3('❌ Summary send failed: ','❌ ផ្ញើសង្ខេបបរាជ័យ៖ ')+e.message,'err')}finally{b.disabled=false}
   };
   window.procTelegram=window.procSummaryOpen;
 
@@ -3283,8 +3375,8 @@ initLogin();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init3916);else init3916();
 })();
 </script>
-<script src="shared/ga-po-draft.js?v=3.9.20"></script>
-<script src="shared/ga-proc-cloud.js?v=3.9.21"></script>
+<script src="shared/ga-po-draft.js?v=3.9.26"></script>
+<script src="shared/ga-proc-cloud.js?v=3.9.26"></script>
 <script src="shared/ga-proc-receiving.js?v=3.9.22"></script>
 </body>
 </html>

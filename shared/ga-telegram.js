@@ -18,6 +18,8 @@
 var GA = global.GA; if (!GA) { console.error('ga-telegram.js 需要先載入 ga-core.js'); return; }
 
 var TG = GA.telegram = {};
+/* v3.9.26: web UI text per platform language (Telegram message content is unchanged) */
+function L3(zh, en, km) { return GA.lang === 'en' ? en : GA.lang === 'km' ? km : zh; }
 
 GA.addDict({
   zh: {
@@ -59,7 +61,7 @@ TG.groups = function (force) {
   });
 };
 TG.matchesModule=function(list,module){var alias={fuel:'diesel',recv:'receiving',transport:'transportation'},wanted=alias[module]||module;return String(list||'all').toLowerCase().split(/[\s,;]+/).some(function(m){return m==='all'||(alias[m]||m)===wanted;});};
-TG.deliveryResult=function(d){d=d||{};var errors=Array.isArray(d.errors)?d.errors:[],duplicate=!!d.skippedDuplicate,receipts=Array.isArray(d.receipts)?d.receipts:[],receiptCount=receipts.filter(function(r){return r&&r.chatId&&r.messageId;}).length,confirmed=receiptCount>0&&(Number(d.sent)>0||duplicate);return {ok:confirmed&&!errors.length,duplicate:duplicate,receipts:receipts,text:duplicate&&confirmed?'相同摘要先前已送達；請由下方回執開啟原訊息。若要新增一則，請勾選「重新發一則」 / Same summary was already delivered; open the original receipt below. Check “send a new copy” to post another message':duplicate?'後端表示摘要重複，但沒有原訊息回執；請更新 GAS 後再核對 / Backend reports a duplicate but provided no original receipt; update GAS and verify':confirmed?'Telegram 已確認 '+receiptCount+' 則訊息、'+Number(d.sent)+' 個群組 / '+receiptCount+' message receipt(s), '+Number(d.sent)+' group(s) confirmed':Number(d.sent)>0?'伺服器回報已發送，但缺少群組 Message ID；不可視為送達，請更新 GAS / Server reports sent but no group Message ID; delivery is unconfirmed, update GAS':'未取得群組發送確認 / No group delivery confirmation',errors:errors};};
+TG.deliveryResult=function(d){d=d||{};var errors=Array.isArray(d.errors)?d.errors:[],duplicate=!!d.skippedDuplicate,receipts=Array.isArray(d.receipts)?d.receipts:[],receiptCount=receipts.filter(function(r){return r&&r.chatId&&r.messageId;}).length,confirmed=receiptCount>0&&(Number(d.sent)>0||duplicate);return {ok:confirmed&&!errors.length,duplicate:duplicate,receipts:receipts,text:duplicate&&confirmed?L3('相同摘要先前已送達；請由下方回執開啟原訊息。若要新增一則，請勾選「重新發一則」','This summary was already sent; open the original message below. Tick “Send a new copy” to post it again','សង្ខេបនេះបានផ្ញើរួចហើយ; បើកសារដើមខាងក្រោម។ ធីក “ផ្ញើច្បាប់ថ្មី” ដើម្បីផ្ញើម្ដងទៀត'):duplicate?L3('後端表示摘要重複，但沒有原訊息回執；請更新 GAS 後再核對','Backend reports a duplicate but gave no original receipt; update GAS and check','Backend និយាយថាស្ទួន ប៉ុន្តែគ្មានបង្កាន់ដៃសារដើម; សូមធ្វើបច្ចុប្បន្នភាព GAS ហើយពិនិត្យ'):confirmed?L3('Telegram 已確認 '+receiptCount+' 則訊息、'+Number(d.sent)+' 個群組',receiptCount+' message receipt(s), '+Number(d.sent)+' group(s) confirmed','Telegram បានបញ្ជាក់ '+receiptCount+' សារ, '+Number(d.sent)+' ក្រុម'):Number(d.sent)>0?L3('伺服器回報已發送，但缺少群組 Message ID；不可視為送達，請更新 GAS','Server says sent but gave no group message ID; delivery is not confirmed, update GAS','Server និយាយថាបានផ្ញើ ប៉ុន្តែគ្មានលេខសារក្រុម; មិនទាន់បញ្ជាក់ការផ្ញើ សូមធ្វើបច្ចុប្បន្នភាព GAS'):L3('未取得群組發送確認','No group delivery confirmation','មិនទាន់មានការបញ្ជាក់ការផ្ញើទៅក្រុម'),errors:errors};};
 
 /* ═══════════ 開啟視窗 ═══════════
    opt = {
@@ -122,11 +124,11 @@ TG.open = function (opt) {
         '<div class="ga-grid2">' +
           '<div class="ga-fld"><label>' + GA.T('tgLang') + '</label>' +
             '<select id="tg-lang">' +
-              '<option value="zh">繁體中文</option>' +
+              '<option value="zh">' + L3('繁體中文', 'Chinese', 'ភាសាចិន') + '</option>' +
               '<option value="en">English</option>' +
               '<option value="km">ខ្មែរ</option>' +
-              '<option value="both" selected>' + GA.T('tgBoth') + ' 中／EN</option>' +
-              '<option value="all3">中 / EN / ខ្មែរ</option>' +
+              '<option value="both" selected>' + GA.T('tgBoth') + L3(' 中／EN', ' (Chinese / English)', ' (ចិន / អង់គ្លេស)') + '</option>' +
+              '<option value="all3">' + L3('中 / EN / ខ្មែរ', 'Chinese / English / Khmer', 'ចិន / អង់គ្លេស / ខ្មែរ') + '</option>' +
             '</select></div>' +
           '<div class="ga-fld"><label>' + GA.T('tgGroup') + '</label>' +
             '<select id="tg-group"><option value="">' + GA.T('tgLoadGroup') + '</option></select></div>' +
@@ -136,7 +138,7 @@ TG.open = function (opt) {
           '<pre id="tg-pv" class="ga-pre"></pre></div>' +
         '<p id="tg-result" role="status" style="white-space:pre-wrap"></p>' +
         '<div id="tg-receipts"></div>' +
-        '<label id="tg-resend-label"><input type="checkbox" id="tg-resend"> '+(GA.lang==='zh'?'重新發一則新訊息（未勾選時，相同摘要只顯示原訊息）':'Send a new copy (otherwise an identical summary opens the original receipt)')+'</label>' +
+        '<label id="tg-resend-label"><input type="checkbox" id="tg-resend"> '+L3('重新發一則新訊息（未勾選時，相同摘要只顯示原訊息）','Send a new copy (otherwise the same summary just shows the original message)','ផ្ញើច្បាប់ថ្មី (បើមិនធីក សង្ខេបដដែលនឹងបង្ហាញសារដើម)')+'</label>' +
         '<p class="ga-note" id="tg-note">' + GA.T('tgNoteSum') + '</p>' +
       '</div>' +
       '<div class="ga-modal-f">' +
@@ -160,12 +162,12 @@ TG.open = function (opt) {
     });
     sel.innerHTML = usable.length
       ? usable.map(function (g) { return '<option value="' + GA.esc(g.chatId) + '">' + GA.esc(g.name || g.chatId) + '</option>'; }).join('')
-      : TG.defaultChatId?'<option value="'+GA.esc(TG.defaultChatId)+'">GA-EXP ('+GA.esc(TG.defaultChatId)+')</option>':'<option value="">'+(GA.lang==='zh'?'無可用群組，請檢查設定':'No available group; check settings')+'</option>';
+      : TG.defaultChatId?'<option value="'+GA.esc(TG.defaultChatId)+'">GA-EXP ('+GA.esc(TG.defaultChatId)+')</option>':'<option value="">'+L3('無可用群組，請檢查設定','No group available; check settings','គ្មានក្រុមដែលអាចប្រើបាន; សូមពិនិត្យការកំណត់')+'</option>';
     if(TG.defaultChatId&&usable.some(function(g){return String(g.chatId)===TG.defaultChatId;}))sel.value=TG.defaultChatId;
     st.group = sel.value;
     groupsReady=!!st.group;preview();
     sel.onchange = function () { st.group = this.value; };
-  }).catch(function(e){el('tg-group').innerHTML='<option value="">'+GA.esc(e.message)+'</option>';el('tg-result').textContent='❌ '+e.message;groupsReady=false;preview();});
+  }).catch(function(e){var em=GA.errText?GA.errText(e,false):e.message;el('tg-group').innerHTML='<option value="">'+GA.esc(em)+'</option>';el('tg-result').textContent='❌ '+em;groupsReady=false;preview();});
 
   /* 期間清單：只列有資料的期間，另保留「全部」 */
   function fillPeriods() {
@@ -217,7 +219,7 @@ TG.open = function (opt) {
         });
         el('tg-send').disabled = sending||!groupsReady||!items.length;
       } else {
-        pv.textContent = opt.summary ? opt.summary(st) : '(no preview)';
+        pv.textContent = opt.summary ? opt.summary(st) : L3('(no preview)', '(no preview)', '(គ្មានការមើលជាមុន)');
         el('tg-send').disabled = sending||!groupsReady;
       }
     } catch (e) { pv.textContent = '⚠️ ' + e.message; }
@@ -236,10 +238,10 @@ TG.open = function (opt) {
       if (ok&&st.mode==='approval') close();
     };
 
-    if(opt.beforeSend){try{if(await opt.beforeSend()===false){done('❌ '+(GA.lang==='zh'?'雲端未同步，請先處理同步狀態':'Cloud not synced; resolve sync first'),false);return;}}catch(e){done(e.message,false);return;}}
+    if(opt.beforeSend){try{if(await opt.beforeSend()===false){done('❌ '+L3('雲端未同步，請先處理同步狀態','Cloud not synced; fix sync first','Cloud មិនទាន់សមកាលកម្ម; សូមដោះស្រាយសមកាលកម្មជាមុន'),false);return;}}catch(e){done(GA.errText?GA.errText(e,false):e.message,false);return;}}
     if (st.mode === 'summary') {
       var latest=opt.summary?opt.summary(st):el('tg-pv').textContent;
-      if(latest!==el('tg-pv').textContent){el('tg-pv').textContent=latest;done(GA.lang==='zh'?'同步後資料已更新，請核對預覽再按確認傳送':'Data changed after sync. Review the updated preview and send again.',false);return;}
+      if(latest!==el('tg-pv').textContent){el('tg-pv').textContent=latest;done(L3('同步後資料已更新，請核對預覽再按確認傳送','Data changed after sync. Check the preview, then press Send again.','ទិន្នន័យបានផ្លាស់ប្ដូរក្រោយសមកាលកម្ម។ សូមពិនិត្យការមើលជាមុន ហើយចុចផ្ញើម្ដងទៀត។'),false);return;}
       if(el('tg-resend').checked&&!resendKey)resendKey=crypto.randomUUID();
       /* 摘要：後端只發訊息，不建 batch、不加按鈕、不改狀態 */
       try {
@@ -255,7 +257,7 @@ TG.open = function (opt) {
         });
         var data=response.data||response,result=TG.deliveryResult(data);showReceipts(result.receipts);done(result.text+(result.errors.length?' · '+result.errors.join(' | '):''),result.ok);
         if (result.ok&&opt.onSummarySent) opt.onSummarySent(data, st);
-      } catch (e) {showReceipts(e.payload&&e.payload.data&&e.payload.data.receipts||[]);done('❌ ' + e.message, false);}
+      } catch (e) {showReceipts(e.payload&&e.payload.data&&e.payload.data.receipts||[]);done('❌ ' + (GA.errText?GA.errText(e,false):e.message), false);}
 
     } else {
       var items = opt.approvalItems ? (opt.approvalItems(st) || []) : [];
@@ -272,18 +274,18 @@ TG.open = function (opt) {
       }).then(function (r) {
         var d = r.data || {};
         var receipt=d.receipt||{};
-        if(!d.chatId||!d.messageId||!receipt.chatId||!receipt.messageId)throw new Error(GA.lang==='zh'?'Telegram 未回傳群組 Message ID，核可請求不可視為已送達':'Telegram returned no group Message ID; approval delivery is unconfirmed');
+        if(!d.chatId||!d.messageId||!receipt.chatId||!receipt.messageId)throw new Error(L3('Telegram 未回傳群組 Message ID，核可請求不可視為已送達','Telegram returned no group message ID; the approval request is not confirmed as delivered','Telegram មិនបានផ្ញើលេខសារក្រុម; មិនទាន់បញ្ជាក់ថាសំណើអនុម័តបានផ្ញើ'));
         showReceipts([receipt]);
-        done('📋 ' + (d.updated ? (GA.lang === 'zh' ? '已更新原核可訊息' : 'Updated existing request')
-                                : (GA.lang === 'zh' ? '核可請求已送出' : 'Approval request sent')), true);
+        done('📋 ' + (d.updated ? L3('已更新原核可訊息', 'Updated the existing approval message', 'បានធ្វើបច្ចុប្បន្នភាពសារអនុម័តដើម')
+                                : L3('核可請求已送出', 'Approval request sent', 'បានផ្ញើសំណើអនុម័ត')), true);
         if (opt.onApprovalSent) opt.onApprovalSent(d, st);
       }).catch(function (e) {
-        done('❌ ' + (e.code === 'NO_PERM' ? GA.T('tgNoPerm') : e.message), false);
+        done('❌ ' + (e.code === 'NO_PERM' ? GA.T('tgNoPerm') : (GA.errText ? GA.errText(e, false) : e.message)), false);
       });
     }
   };
 
-  function showReceipts(receipts){var box=el('tg-receipts');box.replaceChildren();(receipts||[]).forEach(function(r){var p=document.createElement('p');p.textContent=(r.title||r.chatId)+' · '+r.chatId+' · Message #'+r.messageId+(r.status==='previously_sent'?' (previously sent)':'');if(/^https:\/\/t\.me\//.test(r.url||'')){var a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';a.textContent=GA.lang==='zh'?' 開啟群組訊息':' Open message';p.appendChild(a);}box.appendChild(p);});}
+  function showReceipts(receipts){var box=el('tg-receipts');box.replaceChildren();(receipts||[]).forEach(function(r){var p=document.createElement('p');p.textContent=(r.title||r.chatId)+' · '+r.chatId+' · '+L3('Message #','Message #','សារ #')+r.messageId+(r.status==='previously_sent'?L3('（先前已送）',' (previously sent)',' (បានផ្ញើពីមុន)'):'');if(/^https:\/\/t\.me\//.test(r.url||'')){var a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';a.textContent=L3(' 開啟群組訊息',' Open group message',' បើកសារក្រុម');p.appendChild(a);}box.appendChild(p);});}
 
   el('tg-kind').textContent = '📄 ' + GA.T('tgSummary');
   el('tg-ptype').value=st.ptype;
