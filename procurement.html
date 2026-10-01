@@ -774,6 +774,7 @@ const RC = {
   applicant:{label:"申請人",en:"Applicant",km:"អ្នកស្នើសុំ",color:"#2563eb",bg:"#dbeafe",border:"#93c5fd"},
   verifier: {label:"審查人",en:"Verifier", km:"អ្នកត្រួតពិនិត្យ",color:"#059669",bg:"#d1fae5",border:"#6ee7b7"},
   approver: {label:"核可人",en:"Approver", km:"អ្នកអនុម័ត",color:"#dc2626",bg:"#fee2e2",border:"#fca5a5"},
+  owner:    {label:"管理者",en:"Manager",  km:"អ្នកគ្រប់គ្រង",color:"#7c3aed",bg:"#ede9fe",border:"#c4b5fd"}, /* v3.9.28: owner (Paul) — was missing, caused a crash on owner login */
 };
 function getCSS(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 
@@ -1329,9 +1330,14 @@ function renderPOHistory() {
     container.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:12px">── ${L3("今年暫無記錄","No records this year","មិនទាន់មានកំណត់ត្រាក្នុងឆ្នាំនេះ")} ──</div>`;
     return;
   }
+  const _realKey=(new Date().getFullYear())*12+new Date().getMonth(); // v3.9.28
   const sorted = [...poHistoryData].reverse();
   container.innerHTML = sorted.map(po => {
-    const st = statusMap[po.status] || {label: po.status, color:"var(--text2)"};
+    const _pending=(po.status==='SUBMITTED'||po.status==='VERIFIED');
+    const _expired=_pending && (Number(po.year)*12+Number(po.month) < _realKey); // past-month, never finished
+    const st = _expired
+      ? {label:L3("⏱ 已過期（未完成，已關閉）","⏱ Expired (unfinished, closed)","⏱ ផុតកំណត់ (មិនបានបញ្ចប់)"), color:"var(--text3)"}
+      : (statusMap[po.status] || {label: po.status, color:"var(--text2)"});
     const canVoid = po.status === "APPROVED" && cu && (cu.role === "approver" || cu.role === "owner");
     return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div style="flex:1;min-width:180px">
@@ -2031,7 +2037,7 @@ function renderReviewBanner(){
 請按下方重新送審；系統會先核對雲端歷史，避免重複。`,`The local page shows Applicant signed, but there is no server PO ID. This can happen when the old version changed local status before Telegram submission completed.
 Use Retry Submit below; cloud history is checked first to reduce duplicate submissions.`,`ទំព័រក្នុងម៉ាស៊ីនបង្ហាញថាអ្នកស្នើសុំបានចុះហត្ថលេខា ប៉ុន្តែគ្មានលេខ PO ID ពីម៉ាស៊ីនមេទេ។ ជាធម្មតាកើតឡើងពេលកំណែចាស់ប្តូរស្ថានភាពក្នុងម៉ាស៊ីនមុន ហើយការផ្ញើទៅក្រុមបរាជ័យ។
 សូមចុចខាងក្រោមដើម្បីផ្ញើពិនិត្យម្តងទៀត។ ប្រព័ន្ធនឹងពិនិត្យប្រវត្តិលើពពកជាមុន ដើម្បីជៀសវាងការស្ទួន។`);
-      if(cu&&cu.role==="applicant"){
+      if(cu&&["applicant","owner"].includes(cu.role)){
         okBtn.style.display="";
         okBtn.style.background="var(--blue)";
         okBtn.textContent=L3("📤 重新送審並通知群組","📤 Retry submit & notify group","📤 ដាក់ស្នើម្ដងទៀត និងជូនដំណឹងក្រុម");
@@ -2043,9 +2049,9 @@ Use Retry Submit below; cloud history is checked first to reduce duplicate submi
 伺服器與 Telegram 群組狀態已連接`,`Applicant: ${sigs.applicant?.name||"—"}  |  ${n} items
 Server and Telegram workflow are linked`,`អ្នកស្នើសុំ៖ ${sigs.applicant?.name||"—"}  |  សរុប ${n} មុខ  |  ${sigs.applicant?.date||""}
 ស្ថានភាពម៉ាស៊ីនមេ និងក្រុម Telegram បានភ្ជាប់គ្នា`);
-      if(cu&&cu.role==='verifier'){
+      if(cu&&(cu.role==='verifier'||cu.role==='owner')){
         okBtn.style.display=''; noBtn.style.display='';
-        okBtn.style.background='var(--green)'; okBtn.textContent=L3('✅ Phea 審查通過','✅ Verify','✅ Phea ត្រួតពិនិត្យរួច');
+        okBtn.style.background='var(--green)'; okBtn.textContent=L3('✅ 審查通過','✅ Verify','✅ ត្រួតពិនិត្យរួច');
         noBtn.textContent=L3('↩ 退回修改','↩ Return','↩ បញ្ជូនត្រឡប់ឱ្យកែ');
         okBtn.onclick=()=>doVerify(true); noBtn.onclick=()=>doVerify(false);
       }
@@ -2123,7 +2129,7 @@ function generatePONumber(){
 }
 
 function rbAction(ok){
-  if(cu.role==="verifier") doVerify(ok);
+  if(cu.role==="verifier"||(cu.role==="owner"&&poStatus==="submitted")) doVerify(ok); /* v3.9.28: owner can review */
   else if((cu.role==="approver"||cu.role==="owner")&&poStatus==="verified") doApprove(ok);
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="rejected"&&ok) doEditRejected();
   else if(["applicant","owner"].includes(cu.role)&&poStatus==="approved"&&ok) doStartNewPO();
@@ -2362,7 +2368,7 @@ async function _procWithSession(fn){
   }
 }
 async function _procPost(action,data){
-  const j=await _procWithSession(()=>GA.gasPost(action,Object.assign({},data||{},{session:_procSession()})));
+  const j=await _procWithSession(()=>GA.gasPost(action,Object.assign({},data||{},{session:_procSession(),role:(cu&&cu.role)||'',name:(cu&&cu.name)||'',uid:(cu&&cu.uid)||''}))); /* v3.9.28: pass identity so backend works without a session */
   return j.data||j;
 }
 async function _procEnsureTelegram(po){
@@ -2377,6 +2383,10 @@ async function _procReconcileCurrentFromHistory(){
     if(submitAckId) po=poHistoryData.find(x=>String(x.poId||'')===String(submitAckId));
     if(!po && poStatus!=='draft') po=await _procFindExistingServerPO();
     if(!po) return;
+    // v3.9.28: an unfinished PO whose month has already passed is treated as expired/closed — do not adopt it as the active PO (so the applicant is free to start a new month).
+    const _rk=(new Date().getFullYear())*12+new Date().getMonth();
+    const _ps=String(po.status).toUpperCase();
+    if((_ps==='SUBMITTED'||_ps==='VERIFIED') && (Number(po.year)*12+Number(po.month) < _rk)){ return; }
     // Repair the exact current PO if old code recorded Pending but Telegram never got the review message.
     if((String(po.status).toUpperCase()==='SUBMITTED'||String(po.status).toUpperCase()==='VERIFIED')&&!po.groupMessageId){
       try{ po=await _procEnsureTelegram(po); }catch(e){ console.warn('Telegram repair failed',e); }
@@ -2386,9 +2396,19 @@ async function _procReconcileCurrentFromHistory(){
 }
 async function doSubmit(forceRetry){
   if(submitInFlight) return;
-  if(!cu||cu.role!=="applicant"){
-    try{GA.toast(L3("❌ 只有 Applicant 可送審","❌ Applicant only","❌ មានតែអ្នកស្នើសុំទេដែលអាចដាក់ស្នើ"));}catch(_){alert(L3("Applicant only","Applicant only","សម្រាប់តែអ្នកស្នើសុំ"));}
+  if(!cu||!["applicant","owner"].includes(cu.role)){
+    try{GA.toast(L3("❌ 只有 Applicant／Paul 可送審","❌ Applicant / Paul only","❌ មានតែអ្នកស្នើសុំ／Paul"));}catch(_){alert(L3("Applicant only","Applicant only","សម្រាប់តែអ្នកស្នើសុំ"));}
     return;
+  }
+  // v3.9.28: monthly PO is for the UPCOMING month — warn if a past month was picked.
+  {
+    const _rM=new Date().getMonth(), _rY=new Date().getFullYear();
+    if(YEAR<_rY || (YEAR===_rY && curMonth<_rM)){
+      if(!confirm(L3(
+        `⚠️ 你選擇的採購月份是「${MN(curMonth)} ${YEAR}」，這是過去的月份。\n月採購單是給「下個月」採買（例如本月申請下月、月初申請當月），不是申請過去的月份。\n確定仍要送出嗎？`,
+        `⚠️ You picked "${MO[curMonth]} ${YEAR}", a past month.\nA monthly PO is for the upcoming month (this month you request next month; early in the month you may request the current one), not a past month.\nSubmit anyway?`,
+        `⚠️ អ្នកបានជ្រើសខែ "${MK[curMonth]} ${YEAR}" ដែលជាខែកន្លងផុត។\nបញ្ជាទិញប្រចាំខែគឺសម្រាប់ខែខាងមុខ មិនមែនខែកន្លងផុតទេ។\nនៅតែដាក់ស្នើឬ?`))) return;
+    }
   }
   if(totalN()===0){
     try{GA.toast(L3("⚠️ 尚未選擇採購品項","⚠️ No purchase items selected","⚠️ មិនទាន់ជ្រើសមុខទំនិញ"));}catch(_){ }
@@ -2418,7 +2438,7 @@ async function doSubmit(forceRetry){
       id:i.id,name:i.name,cn:i.cn||i.name,cat:i.cat||"",
       qty:ords[i.id].qty,note:ords[i.id].note||""
     }));
-    const mkPayload=()=>({name:cu.name,uid:cu.uid,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()});
+    const mkPayload=()=>({name:cu.name,uid:cu.uid,role:cu.role,year:YEAR,month:curMonth,items,lang:lang,session:_procSession()}); /* v3.9.28 */
     try{GA.toast(L3("📤 正在送審並通知 Telegram 群組…","📤 Submitting and notifying Telegram group…","📤 កំពុងដាក់ស្នើ និងជូនដំណឹងក្រុម Telegram…"));}catch(_){ }
     const out=await _procWithSession(()=>GA.gasGet('submit',{data:JSON.stringify(mkPayload()),_:Date.now()}));
     // IMPORTANT: only sign locally AFTER GAS confirms the request.
@@ -2442,7 +2462,7 @@ async function doSubmit(forceRetry){
   }
 }
 async function doVerify(ok){
-  if(!cu||cu.role!=="verifier"||poStatus!=="submitted") return;
+  if(!cu||!["verifier","owner"].includes(cu.role)||poStatus!=="submitted") return; /* v3.9.28: owner may review */
   try{
     let po=await _procFindExistingServerPO();
     if(!po||!po.poId) throw new Error(L3('找不到伺服器採購單','Server PO not found','រកមិនឃើញបញ្ជាទិញនៅម៉ាស៊ីនមេ'));
