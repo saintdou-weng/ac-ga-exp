@@ -860,7 +860,10 @@ if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownloa
         if(add||rem||diff)report.push({file:p.file.name,src:'general',month:m,utility:true,fileRows:um[m].length,platformRows:plat.length,missing:add,extra:0,renamed:0,historyCopies:rem,utilityDiff:diff,fileSum:Math.round(um[m].reduce(function(n,r){return n+value(r);},0)*100)/100,platformSum:Math.round(plat.reduce(function(n,r){return n+value(r);},0)*100)/100,status:add||rem?'add':'review'});
       });
     });
-    parsed.forEach(function(p){
+    /* v3.9.31: different workbooks of the same kind (e.g. "other repair" + "Repair-Maintainance") are compared
+       together, so one file's rows are not reported as "extra" against the other file */
+    var bySrc={};parsed.forEach(function(p){var g=bySrc[p.src]||(bySrc[p.src]={src:p.src,rows:[],names:[]});g.rows=g.rows.concat(p.rows);g.names.push(p.file.name);});
+    Object.keys(bySrc).forEach(function(sk){var p=bySrc[sk];p.file={name:p.names.join(' + ')};
       var months={};p.rows.forEach(function(r){if(isUtil(r))return;var m=String(r.date).slice(0,7);(months[m]=months[m]||[]).push(r);});
       Object.keys(months).sort().forEach(function(m){
         var plat=(EXP3[p.src]||[]).filter(function(r){return String(r.date||'').slice(0,7)===m&&!isUtil(r);}),bag={};
