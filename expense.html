@@ -119,8 +119,11 @@ function directUtility(rows,meta){
   var maxCol=Math.max(titleRow.length,head.length,sub.length),titles=[];
   titleRow.forEach(function(v,c){
     var z=cell(v);
-    if(/factory|staff house|dorm|housing/.test(z))titles.push({col:c,name:txt(v)});
+    if(/factory|staff house|dorm|housing|owner/.test(z))titles.push({col:c,name:txt(v)});
   });
+  /* v3.9.31: 2022-2023 layout = "Factory and owner" (gross meter) | "Factory (deduct from owner consumption)" (net)
+     | "Share to owner".  The factory's cost is the net block only; the gross block and the owner's share are not. */
+  var hasNet=titles.some(function(t){return /deduct/.test(cell(t.name));});
   if(!titles.length)return [];
   titles.sort(function(a,b){return a.col-b.col;});
   var blocks=titles.map(function(t,i){return {title:t,start:t.col,end:(titles[i+1]?titles[i+1].col:maxCol)-1};});
@@ -139,7 +142,12 @@ function directUtility(rows,meta){
   months.forEach(function(m,i){m.end=(months[i+1]?months[i+1].start:rows.length)-1;});
   var out=[];
   blocks.forEach(function(b){
+    var tn=cell(b.title.name);
+    if(/share to owner|^owner/.test(tn))return;
+    if(hasNet&&/and owner/.test(tn))return;
     var rg={start:b.start,end:b.end},ac=usdAmountCol(head,sub,rg),cc=consumptionCol(head,rg);
+    if(ac<0){for(var sc=rg.start;sc<=rg.end;sc++)if(/^amount/.test(cell(sub[sc]))){ac=sc;break;}}
+    if(cc<0){for(var sc2=rg.start;sc2<=rg.end;sc2++)if(/^consum/.test(cell(sub[sc2]))){cc=sc2;break;}}
     if(ac<0)return;
     var area=areaName(b.title.name);
     months.forEach(function(m){
