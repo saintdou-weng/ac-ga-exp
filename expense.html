@@ -10,12 +10,12 @@
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
-<script src="shared/ga-core.js?v=3.9.26"></script>
+<script src="shared/ga-core.js?v=3.9.30"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
 <script src="shared/ga-import.js?v=3.9.26"></script>
 <script src="shared/ga-telegram.js?v=3.9.26"></script>
-<script src="shared/ga-smart-sync.js?v=3.9.23"></script>
+<script src="shared/ga-smart-sync.js?v=3.9.30"></script>
 <script src="shared/ga-auto-sync.js?v=3.9.25"></script>
 <script src="shared/ga-expense-store.js?v=3.9.26"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.9.25" onerror="this.onerror=null;this.src='https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25'"></script>
@@ -198,7 +198,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.23"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.30"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.30"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -532,7 +532,7 @@ async function doExpenseImport(files){
     }));
     before={exp3:JSON.parse(JSON.stringify(EXP3)),stats:JSON.parse(JSON.stringify(EXP3_IMPORT_STATS))};
     var added=0,updated=0,skipped=0,recognizedRows=[],diagnostics=[],sources={},duplicates=[],logicalSeen={};
-    function reindex(){logicalSeen={};allRows().forEach(function(r){var k=expenseLogicalDuplicateKey(r);if(k)logicalSeen[k]=1;});}reindex();
+    function reindex(){logicalSeen={};allRows().forEach(function(r){var k=expenseLogicalDuplicateKey(r);if(k)logicalSeen[k]=sourceFileBase(r.sourceFile)||'manual';});}reindex();
     for(var entry of parsed){
       var src=entry.src,rs=entry.rows,file=entry.file,idx={};
       if(src==='repair'&&rs.some(function(r){return r._repairLayout;})){
@@ -562,10 +562,10 @@ async function doExpenseImport(files){
         if(pos===undefined&&idx[key]!==undefined&&!claimed[idx[key]]&&EXP3[src][idx[key]]&&!inC[contentKey(EXP3[src][idx[key]])])pos=idx[key];
         if(pos!==undefined){claimed[pos]=1;var old=EXP3[src][pos];x.expenseCategory=old.expenseCategory||x.expenseCategory;if(sameImportedRow(old,x)){if(num(old.sourceRow)!==num(x.sourceRow)){old.sourceRow=x.sourceRow;old.updatedAt=new Date().toISOString();}skipped++;EXP3_IMPORT_STATS[src].skipped++;return;}
           x.recordId=old.recordId||x.recordId;x._sourceKey=old._sourceKey||x._sourceKey;x._fp=old._fp||x._fp;x.createdAt=old.createdAt||x.createdAt;x.updatedAt=new Date().toISOString();EXP3[src][pos]=x;updated++;EXP3_IMPORT_STATS[src].updated++;return;}
-        var dk=expenseLogicalDuplicateKey(x);if(dk&&logicalSeen[dk]){duplicates.push({src:src,row:x,key:dk});return;}
+        var dk=expenseLogicalDuplicateKey(x);/* v3.9.30: rows inside the SAME workbook are never duplicates of each other; only an identical row from another file is asked about */if(dk&&logicalSeen[dk]&&logicalSeen[dk]!==sourceFileBase(file.name)){duplicates.push({src:src,row:x,key:dk});return;}
         if(x._sourceKey&&keysInUse[x._sourceKey]){x._sourceKey=GA.fingerprint([x._sourceKey,'moved',x.date,x.item,x.spec,x.qty,x.amount,x.recordId]);x._fp=x._sourceKey;}/* stored rows keep their original key after moving; a new row reusing that row number gets its own key */
         if(x._sourceKey)keysInUse[x._sourceKey]=1;
-        EXP3[src].push(x);idx[key]=EXP3[src].length-1;claimed[EXP3[src].length-1]=1;if(dk)logicalSeen[dk]=1;added++;EXP3_IMPORT_STATS[src].imported++;
+        EXP3[src].push(x);idx[key]=EXP3[src].length-1;claimed[EXP3[src].length-1]=1;if(dk)logicalSeen[dk]=sourceFileBase(file.name);added++;EXP3_IMPORT_STATS[src].imported++;
       });
     }
     if(duplicates.length){var keep=confirm(expMsgText('發現 '+duplicates.length+' 筆疑似重複資料。確定＝仍匯入；取消＝略過。','Found '+duplicates.length+' possible duplicates. OK = import; Cancel = skip.','មាន '+duplicates.length+' កំណត់ត្រាអាចស្ទួន។ OK = នាំចូល; Cancel = រំលង។',GA.lang));duplicates.forEach(function(d){if(keep){EXP3[d.src].push(d.row);added++;EXP3_IMPORT_STATS[d.src].imported++;}else{skipped++;EXP3_IMPORT_STATS[d.src].skipped++;}});}
@@ -644,7 +644,7 @@ function expenseAutoCategory(r,src){if(r._repairLayout)return'repair_maintenance
 function ensureExpenseCategory(r,src){if(!r)return r;if(!r.expenseCategory)r.expenseCategory=expenseAutoCategory(r,src);if(!r.recordId)r.recordId=GA.uid('exp');return r;}
 function ensureExpenseModel(){['repair','purchase','general'].forEach(function(k){(EXP3[k]||[]).forEach(function(r){ensureExpenseCategory(r,k);var item=lower(r.item||'');if(r.expenseCategory==='electricity'&&/chicken(power|powder)/.test(item)&&!/(electric|electricity|edc|電費|电费|用電|用电)/.test(lower([r.categoryLabel,r.category,r.sourceSheet].join(' '))))r.expenseCategory='other';});});(txns||[]).forEach(function(r){ensureExpenseCategory(r,'legacy');});saveExp3();saveTxns(true);}
 function expenseCategoryOptions(selected,withAll){var lang=GA.lang||'zh',out=withAll?'<option value="">'+esc(expMsgText('全部分類','All categories','ប្រភេទទាំងអស់',lang))+'</option>':'';return out+EXP_CAT_DEFS.map(function(d){return'<option value="'+d.v+'"'+(d.v===selected?' selected':'')+'>'+esc(expenseCatLabel(d.v,lang))+'</option>';}).join('');}
-function expenseLogicalDuplicateKey(r){if(!r||!r.date||!r.item)return'';var cat=r.expenseCategory||expenseAutoCategory(r,r._source),m=String(r.date).slice(0,7),a=Math.round(value(r)*100)/100;return r._repairLayout?[String(r.date),cat,lower(r.item),lower(r.equipment),lower(r.location),a.toFixed(2)].join('|'):[m,cat,lower(r.item),a.toFixed(2)].join('|');}
+function expenseLogicalDuplicateKey(r){if(!r||!r.date||!r.item)return'';var cat=r.expenseCategory||expenseAutoCategory(r,r._source),a=Math.round(value(r)*100)/100;/* v3.9.30: same DAY + item + qty + amount (was same month → legit repeat purchases were dropped) */return r._repairLayout?[String(r.date),cat,lower(r.item),lower(r.equipment),lower(r.location),a.toFixed(2)].join('|'):[String(r.date),cat,lower(r.item),num(r.qty),a.toFixed(2)].join('|');}
 function expenseDuplicateMatches(r,excludeId){var key=expenseLogicalDuplicateKey(r);if(!key)return[];return allRows().filter(function(x){if(excludeId&&x.recordId===excludeId)return false;ensureExpenseCategory(x,x._source);return expenseLogicalDuplicateKey(x)===key;});}
 function expenseBucket(src){return src==='legacy'?txns:(EXP3[src]||[]);}
 function expenseFind(src,id){var a=expenseBucket(src);for(var i=0;i<a.length;i++){ensureExpenseCategory(a[i],src);if(String(a[i].recordId)===String(id))return{row:a[i],index:i,list:a};}return null;}
@@ -775,7 +775,11 @@ async function expCloudUpload(opts){
     if(generation!==EXP_LOCAL_GEN)throw new Error(expMsgText('本機有新變更待同步','New changes on this device are waiting to sync','មានការផ្លាស់ប្ដូរថ្មីក្នុងឧបករណ៍នេះ កំពុងរង់ចាំសមកាលកម្ម',GA.lang));
     EXP_PENDING=false;if(!(await persistExpense(false)))throw new Error(EXP_LAST_ERROR);
     try{GA.saveCfg({sync_expense:new Date().toISOString()});}catch(e){}
-    expSyncStatus(r&&r.skipped?expMsgText('雲端已是最新','Cloud is up to date','Cloud ទាន់សម័យហើយ',GA.lang):expMsgText('上傳完成｜雲端資料已保留','Upload done · cloud history kept','ផ្ទុកឡើងរួចរាល់ · រក្សាប្រវត្តិ Cloud',GA.lang),'up');
+    /* v3.9.30: confirm the cloud now holds exactly this device's data, month by month */
+    try{var v=await GASmartSync.verify({url:url,tool:EXP_SMART_TOOL,records:expSyncRows()});window.EXP_LAST_VERIFY=v;
+      if(v.ok)expSyncStatus(expMsgText('本機 '+v.localTotal.toLocaleString()+' 筆＝雲端 '+v.cloudTotal.toLocaleString()+' 筆','Device '+v.localTotal.toLocaleString()+' = cloud '+v.cloudTotal.toLocaleString(),'ឧបករណ៍ '+v.localTotal.toLocaleString()+' = Cloud '+v.cloudTotal.toLocaleString(),GA.lang)+' · '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false}),'synced');
+      else expSyncStatus(expMsgText('雲端與本機有 '+v.mismatches.length+' 個月份不一致，將自動重試','Cloud differs in '+v.mismatches.length+' months; will retry','Cloud ខុស '+v.mismatches.length+' ខែ; នឹងព្យាយាមម្ដងទៀត',GA.lang),'warn');
+    }catch(_v){expSyncStatus(r&&r.skipped?expMsgText('雲端已是最新','Cloud is up to date','Cloud ទាន់សម័យហើយ',GA.lang):expMsgText('上傳完成','Upload done','ផ្ទុកឡើងរួចរាល់',GA.lang),'synced');}
     if(!opts.silent)GA.toast(r&&r.skipped?expMsgText('☁️ 已是最新','☁️ Up to date','☁️ ទាន់សម័យហើយ',GA.lang):expMsgText('☁️ 已上傳並保留雲端歷史','☁️ Uploaded; cloud history kept','☁️ បានផ្ទុកឡើង និងរក្សាប្រវត្តិ Cloud',GA.lang),'success');
     return r;
   }).catch(function(e){e=GA.normalizeCloudError(e,'smartSync');var em=GA.errText?GA.errText(e,!!EXP_PENDING):e.message;expSyncStatus(em,'err');if(!opts.silent)GA.toast(GA.isNetworkError&&GA.isNetworkError(e)?'❌ '+em:expMsgText('❌ 上傳失敗：'+em,'❌ Upload failed: '+em,'❌ ផ្ទុកឡើងបរាជ័យ៖ '+em,GA.lang),'err');throw e;});
@@ -814,6 +818,65 @@ EXP_DATA_READY.then(function(ok){
 pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){saveExpenseUI();render();}});restoreExpenseUI();GA.on('lang',function(){render();});saveExpenseUI();render();
 if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownload,push:expCloudUpload,canSync:function(){return EXP_STORAGE_READY&&!EXP_STORAGE_FAILED&&!EXP_IMPORT_BUSY&&!EXP_SAVE_COUNT&&!!GA.gasUrl();},startDelay:120,anchor:'#ga-cloud'});if(EXP_PENDING)scheduleExpenseAutoCloudSync('resume-pending');}
 });
+</script>
+<script id="exp-reconcile-v3930">
+/* v3.9.30 原檔對帳 / Reconcile with source workbooks.
+   Compares the platform with the original Excel files month by month (date + item + spec + qty + amount,
+   regardless of which file the platform rows came from).
+   - month only MISSING rows  → can be added (nothing is deleted or overwritten)
+   - month has rows the file does not have (other versions / manual) → reported, never removed automatically
+   - both                     → reported for review, not changed */
+(function(){
+  function L(zh,en,km){return expMsgText(zh,en,km,GA.lang);}
+  function yearOfName(n){var b=String(n||'').toLowerCase().replace(/^\d{8}(_\d{4})?__/,'').replace(/__[0-9a-f]{6,}(?=\.[a-z]+$)/,'');var m=b.match(/(?:^|[^0-9])(20\d{2})(?:0[1-9]|1[0-2])?(?![0-9])/);return m?+m[1]:0;}
+  function key(r,src){var k=[src,String(r.date||''),lower(r.item),lower(r.spec),num(r.qty),Math.round(value(r)*100)];if(r._repairLayout)k.push(lower(r.equipment),lower(r.location));return JSON.stringify(k);}
+  async function parseFiles(files){
+    return Promise.all(Array.prototype.map.call(files,async function(file){var wb=await readWorkbook(file),src=classifyFile(file.name);
+      var maint=wb.SheetNames.some(function(sn){var rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:''});return GA.vrtParsers.isMaintenanceSheet(rows,{sheetName:sn});});if(maint)src='repair';
+      var rows=parseWorkbook(wb,src,file.name)||[],y=yearOfName(file.name);
+      if(!y){var c={};rows.forEach(function(r){var yy=String(r.date).slice(0,4);c[yy]=(c[yy]||0)+1;});y=+(Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0]||0);}
+      return {file:file,src:src,year:y,rows:rows.filter(function(r){return String(r.date).slice(0,4)===String(y);})};}));
+  }
+  window.expReconcile=async function(files,opts){
+    opts=opts||{};await EXP_DATA_READY;
+    var parsed=await parseFiles(files),report=[],toAdd=[];
+    parsed.forEach(function(p){
+      var months={};p.rows.forEach(function(r){var m=String(r.date).slice(0,7);(months[m]=months[m]||[]).push(r);});
+      Object.keys(months).sort().forEach(function(m){
+        var plat=(EXP3[p.src]||[]).filter(function(r){return String(r.date||'').slice(0,7)===m;}),bag={};
+        plat.forEach(function(r){var k=key(r,p.src);bag[k]=(bag[k]||0)+1;});
+        var missing=[];months[m].forEach(function(r){var k=key(r,p.src);if(bag[k]>0)bag[k]--;else missing.push(r);});
+        var extra=Object.keys(bag).reduce(function(n,k){return n+bag[k];},0);
+        var fileSum=months[m].reduce(function(n,r){return n+value(r);},0),platSum=plat.reduce(function(n,r){return n+value(r);},0);
+        var status=!missing.length&&!extra?'ok':missing.length&&!extra?'add':!missing.length?'extra':'review';
+        report.push({file:p.file.name,src:p.src,month:m,fileRows:months[m].length,platformRows:plat.length,missing:missing.length,extra:extra,fileSum:Math.round(fileSum*100)/100,platformSum:Math.round(platSum*100)/100,status:status});
+        if(status==='add')missing.forEach(function(r){toAdd.push({src:p.src,row:r});});
+      });
+    });
+    var result={report:report,addable:toAdd.length,added:0};
+    if(opts.apply&&toAdd.length){
+      await GAExpenseStore.backup('exp_reconcile_backup_'+new Date().toISOString().slice(0,10),{at:new Date().toISOString(),exp3:EXP3});
+      toAdd.forEach(function(x){ensureExpenseCategory(x.row,x.src);x.row.updatedAt=new Date().toISOString();x.row.reconciledFrom=x.row.sourceFile;EXP3[x.src].push(x.row);});
+      EXP_LOCAL_GEN++;if(!(await persistExpense(true)))throw new Error(EXP_LAST_ERROR||'save failed');
+      result.added=toAdd.length;try{render();}catch(_){}scheduleExpenseAutoCloudSync('import');
+    }
+    window.EXP_LAST_RECONCILE=result;return result;
+  };
+  function show(res,files){
+    var d=document.getElementById('exp-rec-dlg');if(!d){d=document.createElement('dialog');d.id='exp-rec-dlg';d.className='exp-rec-dlg';document.body.appendChild(d);}
+    var lab={ok:L('✅ 一致','✅ Match','✅ ត្រូវគ្នា'),add:L('➕ 缺少，可補入','➕ Missing — can add','➕ ខ្វះ — អាចបន្ថែម'),extra:L('⚠️ 平台較多（可能重複版本）','⚠️ Platform has more (duplicate versions?)','⚠️ វេទិកាច្រើនជាង'),review:L('🔎 內容不同，請確認','🔎 Different — review','🔎 ខុសគ្នា — ពិនិត្យ')};
+    var rows=res.report.map(function(r){return '<tr class="s-'+r.status+'"><td>'+GA.esc(r.month)+'</td><td>'+GA.esc(r.src)+'</td><td>'+r.fileRows+' / $'+r.fileSum.toLocaleString()+'</td><td>'+r.platformRows+' / $'+r.platformSum.toLocaleString()+'</td><td>'+lab[r.status]+(r.missing?' ('+r.missing+')':'')+(r.extra?' (+'+r.extra+')':'')+'</td></tr>';}).join('');
+    d.innerHTML='<h3>🔍 '+L('原檔對帳','Reconcile with source files','ផ្ទៀងផ្ទាត់ជាមួយឯកសារដើម')+'</h3><p class="exp-note">'+L('以原始 Excel 逐月比對（日期＋品項＋規格＋數量＋金額）。只會補入「缺少」的資料，不會刪除或覆蓋任何資料。','Month-by-month check against the original Excel (date + item + spec + qty + amount). Only missing rows are added; nothing is deleted or overwritten.','ពិនិត្យតាមខែ។ បន្ថែមតែទិន្នន័យដែលខ្វះ មិនលុបអ្វីទេ។')+'</p><div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+L('月份','Month','ខែ')+'</th><th>'+L('類別','Type','ប្រភេទ')+'</th><th>'+L('原檔','File','ឯកសារ')+'</th><th>'+L('平台','Platform','វេទិកា')+'</th><th>'+L('結果','Result','លទ្ធផល')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="exp-rec-act">'+(res.addable?'<button class="ga-btn primary" id="exp-rec-apply">➕ '+L('補入缺少的 '+res.addable+' 筆','Add '+res.addable+' missing rows','បន្ថែម '+res.addable+' ជួរ')+'</button>':'')+'<button class="ga-btn" id="exp-rec-close">'+L('關閉','Close','បិទ')+'</button></div>';
+    d.querySelector('#exp-rec-close').onclick=function(){d.close();};
+    var ap=d.querySelector('#exp-rec-apply');if(ap)ap.onclick=async function(){ap.disabled=true;try{var r=await window.expReconcile(files,{apply:true});GA.toast('✅ '+L('已補入 '+r.added+' 筆，將自動上雲','Added '+r.added+' rows; syncing to cloud','បានបន្ថែម '+r.added),'success');d.close();}catch(e){GA.toast('❌ '+e.message,'err');ap.disabled=false;}};
+    if(d.showModal)d.showModal();else d.setAttribute('open','');
+  }
+  var inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.xlsx,.xlsb,.xls';inp.id='exp-reconcile-file';inp.style.display='none';document.body.appendChild(inp);
+  inp.addEventListener('change',async function(){var fs=Array.prototype.slice.call(this.files||[]);if(!fs.length)return;try{GA.toast('⏳ '+L('對帳中…','Checking…','កំពុងពិនិត្យ…'));var r=await window.expReconcile(fs,{});show(r,fs);}catch(e){GA.toast('❌ '+e.message,'err');}});
+  window.expReconcileOpen=function(){inp.value='';inp.click();};
+  var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.id='exp-reconcile-btn';b.title=L('原檔對帳','Reconcile','ផ្ទៀងផ្ទាត់');b.innerHTML='🔍<span>'+L('原檔對帳','Reconcile','ផ្ទៀងផ្ទាត់')+'</span>';b.onclick=window.expReconcileOpen;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}
+  var st=document.createElement('style');st.textContent='.exp-rec-dlg{max-width:760px;width:94vw;border:0;border-radius:14px;padding:18px;box-shadow:0 20px 60px rgba(15,23,42,.3)}.exp-rec-dlg::backdrop{background:rgba(15,23,42,.45)}.exp-rec-dlg h3{margin:0 0 6px}.exp-rec-dlg table{font-size:12px}.exp-rec-dlg tr.s-add td{background:#eef7ff}.exp-rec-dlg tr.s-review td,.exp-rec-dlg tr.s-extra td{background:#fff8e6}.exp-rec-act{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}';document.head.appendChild(st);
+})();
 </script>
 </body>
 </html>

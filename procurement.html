@@ -343,14 +343,14 @@ body{min-height:100vh;background:var(--bg);font-family:'Noto Sans TC',sans-serif
 </style>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
 <link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
-<script src="shared/ga-core.js?v=3.9.26"></script>
+<script src="shared/ga-core.js?v=3.9.30"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
 <script src="shared/ga-import.js?v=3.9.26"></script>
 <script src="shared/ga-telegram.js?v=3.9.26"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.30"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');}
 </script>
 
 <link rel="stylesheet" href="shared/ga-po-workspace.css?v=3.9.20">
@@ -1153,13 +1153,23 @@ function hideCloudLoading(){
   document.getElementById("cloud-loading").classList.remove("show");
 }
 
+/* v3.9.29: a monthly PO is for the coming month (apply in Sep for Oct, or early Oct for Oct).
+   Default: day 1–10 → this month, later → next month (December stays December: one-year list). */
+function _procDefaultMonth(){const d=new Date(),m=d.getMonth();return d.getDate()<=10||m===11?m:m+1;}
+function _procMonthHint(m){
+  const now=new Date(),cm=now.getMonth();
+  if(m<cm) return L3(`⚠️ 「${MN(m)}」是過去的月份。月採購單是申請下個月（或月初申請當月）的採買。`,`⚠️ "${MO[m]}" is a past month. A monthly PO is for next month (or this month, early in the month).`,`⚠️ "${MK[m]}" ជាខែកន្លងផុត។ បញ្ជាទិញប្រចាំខែគឺសម្រាប់ខែក្រោយ។`);
+  if(m===cm&&now.getDate()>10) return L3(`⚠️ 現在已過月初，月採購單通常是申請「${MN((cm+1)%12)}」。確定要申請本月「${MN(m)}」？`,`⚠️ It is past the start of the month — a monthly PO is usually for "${MO[(cm+1)%12]}". Request this month ("${MO[m]}") anyway?`,`⚠️ ហួសដើមខែហើយ — ជាធម្មតាស្នើសម្រាប់ "${MK[(cm+1)%12]}"។`);
+  return '';
+}
 function bootApp(){
   // State already loaded from cloud before bootApp is called
   ensureMonthlyFlags(); // back-fill 每月/非每月 flags for items loaded from cloud
+  if(poStatus==="draft"&&curMonth<new Date().getMonth()) curMonth=_procDefaultMonth(); /* v3.9.29: never start on a past month */
 
   const ms=document.getElementById("msel");
   ms.innerHTML=MO.map((m,i)=>`<option value="${i}"${i===curMonth?" selected":""}>${L3(m,m,MK[i])} ${YEAR}</option>`).join("");
-  ms.onchange=e=>{curMonth=+e.target.value; saveState(); render();};
+  ms.onchange=e=>{curMonth=+e.target.value; saveState(); render(); const h=_procMonthHint(curMonth); if(h){try{GA.toast(h,'warn');}catch(_){ }}};
 
   // PO month reference selector for inventory
   const ims=document.getElementById("po-month-ref");
@@ -1289,9 +1299,10 @@ let poHistoryData = [];
 
 async function loadPOHistory() {
   try {
+    /* v3.9.29: the receiving-progress call must never hide the PO list — if it fails, show POs without progress */
     const [json, recvJson] = await Promise.all([
       GA.gasGet('getHistory',{year:YEAR}),
-      GA.gasGet('monthlyPoApproved',{year:YEAR})
+      GA.gasGet('monthlyPoApproved',{year:YEAR}).catch(e=>{console.warn('monthlyPoApproved failed',e);return {ok:false,data:[]};})
     ]);
     if (json.ok) {
       poHistoryData = json.data || [];
@@ -1325,6 +1336,7 @@ function renderPOHistory() {
     RETURNED:  {label:L3("↩ 已退回","↩ Returned","↩ បានបញ្ជូនត្រឡប់"), color:"var(--orange)"},
     REJECTED:  {label:L3("❌ 已拒絕","❌ Rejected","❌ បានបដិសេធ"), color:"var(--red)"},
     VOIDED:    {label:L3("🗑️ 已作廢","🗑️ Voided","🗑️ បានលុបចោល"), color:"var(--text3)"},
+    EXPIRED:   {label:L3("⏱ 已過期（已關閉）","⏱ Expired (closed)","⏱ ផុតកំណត់ (បានបិទ)"), color:"var(--text3)"},
   };
   if (!poHistoryData.length) {
     container.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:12px">── ${L3("今年暫無記錄","No records this year","មិនទាន់មានកំណត់ត្រាក្នុងឆ្នាំនេះ")} ──</div>`;
@@ -2328,6 +2340,28 @@ function _procApplyServerPO(po){
   sigs.approver=po.approver?{name:po.approver,date:po.approveDate||''}:null;
   poNumber=po.poNumber||null;
   window.procCurrentApprovalDoc=po.approvalDoc||null;
+  /* v3.9.29: the server PO is authoritative for its items too — another device (Paul / reviewer)
+     used to see "Pending" with an empty item list because only the status was copied. */
+  if(Array.isArray(po.items)&&po.items.length){
+    if(po.month!=null&&po.month!=="") curMonth=Number(po.month);
+    const next={};let missing=0;
+    po.items.forEach(it=>{
+      const nm=String(it.name||it.item||'').trim().toLowerCase();
+      let hit=allItems().find(x=>String(x.id)===String(it.id))||allItems().find(x=>String(x.name||'').trim().toLowerCase()===nm||String(x.cn||'').trim().toLowerCase()===nm);
+      if(!hit&&it.id!=null&&String(it.id)!==''){
+        /* item exists only on the applicant's device: add it so it is visible here */
+        const cat=CATS[it.cat]?it.cat:Object.keys(CATS)[0];
+        customItems.push({id:String(it.id),name:String(it.name||it.item||it.id),cn:String(it.cn||it.name||''),e:'📦',catKey:cat,unit:String(it.unit||'pcs')});
+        hit=allItems().find(x=>String(x.id)===String(it.id));
+      }
+      if(hit){const prev=next[hit.id];next[hit.id]={qty:(prev?Number(prev.qty)||0:0)+(Number(it.qty)||0),note:String(it.note||'')};}else missing++;
+    });
+    if(Object.keys(next).length){
+      allItems().forEach(i=>{if(!next[i.id])next[i.id]={qty:0,note:""};});
+      ords=next;
+    }
+    if(missing) console.warn('PO items not in catalog:',missing);
+  }
   saveState(); render();
   return true;
 }
@@ -2382,7 +2416,23 @@ async function _procReconcileCurrentFromHistory(){
     let po=null;
     if(submitAckId) po=poHistoryData.find(x=>String(x.poId||'')===String(submitAckId));
     if(!po && poStatus!=='draft') po=await _procFindExistingServerPO();
+    /* v3.9.29: reviewers (Phea / Manager / Paul) open the PO that is waiting for them even when
+       their own device has no local copy of it. */
+    if(!po && cu && ["verifier","approver","owner"].includes(cu.role) && poStatus==='draft' && totalN()===0){
+      const rk=(new Date().getFullYear())*12+new Date().getMonth();
+      const want=cu.role==='verifier'?['SUBMITTED']:cu.role==='approver'?['VERIFIED']:['SUBMITTED','VERIFIED'];
+      const live=poHistoryData.filter(x=>want.includes(String(x.status).toUpperCase())&&(Number(x.year)*12+Number(x.month)>=rk));
+      if(live.length) po=live[live.length-1];
+    }
     if(!po) return;
+    if(String(po.status).toUpperCase()==='EXPIRED'||((String(po.status).toUpperCase()==='SUBMITTED'||String(po.status).toUpperCase()==='VERIFIED')&&(Number(po.year)*12+Number(po.month)<(new Date().getFullYear())*12+new Date().getMonth()))){
+      /* v3.9.29: the local PO expired (its month passed before approval) → start a fresh draft for the right month */
+      if(poStatus!=='draft'&&String(submitAckId)===String(po.poId||'')){
+        clearPOState(); curMonth=_procDefaultMonth(); saveState(); render();
+        try{GA.toast(L3("⏱ 上個月未完成的採購單已過期關閉，請建立新的採購單","⏱ Last month's unfinished PO expired and was closed — please create a new PO","⏱ បញ្ជាទិញខែមុនដែលមិនទាន់បញ្ចប់បានផុតកំណត់ សូមបង្កើតថ្មី"));}catch(_){ }
+      }
+      return;
+    }
     // v3.9.28: an unfinished PO whose month has already passed is treated as expired/closed — do not adopt it as the active PO (so the applicant is free to start a new month).
     const _rk=(new Date().getFullYear())*12+new Date().getMonth();
     const _ps=String(po.status).toUpperCase();
@@ -2409,6 +2459,10 @@ async function doSubmit(forceRetry){
         `⚠️ You picked "${MO[curMonth]} ${YEAR}", a past month.\nA monthly PO is for the upcoming month (this month you request next month; early in the month you may request the current one), not a past month.\nSubmit anyway?`,
         `⚠️ អ្នកបានជ្រើសខែ "${MK[curMonth]} ${YEAR}" ដែលជាខែកន្លងផុត។\nបញ្ជាទិញប្រចាំខែគឺសម្រាប់ខែខាងមុខ មិនមែនខែកន្លងផុតទេ។\nនៅតែដាក់ស្នើឬ?`))) return;
     }
+  }
+  { /* v3.9.29: late in the month, remind that the monthly PO is normally for next month */
+    const _n=new Date();
+    if(YEAR===_n.getFullYear()&&curMonth===_n.getMonth()&&_n.getDate()>10&&poStatus==="draft"){ if(!confirm(_procMonthHint(curMonth))) return; }
   }
   if(totalN()===0){
     try{GA.toast(L3("⚠️ 尚未選擇採購品項","⚠️ No purchase items selected","⚠️ មិនទាន់ជ្រើសមុខទំនិញ"));}catch(_){ }
