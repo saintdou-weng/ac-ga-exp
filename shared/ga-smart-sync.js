@@ -13,7 +13,10 @@
   if (g.HRASmartSync) { if (!g.GASmartSync) g.GASmartSync = g.HRASmartSync; return; }
 
   var VERSION = '1.8';
-  var STATE_PREFIX = 'ac_hra_smart_sync_v2_';
+  /* v3.9.31: own prefix.  'ac_hra_smart_sync_v2_*' is also used by the HRA Portal on the same
+     github.io origin, whose ac-storage.js moves those keys out of localStorage; GA-EXP then lost its
+     sync baseline and every later sync became a "first sync" (union merge), so deletions came back. */
+  var STATE_PREFIX = 'ac_gaexp_smart_sync_v1_', LEGACY_STATE_PREFIX = 'ac_hra_smart_sync_v2_';
   var FULL_CACHE_DB = 'AC_HRA_FullCloudCache_v1', FULL_CACHE_STORE = 'snapshots';
   var nativeFetch = g.fetch ? g.fetch.bind(g) : null;
 
@@ -161,7 +164,11 @@
     return Promise.all(jobs).then(function () { return out; });
   }
   function readState(tool) {
-    try { return JSON.parse(localStorage.getItem(STATE_PREFIX + tool) || 'null'); } catch (_) { return null; }
+    try {
+      var v = localStorage.getItem(STATE_PREFIX + tool);
+      if (v == null) { v = localStorage.getItem(LEGACY_STATE_PREFIX + tool); if (v != null) { try { localStorage.setItem(STATE_PREFIX + tool, v); } catch (_) {} } }
+      return JSON.parse(v || 'null');
+    } catch (_) { return null; }
   }
   function writeState(tool, v) { try { localStorage.setItem(STATE_PREFIX + tool, JSON.stringify(v)); } catch (_) {} }
   /* Sewing keeps the complete downloaded dataset in IndexedDB.  Do the same
