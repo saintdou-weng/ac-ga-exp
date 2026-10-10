@@ -308,7 +308,7 @@ var DICT = {
     returned: '已退回', draft: '草稿', submitted: '已送出', verified: '已審查',
     voided: '已作廢', urgent: '緊急', amount: '金額', qty: '數量', date: '日期',
     noData: '目前沒有資料', loading: '載入中…', saving: '儲存中…',
-    cloudIdle: '未連線', cloudSync: '同步中…', cloudUp: '上傳成功',
+    cloudIdle: '未連線', cloudSynced: '已同步', cloudWarn: '需注意', cloudSync: '同步中…', cloudUp: '上傳成功',
     cloudDown: '下載成功', cloudErr: '連線失敗', cloudConflict: '版本衝突',
     confirm: '確認', cancel: '取消', close: '關閉', save: '儲存', del: '刪除',
     edit: '編輯', add: '新增', records: '筆', page: '頁', of: '/',
@@ -323,7 +323,7 @@ var DICT = {
     returned: 'Returned', draft: 'Draft', submitted: 'Submitted', verified: 'Verified',
     voided: 'Voided', urgent: 'Urgent', amount: 'Amount', qty: 'Qty', date: 'Date',
     noData: 'No data available', loading: 'Loading…', saving: 'Saving…',
-    cloudIdle: 'Not connected', cloudSync: 'Syncing…', cloudUp: 'Upload OK',
+    cloudIdle: 'Not connected', cloudSynced: 'Synced', cloudWarn: 'Attention', cloudSync: 'Syncing…', cloudUp: 'Upload OK',
     cloudDown: 'Download OK', cloudErr: 'Connection failed', cloudConflict: 'Version conflict',
     confirm: 'Confirm', cancel: 'Cancel', close: 'Close', save: 'Save', del: 'Delete',
     edit: 'Edit', add: 'Add', records: 'records', page: 'Page', of: '/',
@@ -338,7 +338,7 @@ var DICT = {
     returned: 'ត្រឡប់', draft: 'ព្រាង', submitted: 'បានដាក់ស្នើ', verified: 'បានពិនិត្យ',
     voided: 'បានលុបចោល', urgent: 'បន្ទាន់', amount: 'ចំនួនទឹកប្រាក់', qty: 'បរិមាណ', date: 'កាលបរិច្ឆេទ',
     noData: 'មិនមានទិន្នន័យ', loading: 'កំពុងផ្ទុក…', saving: 'កំពុងរក្សាទុក…',
-    cloudIdle: 'មិនបានតភ្ជាប់', cloudSync: 'កំពុងធ្វើសមកាលកម្ម…', cloudUp: 'ផ្ទុកឡើងជោគជ័យ',
+    cloudIdle: 'មិនបានតភ្ជាប់', cloudSynced: 'បានសមកាលកម្ម', cloudWarn: 'ត្រូវពិនិត្យ', cloudSync: 'កំពុងធ្វើសមកាលកម្ម…', cloudUp: 'ផ្ទុកឡើងជោគជ័យ',
     cloudDown: 'ទាញយកជោគជ័យ', cloudErr: 'ការតភ្ជាប់បរាជ័យ', cloudConflict: 'ជម្លោះកំណែ',
     confirm: 'បញ្ជាក់', cancel: 'បោះបង់', close: 'បិទ', save: 'រក្សាទុក', del: 'លុប',
     edit: 'កែសម្រួល', add: 'បន្ថែម', records: 'កំណត់ត្រា', page: 'ទំព័រ', of: '/',
@@ -716,8 +716,12 @@ GA.cloud = {
       up:       { i: '●', t: GA.T('cloudUp'),       c: 'ok' },
       down:     { i: '●', t: GA.T('cloudDown'),     c: 'ok' },
       err:      { i: '✕', t: GA.T('cloudErr'),      c: 'err' },
-      conflict: { i: '⚠', t: GA.T('cloudConflict'), c: 'warn' }
+      conflict: { i: '⚠', t: GA.T('cloudConflict'), c: 'warn' },
+      /* v3.9.30: smart-sync reports busy / ok / warn — they used to fall back to "Not connected" */
+      synced:   { i: '●', t: GA.T('cloudSynced'),   c: 'ok' },
+      warn:     { i: '⚠', t: GA.T('cloudWarn'),     c: 'warn' }
     };
+    map.busy = map.sync; map.ok = map.synced;
     var m = map[state] || map.idle;
     /* v3.9.26: module status details are often Chinese-only; never show them in EN / KM */
     if (detail && GA.lang !== 'zh' && /[\u3400-\u9fff]/.test(String(detail))) detail = '';

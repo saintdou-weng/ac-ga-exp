@@ -126,6 +126,7 @@
   }
   function newer(a, b) {
     function stamp(x) {
+      if (x && x.row && typeof x.row === 'object' && !x.updatedAt) x = x.row; /* v3.9.30: GA-EXP wraps rows */
       for (var i = 0; i < ['updatedAt','savedAt','modifiedAt','createdAt','timestamp','date','effectiveDate'].length; i++) {
         var d = x && x[['updatedAt','savedAt','modifiedAt','createdAt','timestamp','date','effectiveDate'][i]];
         if (d) { var n = new Date(d).getTime(); if (!isNaN(n)) return n; }
@@ -449,6 +450,14 @@
       });
     }
     return tryCandidate(0, null);
+  }
+  /* v3.9.30: one bucket request may fail on a slow connection; retry it twice (2s, 6s) before failing the whole sync */
+  function retry3(fn) {
+    return fn().catch(function (e) {
+      return new Promise(function (r) { setTimeout(r, 2000); }).then(fn).catch(function () {
+        return new Promise(function (r) { setTimeout(r, 6000); }).then(fn);
+      });
+    });
   }
   function post(url, body) {
     if(['expense','receiving'].indexOf(canonicalTool(body.tool))>=0&&g.GA&&GA.gasUrl&&url!==GA.gasUrl())return Promise.reject(new Error('連線設定已變更，請重新同步 / Connection changed; retry sync'));
@@ -815,14 +824,18 @@
         return { ok:false, needsPull:true, remoteChanged:remoteChanged, conflicts:conflicts, recordCount:records.length };
       }
       var uploadId = 'hra_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8), sent = 0;
-      var chain = Promise.resolve();
-      changed.forEach(function (k, idx) {
-        chain = chain.then(function () {
-          var b = local[k];
-          callStatus(status, '上傳變更 ' + (idx + 1) + '/' + changed.length + ' · ' + k, 'busy');
-          return post(url, { action:'smartBucket', tool:tool, uploadId:uploadId, bucket:k, hash:b.hash, count:b.count, records:b.records }).then(function () { sent += b.count; });
-        });
-      });
+      /* v3.9.30: upload changed buckets 3 at a time (each is its own staged file; the commit is still one locked step) */
+      var nextUp = 0, doneUp = 0;
+      function upWorker() {
+        if (nextUp >= changed.length) return Promise.resolve();
+        var k = changed[nextUp++], b = local[k];
+        return retry3(function () { return post(url, { action:'smartBucket', tool:tool, uploadId:uploadId, bucket:k, hash:b.hash, count:b.count, records:b.records }); }).then(function () {
+          sent += b.count; doneUp++;
+          callStatus(status, '上傳變更 ' + doneUp + '/' + changed.length + ' · ' + k, 'busy');
+        }).then(upWorker);
+      }
+      var upPool = []; for (var uw = 0; uw < Math.min(3, changed.length); uw++) upPool.push(upWorker());
+      var chain = Promise.all(upPool);
       return chain.then(function () {
         var hashes = {}, counts = {}; Object.keys(local).forEach(function (k) { hashes[k] = local[k].hash; counts[k] = local[k].count; });
         /* Remote-only buckets are intentionally retained. They are merged on the next pull. */
@@ -883,9 +896,8 @@
       var continueSmartPull = function () { return buildBuckets(localRows).then(function (local) {
         var last = readState(tool) || {}, lastH = last.hashes || {}, remoteH = remote.hashes || {}, out = {}, remoteRows = [], downloaded = 0, unchanged = 0, pending = 0, removed = 0, conflictKeys = [], keys = {};
         Object.keys(remoteH).concat(Object.keys(local)).forEach(function (k) { keys[k] = true; });
-        var list = Object.keys(keys).sort(), remoteOrder = Object.keys(remoteH).sort(), chain = Promise.resolve();
-        list.forEach(function (k, idx) {
-          chain = chain.then(function () {
+        var list = Object.keys(keys).sort(), remoteOrder = Object.keys(remoteH).sort(), jobs = [], doneJobs = 0;
+        list.forEach(function (k) {
             var lb = local[k], rh = remoteH[k] || '', bh = lastH[k] || '';
             if (lb && rh && lb.hash === rh) { out[k] = lb.records; unchanged += lb.count; return; }
             if (lb && !rh) {
@@ -907,20 +919,31 @@
             }
             if (lb && localChanged && remoteChanged && lb.hash !== rh) conflictKeys.push(k);
             if (!rh) return;
-            callStatus(status, '下載變更 ' + (idx + 1) + '/' + list.length + ' · ' + k, 'busy');
-            return smartBucketRead(url, tool, k, remoteOrder.indexOf(k), Number((remote.counts || {})[k]) || 0, status).then(function (bj) {
-              var bd = dataOf(bj) || {}, rows = bd.records || [];
-              remoteRows = remoteRows.concat(rows);
-              downloaded += rows.length;
-              /* When the cloud alone changed, its complete bucket is the new
-                 source of truth.  Merging by semantic key here could keep an
-                 equal-length stale local value.  True two-sided conflicts
-                 still use the page-specific merge after confirmation. */
-              out[k] = (lb && localChanged && remoteChanged && lb.hash !== rh)
-                ? mergeSnapshots(opts, lb.records, rows) : rows;
-            });
-          });
+            /* v3.9.30: with NO sync baseline for this bucket (first sync on this
+               device / lost state) the cloud copy may be older or smaller than the
+               phone's.  Never let it replace local rows: merge both sides
+               (union by record identity, newer row wins).  Only when the phone is
+               provably unchanged since the last sync may the cloud copy replace it. */
+            var mergeBoth = !!(lb && ((localChanged && remoteChanged && lb.hash !== rh) || !bh));
+            jobs.push({ k:k, lb:lb, mergeBoth:mergeBoth });
         });
+        /* v3.9.30: download changed buckets 4 at a time instead of one by one */
+        var nextJob = 0;
+        function worker() {
+          if (nextJob >= jobs.length) return Promise.resolve();
+          var j = jobs[nextJob++];
+          return retry3(function () { return smartBucketRead(url, tool, j.k, remoteOrder.indexOf(j.k), Number((remote.counts || {})[j.k]) || 0, status); }).then(function (bj) {
+            var bd = dataOf(bj) || {}, rows = bd.records || [];
+            remoteRows = remoteRows.concat(rows);
+            downloaded += rows.length;
+            out[j.k] = j.mergeBoth ? mergeSnapshots(opts, j.lb.records, rows) : rows;
+            if (j.mergeBoth && j.lb && out[j.k].length < j.lb.records.length) out[j.k] = mergeRows(j.lb.records, out[j.k]);
+            doneJobs++;
+            callStatus(status, '下載變更 ' + doneJobs + '/' + jobs.length + ' · ' + j.k, 'busy');
+          }).then(worker);
+        }
+        var pool = []; for (var w = 0; w < Math.min(4, jobs.length); w++) pool.push(worker());
+        var chain = Promise.all(pool);
         return chain.then(function () {
           if (conflictKeys.length && !conflictConfirm(tool, conflictKeys, opts)) return { ok:false, cancelled:true, conflicts:conflictKeys, records:localRows, meta:remote.meta || {} };
           var merged = sortRows(Object.keys(out).reduce(function (a, k) { return a.concat(out[k] || []); }, []));
@@ -976,7 +999,22 @@
     });
   }
 
-  g.HRASmartSync = { version:VERSION, push:push, pull:pull, pullReliable:pullReliable, pullDirect:directPull,
+  /* v3.9.30: compare this device with the cloud manifest bucket by bucket
+     (counts + content hash) without downloading any data. */
+  function verify(opts) {
+    var url = text(opts.url).trim(), tool = opts.tool;
+    return Promise.all([buildBuckets(sortRows(opts.records || [])), getManifest(url, tool)]).then(function (p) {
+      var local = p[0], remote = p[1] || {}, rh = remote.hashes || {}, rc = remote.counts || {}, keys = {}, mismatches = [], localTotal = 0, cloudTotal = 0;
+      Object.keys(local).concat(Object.keys(rh)).forEach(function (k) { keys[k] = true; });
+      Object.keys(keys).sort().forEach(function (k) {
+        var ln = local[k] ? local[k].count : 0, cn = Number(rc[k]) || 0;
+        localTotal += ln; cloudTotal += cn;
+        if (ln !== cn || (local[k] ? local[k].hash : '') !== (rh[k] || '')) mismatches.push({ bucket:k, local:ln, cloud:cn });
+      });
+      return { ok:!mismatches.length, exists:!!remote.exists, localTotal:localTotal, cloudTotal:cloudTotal, buckets:Object.keys(keys).length, mismatches:mismatches };
+    });
+  }
+  g.HRASmartSync = { version:VERSION, push:push, pull:pull, verify:verify, pullReliable:pullReliable, pullDirect:directPull,
     fullCacheGet:fullCacheGet, fullCachePut:fullCachePut,
     buildBuckets:buildBuckets, mergeRows:mergeRows, semanticKey:semanticKey, keyOf:semanticKey, bucketKey:bucketKey, stable:stable };
   /* Keep AC-GA-EXP's existing public name so all earlier pages and saved
