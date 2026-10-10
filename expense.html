@@ -837,37 +837,96 @@ if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownloa
       if(!y){var c={};rows.forEach(function(r){var yy=String(r.date).slice(0,4);c[yy]=(c[yy]||0)+1;});y=+(Object.keys(c).sort(function(a,b){return c[b]-c[a];})[0]||0);}
       return {file:file,src:src,year:y,rows:rows.filter(function(r){return String(r.date).slice(0,4)===String(y);})};}));
   }
+  function isUtil(r){var sh=String(r.sourceSheet||'').toLowerCase().replace(/[\s._\-]+/g,''),c=String(r.category||r.expenseCategory||'').toLowerCase();return /^(electric(ity)?|water)$/.test(sh)||/^(electric(ity)?|water)$/.test(c);}
+  /* utility rows (electricity / water) are rebuilt by the importer's own utility logic, so they are not compared here */
   window.expReconcile=async function(files,opts){
     opts=opts||{};await EXP_DATA_READY;
-    var parsed=await parseFiles(files),report=[],toAdd=[];
+    var parsed=await parseFiles(files),report=[],toAdd=[],toRemove=[];
+    /* utility pass: electricity / water rows are only fixed where the platform holds a copy taken from a LATER year's
+       workbook (history sheet) or has none; rows imported from the same year's file are left as they are */
     parsed.forEach(function(p){
-      var months={};p.rows.forEach(function(r){var m=String(r.date).slice(0,7);(months[m]=months[m]||[]).push(r);});
-      Object.keys(months).sort().forEach(function(m){
-        var plat=(EXP3[p.src]||[]).filter(function(r){return String(r.date||'').slice(0,7)===m;}),bag={};
-        plat.forEach(function(r){var k=key(r,p.src);bag[k]=(bag[k]||0)+1;});
-        var missing=[];months[m].forEach(function(r){var k=key(r,p.src);if(bag[k]>0)bag[k]--;else missing.push(r);});
-        var extra=Object.keys(bag).reduce(function(n,k){return n+bag[k];},0);
-        var fileSum=months[m].reduce(function(n,r){return n+value(r);},0),platSum=plat.reduce(function(n,r){return n+value(r);},0);
-        var status=!missing.length&&!extra?'ok':missing.length&&!extra?'add':!missing.length?'extra':'review';
-        report.push({file:p.file.name,src:p.src,month:m,fileRows:months[m].length,platformRows:plat.length,missing:missing.length,extra:extra,fileSum:Math.round(fileSum*100)/100,platformSum:Math.round(platSum*100)/100,status:status});
-        if(status==='add')missing.forEach(function(r){toAdd.push({src:p.src,row:r});});
+      if(p.src!=='general')return;var y=0,um={};
+      p.rows.forEach(function(r){if(!isUtil(r))return;var m=String(r.date).slice(0,7);(um[m]=um[m]||[]).push(r);});
+      Object.keys(um).sort().forEach(function(m){
+        y=+m.slice(0,4);var plat=(EXP3.general||[]).filter(function(r){return String(r.date||'').slice(0,7)===m&&isUtil(r);});
+        var uk=function(r){return expenseUtilitySheetKey(r.sourceSheet||r.category||'')+'|'+lower(r.item);},add=0,rem=0,diff=0;
+        um[m].forEach(function(r){var same=plat.filter(function(x){return uk(x)===uk(r);});
+          var keep=same.filter(function(x){var fy=yearOfName(x.sourceFile);return !fy||fy<=y;});
+          if(keep.length){if(Math.abs(value(keep[0])-value(r))>0.01)diff++;return;}
+          same.forEach(function(x){if(!x._recRemoved){x._recRemoved=1;toRemove.push({src:'general',row:x});rem++;}});toAdd.push({src:'general',row:r});add++;});
+        /* any other utility row copied from a later year's workbook into this month is a history copy too */
+        plat.forEach(function(x){var fy=yearOfName(x.sourceFile);if(fy&&fy>y&&!x._recRemoved){x._recRemoved=1;toRemove.push({src:'general',row:x});rem++;}});
+        plat.forEach(function(x){delete x._recRemoved;});
+        if(add||rem||diff)report.push({file:p.file.name,src:'general',month:m,utility:true,fileRows:um[m].length,platformRows:plat.length,missing:add,extra:0,renamed:0,historyCopies:rem,utilityDiff:diff,fileSum:Math.round(um[m].reduce(function(n,r){return n+value(r);},0)*100)/100,platformSum:Math.round(plat.reduce(function(n,r){return n+value(r);},0)*100)/100,status:add||rem?'add':'review'});
       });
     });
-    var result={report:report,addable:toAdd.length,added:0};
-    if(opts.apply&&toAdd.length){
-      await GAExpenseStore.backup('exp_reconcile_backup_'+new Date().toISOString().slice(0,10),{at:new Date().toISOString(),exp3:EXP3});
-      toAdd.forEach(function(x){ensureExpenseCategory(x.row,x.src);x.row.updatedAt=new Date().toISOString();x.row.reconciledFrom=x.row.sourceFile;EXP3[x.src].push(x.row);});
+    parsed.forEach(function(p){
+      var months={};p.rows.forEach(function(r){if(isUtil(r))return;var m=String(r.date).slice(0,7);(months[m]=months[m]||[]).push(r);});
+      Object.keys(months).sort().forEach(function(m){
+        var plat=(EXP3[p.src]||[]).filter(function(r){return String(r.date||'').slice(0,7)===m&&!isUtil(r);}),bag={};
+        plat.forEach(function(r){var k=key(r,p.src);(bag[k]=bag[k]||[]).push(r);});
+        var missing=[];months[m].forEach(function(r){var k=key(r,p.src);if(bag[k]&&bag[k].length)bag[k].pop();else missing.push(r);});
+        var extras=[];Object.keys(bag).forEach(function(k){extras=extras.concat(bag[k]);});
+        /* same date + qty + amount but a re-worded item name = the same purchase edited in another file version */
+        var fz=function(r){return [String(r.date),num(r.qty),Math.round(value(r)*100)].join('|');},pool={};
+        extras.forEach(function(r){(pool[fz(r)]=pool[fz(r)]||[]).push(r);});
+        var stillMissing=[],paired=0;missing.forEach(function(r){var l=pool[fz(r)];if(l&&l.length){l.pop();paired++;}else stillMissing.push(r);});
+        var unpaired=[];Object.keys(pool).forEach(function(k){unpaired=unpaired.concat(pool[k]);});
+        var y=+m.slice(0,4),cross=p.src==='general'?unpaired.filter(function(r){var fy=yearOfName(r.sourceFile);return fy&&fy>y;}):[];
+        var sameYearExtra=unpaired.length-cross.length;
+        var fileSum=months[m].reduce(function(n,r){return n+value(r);},0),platSum=plat.reduce(function(n,r){return n+value(r);},0);
+        var status=!stillMissing.length&&!unpaired.length?'ok':!sameYearExtra?(stillMissing.length||cross.length?'add':'ok'):(!stillMissing.length?'extra':'review');
+        report.push({file:p.file.name,src:p.src,month:m,fileRows:months[m].length,platformRows:plat.length,missing:stillMissing.length,extra:sameYearExtra,renamed:paired,historyCopies:cross.length,fileSum:Math.round(fileSum*100)/100,platformSum:Math.round(platSum*100)/100,status:status});
+        if(status==='add'){stillMissing.forEach(function(r){toAdd.push({src:p.src,row:r});});cross.forEach(function(r){toRemove.push({src:p.src,row:r});});}
+      });
+    });
+    var result={report:report,addable:toAdd.length,removable:toRemove.length,added:0,removed:0};
+    if(opts.apply&&(toAdd.length||toRemove.length)){
+      await GAExpenseStore.backup('exp_reconcile_backup_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'),{at:new Date().toISOString(),exp3:EXP3,txns:txns});
+      toRemove.forEach(function(x){var i=EXP3[x.src].indexOf(x.row);if(i>=0){EXP3[x.src].splice(i,1);result.removed++;}});
+      toAdd.forEach(function(x){ensureExpenseCategory(x.row,x.src);x.row.updatedAt=new Date().toISOString();x.row.reconciledFrom=x.row.sourceFile;EXP3[x.src].push(x.row);result.added++;});
       EXP_LOCAL_GEN++;if(!(await persistExpense(true)))throw new Error(EXP_LAST_ERROR||'save failed');
-      result.added=toAdd.length;try{render();}catch(_){}scheduleExpenseAutoCloudSync('import');
+      try{render();}catch(_){}scheduleExpenseAutoCloudSync('import');
     }
     window.EXP_LAST_RECONCILE=result;return result;
+  };
+  /* v3.9.30 同月重複版本：the same month imported from several versions of one workbook
+     ("VRT General Expense 2026.xlsx", "… 2026 (2).xlsb", "09. VRT General Expense 2026.xlsx").
+     Per month the version with the most rows is kept; a row of another version is removed ONLY when the kept
+     version holds the same purchase (same date+item+qty+amount, or same date+qty+amount re-worded).
+     Rows that exist in only one version are always kept. A backup is saved first. */
+  function family(n){return String(n||'').toLowerCase().replace(/\.(xlsx|xlsb|xlsm|xls)$/,'').replace(/^\d{8}(_\d{4})?__/,'').replace(/__[0-9a-f]{6,}$/,'').replace(/^\d+\.\s*/,'').replace(/\(\s*(\d+|recovered)\s*\)/g,'').replace(/\bnew\d*\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();}
+  window.expDedupeVersions=async function(opts){
+    opts=opts||{};await EXP_DATA_READY;var plan=[],removeRows=[];
+    ['general','purchase','repair'].forEach(function(src){
+      var groups={};(EXP3[src]||[]).forEach(function(r){if(r.sourceModule!=='excel'||!r.sourceFile)return;var g=String(r.date||'').slice(0,7)+'|'+family(r.sourceFile);((groups[g]=groups[g]||{})[r.sourceFile]=groups[g][r.sourceFile]||[]).push(r);});
+      Object.keys(groups).sort().forEach(function(g){
+        var files=Object.keys(groups[g]);if(files.length<2)return;
+        files.sort(function(a,b){return groups[g][b].length-groups[g][a].length;});
+        var keep=groups[g][files[0]],exact={},fuzzy={};
+        keep.forEach(function(r){var k=key(r,src),f=[String(r.date),num(r.qty),Math.round(value(r)*100),isUtil(r)?lower(r.item):''].join('|');exact[k]=(exact[k]||0)+1;fuzzy[f]=(fuzzy[f]||0)+1;});
+        var rm=0,kept=0;files.slice(1).forEach(function(fn){groups[g][fn].forEach(function(r){var k=key(r,src),f=[String(r.date),num(r.qty),Math.round(value(r)*100),isUtil(r)?lower(r.item):''].join('|');
+          if(exact[k]>0){exact[k]--;if(fuzzy[f]>0)fuzzy[f]--;removeRows.push({src:src,row:r});rm++;}else if(fuzzy[f]>0){fuzzy[f]--;removeRows.push({src:src,row:r});rm++;}else kept++;});});
+        if(rm||kept)plan.push({src:src,month:g.split('|')[0],keep:files[0],others:files.slice(1),remove:rm,uniqueKept:kept});
+      });
+    });
+    var res={plan:plan,removable:removeRows.length,removed:0};
+    if(opts.apply&&removeRows.length){
+      await GAExpenseStore.backup('exp_dedupe_backup_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-'),{at:new Date().toISOString(),exp3:EXP3,txns:txns});
+      removeRows.forEach(function(x){var i=EXP3[x.src].indexOf(x.row);if(i>=0){EXP3[x.src].splice(i,1);res.removed++;}});
+      EXP_LOCAL_GEN++;if(!(await persistExpense(true)))throw new Error(EXP_LAST_ERROR||'save failed');try{render();}catch(_){}scheduleExpenseAutoCloudSync('import');
+    }
+    window.EXP_LAST_DEDUPE=res;return res;
   };
   function show(res,files){
     var d=document.getElementById('exp-rec-dlg');if(!d){d=document.createElement('dialog');d.id='exp-rec-dlg';d.className='exp-rec-dlg';document.body.appendChild(d);}
     var lab={ok:L('✅ 一致','✅ Match','✅ ត្រូវគ្នា'),add:L('➕ 缺少，可補入','➕ Missing — can add','➕ ខ្វះ — អាចបន្ថែម'),extra:L('⚠️ 平台較多（可能重複版本）','⚠️ Platform has more (duplicate versions?)','⚠️ វេទិកាច្រើនជាង'),review:L('🔎 內容不同，請確認','🔎 Different — review','🔎 ខុសគ្នា — ពិនិត្យ')};
-    var rows=res.report.map(function(r){return '<tr class="s-'+r.status+'"><td>'+GA.esc(r.month)+'</td><td>'+GA.esc(r.src)+'</td><td>'+r.fileRows+' / $'+r.fileSum.toLocaleString()+'</td><td>'+r.platformRows+' / $'+r.platformSum.toLocaleString()+'</td><td>'+lab[r.status]+(r.missing?' ('+r.missing+')':'')+(r.extra?' (+'+r.extra+')':'')+'</td></tr>';}).join('');
-    d.innerHTML='<h3>🔍 '+L('原檔對帳','Reconcile with source files','ផ្ទៀងផ្ទាត់ជាមួយឯកសារដើម')+'</h3><p class="exp-note">'+L('以原始 Excel 逐月比對（日期＋品項＋規格＋數量＋金額）。只會補入「缺少」的資料，不會刪除或覆蓋任何資料。','Month-by-month check against the original Excel (date + item + spec + qty + amount). Only missing rows are added; nothing is deleted or overwritten.','ពិនិត្យតាមខែ។ បន្ថែមតែទិន្នន័យដែលខ្វះ មិនលុបអ្វីទេ។')+'</p><div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+L('月份','Month','ខែ')+'</th><th>'+L('類別','Type','ប្រភេទ')+'</th><th>'+L('原檔','File','ឯកសារ')+'</th><th>'+L('平台','Platform','វេទិកា')+'</th><th>'+L('結果','Result','លទ្ធផល')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="exp-rec-act">'+(res.addable?'<button class="ga-btn primary" id="exp-rec-apply">➕ '+L('補入缺少的 '+res.addable+' 筆','Add '+res.addable+' missing rows','បន្ថែម '+res.addable+' ជួរ')+'</button>':'')+'<button class="ga-btn" id="exp-rec-close">'+L('關閉','Close','បិទ')+'</button></div>';
+    var rows=res.report.map(function(r){return '<tr class="s-'+r.status+'"><td>'+GA.esc(r.month)+'</td><td>'+GA.esc(r.src)+(r.utility?' ⚡💧':'')+'</td><td>'+r.fileRows+' / $'+r.fileSum.toLocaleString()+'</td><td>'+r.platformRows+' / $'+r.platformSum.toLocaleString()+'</td><td>'+lab[r.status]+(r.missing?' ('+r.missing+')':'')+(r.extra?' (+'+r.extra+')':'')+(r.historyCopies?' · '+L('舊年度檔重複','history copies','ច្បាប់ចម្លងចាស់')+' '+r.historyCopies:'')+'</td></tr>';}).join('');
+    d.innerHTML='<h3>🔍 '+L('原檔對帳','Reconcile with source files','ផ្ទៀងផ្ទាត់ជាមួយឯកសារដើម')+'</h3><p class="exp-note">'+L('以原始 Excel 逐月比對（日期＋品項＋規格＋數量＋金額）。只會補入「缺少」的資料；唯一會移除的是「後面年度檔案裡夾帶的舊年度重複列」（例如 2026 檔裡的 2024 資料），且會先自動備份。電費水費不在比對範圍。','Month-by-month check against the original Excel (date + item + spec + qty + amount). Missing rows are added; the only rows removed are old-year copies carried inside a later year\'s workbook (backed up first). Electricity / water rows are not compared.','ពិនិត្យតាមខែ។ បន្ថែមតែទិន្នន័យដែលខ្វះ មិនលុបអ្វីទេ។')+'</p><div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+L('月份','Month','ខែ')+'</th><th>'+L('類別','Type','ប្រភេទ')+'</th><th>'+L('原檔','File','ឯកសារ')+'</th><th>'+L('平台','Platform','វេទិកា')+'</th><th>'+L('結果','Result','លទ្ធផល')+'</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="exp-rec-act">'+((res.addable||res.removable)?'<button class="ga-btn primary" id="exp-rec-apply">➕ '+L('補入缺少的 '+res.addable+' 筆'+(res.removable?'，移除舊年度檔重複的 '+res.removable+' 筆':''),'Add '+res.addable+' missing rows'+(res.removable?', remove '+res.removable+' history copies':''),'បន្ថែម '+res.addable+' ជួរ')+'</button>':'')+'<button class="ga-btn" id="exp-rec-dedupe">🧹 '+L('檢查同月重複版本','Check duplicate workbook versions','ពិនិត្យកំណែស្ទួន')+'</button><button class="ga-btn" id="exp-rec-close">'+L('關閉','Close','បិទ')+'</button></div>';
     d.querySelector('#exp-rec-close').onclick=function(){d.close();};
+    d.querySelector('#exp-rec-dedupe').onclick=async function(){var x=await window.expDedupeVersions({});if(!x.removable){GA.toast('✅ '+L('沒有同月重複版本','No duplicate versions found','គ្មានកំណែស្ទួន'),'success');return;}
+      if(!confirm(L('發現 '+x.removable+' 筆是同一份工作簿不同版本重複匯入的資料（'+x.plan.length+' 個月）。只會移除「另一版本已有相同內容」的列，獨有的列都保留，並先自動備份。要清除嗎？','Found '+x.removable+' rows imported twice from different versions of the same workbook ('+x.plan.length+' months). Only rows whose same content exists in the kept version are removed (backed up first). Clean up?','រកឃើញ '+x.removable+' ជួរស្ទួន។ សម្អាត?')))return;
+      var y=await window.expDedupeVersions({apply:true});GA.toast('✅ '+L('已清除 '+y.removed+' 筆重複版本資料','Removed '+y.removed+' duplicate-version rows','បានសម្អាត '+y.removed),'success');d.close();};
     var ap=d.querySelector('#exp-rec-apply');if(ap)ap.onclick=async function(){ap.disabled=true;try{var r=await window.expReconcile(files,{apply:true});GA.toast('✅ '+L('已補入 '+r.added+' 筆，將自動上雲','Added '+r.added+' rows; syncing to cloud','បានបន្ថែម '+r.added),'success');d.close();}catch(e){GA.toast('❌ '+e.message,'err');ap.disabled=false;}};
     if(d.showModal)d.showModal();else d.setAttribute('open','');
   }
