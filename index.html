@@ -12,6 +12,7 @@
 <script src="shared/ga-core.js?v=3.9.30"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
+<script src="shared/ga-sync-hub.js?v=3.9.32"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
 if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.30"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');}
 </script>
@@ -465,6 +466,8 @@ document.querySelectorAll('[data-lg]').forEach(b=>{
   b.onclick=()=>{ GA.setLang(b.getAttribute('data-lg')); document.querySelectorAll('[data-lg]').forEach(x=>x.classList.toggle('on',x.getAttribute('data-lg')===GA.lang)); };
 });
 refreshDashboard();
+/* v3.9.32: one-place cloud sync for every module (all or ticked) */
+if(window.GASyncHub)GASyncHub.mount('.kpi-row');
 window.addEventListener('focus',()=>{if(!document.hidden)refreshDashboard();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDashboard();});
 </script>
