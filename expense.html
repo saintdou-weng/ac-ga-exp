@@ -229,6 +229,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
   .exp-analysis{border:1px solid #cfe0ef;border-radius:9px;background:#f7fbff;padding:10px 12px;line-height:1.65;color:var(--ga-txt2)}.exp-analysis.has-warn{border-color:#f1d38a;background:#fffaf0}.exp-analysis small{display:block;color:var(--ga-mut);margin-top:7px}
   .exp-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}.exp-form label{display:block;font-size:10px;font-weight:800;color:var(--ga-mut);margin-bottom:4px}.exp-form input,.exp-form select{width:100%;box-sizing:border-box;border:1px solid var(--ga-line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit}.exp-form input:focus,.exp-form select:focus{outline:none;border-color:var(--ga-sky)}
   .exp-note{font-size:11px;color:var(--ga-mut);margin:7px 0 0}.exp-period-hint{margin:9px 0;padding:10px 12px;border:1px solid #f0c36d;background:#fff8e6;border-radius:8px;color:#8a5a00;font-size:12px}.exp-period-hint .ga-btn{margin-left:8px}.exp-file{display:none}
+  .exp-area-table{min-width:640px}.exp-area-table .r{text-align:right;white-space:nowrap;font-family:var(--ga-mono)}.exp-area-table .c{text-align:center}.exp-area-table small{color:var(--ga-mut);font-family:inherit}.exp-area-factory td{background:#fff8d6;font-weight:700}.exp-area-total td{border-top:2px solid var(--ga-line);font-weight:800}
   @media(max-width:680px){.exp-wrap{padding:7px}.exp-sec{padding:10px}.exp-tab{padding:8px 10px}.exp-card .val{font-size:19px}.exp-bar-row{grid-template-columns:95px 1fr 75px}.exp-table{font-size:11px}}
 
   /* v3.9.3 compact expense management */
@@ -816,6 +817,191 @@ function expDownload(){return expCloudDownload({silent:false});}
 /* 不依賴每個模組重複改 modal：費用的摘要／核可成功後都自動排程背景同步。 */
 (function(){var open=GA.telegram&&GA.telegram.open;if(!open)return;GA.telegram.open=function(opt){opt=opt||{};if(opt.module==='expense'){var oldS=opt.onSummarySent,oldA=opt.onApprovalSent;opt.onSummarySent=function(d,st){scheduleExpenseAutoCloudSync('telegram-summary');if(oldS)oldS(d,st);};opt.onApprovalSent=function(d,st){scheduleExpenseAutoCloudSync('telegram-approval');if(oldA)oldA(d,st);};}return open.call(this,opt);};})();
 (function(){var f=document.getElementById('exp-file');if(f)f.addEventListener('change',function(){doExpenseImport(this.files);});})();
+/* ═════════ v3.9.34 Expense summary / report ═════════
+   - 水電依區域（工廠／外籍宿舍／本地宿舍）拆開，工廠電費獨立醒目
+   - Telegram：總額 → 水電分區 → 重大費用 Top → 其他明細一行一筆 → 分類小計
+   - 報表：中／英／柬／三語，可列印存 PDF 或下載 Excel */
+var EXP_AREA_DEFS=[
+  {k:'factory',re:/factory|工廠|工厂|រោងចក្រ/,icon:'🏭',zh:'工廠',en:'Factory',km:'រោងចក្រ'},
+  {k:'expat',re:/expat|foreign|外籍/,icon:'🏠',zh:'外籍宿舍',en:'Expat staff house',km:'ផ្ទះបុគ្គលិកបរទេស'},
+  {k:'local',re:/local|本地/,icon:'🏘️',zh:'本地宿舍',en:'Local staff house',km:'ផ្ទះបុគ្គលិកក្នុងស្រុក'}
+];
+function expAreaOf(r){var s=lower([r.item,r.dept,r.location].join(' '));for(var i=0;i<EXP_AREA_DEFS.length;i++)if(EXP_AREA_DEFS[i].re.test(s))return EXP_AREA_DEFS[i];var t=text(r.item||r.dept||'')||'—';return{k:'x:'+lower(t),icon:'📍',zh:t,en:t,km:t};}
+function expAreaLabel(a,L){return expenseTgLang(a.zh,a.en,a.km,L);}
+function expUnitLabel(u){u=text(u);if(/^kw/i.test(u))return'kWh';if(/^m3|m³|cbm/i.test(u))return'm³';return u;}
+function expUtilBreak(rows,prev,cat){
+  var map={},order=[];
+  function add(list,isPrev){(list||[]).forEach(function(r){ensureExpenseCategory(r,r._source);if(r.expenseCategory!==cat)return;var a=expAreaOf(r),g=map[a.k];if(!g){g=map[a.k]={area:a,amount:0,prev:0,cons:0,prevCons:0,hasCons:false,unit:'',count:0};order.push(a.k);}if(isPrev){g.prev+=value(r);g.prevCons+=num(r.consumption);}else{g.amount+=value(r);g.count++;if(r.consumption!==undefined&&r.consumption!==null&&String(r.consumption)!==''){g.cons+=num(r.consumption);g.hasCons=true;}if(!g.unit)g.unit=expUnitLabel(r.consUnit);}});}
+  add(rows,false);add(prev,true);
+  var fixed=EXP_AREA_DEFS.map(function(d){return d.k;});
+  var list=order.map(function(k){return map[k];}).filter(function(g){return g.count>0||g.prev>0;});
+  list.sort(function(a,b){var ia=fixed.indexOf(a.area.k),ib=fixed.indexOf(b.area.k);if(ia<0)ia=99;if(ib<0)ib=99;return ia-ib||b.amount-a.amount;});
+  var tot={amount:0,prev:0,count:0};list.forEach(function(g){tot.amount+=g.amount;tot.prev+=g.prev;tot.count+=g.count;});
+  return{list:list,total:tot};
+}
+function expPct(a,b){if(!b)return a?null:0;return(a-b)/Math.abs(b)*100;}
+function expTrend(a,b,hasPrev){if(!hasPrev)return'';var p=expPct(a,b);if(p===null)return'🆕';var s=(p>0?'+':p<0?'−':'')+Math.abs(p).toFixed(1)+'%';return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+s;}
+function expReportData(rows,prev,hasPrev){
+  rows=(rows||[]).slice();prev=prev||[];rows.forEach(function(r){ensureExpenseCategory(r,r._source);});prev.forEach(function(r){ensureExpenseCategory(r,r._source);});
+  var isU=function(r){return r.expenseCategory==='electricity'||r.expenseCategory==='water';};
+  var nonUtil=rows.filter(function(r){return!isU(r);}).sort(function(a,b){return value(b)-value(a);});
+  var cats={},pcats={};rows.forEach(function(r){var c=r.expenseCategory;if(!cats[c])cats[c]={cat:c,amount:0,count:0,prev:0};cats[c].amount+=value(r);cats[c].count++;});
+  prev.forEach(function(r){var c=r.expenseCategory;pcats[c]=(pcats[c]||0)+value(r);if(cats[c])cats[c].prev=pcats[c];});
+  var catList=Object.keys(cats).map(function(k){return cats[k];}).sort(function(a,b){return b.amount-a.amount;});
+  var src={};rows.forEach(function(r){var k=r._source||'legacy';if(!src[k])src[k]={amount:0,count:0};src[k].amount+=value(r);src[k].count++;});
+  return{rows:rows,prev:prev,hasPrev:!!hasPrev,total:sumRows(rows),prevTotal:sumRows(prev),elec:expUtilBreak(rows,prev,'electricity'),water:expUtilBreak(rows,prev,'water'),nonUtil:nonUtil,nonUtilTotal:sumRows(nonUtil),cats:catList,sources:src};
+}
+function expShortDate(d){d=String(d||'');return/^\d{4}-\d{2}-\d{2}/.test(d)?d.slice(5,10):d||'—';}
+function expItemName(r){var s=text(r.item||r.purpose||r.equipment||'—');if(r._repairLayout&&r.equipment&&lower(r.equipment)!==lower(s))s+=' · '+text(r.equipment);return s;}
+function expQtyText(r){var q=num(r.qty||r.quantity);return q&&q!==1?' ×'+(Math.round(q*100)/100)+(text(r.unit)?' '+text(r.unit):''):'';}
+
+function expenseTelegramText(s){
+  var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]);
+  var rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
+  var hasPrev=s.period!=='ALL',prevKey=hasPrev?GA.shiftPeriod(s.period,s.ptype,-1):'';
+  var prev=hasPrev?arr.filter(function(r){return GA.inPeriod(r.date,prevKey,s.ptype);}):[];
+  var mode=window.EXP_TG_SUMMARY_MODE||'key',L=s.lang||'zh',T=function(zh,en,km){return expenseTgLang(zh,en,km,L);};
+  var D=expReportData(rows,prev,hasPrev),line='━━━━━━━━━━━━━━',out=[];
+  var scopeText=s.scope==='all'?T('三類整合（維修＋採購＋一般）','All sources (Repair + Purchasing + General)','ប្រភពទាំងបី (ជួសជុល + ទិញ + ទូទៅ)'):expSourceText(s.scope,L);
+  out.push('💰 '+T('費用摘要','Expense Summary','សង្ខេបចំណាយ')+'｜'+(s.period==='ALL'?T('全部期間','All periods','គ្រប់រយៈពេល'):s.period));
+  out.push('🧾 '+T('範圍','Scope','វិសាលភាព')+'：'+scopeText);
+  out.push(line);
+  out.push('💵 '+T('本期總額','Total','សរុប')+'：'+money(D.total)+'（'+rows.length+' '+T('筆','rows','កំណត់ត្រា')+'）');
+  if(hasPrev)out.push('↔️ '+T('上期','Previous','មុន')+' '+prevKey+'：'+money(D.prevTotal)+(D.prevTotal||D.total?' → '+expTrend(D.total,D.prevTotal,true):''));
+  function utilBlock(u,icon,name){
+    if(!u.list.length)return;
+    out.push(line);
+    out.push(icon+' '+name+'：'+money(u.total.amount)+(hasPrev?'  '+expTrend(u.total.amount,u.total.prev,true):''));
+    u.list.forEach(function(g){
+      var cons=g.hasCons&&g.cons?' · '+Math.round(g.cons).toLocaleString('en-US')+(g.unit?' '+g.unit:''):'';
+      out.push('• '+g.area.icon+' '+expAreaLabel(g.area,L)+'：'+money(g.amount)+cons+(hasPrev?'  '+expTrend(g.amount,g.prev,true):''));
+    });
+  }
+  utilBlock(D.elec,'⚡',T('電費','Electricity','អគ្គិសនី'));
+  utilBlock(D.water,'🚰',T('水費','Water','ទឹក'));
+  if(!D.elec.list.length&&!D.water.list.length&&(s.scope==='repair'||s.scope==='purchase'||s.scope==='legacy'))out.push('ℹ️ '+T('電費／水費在「一般費用」；選「三類整合」可看工廠與宿舍電費','Electricity / water are in General Expense — choose "All sources" to see Factory & staff-house power','អគ្គិសនី / ទឹក នៅក្នុងចំណាយទូទៅ — ជ្រើស «ប្រភពទាំងបី»'));
+  var majorN=mode==='large'?12:5,major=D.nonUtil.filter(function(r){return value(r)>0;}).slice(0,majorN);
+  if(major.length){
+    out.push(line);
+    out.push('🔥 '+T('重大費用','Major expenses','ចំណាយធំៗ')+' Top '+major.length+(D.elec.list.length||D.water.list.length?' '+T('（不含水電）','(excl. utilities)','(មិនរាប់ទឹកភ្លើង)'):''));
+    major.forEach(function(r,i){out.push((i+1)+') '+money(value(r))+'｜'+expenseTgTrim(expItemName(r),38)+expQtyText(r)+'｜'+expenseTgCatLabel(r.expenseCategory,L==='all3'?'both':L)+'｜'+expShortDate(r.date));});
+  }
+  var rest=D.nonUtil.slice(major.length),listN=mode==='all'?rest.length:mode==='large'?0:15,shown=rest.slice(0,listN);
+  if(shown.length){
+    out.push(line);
+    out.push('📋 '+T('其他明細','Other items','ធាតុផ្សេងទៀត')+'（'+shown.length+'/'+rest.length+'）');
+    shown.forEach(function(r){out.push('• '+expShortDate(r.date)+' '+expenseTgTrim(expItemName(r),34)+expQtyText(r)+' — '+money(value(r)));});
+  }
+  if(rest.length>shown.length){var hid=rest.slice(shown.length);out.push('… '+T('另 '+hid.length+' 筆，合計 ','+'+hid.length+' more, total ','+'+hid.length+' ទៀត សរុប ')+money(sumRows(hid)));}
+  if(D.cats.length){
+    out.push(line);
+    out.push('🗂️ '+T('分類小計','By category','តាមប្រភេទ'));
+    D.cats.slice(0,8).forEach(function(c){var pct=D.total?Math.round(c.amount/D.total*100):0;out.push('• '+expenseTgCatLabel(c.cat,L==='all3'?'both':L)+'：'+money(c.amount)+'（'+pct+'%）');});
+    if(D.cats.length>8)out.push('• … +'+(D.cats.length-8));
+  }
+  if(!rows.length)out.push(T('（本期無資料）','(No data for this period)','(គ្មានទិន្នន័យ)'));
+  var q=expQuality(rows,prev);
+  out.push(line);
+  out.push('🔎 '+T('資料檢查','Data check','ពិនិត្យទិន្នន័យ')+'：'+(q.duplicate?'⚠️ '+T('疑似重複 ','Possible duplicates ','អាចស្ទួន ')+q.duplicate:'✅ OK'));
+  out.push('🔗 '+EXP_DASH_URL);
+  return out.join('\n');
+}
+
+/* Telegram modal: open on the period shown on the page, with clearer content options */
+expTelegram=function(){window.EXP_TG_SUMMARY_MODE='key';var st=currentState();GA.telegram.open({module:'expense',canApprove:false,ptype:st.type,period:st.key,scopes:[{v:'all',zh:'三類整合',en:'All three sources',km:'ប្រភពទាំងបី'},{v:'repair',zh:'其他維修',en:'Other Repair',km:'ជួសជុលផ្សេងៗ'},{v:'purchase',zh:'採購記錄',en:'Purchasing',km:'កំណត់ត្រាទិញ'},{v:'general',zh:'一般費用',en:'General Expense',km:'ចំណាយទូទៅ'},{v:'legacy',zh:'手動／歷史',en:'Manual / Historical',km:'ដោយដៃ / ប្រវត្តិ'}],periods:function(type){return expPeriodKeys(type);},summary:function(s){return expenseTelegramText(s);}});enhanceExpenseTelegramModal();
+  setTimeout(function(){var sel=document.querySelector('#exp-tg-summary-mode');if(!sel)return;var o=sel.options;if(o[0])o[0].textContent=expMsgText('重點：水電分區＋重大費用＋明細列表','Key: utilities by area + major expenses + item list','សំខាន់៖ ទឹកភ្លើងតាមតំបន់ + ចំណាយធំ + បញ្ជី',GA.lang);if(o[1])o[1].textContent=expMsgText('只看重大費用 Top 12','Major expenses only (Top 12)','ចំណាយធំៗ Top 12',GA.lang);if(o[2])o[2].textContent=expMsgText('全部明細（一行一筆）','All items (one line each)','ធាតុទាំងអស់ (មួយបន្ទាត់)',GA.lang);},40);
+};
+
+/* ── In-page summary: utilities by area ── */
+function expUtilAreaHtml(D){
+  var L=GA.lang||'zh',keys=[],map={};
+  [['e',D.elec],['w',D.water]].forEach(function(p){p[1].list.forEach(function(g){if(!map[g.area.k]){map[g.area.k]={area:g.area};keys.push(g.area.k);}map[g.area.k][p[0]]=g;});});
+  if(!keys.length)return'';
+  var fixed=EXP_AREA_DEFS.map(function(d){return d.k;});keys.sort(function(a,b){var ia=fixed.indexOf(a),ib=fixed.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib);});
+  function cell(g){if(!g)return'<td class="r">—</td><td class="r">—</td><td class="r">—</td>';var cons=g.hasCons&&g.cons?Math.round(g.cons).toLocaleString('en-US')+' '+esc(g.unit||''):'—';return'<td class="r"><b>'+money(g.amount)+'</b></td><td class="r">'+cons+'</td><td class="r">'+(D.hasPrev?esc(money(g.prev))+'<br><small>'+esc(expTrend(g.amount,g.prev,true))+'</small>':'—')+'</td>';}
+  var H=function(zh,en,km){return esc(expMsgText(zh,en,km,L));};
+  var body=keys.map(function(k){var m=map[k],f=k==='factory';return'<tr class="'+(f?'exp-area-factory':'')+'"><td>'+m.area.icon+' <b>'+esc(expenseTgLang(m.area.zh,m.area.en,m.area.km,L))+'</b></td>'+cell(m.e)+cell(m.w)+'</tr>';}).join('');
+  var tot='<tr class="exp-area-total"><td>'+H('合計','Total','សរុប')+'</td><td class="r"><b>'+money(D.elec.total.amount)+'</b></td><td></td><td class="r">'+(D.hasPrev?money(D.elec.total.prev)+'<br><small>'+esc(expTrend(D.elec.total.amount,D.elec.total.prev,true))+'</small>':'—')+'</td><td class="r"><b>'+money(D.water.total.amount)+'</b></td><td></td><td class="r">'+(D.hasPrev?money(D.water.total.prev)+'<br><small>'+esc(expTrend(D.water.total.amount,D.water.total.prev,true))+'</small>':'—')+'</td></tr>';
+  return'<div class="exp-sec"><div class="exp-sec-t">⚡🚰 '+H('水電分區（工廠／宿舍）','Utilities by area (Factory / staff houses)','ទឹកភ្លើងតាមតំបន់ (រោងចក្រ / ផ្ទះបុគ្គលិក)')+'<span class="sp">'+H('🟢 持平或下降　🟡 +5–15%　🔴 >+15%','🟢 flat/down　🟡 +5–15%　🔴 >+15%','🟢 ថេរ/ចុះ　🟡 +5–15%　🔴 >+15%')+'</span></div><div class="exp-table-wrap"><table class="exp-table exp-area-table"><thead><tr><th rowspan="2">'+H('區域','Area','តំបន់')+'</th><th colspan="3" class="c">⚡ '+H('電費','Electricity','អគ្គិសនី')+'</th><th colspan="3" class="c">🚰 '+H('水費','Water','ទឹក')+'</th></tr><tr><th class="r">'+H('本期','This period','រយៈពេលនេះ')+'</th><th class="r">'+H('用量','Usage','ការប្រើប្រាស់')+'</th><th class="r">'+H('上期／變化','Prev / change','មុន / ប្រែប្រួល')+'</th><th class="r">'+H('本期','This period','រយៈពេលនេះ')+'</th><th class="r">'+H('用量','Usage','ការប្រើប្រាស់')+'</th><th class="r">'+H('上期／變化','Prev / change','មុន / ប្រែប្រួល')+'</th></tr></thead><tbody>'+body+tot+'</tbody></table></div></div>';
+}
+function expFactoryCard(D){var f=null;D.elec.list.forEach(function(g){if(g.area.k==='factory')f=g;});if(!f)return'';var L=GA.lang;return'<div class="exp-card" style="background:#fff3c4;border-color:#f59e0b"><div class="lbl">🏭 '+esc(expMsgText('工廠電費','Factory electricity','អគ្គិសនីរោងចក្រ',L))+'</div><div class="val">'+money(f.amount)+'</div><div class="sub">'+(f.hasCons&&f.cons?Math.round(f.cons).toLocaleString('en-US')+' '+esc(f.unit||'')+' · ':'')+esc(D.hasPrev?expTrend(f.amount,f.prev,true):'')+'</div></div>';}
+renderSummary=function(){
+  var st=currentState(),rows=allSourceRows().filter(inCurrent),hasPrev=st.key!=='ALL',prev=hasPrev?previousRows('summary'):[],D=expReportData(rows,prev,hasPrev),L=GA.lang;
+  var major=D.nonUtil.slice(0,20);
+  document.getElementById('exp-view').innerHTML=actionBar()+
+    '<div class="exp-sec"><div class="exp-sec-t">📊 '+esc(GA.T('expSummary'))+'<span class="sp">'+esc(GA.periodLabel(st.key,st.type))+' <button class="ga-btn primary" style="margin-left:8px" onclick="openExpenseReport()">📄 '+esc(expMsgText('產生報表','Generate report','បង្កើតរបាយការណ៍',L))+'</button></span></div><div class="exp-grid">'+card(GA.T('expTotalAll'),money(D.total),rows.length+' '+GA.T('expRows')+(hasPrev?' · '+expTrend(D.total,D.prevTotal,true):''))+expFactoryCard(D)+expenseUtilityCards(rows)+sourceCards()+'</div></div>'+
+    expUtilAreaHtml(D)+
+    '<div class="exp-sec"><div class="exp-sec-t">🔥 '+esc(expMsgText('重大費用（不含水電）','Major expenses (excl. utilities)','ចំណាយធំៗ (មិនរាប់ទឹកភ្លើង)',L))+'<span class="sp">'+esc(expMsgText('依金額排序 · 前 20 筆','Sorted by amount · top 20','តម្រៀបតាមចំនួន · ២០ ដំបូង',L))+'</span></div>'+compactExpenseTable(major,{limit:20})+'</div>'+
+    '<div class="exp-sec"><div class="exp-sec-t">📚 '+esc(expMsgText('分類與來源摘要','Category & Source Summary','សង្ខេបប្រភេទ និងប្រភព',L))+'</div><div class="exp-split"><div>'+expenseCategorySummary(rows)+'</div><div>'+expSourceSummaryHtml(rows)+'</div></div></div>'+
+    '<div class="exp-sec"><div class="exp-sec-t">↔️ '+esc(GA.T('expCompare'))+'</div>'+compareHtml(rows,prev)+'</div>'+
+    '<div class="exp-sec"><div class="exp-sec-t">🔎 '+esc(GA.T('expAnalysis'))+'</div>'+expQualityHtml(rows,prev)+'</div>';
+};
+(function(){var _ab=actionBar;actionBar=function(){var h=_ab.apply(this,arguments);return h.replace('<button class="ga-btn" onclick="render()">','<button class="ga-btn" onclick="openExpenseReport()">📄 '+esc(expMsgText('報表','Report','របាយការណ៍',GA.lang))+'</button><button class="ga-btn" onclick="render()">');};})();
+
+/* ── Report generator (zh / en / km / trilingual) ── */
+function openExpenseReport(){
+  var L=GA.lang||'zh',st=currentState(),ov=document.createElement('div');ov.className='ga-ov on';
+  var opt=function(v,t,on){return'<option value="'+v+'"'+(on?' selected':'')+'>'+esc(t)+'</option>';};
+  ov.innerHTML='<div class="ga-modal" style="max-width:460px"><div class="ga-modal-h"><b>📄 '+esc(expMsgText('費用報表','Expense report','របាយការណ៍ចំណាយ',L))+'</b><span class="ga-modal-sub">'+esc(GA.periodLabel(st.key,st.type))+'</span><button class="ga-x" data-close>&times;</button></div><div class="ga-modal-b">'+
+    '<div class="ga-fld"><label>'+esc(expMsgText('語言','Language','ភាសា',L))+'</label><select id="rp-lang">'+opt('zh','中文',L==='zh')+opt('en','English',L==='en')+opt('km','ខ្មែរ',L==='km')+opt('all3','中文 / English / ខ្មែរ',false)+'</select></div>'+
+    '<div class="ga-fld"><label>'+esc(expMsgText('範圍','Scope','វិសាលភាព',L))+'</label><select id="rp-scope">'+opt('all',expMsgText('三類整合','All three sources','ប្រភពទាំងបី',L),true)+opt('repair',expSourceText('repair',L))+opt('purchase',expSourceText('purchase',L))+opt('general',expSourceText('general',L))+'</select></div>'+
+    '<div class="exp-note">'+esc(expMsgText('期間依頁面上方「日／週／月／年」選擇。列印視窗可另存成 PDF。','Period follows the Day / Week / Month / Year selector on the page. Use the print window to save as PDF.','រយៈពេលតាមជម្រើសខាងលើ។ អាចរក្សាទុកជា PDF ពីផ្ទាំងបោះពុម្ព។',L))+'</div>'+
+    '<div class="exp-actions" style="margin-top:10px"><button class="ga-btn primary" id="rp-print">🖨️ '+esc(expMsgText('開啟／列印（PDF）','Open / Print (PDF)','បើក / បោះពុម្ព (PDF)',L))+'</button><button class="ga-btn" id="rp-xlsx">📊 Excel</button></div></div></div>';
+  document.body.appendChild(ov);
+  var close=function(){ov.remove();};ov.querySelectorAll('[data-close]').forEach(function(b){b.onclick=close;});ov.onclick=function(e){if(e.target===ov)close();};
+  var get=function(){return{lang:ov.querySelector('#rp-lang').value,scope:ov.querySelector('#rp-scope').value,ptype:st.type,period:st.key};};
+  ov.querySelector('#rp-print').onclick=function(){expenseReportOpen(get());};
+  ov.querySelector('#rp-xlsx').onclick=function(){expenseReportXlsx(get());};
+}
+function expReportRowsFor(o){var arr=o.scope==='all'?allSourceRows():(EXP3[o.scope]||[]),hasPrev=o.period!=='ALL',pk=hasPrev?GA.shiftPeriod(o.period,o.ptype,-1):'';return{rows:arr.filter(function(r){return GA.inPeriod(r.date,o.period,o.ptype);}),prev:hasPrev?arr.filter(function(r){return GA.inPeriod(r.date,pk,o.ptype);}):[],hasPrev:hasPrev,prevKey:pk};}
+function expRT(L){return function(zh,en,km){if(L==='all3')return zh+' · '+en+' · '+km;return expenseTgLang(zh,en,km,L);};}
+function expenseReportHtml(o){
+  var R=expReportRowsFor(o),D=expReportData(R.rows,R.prev,R.hasPrev),L=o.lang,T=expRT(L),e=esc,CL=L==='all3'?'both':L;
+  var scopeText=o.scope==='all'?T('三類整合','All three sources','ប្រភពទាំងបី'):expSourceText(o.scope,CL);
+  var periodText=o.period==='ALL'?T('全部期間','All periods','គ្រប់រយៈពេល'):o.period;
+  var trend=function(a,b){return D.hasPrev?expTrend(a,b,true):'—';};
+  var kpi=function(l,v,s){return'<div class="k"><div class="kl">'+l+'</div><div class="kv">'+v+'</div><div class="ks">'+(s||'')+'</div></div>';};
+  var fac=null;D.elec.list.forEach(function(g){if(g.area.k==='factory')fac=g;});
+  var h='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expense Report '+e(periodText)+'</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"><style>'+
+  'body{font-family:"Noto Sans TC","Noto Sans Khmer",system-ui,-apple-system,"Segoe UI",sans-serif;color:#0f172a;margin:0;background:#eef2f7}.pg{max-width:980px;margin:16px auto;background:#fff;padding:28px 32px;border-radius:10px;box-shadow:0 2px 12px rgba(15,23,42,.08)}'+
+  'h1{font-size:22px;margin:0}h2{font-size:15px;margin:22px 0 8px;padding-bottom:5px;border-bottom:2px solid #0f172a}.meta{color:#64748b;font-size:12px;margin-top:4px}'+
+  '.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.k{border:1px solid #cbd5e1;border-radius:8px;padding:10px}.k.f{background:#fff3c4;border-color:#f59e0b}.kl{font-size:11px;color:#64748b;font-weight:700}.kv{font-size:20px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}.ks{font-size:11px;color:#64748b;margin-top:2px}'+
+  'table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f1f5f9;text-align:left;padding:7px 8px;border-bottom:2px solid #cbd5e1;font-size:11px}td{padding:6px 8px;border-bottom:1px solid #e8edf3;vertical-align:top}.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}tr.fa td{background:#fff8d6;font-weight:700}tr.tt td{font-weight:800;border-top:2px solid #0f172a}'+
+  '.bar{display:inline-block;height:8px;background:#0369a1;border-radius:4px;vertical-align:middle}.tb{max-width:980px;margin:12px auto 0;display:flex;gap:8px;justify-content:flex-end;padding:0 16px}.tb button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #0369a1;background:#0369a1;color:#fff;cursor:pointer}.note{font-size:11px;color:#64748b;margin-top:18px}'+
+  '@media(max-width:700px){.pg{padding:16px;margin:8px}.kg{grid-template-columns:repeat(2,1fr)}table{font-size:11px}}@media print{body{background:#fff}.tb{display:none}.pg{box-shadow:none;margin:0;max-width:none;padding:0}h2{break-after:avoid}tr{break-inside:avoid}@page{size:A4;margin:14mm}}'+
+  '</style></head><body><div class="tb"><button onclick="window.print()">🖨️ '+e(T('列印／存 PDF','Print / Save PDF','បោះពុម្ព / PDF'))+'</button></div><div class="pg">'+
+  '<h1>💰 '+e(T('費用報表','Expense Report','របាយការណ៍ចំណាយ'))+' — '+e(periodText)+'</h1><div class="meta">AC-GA-EXP · '+e(T('範圍','Scope','វិសាលភាព'))+': '+e(scopeText)+' · '+e(T('產生時間','Generated','បង្កើតនៅ'))+': '+e(GA.ymd(new Date())+' '+new Date().toTimeString().slice(0,5))+(D.hasPrev?' · '+e(T('比較期間','Compared with','ប្រៀបធៀបជាមួយ'))+': '+e(R.prevKey):'')+'</div>'+
+  '<div class="kg">'+kpi(e(T('本期總額','Total','សរុប')),money(D.total),R.rows.length+' '+e(T('筆','rows','កំណត់ត្រា'))+' · '+e(trend(D.total,D.prevTotal)))+
+    '<div class="k f"><div class="kl">🏭 '+e(T('工廠電費','Factory electricity','អគ្គិសនីរោងចក្រ'))+'</div><div class="kv">'+(fac?money(fac.amount):'—')+'</div><div class="ks">'+(fac?(fac.hasCons&&fac.cons?Math.round(fac.cons).toLocaleString('en-US')+' '+e(fac.unit)+' · ':'')+e(trend(fac.amount,fac.prev)):'')+'</div></div>'+
+    kpi('⚡ '+e(T('電費合計','Electricity total','អគ្គិសនីសរុប')),money(D.elec.total.amount),e(trend(D.elec.total.amount,D.elec.total.prev)))+
+    kpi('🚰 '+e(T('水費合計','Water total','ទឹកសរុប')),money(D.water.total.amount),e(trend(D.water.total.amount,D.water.total.prev)))+'</div>';
+  if(D.elec.list.length||D.water.list.length){
+    h+='<h2>⚡🚰 '+e(T('水電分區','Utilities by area','ទឹកភ្លើងតាមតំបន់'))+'</h2><table><thead><tr><th>'+e(T('類別','Type','ប្រភេទ'))+'</th><th>'+e(T('區域','Area','តំបន់'))+'</th><th class="r">'+e(T('本期','This period','រយៈពេលនេះ'))+'</th><th class="r">'+e(T('用量','Usage','ការប្រើប្រាស់'))+'</th><th class="r">'+e(T('上期','Previous','មុន'))+'</th><th class="r">'+e(T('變化','Change','ប្រែប្រួល'))+'</th></tr></thead><tbody>';
+    [['⚡ '+T('電費','Electricity','អគ្គិសនី'),D.elec],['🚰 '+T('水費','Water','ទឹក'),D.water]].forEach(function(p){if(!p[1].list.length)return;p[1].list.forEach(function(g,i){h+='<tr class="'+(g.area.k==='factory'&&p[1]===D.elec?'fa':'')+'"><td>'+(i?'':e(p[0]))+'</td><td>'+g.area.icon+' '+e(expRT(L)(g.area.zh,g.area.en,g.area.km))+'</td><td class="r">'+money(g.amount)+'</td><td class="r">'+(g.hasCons&&g.cons?Math.round(g.cons).toLocaleString('en-US')+' '+e(g.unit):'—')+'</td><td class="r">'+(D.hasPrev?money(g.prev):'—')+'</td><td class="r">'+e(trend(g.amount,g.prev))+'</td></tr>';});h+='<tr class="tt"><td></td><td>'+e(T('小計','Subtotal','សរុបរង'))+'</td><td class="r">'+money(p[1].total.amount)+'</td><td></td><td class="r">'+(D.hasPrev?money(p[1].total.prev):'—')+'</td><td class="r">'+e(trend(p[1].total.amount,p[1].total.prev))+'</td></tr>';});
+    h+='</tbody></table>';
+  }
+  var major=D.nonUtil.filter(function(r){return value(r)>0;}).slice(0,10);
+  if(major.length){h+='<h2>🔥 '+e(T('重大費用 Top 10（不含水電）','Major expenses Top 10 (excl. utilities)','ចំណាយធំៗ Top 10 (មិនរាប់ទឹកភ្លើង)'))+'</h2><table><thead><tr><th>#</th><th>'+e(T('日期','Date','កាលបរិច្ឆេទ'))+'</th><th>'+e(T('項目','Item','ធាតុ'))+'</th><th>'+e(T('分類','Category','ប្រភេទ'))+'</th><th>'+e(T('供應商／用途','Supplier / purpose','អ្នកផ្គត់ផ្គង់ / គោលបំណង'))+'</th><th class="r">'+e(T('金額','Amount','ចំនួន'))+'</th></tr></thead><tbody>'+major.map(function(r,i){return'<tr><td>'+(i+1)+'</td><td>'+e(r.date||'')+'</td><td>'+e(expItemName(r)+expQtyText(r))+'</td><td>'+e(expenseTgCatLabel(r.expenseCategory,CL))+'</td><td>'+e(text(r.supplier||r.purpose||''))+'</td><td class="r"><b>'+money(value(r))+'</b></td></tr>';}).join('')+'</tbody></table>';}
+  if(D.cats.length){var mx=D.cats[0].amount||1;h+='<h2>🗂️ '+e(T('分類小計','By category','តាមប្រភេទ'))+'</h2><table><thead><tr><th>'+e(T('分類','Category','ប្រភេទ'))+'</th><th class="r">'+e(T('筆數','Rows','កំណត់ត្រា'))+'</th><th class="r">'+e(T('金額','Amount','ចំនួន'))+'</th><th class="r">%</th><th style="width:22%"></th><th class="r">'+e(T('上期','Previous','មុន'))+'</th><th class="r">'+e(T('變化','Change','ប្រែប្រួល'))+'</th></tr></thead><tbody>'+D.cats.map(function(c){return'<tr><td>'+e(expenseTgCatLabel(c.cat,CL))+'</td><td class="r">'+c.count+'</td><td class="r">'+money(c.amount)+'</td><td class="r">'+(D.total?Math.round(c.amount/D.total*100):0)+'%</td><td><span class="bar" style="width:'+Math.max(2,Math.round(c.amount/mx*100))+'%"></span></td><td class="r">'+(D.hasPrev?money(c.prev):'—')+'</td><td class="r">'+e(trend(c.amount,c.prev))+'</td></tr>';}).join('')+'<tr class="tt"><td>'+e(T('合計','Total','សរុប'))+'</td><td class="r">'+R.rows.length+'</td><td class="r">'+money(D.total)+'</td><td class="r">100%</td><td></td><td class="r">'+(D.hasPrev?money(D.prevTotal):'—')+'</td><td class="r">'+e(trend(D.total,D.prevTotal))+'</td></tr></tbody></table>';}
+  var rest=D.nonUtil.slice(major.length);
+  if(rest.length){h+='<h2>📋 '+e(T('其他明細','Other items','ធាតុផ្សេងទៀត'))+'（'+rest.length+'）</h2><table><thead><tr><th>'+e(T('日期','Date','កាលបរិច្ឆេទ'))+'</th><th>'+e(T('項目','Item','ធាតុ'))+'</th><th>'+e(T('分類','Category','ប្រភេទ'))+'</th><th>'+e(T('來源','Source','ប្រភព'))+'</th><th class="r">'+e(T('金額','Amount','ចំនួន'))+'</th></tr></thead><tbody>'+rest.map(function(r){return'<tr><td>'+e(r.date||'')+'</td><td>'+e(expItemName(r)+expQtyText(r))+'</td><td>'+e(expenseTgCatLabel(r.expenseCategory,CL))+'</td><td>'+e(expSourceText(r._source||'legacy',CL))+'</td><td class="r">'+money(value(r))+'</td></tr>';}).join('')+'</tbody></table>';}
+  if(!R.rows.length)h+='<p>'+e(T('本期無資料','No data for this period','គ្មានទិន្នន័យ'))+'</p>';
+  h+='<div class="note">'+e(T('變化燈號：🟢 持平或下降　🟡 增加 5–15%　🔴 增加超過 15%。資料來源：AC-GA-EXP 費用中心。','Change lights: 🟢 flat or down · 🟡 up 5–15% · 🔴 up more than 15%. Source: AC-GA-EXP Expense Center.','ពន្លឺ៖ 🟢 ថេរ ឬចុះ · 🟡 កើន 5–15% · 🔴 កើនលើស 15%។ ប្រភព៖ AC-GA-EXP'))+'</div></div></body></html>';
+  return h;
+}
+function expenseReportOpen(o){var html=expenseReportHtml(o),w=null;try{w=window.open('','_blank');}catch(e){}if(w&&w.document){w.document.open();w.document.write(html);w.document.close();return true;}var blob=new Blob([html],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='AC_GA_EXP_Expense_Report_'+o.period+'_'+o.lang+'.html';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);return false;}
+function expenseReportXlsx(o){
+  var R=expReportRowsFor(o),D=expReportData(R.rows,R.prev,R.hasPrev),T=expRT(o.lang),CL=o.lang==='all3'?'both':o.lang,r2=function(v){return Math.round(v*100)/100;},pct=function(a,b){var p=expPct(a,b);return D.hasPrev&&p!==null?r2(p)/100:'';};
+  var S=[[T('費用報表','Expense Report','របាយការណ៍ចំណាយ'),o.period],[T('範圍','Scope','វិសាលភាព'),o.scope==='all'?T('三類整合','All three sources','ប្រភពទាំងបី'):expSourceText(o.scope,CL)],[T('比較期間','Compared with','ប្រៀបធៀបជាមួយ'),R.prevKey||'—'],[],[T('項目','Item','ធាតុ'),T('本期','This period','រយៈពេលនេះ'),T('上期','Previous','មុន'),T('變化 %','Change %','ប្រែប្រួល %')],[T('本期總額','Total','សរុប'),r2(D.total),r2(D.prevTotal),pct(D.total,D.prevTotal)]];
+  [[T('電費','Electricity','អគ្គិសនី'),D.elec],[T('水費','Water','ទឹក'),D.water]].forEach(function(p){if(!p[1].list.length)return;S.push([p[0],r2(p[1].total.amount),r2(p[1].total.prev),pct(p[1].total.amount,p[1].total.prev)]);p[1].list.forEach(function(g){S.push(['   '+T(g.area.zh,g.area.en,g.area.km)+(g.hasCons&&g.cons?' ('+Math.round(g.cons)+' '+g.unit+')':''),r2(g.amount),r2(g.prev),pct(g.amount,g.prev)]);});});
+  S.push([]);S.push([T('分類','Category','ប្រភេទ'),T('本期','This period','រយៈពេលនេះ'),T('上期','Previous','មុន'),T('變化 %','Change %','ប្រែប្រួល %'),T('筆數','Rows','កំណត់ត្រា')]);D.cats.forEach(function(c){S.push([expenseTgCatLabel(c.cat,CL),r2(c.amount),r2(c.prev),pct(c.amount,c.prev),c.count]);});
+  var I=[[T('日期','Date','កាលបរិច្ឆេទ'),T('項目','Item','ធាតុ'),T('分類','Category','ប្រភេទ'),T('區域','Area','តំបន់'),T('數量','Qty','បរិមាណ'),T('單位','Unit','ឯកតា'),T('金額','Amount','ចំនួន'),T('供應商','Supplier','អ្នកផ្គត់ផ្គង់'),T('用途','Purpose','គោលបំណង'),T('來源','Source','ប្រភព')]];
+  D.rows.slice().sort(function(a,b){return value(b)-value(a);}).forEach(function(r){var u=r.expenseCategory==='electricity'||r.expenseCategory==='water',a=u?expAreaOf(r):null;I.push([r.date||'',expItemName(r),expenseTgCatLabel(r.expenseCategory,CL),a?T(a.zh,a.en,a.km):'',num(r.qty||r.quantity)||'',text(r.unit||r.consUnit||''),r2(value(r)),text(r.supplier||''),text(r.purpose||''),expSourceText(r._source||'legacy',CL)]);});
+  var wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(S),ws2=XLSX.utils.aoa_to_sheet(I);ws1['!cols']=[{wch:38},{wch:14},{wch:14},{wch:12},{wch:8}];ws2['!cols']=[{wch:11},{wch:40},{wch:22},{wch:18},{wch:7},{wch:7},{wch:12},{wch:22},{wch:26},{wch:16}];
+  Object.keys(ws1).forEach(function(k){var c=ws1[k];if(k[0]==='!'||!c||c.t!=='n')return;c.z=/^D\d/.test(k)?'0.0%':/^E\d/.test(k)?'0':'#,##0.00';});
+  XLSX.utils.book_append_sheet(wb,ws1,'Summary');XLSX.utils.book_append_sheet(wb,ws2,'Items');XLSX.writeFile(wb,'AC_GA_EXP_Expense_Report_'+o.period+'_'+o.lang+'.xlsx');
+}
+
 </script>
 <script src="shared/ga-expense-persistence.js?v=3.9.23"></script>
 <script>
