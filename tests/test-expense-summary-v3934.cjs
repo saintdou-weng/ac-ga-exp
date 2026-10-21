@@ -36,6 +36,11 @@ const assert=require('assert');const F=require('./ga-browser-fixtures.cjs');
  assert(saved&&/Expense_Report_2026-06_en\.xlsx/.test(saved.name)&&saved.wb.SheetNames.join()==='Summary,Items');
  const sum=w.XLSX.utils.sheet_to_json(saved.wb.Sheets.Summary,{header:1});assert(sum.some(r=>/Factory \(43061 kWh\)/.test(r[0])&&r[1]===4306.13&&r[2]===5001.02),'excel factory row');
  assert.equal(w.XLSX.utils.sheet_to_json(saved.wb.Sheets.Items,{header:1}).length,1+9-4+27,'items sheet rows');
+ // Khmer ទឹក (liquid) in item names is not a water bill
+ w.EXP3.purchase.push({date:'2026-06-05',item:'Floor Cleaner ទឹកជូតការ៉ូ',amount:7,_source:'purchase',recordId:'fc',expenseCategory:'water'},{date:'2026-06-05',item:'Water glue (កាវទឹក)',amount:4,_source:'purchase',recordId:'wg',expenseCategory:'water'});
+ w.ensureExpenseModel();assert.equal(w.EXP3.purchase.find(r=>r.recordId==='fc').expenseCategory,'cleaning');assert.notEqual(w.EXP3.purchase.find(r=>r.recordId==='wg').expenseCategory,'water');
+ assert(w.EXP3.general.filter(r=>r.sourceSheet==='Water').every(r=>r.expenseCategory==='water'),'water-sheet rows stay water');
+ assert.equal(w.expenseAutoCategory({item:'Water bill May',sourceSheet:'other'},'general'),'water');
  assert.deepEqual(p.errors,[],'no page errors');
  console.log('PASS expense summary v3.9.34');process.exit(0);
 })().catch(e=>{console.error(e);process.exit(1);});
