@@ -9,8 +9,8 @@
 <title>AC-GA-EXP · Expense Center 費用中心</title>
 <script src="shared/xlsx.full.min.js?v=0.18.5-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'"></script>
 <script src="shared/chart.umd.min.js?v=4.4.1-local-20260824" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'"></script>
-<link rel="stylesheet" href="shared/ga.css?v=3.9.26" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.26'">
-<script src="shared/ga-core.js?v=3.9.30"></script>
+<link rel="stylesheet" href="shared/ga.css?v=3.9.35" onerror="this.onerror=null;this.href='https://saintdou-weng.github.io/ac-ga-exp/shared/ga.css?v=3.9.35'">
+<script src="shared/ga-core.js?v=3.9.35"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
 <script src="shared/ga-import.js?v=3.9.26"></script>
@@ -206,11 +206,12 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.30"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.35"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
   .exp-tab{border:0;background:transparent;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;color:var(--ga-txt2);cursor:pointer;font-family:inherit;white-space:nowrap}
+  .exp-nav>.exp-tab{flex:0 0 auto}
   .exp-tab.on{background:var(--ga-sky);color:#fff}.exp-tab:not(.on):hover{background:var(--ga-sky-l);color:var(--ga-sky)}
   .exp-sec{background:#fff;border:1px solid var(--ga-line);border-radius:12px;padding:14px;margin-bottom:11px;box-shadow:var(--ga-sh)}
   .exp-sec-t{font-size:13px;font-weight:800;color:var(--ga-txt2);margin-bottom:11px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
@@ -252,6 +253,15 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
   .exp-dup-box{margin:8px 0;padding:8px 10px;border:1px solid #f5c76b;border-radius:7px;background:#fff8e6;color:#8a5a00;font-size:11px;line-height:1.45}
   @media(max-width:680px){.exp-split{grid-template-columns:1fr}.exp-table.compact{min-width:690px}.exp-table.compact th,.exp-table.compact td{padding:4px 5px}.exp-cat-select{width:125px;max-width:125px}.exp-modal-grid{grid-template-columns:1fr}.exp-modal-grid .full{grid-column:1}}
 
+  /* v3.9.35 trend / report */
+  .exp-trend-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border:1px solid var(--ga-line);border-radius:10px;padding:7px 10px;margin-bottom:11px;box-shadow:var(--ga-sh)}.exp-trend-bar .sp{margin-left:auto;font-size:11px;color:var(--ga-mut)}.exp-trend-bar select{border:1px solid var(--ga-line);border-radius:7px;padding:5px 9px;font-size:12px;font-family:inherit;background:#fff}
+  .exp-trend-seg>button{flex:0 0 auto}
+  .exp-trend-table{min-width:900px}.exp-trend-table td.r,.exp-trend-table th.r{text-align:right;white-space:nowrap}.exp-trend-table td{font-family:var(--ga-mono)}.exp-trend-table td.k{color:#d97706;font-weight:800;white-space:nowrap}.exp-trend-table tbody tr{cursor:pointer}.exp-trend-table tbody tr:hover td{background:#f0f7ff}
+  .exp-trend-table td.tot{position:relative;min-width:120px}.exp-tbar{display:block;height:4px;border-radius:3px;background:#0369a1;opacity:.55;margin:3px 0 0 auto}.exp-trend-table td.el{background:#fffbea}.exp-trend-table td.wa{background:#f0f9ff}
+  .exp-rpt-audit{margin:8px 0;padding:9px 12px;border-radius:8px;font-size:12px;line-height:1.5;border-left:4px solid}.exp-rpt-audit.ok{background:#e8f5e9;border-color:#2e7d32;color:#1b5e20}.exp-rpt-audit.warn{background:#fff8e1;border-color:#f59e0b;color:#7a5200}.exp-rpt-audit.bad{background:#fdecea;border-color:#c62828;color:#8e1b1b}
+  .exp-rpt-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:10px 0}.exp-rpt-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:800;color:var(--ga-mut)}.exp-rpt-form .full{grid-column:1/-1}.exp-rpt-form select,.exp-rpt-form textarea{border:1px solid var(--ga-line);border-radius:7px;padding:7px 9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ga-txt);font-weight:600}
+  .exp-rpt-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.exp-rpt-k{background:#eef3f9;border-radius:9px;padding:11px 8px;text-align:center;display:flex;flex-direction:column;gap:3px}.exp-rpt-k b{font-family:var(--ga-mono);font-size:18px;color:#1f3864}.exp-rpt-k span{font-size:11px;color:var(--ga-txt2);font-weight:700}.exp-rpt-k em{font-style:normal;font-size:10px;color:var(--ga-mut)}
+  @media(max-width:680px){.exp-grid.k2{grid-template-columns:1fr 1fr;gap:7px}.exp-grid.k2 .exp-card{padding:9px}.exp-grid.k2 .exp-card .val{font-size:16px}.exp-rpt-form{grid-template-columns:1fr 1fr}.exp-rpt-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.exp-trend-bar .sp{display:none}}
 </style>
 </head>
 <body>
@@ -261,10 +271,12 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
   <div class="exp-note" id="exp-source-note"></div>
   <div class="exp-nav">
     <button class="exp-tab on" data-p="summary" onclick="expTab('summary')">📊 <span data-t="expSummary">整合總覽</span></button>
+    <button class="exp-tab" data-p="trend" onclick="expTab('trend')">📆 <span class="exp-tab-l" data-zh="月年趨勢" data-en="Month / Year" data-km="ខែ / ឆ្នាំ">月年趨勢</span></button>
     <button class="exp-tab" data-p="repair" onclick="expTab('repair')">🔧 <span data-t="expRepair">其他維修費用</span></button>
     <button class="exp-tab" data-p="purchase" onclick="expTab('purchase')">📋 <span data-t="expPurchase">採購記錄</span></button>
     <button class="exp-tab" data-p="general" onclick="expTab('general')">💰 <span data-t="expGeneral">一般費用</span></button>
     <button class="exp-tab" data-p="legacy" onclick="expTab('legacy')">🗂️ <span data-t="expLegacy">手動／歷史</span></button>
+    <button class="exp-tab" data-p="report" onclick="expTab('report')">📝 <span class="exp-tab-l" data-zh="報告生成" data-en="Report" data-km="របាយការណ៍">報告生成</span></button>
   </div>
   <div id="exp-view"><div class="exp-sec">⏳ 正在讀取本機資料 / Loading saved data…</div></div>
 </div>
@@ -377,7 +389,7 @@ function expenseLocalSavedLabel(){
 }
 function restoreExpenseUI(){
   var u=loadExpenseUI();
-  if(u.tab&&/^(summary|repair|purchase|general|legacy)$/.test(u.tab))activeTab=u.tab;
+  if(u.tab&&/^(summary|trend|repair|purchase|general|legacy|report)$/.test(u.tab))activeTab=u.tab;
   if(pc&&u.type&&u.key){pc.set(u.type,u.key);return;}
   /* First visit on a phone: if current month is empty but local cache already
      contains historical data, open the latest available month automatically.
@@ -388,7 +400,7 @@ function restoreExpenseUI(){
   }
 }
 function loadData(){
-  var ui0=loadExpenseUI();if(ui0.tab&&/^(summary|repair|purchase|general|legacy)$/.test(ui0.tab))activeTab=ui0.tab;
+  var ui0=loadExpenseUI();if(ui0.tab&&/^(summary|trend|repair|purchase|general|legacy|report)$/.test(ui0.tab))activeTab=ui0.tab;
   try{CATMETA=JSON.parse(localStorage.getItem(LS_CAT))||null;}catch(e){CATMETA=null;}
   if(!CATMETA)CATMETA=JSON.parse(JSON.stringify((window.EXP_SEED&&EXP_SEED.categories)||{}));
   try{var t=JSON.parse(localStorage.getItem(LS_TXN));if(Array.isArray(t)){txns=t;var hadTxns=true;}}catch(e){}
@@ -1002,6 +1014,167 @@ function expenseReportXlsx(o){
   XLSX.utils.book_append_sheet(wb,ws1,'Summary');XLSX.utils.book_append_sheet(wb,ws2,'Items');XLSX.writeFile(wb,'AC_GA_EXP_Expense_Report_'+o.period+'_'+o.lang+'.xlsx');
 }
 
+/* ═════════ v3.9.35 sewing-style views ═════════
+   - 📆 月年趨勢：月報／年報一列一期（不列明細、不用逐月切換），點期間進整合總覽
+   - 年模式下各來源分頁先顯示「每月小計」，明細收合
+   - 📝 報告生成：同 sewing 週報，產生 Word（中＋英 或 英＋柬），另可匯出 Excel */
+function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return km;if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both'||lang==='zh-en')return zh+' / '+en;if(lang==='en-km')return en+' / '+km;return zh;}
+function expL(zh,en,km){return expMsgText(zh,en,km,GA.lang);}
+function expBuckets(rows){var b={count:0,total:0,elec:0,fac:0,staff:0,kwh:0,water:0,repair:0,purchase:0,general:0};(rows||[]).forEach(function(r){ensureExpenseCategory(r,r._source);var v=value(r);b.count++;b.total+=v;if(r.expenseCategory==='electricity'){b.elec+=v;var a=expAreaOf(r);if(a.k==='factory'){b.fac+=v;b.kwh+=num(r.consumption);}else if(a.k==='expat'||a.k==='local')b.staff+=v;}else if(r.expenseCategory==='water')b.water+=v;else if(r._source==='repair')b.repair+=v;else if(r._source==='purchase')b.purchase+=v;else b.general+=v;});return b;}
+function expScopeRows(scope){return scope==='legacy'?txns.map(function(r){var x=Object.assign({},r);x._source='legacy';return x;}):scope&&scope!=='all'?(EXP3[scope]||[]):allSourceRows();}
+function expGroupBy(rows,type){var g={};(rows||[]).forEach(function(r){var k=GA.periodKey(r.date,type);if(!k)return;(g[k]=g[k]||[]).push(r);});return g;}
+function expPctTxt(a,b){if(!b)return a?'🆕':'—';var p=(a-b)/Math.abs(b)*100;return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+(p>0?'+':p<0?'−':'')+Math.abs(p).toFixed(1)+'%';}
+function expMoney0(v){return v?money(v):'—';}
+
+/* ── 📆 月年趨勢 ── */
+window.EXP_TREND={type:'month',scope:'all'};
+function expTrendData(type,scope){var g=expGroupBy(expScopeRows(scope),type),keys=Object.keys(g).sort().reverse();return keys.map(function(k){var b=expBuckets(g[k]),pk=GA.shiftPeriod(k,type,-1);b.key=k;b.prev=g[pk]?expBuckets(g[pk]).total:0;b.hasPrev=!!g[pk];return b;});}
+function renderTrend(){
+  var T=EXP_TREND,data=expTrendData(T.type,T.scope),max=data.reduce(function(m,b){return Math.max(m,b.total);},0)||1,L=GA.lang;
+  var seg='<div class="ga-pc-seg exp-trend-seg">'+[['month',expL('月報','Monthly','ប្រចាំខែ')],['year',expL('年報','Yearly','ប្រចាំឆ្នាំ')]].map(function(x){return'<button class="ga-pc-t'+(T.type===x[0]?' on':'')+'" onclick="EXP_TREND.type=\''+x[0]+'\';renderTrend()">'+esc(x[1])+'</button>';}).join('')+'</div>';
+  var scopeSel='<select class="exp-trend-scope" onchange="EXP_TREND.scope=this.value;renderTrend()">'+[['all',expL('三類整合','All three sources','ប្រភពទាំងបី')],['repair',expSourceText('repair',L)],['purchase',expSourceText('purchase',L)],['general',expSourceText('general',L)],['legacy',expSourceText('legacy',L)]].map(function(x){return'<option value="'+x[0]+'"'+(T.scope===x[0]?' selected':'')+'>'+esc(x[1])+'</option>';}).join('')+'</select>';
+  var kpi='';
+  if(data.length){
+    if(T.type==='month'){var last12=data.slice(0,12),s12=last12.reduce(function(a,b){return a+b.total;},0),top=last12.slice().sort(function(a,b){return b.total-a.total;})[0],lf=data.filter(function(b){return b.fac>0;})[0];
+      kpi=card(expL('最新月份','Latest month','ខែចុងក្រោយ')+' '+data[0].key,money(data[0].total),data[0].count+' '+GA.T('expRows')+(data[0].hasPrev?' · '+expPctTxt(data[0].total,data[0].prev):''))+card(expL('近 '+last12.length+' 個月合計','Last '+last12.length+' months','សរុប '+last12.length+' ខែ'),money(s12),expL('月平均 ','Avg / month ','មធ្យម/ខែ ')+money(s12/last12.length))+card(expL('最高月份','Highest month','ខែខ្ពស់បំផុត'),money(top.total),top.key)+(lf?'<div class="exp-card" style="background:#fff3c4;border-color:#f59e0b"><div class="lbl">🏭 '+esc(expL('工廠電費（最新有資料月）','Factory electricity (latest month with data)','អគ្គិសនីរោងចក្រ (ខែចុងក្រោយ)'))+'</div><div class="val">'+money(lf.fac)+'</div><div class="sub">'+lf.key+(lf.kwh?' · '+Math.round(lf.kwh).toLocaleString('en-US')+' kWh':'')+'</div></div>':'');}
+    else{var y0=data[0],y1=data[1];kpi=card(expL('最新年度','Latest year','ឆ្នាំចុងក្រោយ')+' '+y0.key,money(y0.total),y0.count+' '+GA.T('expRows'))+(y1?card(expL('前一年度','Previous year','ឆ្នាំមុន')+' '+y1.key,money(y1.total),expPctTxt(y0.total,y1.total)):'')+card(expL('電費（最新年度）','Electricity (latest year)','អគ្គិសនី (ឆ្នាំចុងក្រោយ)'),money(y0.elec),expL('工廠 ','Factory ','រោងចក្រ ')+money(y0.fac))+card(expL('年度數','Years','ចំនួនឆ្នាំ'),String(data.length),data[data.length-1].key+' – '+y0.key);}
+  }
+  var H=function(zh,en,km){return'<th class="r">'+esc(expL(zh,en,km))+'</th>';};
+  var rows=data.map(function(b){var w=Math.max(2,Math.round(b.total/max*100));return'<tr onclick="expOpenPeriod(\''+T.type+'\',\''+b.key+'\')" title="'+esc(expL('點選查看此期整合總覽','Open this period','បើករយៈពេលនេះ'))+'"><td class="k">'+esc(b.key)+'</td><td class="r">'+b.count+'</td><td class="r tot"><b>'+money(b.total)+'</b><i class="exp-tbar" style="width:'+w+'%"></i></td><td class="r">'+(b.hasPrev?expPctTxt(b.total,b.prev):'—')+'</td><td class="r el">'+expMoney0(b.elec)+'</td><td class="r el"><b>'+expMoney0(b.fac)+'</b></td><td class="r">'+(b.kwh?Math.round(b.kwh).toLocaleString('en-US'):'—')+'</td><td class="r el">'+expMoney0(b.staff)+'</td><td class="r wa">'+expMoney0(b.water)+'</td><td class="r">'+expMoney0(b.repair)+'</td><td class="r">'+expMoney0(b.purchase)+'</td><td class="r">'+expMoney0(b.general)+'</td></tr>';}).join('');
+  document.getElementById('exp-view').innerHTML='<div class="exp-trend-bar">'+seg+scopeSel+'<span class="sp">'+data.length+' '+esc(expL('個期間','periods','រយៈពេល'))+'</span><button class="ga-btn" onclick="expTrendXlsx()">⬇ '+esc(expL('匯出 Excel','Export Excel','នាំចេញ Excel'))+'</button></div>'+
+    (kpi?'<div class="exp-grid k2" style="margin-bottom:11px">'+kpi+'</div>':'')+
+    '<div class="exp-sec"><div class="exp-sec-t">📆 '+esc(T.type==='month'?expL('月別報表','Monthly report','របាយការណ៍ប្រចាំខែ'):expL('年度報表','Yearly report','របាយការណ៍ប្រចាំឆ្នាំ'))+'<span class="sp">'+esc(expL('點期間可看該期整合總覽','Tap a period to open its summary','ចុចរយៈពេលដើម្បីមើលសង្ខេប'))+'</span></div>'+
+    (data.length?'<div class="exp-table-wrap"><table class="exp-table exp-trend-table"><thead><tr><th>'+esc(expL('期間','Period','រយៈពេល'))+'</th>'+H('筆數','Rows','កំណត់ត្រា')+H('總額','Total','សរុប')+H('較前期','vs prev','ធៀបមុន')+H('⚡ 電費','⚡ Electricity','⚡ អគ្គិសនី')+H('🏭 工廠電','🏭 Factory','🏭 រោងចក្រ')+H('工廠 kWh','Factory kWh','kWh រោងចក្រ')+H('🏠 宿舍電','🏠 Staff houses','🏠 ផ្ទះបុគ្គលិក')+H('🚰 水費','🚰 Water','🚰 ទឹក')+H('🔧 維修','🔧 Repair','🔧 ជួសជុល')+H('📋 採購','📋 Purchasing','📋 ការទិញ')+H('💰 一般其他','💰 General (other)','💰 ទូទៅផ្សេងៗ')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>')+
+    '<div class="exp-note">'+esc(expL('總額＝電費＋水費＋維修＋採購＋一般其他。燈號：🟢 持平或下降　🟡 +5–15%　🔴 >+15%','Total = electricity + water + repair + purchasing + general (other). Lights: 🟢 flat/down · 🟡 +5–15% · 🔴 >+15%','សរុប = អគ្គិសនី + ទឹក + ជួសជុល + ការទិញ + ទូទៅ'))+'</div></div>';
+}
+function expOpenPeriod(type,key){activeTab='summary';window.expQuery='';if(pc)pc.set(type,key);saveExpenseUI();render();try{window.scrollTo(0,0);}catch(e){}}
+function expTrendXlsx(){var T=EXP_TREND,data=expTrendData(T.type,T.scope);var aoa=[['Period','Rows','Total','vs prev %','Electricity','Factory electricity','Factory kWh','Staff-house electricity','Water','Repair','Purchasing','General (other)']].concat(data.map(function(b){var r2=function(v){return Math.round(v*100)/100;};return[b.key,b.count,r2(b.total),b.hasPrev&&b.prev?Math.round((b.total-b.prev)/b.prev*1000)/1000:'',r2(b.elec),r2(b.fac),Math.round(b.kwh)||'',r2(b.staff),r2(b.water),r2(b.repair),r2(b.purchase),r2(b.general)];}));var ws=XLSX.utils.aoa_to_sheet(aoa),wb=XLSX.utils.book_new();ws['!cols']=[{wch:10},{wch:7}].concat(Array(10).fill({wch:13}));XLSX.utils.book_append_sheet(wb,ws,T.type==='month'?'Monthly':'Yearly');XLSX.writeFile(wb,'AC_GA_EXP_Expense_'+(T.type==='month'?'Monthly':'Yearly')+'_'+T.scope+'_'+GA.ymd(new Date())+'.xlsx');}
+
+/* ── 年模式：來源分頁先看每月小計，明細收合 ── */
+window.EXP_SHOW_YEAR_DETAIL=false;
+function expMonthBreakdownHtml(rows){var g=expGroupBy(rows,'month'),keys=Object.keys(g).sort(),prev=0,max=0;keys.forEach(function(k){max=Math.max(max,sumRows(g[k]));});if(!keys.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';
+  return'<div class="exp-table-wrap"><table class="exp-table exp-trend-table"><thead><tr><th>'+esc(expL('月份','Month','ខែ'))+'</th><th class="r">'+esc(expL('筆數','Rows','កំណត់ត្រា'))+'</th><th class="r">'+esc(expL('金額','Amount','ចំនួន'))+'</th><th class="r">'+esc(expL('較前月','vs prev month','ធៀបខែមុន'))+'</th></tr></thead><tbody>'+keys.map(function(k,i){var s=sumRows(g[k]),t='<tr onclick="expOpenMonth(\''+k+'\')"><td class="k">'+k+'</td><td class="r">'+g[k].length+'</td><td class="r tot"><b>'+money(s)+'</b><i class="exp-tbar" style="width:'+Math.max(2,Math.round(s/(max||1)*100))+'%"></i></td><td class="r">'+(i?expPctTxt(s,prev):'—')+'</td></tr>';prev=s;return t;}).reverse().join('')+'</tbody></table></div>';}
+function expOpenMonth(k){window.expQuery='';if(pc)pc.set('month',k);saveExpenseUI();render();}
+(function(){var _c=compactExpenseTable;compactExpenseTable=function(rows,opt){opt=opt||{};var st=currentState();if(opt.source&&!opt.limit&&st.type==='year'&&!window.expQuery&&!EXP_SHOW_YEAR_DETAIL&&(rows||[]).length>0){return'<div class="exp-sec-t" style="margin:6px 0">📆 '+esc(expL('本年每月小計（點月份看該月明細）','Monthly subtotals this year (tap a month for its details)','សរុបប្រចាំខែ (ចុចខែដើម្បីមើលលម្អិត)'))+'</div>'+expMonthBreakdownHtml(rows)+'<div style="margin-top:8px"><button class="ga-btn" onclick="EXP_SHOW_YEAR_DETAIL=true;render()">📄 '+esc(expL('顯示全年 '+rows.length+' 筆明細','Show all '+rows.length+' rows of the year','បង្ហាញទាំង '+rows.length+' កំណត់ត្រា'))+'</button></div>';}return _c.call(this,rows,opt);};})();
+
+/* ── tabs / render ── */
+(function(){var _r=render,sig='';render=function(){var st=currentState(),s=activeTab+'|'+st.type+'|'+st.key;if(s!==sig){EXP_SHOW_YEAR_DETAIL=false;sig=s;}
+  document.querySelectorAll('.exp-tab-l').forEach(function(e){e.textContent=e.getAttribute('data-'+(GA.lang==='en'?'en':GA.lang==='km'?'km':'zh'));});
+  var per=document.getElementById('exp-period');if(per)per.style.display=(activeTab==='trend'||activeTab==='report')?'none':'';
+  if(activeTab==='trend'||activeTab==='report'){document.querySelectorAll('.exp-tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-p')===activeTab);});return activeTab==='trend'?renderTrend():renderReportTab();}
+  return _r.apply(this,arguments);};})();
+function openExpenseReport(){var st=currentState();if(st.type==='month'||st.type==='year')EXP_RPT.type=st.type,EXP_RPT.key=st.key;activeTab='report';saveExpenseUI();render();try{window.scrollTo(0,0);}catch(e){}}
+
+/* ── 📝 報告生成 ── */
+window.EXP_RPT={type:'month',key:'',lang:'zh-en',scope:'all',notes:''};
+function expRptKeys(type){var g=expGroupBy(expScopeRows(EXP_RPT.scope),type);return Object.keys(g).sort().reverse();}
+function expRptCtx(){
+  var R=EXP_RPT,keys=expRptKeys(R.type);if(!R.key||keys.indexOf(R.key)<0)R.key=keys[0]||GA.currentPeriod(R.type);
+  var all=expScopeRows(R.scope),g=expGroupBy(all,R.type),pk=GA.shiftPeriod(R.key,R.type,-1),yk=R.type==='month'?GA.shiftPeriod(R.key,'month',-12):'';
+  var rows=g[R.key]||[],prev=g[pk]||[],yoy=yk&&g[yk]&&g[yk].length?g[yk]:null;
+  var trendKeys=Object.keys(g).sort().filter(function(k){return k<=R.key;}).slice(-6);
+  var D=expReportData(rows,prev,true),dates=all.map(function(r){return String(r.date||'');}).filter(Boolean).sort();
+  return{R:R,keys:keys,rows:rows,prev:prev,yoy:yoy,pk:pk,yk:yk,cur:expBuckets(rows),pb:expBuckets(prev),yb:yoy?expBuckets(yoy):null,D:D,trend:trendKeys.map(function(k){var b=expBuckets(g[k]);b.key=k;return b;}),allCount:all.length,first:dates[0]||'',last:dates[dates.length-1]||''};
+}
+function expRptAudit(c){var a=[],R=c.R;if(!c.rows.length)a.push(['bad',expL('本期沒有費用資料','No expense data in this period','គ្មានទិន្នន័យ')]);
+  if(c.rows.length&&!c.cur.elec&&(R.scope==='all'||R.scope==='general'))a.push(['warn',expL('本期沒有電費資料（一般費用原檔尚未含此期）','No electricity data for this period (General Expense file does not cover it yet)','មិនទាន់មានទិន្នន័យអគ្គិសនី')]);
+  var q=expQuality(c.rows,c.prev);if(q.duplicate)a.push(['warn',expL('疑似重複 '+q.duplicate+' 筆','Possible duplicates: '+q.duplicate,'អាចស្ទួន '+q.duplicate)]);
+  return a;}
+function expJudge(a,b,pair){if(!b&&!a)return{t:pair('—','—','—'),c:'808080'};if(!b)return{t:pair('新增','New','ថ្មី'),c:'2F5597'};var p=(a-b)/Math.abs(b)*100;if(p>15)return{t:pair('明顯增加','Significant increase','កើនខ្លាំង'),c:'C00000'};if(p>5)return{t:pair('略增','Slight increase','កើនបន្តិច'),c:'BF8F00'};if(p<-5)return{t:pair('下降','Decrease','ថយចុះ'),c:'548235'};return{t:pair('持平','Stable','ថេរ'),c:'548235'};}
+function expPctNum(a,b){if(!b)return a?'—':'0%';var p=(a-b)/Math.abs(b)*100;return(p>0?'+':'')+p.toFixed(1)+'%';}
+function expRptMetrics(c,pair){var m=[[pair('費用總額','Total expense','ចំណាយសរុប'),'total'],[pair('電費','Electricity','អគ្គិសនី'),'elec'],[pair('工廠電費','Factory electricity','អគ្គិសនីរោងចក្រ'),'fac'],[pair('宿舍電費','Staff-house electricity','អគ្គិសនីផ្ទះបុគ្គលិក'),'staff'],[pair('水費','Water','ទឹក'),'water'],[pair('維修','Repair','ជួសជុល'),'repair'],[pair('採購','Purchasing','ការទិញ'),'purchase'],[pair('一般其他','General (other)','ទូទៅផ្សេងៗ'),'general']];return m.map(function(x){return{label:x[0],k:x[1],cur:c.cur[x[1]],prev:c.pb[x[1]],yoy:c.yb?c.yb[x[1]]:null};});}
+function renderReportTab(){
+  var c=expRptCtx(),R=c.R,L=GA.lang,audit=expRptAudit(c),pairUI=function(zh,en,km){return expL(zh,en,km);};
+  var opt=function(v,t,on){return'<option value="'+esc(v)+'"'+(on?' selected':'')+'>'+esc(t)+'</option>';};
+  var mets=expRptMetrics(c,pairUI);
+  var tile=function(v,l,s){return'<div class="exp-rpt-k"><b>'+v+'</b><span>'+esc(l)+'</span>'+(s?'<em>'+esc(s)+'</em>':'')+'</div>';};
+  document.getElementById('exp-view').innerHTML='<div class="exp-sec"><div class="exp-sec-t">📝 '+esc(expL('行政中心費用報告','Admin Center Expense Report','របាយការណ៍ចំណាយ'))+'<span class="sp">Word · '+esc(expL('中＋英 / 英＋柬','zh+en / en+km','ចិន+អង់គ្លេស / អង់គ្លេស+ខ្មែរ'))+'</span></div>'+
+    '<div class="exp-note">'+esc(expL('資料來源：本系統 '+c.allCount.toLocaleString('en-US')+' 筆費用記錄，涵蓋 '+c.first+' 至 '+c.last+'。','Source: '+c.allCount.toLocaleString('en-US')+' expense records in this system, '+c.first+' to '+c.last+'.','ប្រភព៖ '+c.allCount+' កំណត់ត្រា '+c.first+' – '+c.last))+'</div>'+
+    '<div class="exp-rpt-audit '+(audit.some(function(a){return a[0]==='bad';})?'bad':audit.length?'warn':'ok')+'">'+(audit.length?audit.map(function(a){return'<div>'+(a[0]==='bad'?'⛔ ':'⚠️ ')+esc(a[1])+'</div>';}).join(''):'✓ '+esc(expL('資料檢核通過，可產生報告。','Data check passed; the report can be generated.','ពិនិត្យរួច អាចបង្កើតរបាយការណ៍')))+'</div>'+
+    '<div class="exp-rpt-form"><label>'+esc(expL('報告類型','Report type','ប្រភេទ'))+'<select onchange="EXP_RPT.type=this.value;EXP_RPT.key=\'\';renderReportTab()">'+opt('month',expL('月報','Monthly','ប្រចាំខែ'),R.type==='month')+opt('year',expL('年報','Yearly','ប្រចាំឆ្នាំ'),R.type==='year')+'</select></label>'+
+      '<label>'+esc(expL('選擇期間','Select period','ជ្រើសរយៈពេល'))+'<select onchange="EXP_RPT.key=this.value;renderReportTab()">'+c.keys.map(function(k){return opt(k,GA.periodLabel(k,R.type),k===R.key);}).join('')+'</select></label>'+
+      '<label>'+esc(expL('語言','Language','ភាសា'))+'<select onchange="EXP_RPT.lang=this.value">'+opt('zh-en','中文 + English',R.lang==='zh-en')+opt('en-km','English + ខ្មែរ',R.lang==='en-km')+'</select></label>'+
+      '<label>'+esc(expL('範圍','Scope','វិសាលភាព'))+'<select onchange="EXP_RPT.scope=this.value;EXP_RPT.key=\'\';renderReportTab()">'+opt('all',expL('三類整合','All three sources','ប្រភពទាំងបី'),R.scope==='all')+opt('repair',expSourceText('repair',L),R.scope==='repair')+opt('purchase',expSourceText('purchase',L),R.scope==='purchase')+opt('general',expSourceText('general',L),R.scope==='general')+'</select></label>'+
+      '<label class="full">'+esc(expL('補充說明（每行一則，會寫進管理摘要）','Notes (one per line, added to the summary)','កំណត់ចំណាំ (មួយបន្ទាត់មួយ)'))+'<textarea rows="2" oninput="EXP_RPT.notes=this.value">'+esc(R.notes||'')+'</textarea></label></div>'+
+    '<div class="exp-rpt-tiles">'+tile(money(c.cur.total),expL('本期費用','Total','សរុប'),expPctTxt(c.cur.total,c.pb.total))+tile(money(c.cur.fac),expL('🏭 工廠電費','🏭 Factory electricity','🏭 អគ្គិសនីរោងចក្រ'),c.cur.kwh?Math.round(c.cur.kwh).toLocaleString('en-US')+' kWh':'')+tile(money(c.cur.elec),expL('⚡ 電費','⚡ Electricity','⚡ អគ្គិសនី'),expPctTxt(c.cur.elec,c.pb.elec))+tile(money(c.cur.water),expL('🚰 水費','🚰 Water','🚰 ទឹក'),'')+tile(money(c.cur.repair),expL('🔧 維修','🔧 Repair','🔧 ជួសជុល'),'')+tile(money(c.cur.purchase+c.cur.general),expL('📋 採購＋一般','📋 Purchasing + general','📋 ការទិញ + ទូទៅ'),'')+'</div>'+
+    '<div class="exp-sec-t" style="margin-top:12px">📊 '+esc(expL('期間比較','Period comparison','ប្រៀបធៀបរយៈពេល'))+'</div><div class="exp-table-wrap"><table class="exp-table exp-trend-table"><thead><tr><th>'+esc(expL('指標','Metric','សូចនាករ'))+'</th><th class="r">'+esc(expL('本期','This period','រយៈពេលនេះ'))+'<br><small>'+esc(R.key)+'</small></th><th class="r">'+esc(expL('上期','Previous','មុន'))+'<br><small>'+esc(c.pk)+'</small></th><th class="r">'+esc(expL('變化','Change','ប្រែប្រួល'))+'</th>'+(c.yb?'<th class="r">'+esc(expL('去年同期','Same period last year','ឆ្នាំមុន'))+'<br><small>'+esc(c.yk)+'</small></th>':'')+'</tr></thead><tbody>'+mets.map(function(m){return'<tr><td>'+esc(m.label)+'</td><td class="r"><b>'+money(m.cur)+'</b></td><td class="r">'+money(m.prev)+'</td><td class="r">'+expPctTxt(m.cur,m.prev)+'</td>'+(c.yb?'<td class="r">'+money(m.yoy)+'</td>':'')+'</tr>';}).join('')+'</tbody></table></div>'+
+    '<div class="exp-actions" style="margin-top:12px"><button class="ga-btn primary" id="exp-word-btn" onclick="expWordExport()">📝 '+esc(expL('產生 Word 報告','Generate Word report','បង្កើតរបាយការណ៍ Word'))+'</button><button class="ga-btn" onclick="expenseReportXlsx({lang:EXP_RPT.lang,scope:EXP_RPT.scope,ptype:EXP_RPT.type,period:EXP_RPT.key})">📊 Excel</button><span id="exp-word-msg" class="exp-note" style="margin:0"></span></div></div>';
+}
+function expLoadDocx(){if(window.docx&&window.docx.Document)return Promise.resolve(window.docx);return new Promise(function(res,rej){var tried=0,srcs=['shared/docx.iife.js?v=8.5.0','https://saintdou-weng.github.io/ac-ga-exp/shared/docx.iife.js?v=8.5.0'];(function next(){if(tried>=srcs.length)return rej(new Error(expL('Word 程式庫載入失敗，請檢查網路','Could not load the Word library; check the connection','មិនអាចផ្ទុកកម្មវិធី Word')));var s=document.createElement('script');s.src=srcs[tried++];s.onload=function(){window.docx&&window.docx.Document?res(window.docx):next();};s.onerror=next;document.head.appendChild(s);})();});}
+function expWordDoc(docx,c){
+  var R=c.R,LG=R.lang,pair=function(zh,en,km){return LG==='en-km'?[en,km]:[zh,en];},one=function(zh,en,km){var p=pair(zh,en,km);return p[0]+' '+p[1];};
+  var NAVY='1F3864',GRAY='595959',LGRAY='F2F2F2',LYEL='FFF2CC',LBLUE='DEEAF6',LGREEN='E2EFDA',LRED='FBE4E4';
+  var FONT={ascii:'Arial',hAnsi:'Arial',eastAsia:'Microsoft JhengHei',cs:'Khmer UI'};
+  var T=function(t,o){o=o||{};return new docx.TextRun({text:String(t),font:FONT,size:o.size||19,bold:!!o.bold,italics:!!o.i,color:o.color||'000000'});};
+  var PP=function(r,o){o=o||{};return new docx.Paragraph({children:Array.isArray(r)?r:[r],alignment:o.align,spacing:{before:o.before===undefined?60:o.before,after:o.after===undefined?60:o.after,line:264}});};
+  var H=function(zh,en,km){var p=pair(zh,en,km);return new docx.Paragraph({children:[T(p[0],{bold:true,size:26,color:NAVY}),T('  '+p[1],{bold:true,size:20,color:NAVY,i:true})],spacing:{before:320,after:140},border:{bottom:{style:docx.BorderStyle.SINGLE,size:12,color:NAVY,space:4}}});};
+  var bi=function(zh,en,km,dot){var p=pair(zh,en,km),first=[];if(dot)first.push(T('● ',{color:dot,bold:true}));first.push(T(p[0]));return[PP(first,{after:20}),PP(T(p[1],{size:17,color:'3B3B3B',i:true}),{before:0,after:90})];};
+  var cl=function(t,o){o=o||{};return new docx.TableCell({width:{size:o.w,type:docx.WidthType.DXA},shading:o.fill?{type:docx.ShadingType.CLEAR,fill:o.fill,color:'auto'}:undefined,margins:{top:60,bottom:60,left:90,right:90},verticalAlign:docx.VerticalAlign.CENTER,children:String(t).split('\n').map(function(s,i){return new docx.Paragraph({children:[T(s,{bold:o.bold,color:o.color,size:o.size||(i?14:16),i:i>0&&!o.bold})],alignment:o.align,spacing:{before:20,after:20,line:252}});})});};
+  var tb=function(w,rows){var B={style:docx.BorderStyle.SINGLE,size:4,color:'BFBFBF'},I={style:docx.BorderStyle.SINGLE,size:3,color:'D9D9D9'};return new docx.Table({columnWidths:w,width:{size:w.reduce(function(a,b){return a+b;},0),type:docx.WidthType.DXA},borders:{top:B,bottom:B,left:B,right:B,insideHorizontal:I,insideVertical:I},rows:rows});};
+  var hr=function(w,l){return new docx.TableRow({tableHeader:true,children:l.map(function(x,i){return cl(x,{w:w[i],fill:NAVY,bold:true,color:'FFFFFF',align:docx.AlignmentType.CENTER});})});};
+  var dr=function(w,v,o){o=o||{};return new docx.TableRow({cantSplit:true,children:v.map(function(x,i){var co=o.colors&&o.colors[i];return cl(x,{w:w[i],fill:o.fill,bold:o.bold||(o.boldCols&&o.boldCols[i]),color:co,align:i===0&&!o.all?undefined:docx.AlignmentType.CENTER});})});};
+  var hd=function(zh,en,km){var p=pair(zh,en,km);return p[0]+'\n'+p[1];};
+  var body=[],add=function(){for(var i=0;i<arguments.length;i++){var x=arguments[i];if(Array.isArray(x))body.push.apply(body,x);else body.push(x);}};
+  var typeName=R.type==='year'?pair('年報','Annual Report','របាយការណ៍ប្រចាំឆ្នាំ'):pair('月報','Monthly Report','របាយការណ៍ប្រចាំខែ');
+  var scopeName=R.scope==='all'?pair('三類整合（維修＋採購＋一般費用）','All sources (repair + purchasing + general expense)','ប្រភពទាំងបី'):pair(expSourceText(R.scope,'zh'),expSourceText(R.scope,'en'),expSourceText(R.scope,'km'));
+  var title=pair('行政中心費用','Admin Center Expense','ចំណាយមជ្ឈមណ្ឌលរដ្ឋបាល');
+  add(PP(T('VANTAGE RIVER TEXTILES CO., LTD.　萬泰紡織有限公司',{bold:true,size:16,color:GRAY}),{align:docx.AlignmentType.CENTER,after:20}),
+    PP(T(title[0]+(LG==='en-km'?' ':'')+typeName[0],{bold:true,size:31,color:NAVY}),{align:docx.AlignmentType.CENTER,before:40,after:10}),
+    PP(T(title[1]+' '+typeName[1],{bold:true,size:19,color:NAVY,i:true}),{align:docx.AlignmentType.CENTER,after:30}),
+    PP(T(one('期間','Period','រយៈពេល')+' '+R.key+'　|　'+one('範圍','Scope','វិសាលភាព')+' '+scopeName[0]+(LG==='zh-en'?' / '+scopeName[1]:''),{size:16,color:GRAY}),{align:docx.AlignmentType.CENTER,after:140}));
+  var audit=expRptAudit(c);
+  if(audit.length)add(tb([9700],[new docx.TableRow({children:[new docx.TableCell({width:{size:9700,type:docx.WidthType.DXA},shading:{type:docx.ShadingType.CLEAR,fill:LYEL,color:'auto'},margins:{top:110,bottom:110,left:160,right:160},children:audit.map(function(a){return PP(T('⚠ '+a[1],{bold:true,size:17,color:'7F6000'}),{before:10,after:10});})})]})]));
+  /* 1. Executive summary */
+  var cu=c.cur,pb=c.pb,D=c.D,pc=function(a,b){return expPctNum(a,b);},j=function(a,b){return expJudge(a,b,pair).c;};
+  add(H('一、管理摘要','1. Executive Summary','១. សេចក្តីសង្ខេប'));
+  add(bi('本期費用合計 '+money(cu.total)+'（'+cu.count+' 筆），上期 '+money(pb.total)+'，變化 '+pc(cu.total,pb.total)+'。','Total expense '+money(cu.total)+' ('+cu.count+' records) vs '+money(pb.total)+' in the previous period ('+pc(cu.total,pb.total)+').','ចំណាយសរុប '+money(cu.total)+' ('+cu.count+' កំណត់ត្រា) ធៀបនឹង '+money(pb.total)+' ('+pc(cu.total,pb.total)+')។',j(cu.total,pb.total)));
+  if(cu.elec){var fs=cu.elec?Math.round(cu.fac/cu.elec*100):0;add(bi('電費 '+money(cu.elec)+'（'+pc(cu.elec,pb.elec)+'），其中工廠 '+money(cu.fac)+'，占電費 '+fs+'%'+(cu.kwh?'，用電 '+Math.round(cu.kwh).toLocaleString('en-US')+' kWh':'')+'（工廠 '+pc(cu.fac,pb.fac)+'）；宿舍 '+money(cu.staff)+'。','Electricity '+money(cu.elec)+' ('+pc(cu.elec,pb.elec)+'); Factory '+money(cu.fac)+' = '+fs+'% of electricity'+(cu.kwh?', '+Math.round(cu.kwh).toLocaleString('en-US')+' kWh':'')+' (Factory '+pc(cu.fac,pb.fac)+'); staff houses '+money(cu.staff)+'.','អគ្គិសនី '+money(cu.elec)+' ('+pc(cu.elec,pb.elec)+'); រោងចក្រ '+money(cu.fac)+' = '+fs+'%'+(cu.kwh?', '+Math.round(cu.kwh).toLocaleString('en-US')+' kWh':'')+'; ផ្ទះបុគ្គលិក '+money(cu.staff)+'។',j(cu.fac,pb.fac)));}
+  else if(R.scope==='all'||R.scope==='general')add(bi('本期尚無電費資料（一般費用原檔尚未包含此期），電費比較待資料補齊。','No electricity data for this period yet (the General Expense file does not cover it); comparison pending.','មិនទាន់មានទិន្នន័យអគ្គិសនីសម្រាប់រយៈពេលនេះ។','BF8F00'));
+  var cats=D.cats.filter(function(x){return x.cat!=='electricity'&&x.cat!=='water';});
+  if(cats.length){var c0=cats[0];add(bi('非水電最大分類：'+expenseCatDef(c0.cat).zh+' '+money(c0.amount)+'（'+(cu.total?Math.round(c0.amount/cu.total*100):0)+'%）。','Largest non-utility category: '+expenseCatDef(c0.cat).en+' '+money(c0.amount)+' ('+(cu.total?Math.round(c0.amount/cu.total*100):0)+'%).','ប្រភេទធំបំផុត៖ '+expenseCatDef(c0.cat).km+' '+money(c0.amount)+'។',null));}
+  var big=D.nonUtil.filter(function(r){return value(r)>0;})[0];if(big)add(bi('最大單筆：'+expItemName(big)+' '+money(value(big))+'（'+(big.date||'')+'，'+expenseCatDef(big.expenseCategory).zh+'）。','Largest single item: '+expItemName(big)+' '+money(value(big))+' ('+(big.date||'')+', '+expenseCatDef(big.expenseCategory).en+').','ធាតុធំបំផុត៖ '+expItemName(big)+' '+money(value(big))+'។',null));
+  var ups=D.cats.filter(function(x){return x.prev>0&&x.amount-x.prev>100&&(x.amount-x.prev)/x.prev>0.15;}).slice(0,3);
+  if(ups.length)add(bi('明顯增加：'+ups.map(function(x){return expenseCatDef(x.cat).zh+' '+pc(x.amount,x.prev);}).join('、')+'，建議確認原因。','Significant increases: '+ups.map(function(x){return expenseCatDef(x.cat).en+' '+pc(x.amount,x.prev);}).join(', ')+' — please confirm the reasons.','កើនខ្លាំង៖ '+ups.map(function(x){return expenseCatDef(x.cat).km+' '+pc(x.amount,x.prev);}).join(', ')+'។','C00000'));
+  String(R.notes||'').split(/\n+/).map(function(s){return s.trim();}).filter(Boolean).forEach(function(n){add(PP([T('● ',{color:NAVY,bold:true}),T(n)],{after:60}));});
+  /* 2. Period comparison */
+  add(H('二、期間比較','2. Period Comparison','២. ប្រៀបធៀបរយៈពេល'));
+  var mets=expRptMetrics(c,pair),hasY=!!c.yb,w=hasY?[2500,1500,1500,1100,1500,1600]:[2900,1700,1700,1300,2100];
+  var head=[hd('指標','Metric','សូចនាករ'),hd('本期 '+R.key,'This period','រយៈពេលនេះ'),hd('上期 '+c.pk,'Previous','មុន'),hd('變化','Change','ប្រែប្រួល')].concat(hasY?[hd('去年同期 '+c.yk,'Last year','ឆ្នាំមុន')]:[]).concat([hd('判讀','Reading','ការវិភាគ')]);
+  add(tb(w,[hr(w,head)].concat(mets.map(function(m,i){var jd=expJudge(m.cur,m.prev,pair),v=[m.label[0]+'\n'+m.label[1],money(m.cur),money(m.prev),expPctNum(m.cur,m.prev)].concat(hasY?[money(m.yoy)]:[]).concat([jd.t[0]+'\n'+jd.t[1]]);var cols={};cols[v.length-1]=jd.c;return dr(w,v,{fill:i===0?LBLUE:(m.k==='fac'?LYEL:undefined),bold:i===0,colors:cols});}))));
+  /* 3. Recent trend */
+  add(H('三、近期趨勢','3. Recent Trend','៣. និន្នាការថ្មីៗ'));
+  var w3=[1300,1400,1300,1300,1100,1100,1100,1100,1000];
+  add(tb(w3,[hr(w3,[hd('期間','Period','រយៈពេល'),hd('總額','Total','សរុប'),hd('電費','Electricity','អគ្គិសនី'),hd('工廠電','Factory','រោងចក្រ'),hd('kWh','Factory kWh','kWh'),hd('水費','Water','ទឹក'),hd('維修','Repair','ជួសជុល'),hd('採購','Purchasing','ការទិញ'),hd('一般其他','General','ទូទៅ')])].concat(c.trend.map(function(b){return dr(w3,[b.key,money(b.total),expMoney0(b.elec),expMoney0(b.fac),b.kwh?Math.round(b.kwh).toLocaleString('en-US'):'—',expMoney0(b.water),expMoney0(b.repair),expMoney0(b.purchase),expMoney0(b.general)],{fill:b.key===R.key?LBLUE:undefined,bold:b.key===R.key});}))));
+  /* 4. Utilities by area */
+  add(H('四、水電分區','4. Utilities by Area','៤. ទឹកភ្លើងតាមតំបន់'));
+  if(D.elec.list.length||D.water.list.length){var w4=[1400,2400,1500,1400,1400,1600];var ur=[];[[pair('電費','Electricity','អគ្គិសនី'),D.elec],[pair('水費','Water','ទឹក'),D.water]].forEach(function(p){p[1].list.forEach(function(g,i){var jd=expJudge(g.amount,g.prev,pair),ap=pair(g.area.zh,g.area.en,g.area.km);ur.push(dr(w4,[i?'':p[0][0]+'\n'+p[0][1],ap[0]+'\n'+ap[1],money(g.amount),g.hasCons&&g.cons?Math.round(g.cons).toLocaleString('en-US')+' '+g.unit:'—',money(g.prev),expPctNum(g.amount,g.prev)+'\n'+jd.t[0]],{fill:g.area.k==='factory'&&p[1]===D.elec?LYEL:undefined,bold:g.area.k==='factory'&&p[1]===D.elec,colors:{5:jd.c}}));});ur.push(dr(w4,['',one('小計','Subtotal','សរុបរង'),money(p[1].total.amount),'',money(p[1].total.prev),expPctNum(p[1].total.amount,p[1].total.prev)],{fill:LGRAY,bold:true}));});
+    add(tb(w4,[hr(w4,[hd('類別','Type','ប្រភេទ'),hd('區域','Area','តំបន់'),hd('本期','This period','រយៈពេលនេះ'),hd('用量','Usage','ការប្រើប្រាស់'),hd('上期','Previous','មុន'),hd('變化','Change','ប្រែប្រួល')])].concat(ur)));}
+  else add(bi('本期無水電資料。','No utility data for this period.','គ្មានទិន្នន័យទឹកភ្លើង។',null));
+  /* 5. Major expenses */
+  add(H('五、重大費用（不含水電）','5. Major Expenses (excl. utilities)','៥. ចំណាយធំៗ'));
+  var major=D.nonUtil.filter(function(r){return value(r)>0;}).slice(0,10),w5=[500,1300,3500,1900,1300,1200];
+  if(major.length)add(tb(w5,[hr(w5,['#',hd('日期','Date','កាលបរិច្ឆេទ'),hd('項目','Item','ធាតុ'),hd('分類','Category','ប្រភេទ'),hd('來源','Source','ប្រភព'),hd('金額','Amount','ចំនួន')])].concat(major.map(function(r,i){var cd=expenseCatDef(r.expenseCategory),cp=pair(cd.zh,cd.en,cd.km),sp=pair(expSourceText(r._source||'legacy','zh'),expSourceText(r._source||'legacy','en'),expSourceText(r._source||'legacy','km'));return dr(w5,[String(i+1),r.date||'',expItemName(r)+expQtyText(r),cp[0]+'\n'+cp[1],sp[0],money(value(r))],{boldCols:{5:true}});}))));
+  else add(bi('本期無重大費用。','No major expenses this period.','គ្មានចំណាយធំៗ។',null));
+  /* 6. Category */
+  add(H('六、分類小計','6. By Category','៦. តាមប្រភេទ'));
+  var w6=[2900,900,1600,900,1600,1800];
+  add(tb(w6,[hr(w6,[hd('分類','Category','ប្រភេទ'),hd('筆數','Rows','កំណត់ត្រា'),hd('金額','Amount','ចំនួន'),'%',hd('上期','Previous','មុន'),hd('判讀','Reading','ការវិភាគ')])].concat(D.cats.map(function(x){var cd=expenseCatDef(x.cat),cp=pair(cd.zh,cd.en,cd.km),jd=expJudge(x.amount,x.prev,pair);return dr(w6,[cp[0]+'\n'+cp[1],String(x.count),money(x.amount),(cu.total?Math.round(x.amount/cu.total*100):0)+'%',money(x.prev),expPctNum(x.amount,x.prev)+'\n'+jd.t[0]],{colors:{5:jd.c}});})).concat([dr(w6,[one('合計','Total','សរុប'),String(cu.count),money(cu.total),'100%',money(pb.total),expPctNum(cu.total,pb.total)],{fill:LGRAY,bold:true})])));
+  /* 7. Data basis */
+  add(H('七、資料依據與限制','7. Data Basis and Limitations','៧. មូលដ្ឋានទិន្នន័យ'));
+  add(bi('資料來源：AC-GA-EXP 費用中心，'+c.allCount.toLocaleString('en-US')+' 筆記錄（'+c.first+' 至 '+c.last+'），由原始 Excel（其他維修、採購記錄、一般費用）匯入並同步雲端。','Source: AC-GA-EXP Expense Center, '+c.allCount.toLocaleString('en-US')+' records ('+c.first+' to '+c.last+'), imported from the original Excel files (Other Repair, Purchasing Record, General Expense) and synced to the cloud.','ប្រភព៖ AC-GA-EXP '+c.allCount+' កំណត់ត្រា ('+c.first+' – '+c.last+')។',null));
+  add(bi('電費、水費以一般費用原檔的 Electric / Water 工作表為準，依 Factory、Expat staff house、Local staff house 分區；工廠電費為扣除業主分攤後的淨額。','Electricity and water follow the Electric / Water sheets of the General Expense file, split by Factory, Expat staff house and Local staff house; factory electricity is net of the owner share.','អគ្គិសនី និងទឹក យោងតាមសន្លឹក Electric / Water នៃឯកសារចំណាយទូទៅ។',null));
+  add(bi('「變化」以上期為基準；判讀：增加超過 15% 為明顯增加，5–15% 略增，±5% 內持平。本報告由系統產生，僅供參考。','"Change" is against the previous period; reading: >15% significant increase, 5–15% slight increase, within ±5% stable. System-generated, for reference only.','ការប្រែប្រួលធៀបនឹងរយៈពេលមុន។ របាយការណ៍នេះបង្កើតដោយប្រព័ន្ធ សម្រាប់ជាឯកសារយោង។',null));
+  var w7=[3233,3233,3234];add(PP(T(''),{before:200}),tb(w7,[hr(w7,[hd('製表','Prepared by','រៀបចំដោយ'),hd('審核','Reviewed by','ពិនិត្យដោយ'),hd('核准','Approved by','អនុម័តដោយ')]),dr(w7,['\n\n____________________','\n\n____________________','\n\n____________________'],{all:true})]));
+  var hdrTxt='VRT　'+title[0]+(LG==='en-km'?' ':'')+typeName[0]+'　'+R.key;
+  return new docx.Document({styles:{default:{document:{run:{font:FONT,size:19}}}},sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1000,bottom:1000,left:1080,right:1080,header:560,footer:560}}},
+    headers:{default:new docx.Header({children:[new docx.Paragraph({children:[T(hdrTxt,{size:15,color:GRAY})],alignment:docx.AlignmentType.RIGHT,border:{bottom:{style:docx.BorderStyle.SINGLE,size:4,color:'BFBFBF',space:4}},spacing:{after:100}})]})},
+    footers:{default:new docx.Footer({children:[new docx.Paragraph({alignment:docx.AlignmentType.CENTER,children:[T('Vantage River Textiles Co., Ltd.　Confidential　|　',{size:14,color:GRAY}),new docx.TextRun({children:[docx.PageNumber.CURRENT],font:FONT,size:14,color:GRAY}),T(' / ',{size:14,color:GRAY}),new docx.TextRun({children:[docx.PageNumber.TOTAL_PAGES],font:FONT,size:14,color:GRAY})]})]})},
+    children:body}]});
+}
+async function expWordExport(){var msg=document.getElementById('exp-word-msg'),btn=document.getElementById('exp-word-btn');var say=function(t){if(msg)msg.textContent=t;};
+  try{if(btn)btn.disabled=true;say(expL('產生中…','Generating…','កំពុងបង្កើត…'));var docx=await expLoadDocx(),c=expRptCtx();if(!c.rows.length)throw new Error(expL('本期沒有資料','No data in this period','គ្មានទិន្នន័យ'));var blob=await docx.Packer.toBlob(expWordDoc(docx,c));var name='VRT_Expense_'+(c.R.type==='year'?'Annual':'Monthly')+'_Report_'+c.R.key+'_'+c.R.lang+'.docx';window.EXP_LAST_WORD={name:name,size:blob.size};var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);say('✅ '+name);GA.toast('📝 '+name);}
+  catch(e){say('❌ '+(e.message||e));GA.toast('❌ '+(e.message||e),'err');}finally{if(btn)btn.disabled=false;}}
+
 </script>
 <script src="shared/ga-expense-persistence.js?v=3.9.23"></script>
 <script>
@@ -1009,7 +1182,7 @@ GA.boot({header:{sel:'#ga-header',icon:'💰',name:{zh:'Expense Center 費用中
 (function(){var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.title=GA.T('expManage');b.innerHTML='🗂️<span>'+GA.T('expManage')+'</span>';b.onclick=expDataPanel;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}})();
 EXP_DATA_READY=initExpensePersistence();
 EXP_DATA_READY.then(function(ok){
-pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){saveExpenseUI();render();}});restoreExpenseUI();GA.on('lang',function(){render();});saveExpenseUI();render();
+pc=GA.periodControl('#exp-period',{id:'expense3',type:'month',layout:'nav',dates:function(){return allRows().map(function(r){return r.date;});},onChange:function(){saveExpenseUI();render();}});restoreExpenseUI();GA.on('lang',function(){render();});saveExpenseUI();render();
 if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownload,push:expCloudUpload,canSync:function(){return EXP_STORAGE_READY&&!EXP_STORAGE_FAILED&&!EXP_IMPORT_BUSY&&!EXP_SAVE_COUNT&&!!GA.gasUrl();},startDelay:120,anchor:'#ga-cloud'});if(EXP_PENDING)scheduleExpenseAutoCloudSync('resume-pending');}
 });
 </script>
