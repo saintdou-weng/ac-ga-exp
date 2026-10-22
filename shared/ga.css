@@ -68,6 +68,10 @@ body{margin:0;background:var(--ga-bg);color:var(--ga-txt);
   font-size:12px;background:#fff;color:var(--ga-txt);font-family:inherit;outline:none;max-width:220px}
 .ga-pc-sel:focus,.ga-pc-date:focus{border-color:var(--ga-sky)}
 .ga-pc-lbl{font-family:var(--ga-mono);font-size:11px;color:var(--ga-mut);margin-left:auto;white-space:nowrap}
+/* v3.9.35 sewing-style period bar */
+.ga-pc.nav{gap:8px}.ga-pc.nav .ga-pc-go{display:flex;align-items:center;gap:6px;flex:1 1 260px;min-width:0}
+.ga-pc.nav .ga-pc-sel{flex:1 1 auto;min-width:0;max-width:260px;font-weight:700}
+.ga-pc.nav .ga-pc-seg>button,.ga-pc.nav .ga-pc-go>button{flex:0 0 auto}
 
 /* ═══ 卡片 / KPI ═══ */
 .ga-card{background:#fff;border:1px solid var(--ga-line);border-radius:12px;box-shadow:var(--ga-sh)}

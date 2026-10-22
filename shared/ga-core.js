@@ -639,6 +639,49 @@ GA.periodControl = function (sel, opt) {
     if (opts.indexOf(st.key) < 0) opts.unshift(st.key);
 
     var types = ['day', 'week', 'month', 'year'];
+    if (opt.layout === 'nav') {
+      /* v3.9.35 sewing-style bar: [日][週][月][年]  ◀ [期間下拉] ▶ 最新 — dropdown lists only periods with data */
+      host.innerHTML =
+        '<div class="ga-pc nav">' +
+          '<div class="ga-pc-seg">' + types.map(function (t) {
+            return '<button class="ga-pc-t' + (t === st.type ? ' on' : '') + '" data-type="' + t + '">' + GA.T(t) + '</button>';
+          }).join('') + '</div>' +
+          '<div class="ga-pc-go">' +
+            '<button class="ga-pc-nav" data-act="prev" title="' + GA.T('prev') + '">◀</button>' +
+            '<select class="ga-pc-sel">' + opts.map(function (k) {
+              return '<option value="' + k + '"' + (k === st.key ? ' selected' : '') + '>' + GA.periodLabel(k, st.type) + (keys.indexOf(k) < 0 ? ' · —' : '') + '</option>';
+            }).join('') + '</select>' +
+            '<button class="ga-pc-nav" data-act="next" title="' + GA.T('next') + '">▶</button>' +
+            '<button class="ga-pc-today" data-act="latest">' + (GA.lang === 'en' ? 'Latest' : GA.lang === 'km' ? 'ថ្មីបំផុត' : '最新') + '</button>' +
+          '</div>' +
+        '</div>';
+      host.querySelectorAll('[data-type]').forEach(function (b) {
+        b.onclick = function () {
+          var anchor = st.type === 'day' ? st.key
+            : st.type === 'week' ? (GA.weekRange(st.key) || {}).start
+            : st.type === 'month' ? st.key + '-01' : st.key + '-01-01';
+          st.type = b.getAttribute('data-type');
+          var k = GA.periodKey(anchor || GA.ymd(new Date()), st.type) || GA.currentPeriod(st.type), ks = availableKeys();
+          if (ks.length && ks.indexOf(k) < 0) { var near = ks.filter(function (x) { return x <= k; })[0]; k = near || ks[ks.length - 1]; }
+          st.key = k; fire();
+        };
+      });
+      /* ◀ ▶ step through periods that have data (keys are sorted newest first) */
+      var step = function (dir) {
+        var ks = availableKeys();
+        if (!ks.length) { st.key = GA.shiftPeriod(st.key, st.type, dir); return fire(); }
+        var older = ks.filter(function (x) { return x < st.key; }), newer = ks.filter(function (x) { return x > st.key; });
+        if (dir < 0 && older.length) st.key = older[0];
+        else if (dir > 0 && newer.length) st.key = newer[newer.length - 1];
+        else return;
+        fire();
+      };
+      host.querySelector('[data-act="prev"]').onclick = function () { step(-1); };
+      host.querySelector('[data-act="next"]').onclick = function () { step(1); };
+      host.querySelector('[data-act="latest"]').onclick = function () { var ks = availableKeys(); st.key = ks[0] || GA.currentPeriod(st.type); fire(); };
+      host.querySelector('.ga-pc-sel').onchange = function () { st.key = this.value; fire(); };
+      return;
+    }
     host.innerHTML =
       '<div class="ga-pc">' +
         '<button class="ga-pc-nav" data-act="prev" title="' + GA.T('prev') + '">◀</button>' +
