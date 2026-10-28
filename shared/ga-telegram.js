@@ -126,7 +126,7 @@ TG.open = function (opt) {
             '<select id="tg-lang">' +
               '<option value="zh">' + L3('繁體中文', 'Chinese', 'ភាសាចិន') + '</option>' +
               '<option value="en">English</option>' +
-              '<option value="km">ខ្មែរ</option>' +
+              '<option value="km">English + ខ្មែរ</option>' +
               '<option value="both" selected>' + GA.T('tgBoth') + L3(' 中／EN', ' (Chinese / English)', ' (ចិន / អង់គ្លេស)') + '</option>' +
               '<option value="all3">' + L3('中 / EN / ខ្មែរ', 'Chinese / English / Khmer', 'ចិន / អង់គ្លេស / ខ្មែរ') + '</option>' +
             '</select></div>' +
@@ -303,7 +303,8 @@ TG.langText = function (zh, en, km, lang) {
   km = km == null ? '' : String(km);
   if (L === 'zh') return zh;
   if (L === 'en') return en || zh;
-  if (L === 'km') return km || en || zh;
+  /* 2026-10-28 Paul：選柬文發摘要一律英柬雙語；中文／英文不變。 */
+  if (L === 'km') return (km && en && km !== en) ? en + ' / ' + km : (km || en || zh);
   if (L === 'all3') return [zh, en, km || en].filter(Boolean).join(' / ');
   return [zh, en].filter(Boolean).join(' / ');
 };
