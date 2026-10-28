@@ -14,7 +14,7 @@
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
 <script src="shared/ga-import.js?v=3.9.26"></script>
-<script src="shared/ga-telegram.js?v=3.9.26"></script>
+<script src="shared/ga-telegram.js?v=3.9.36km"></script>
 <script src="shared/ga-smart-sync.js?v=3.9.31"></script>
 <script src="shared/ga-auto-sync.js?v=3.9.25"></script>
 <script src="shared/ga-expense-store.js?v=3.9.26"></script>
@@ -206,7 +206,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.35"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=3.9.35"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=3.9.36km"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -691,7 +691,7 @@ renderLegacy=function(){var rows=rowsFor('legacy'),q=window.expQuery||'',cat=EXP
 writeXlsx=function(rows,name){if(!rows.length){GA.toast(GA.T('expNoData'),'err');return;}rows.forEach(function(r){ensureExpenseCategory(r,r._source);});var aoa=[['Source','Date','Management Category','Sheet','Item','Spec','Qty','Unit','Unit Price','Amount','Supplier','Department','Purpose','Inspector','Source File']].concat(rows.map(function(r){return[r._source||'legacy',r.date||'',expenseCatDef(r.expenseCategory).en,r.sourceSheet||'',r.item||'',r.spec||'',r.qty||'',r.unit||'',r.price||r.unitPrice||'',value(r),r.supplier||'',r.dept||'',r.purpose||'',r.inspector||'',r.sourceFile||''];}));var ws=XLSX.utils.aoa_to_sheet(aoa),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expense');XLSX.writeFile(wb,name);};
 
 /* Expense-specific Telegram compact table. Old shared modal is enhanced at runtime so standalone expense.html still works. */
-function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return km;if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both')return zh+' / '+en;return zh;}
+function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return (km&&en&&km!==en)?en+' / '+km:(km||en);if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both')return zh+' / '+en;return zh;}
 function expenseTgTrim(v,n){v=text(v);return v.length>n?v.slice(0,n-1)+'…':v;}
 function expenseTgCatLabel(v,lang){var d=expenseCatDef(v);return (d.icon?d.icon+' ':'')+expenseTgLang(d.zh,d.en,d.km,lang);}
 function expenseTelegramRows(rows,mode){var sorted=(rows||[]).slice().sort(function(a,b){return value(b)-value(a);});sorted.forEach(function(r){ensureExpenseCategory(r,r._source);});if(mode==='all')return sorted;if(mode==='large')return sorted.slice(0,12);var util=sorted.filter(function(r){return r.expenseCategory==='electricity'||r.expenseCategory==='water';}),other=sorted.filter(function(r){return r.expenseCategory!=='electricity'&&r.expenseCategory!=='water';}).slice(0,10),seen={},out=[];util.concat(other).forEach(function(r){var k=r.recordId||r._fp||expenseLogicalDuplicateKey(r);if(!seen[k]){seen[k]=1;out.push(r);}});return out.slice(0,18);}
@@ -1018,7 +1018,7 @@ function expenseReportXlsx(o){
    - 📆 月年趨勢：月報／年報一列一期（不列明細、不用逐月切換），點期間進整合總覽
    - 年模式下各來源分頁先顯示「每月小計」，明細收合
    - 📝 報告生成：同 sewing 週報，產生 Word（中＋英 或 英＋柬），另可匯出 Excel */
-function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return km;if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both'||lang==='zh-en')return zh+' / '+en;if(lang==='en-km')return en+' / '+km;return zh;}
+function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return (km&&en&&km!==en)?en+' / '+km:(km||en);if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both'||lang==='zh-en')return zh+' / '+en;if(lang==='en-km')return en+' / '+km;return zh;}
 function expL(zh,en,km){return expMsgText(zh,en,km,GA.lang);}
 function expBuckets(rows){var b={count:0,total:0,elec:0,fac:0,staff:0,kwh:0,water:0,repair:0,purchase:0,general:0};(rows||[]).forEach(function(r){ensureExpenseCategory(r,r._source);var v=value(r);b.count++;b.total+=v;if(r.expenseCategory==='electricity'){b.elec+=v;var a=expAreaOf(r);if(a.k==='factory'){b.fac+=v;b.kwh+=num(r.consumption);}else if(a.k==='expat'||a.k==='local')b.staff+=v;}else if(r.expenseCategory==='water')b.water+=v;else if(r._source==='repair')b.repair+=v;else if(r._source==='purchase')b.purchase+=v;else b.general+=v;});return b;}
 function expScopeRows(scope){return scope==='legacy'?txns.map(function(r){var x=Object.assign({},r);x._source='legacy';return x;}):scope&&scope!=='all'?(EXP3[scope]||[]):allSourceRows();}

@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm');
 const base='work/';
 const tg=fs.readFileSync(base+'shared/ga-telegram.js','utf8');
 for(const m of [
-  "<option value=\"km\">ខ្មែរ</option>",
+  "<option value=\"km\">English + ខ្មែរ</option>",
   "<option value=\"all3\">中 / EN / ខ្មែរ</option>",
   'TG.langText = function',
   'TG.periodLabel = function',
