@@ -124,7 +124,7 @@ window.fuelSummaryText=function(s){
     out.push(m.icon+' <b>'+t(m.zh,m.en,m.km)+'</b> · '+n0(C.liters)+' L'+(c==='driver'&&C.avg?' · '+t('平均','avg','មធ្យម')+' '+C.avg.toFixed(2)+' km/L':'')+(c==='generator'&&C.avg?' · '+t('平均','avg','មធ្យម')+' '+C.avg.toFixed(1)+' L/hr':''));
     const wl=Math.max(...C.list.map(g=>(n0(g.liters)+'L').length)),hasRate=C.list.some(g=>g.rate),wr=hasRate?Math.max(...C.list.map(g=>g.rate?g.rate.toFixed(c==='driver'?2:1).length:1)):0;
     C.list.forEach(g=>{const rate=g.rate?g.rate.toFixed(c==='driver'?2:1):'—';
-      out.push(TG.mono((n0(g.liters)+'L').padStart(wl)+(hasRate?rate.padStart(wr+1):''))+' '+(hasRate?(TG.light(g.tone)||'⚪')+' ':'')+TG.safe(g.name)+(c==='driver'&&g.km?' · '+n0(g.km)+' km':'')+(c==='forklift'&&g.km?' · '+g.km.toFixed(1)+' km':'')+(c==='generator'&&g.hours?' · '+g.hours.toFixed(1)+' hr':'')+(c!=='driver'&&g.n>1?' · '+g.n+t('筆',' recs',' កំណត់ត្រា'):''));});
+      out.push(TG.mono((n0(g.liters)+'L').padStart(wl)+(hasRate?rate.padStart(wr+1):''))+' '+(hasRate?(TG.light(g.tone)||'⚪')+' ':'')+TG.safe(g.name)+(c==='driver'&&g.km?' · '+n0(g.km)+' km':'')+(c==='forklift'&&g.km?' · '+g.km.toFixed(1)+' km':'')+(c==='generator'&&g.hours?' · '+g.hours.toFixed(1)+' hr':'')+(c!=='driver'&&g.n>1?' · '+g.n+' '+t('筆','recs','កំណត់ត្រា'):''));});
   });
   out.push(TG.RULE);
   if(D.cats.driver&&D.cats.driver.avg||D.cats.generator&&D.cats.generator.avg)out.push('🟢🟡🔴 '+t('與平均差','vs avg','ធៀបមធ្យម')+': ≤10% / 10–20% / >20%');
