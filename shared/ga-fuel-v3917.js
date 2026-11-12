@@ -77,9 +77,78 @@ const changes=M.plan(DB,rows.filter(r=>['driver','forklift','generator'].include
 window.confirmImport=async function(){if(!importBatch)return;const batch={...importBatch,rows:document.getElementById('fuel-fix-year')?.checked?M.correctYears(importBatch.rows):importBatch.rows};if(batch.warnings.length&&!confirm(F('已列出日期等異常。保留原始值匯入，稍後逐筆更正？','Import original values with the listed warnings for later correction?','នាំចូលតម្លៃដើមដែលមានការព្រមាន?')))return;await persistChain;const fuel=batch.rows.filter(r=>['driver','forklift','generator'].includes(r.cat));const p=M.plan(DB,fuel,{strictDate:true});/* v3.9.27: never overwrite a record with a different date */if(p.updated&&!confirm(F('有 '+p.updated+' 筆同日期資料不同，確認更新？','Update '+p.updated+' changed same-date records?','បញ្ជាក់កែ '+p.updated+' កំណត់ត្រា (ថ្ងៃដូចគ្នា)?')))return;if(p.dateFixes.length&&confirm(F('有 '+p.dateFixes.length+' 筆舊紀錄日期比 Excel 早一天（舊版時區問題），要更正日期嗎？按取消＝保持原樣。',p.dateFixes.length+' older records are one day earlier than the Excel file (old timezone bug). Correct their dates? Cancel = leave unchanged.','កំណត់ត្រាចាស់ '+p.dateFixes.length+' មុនមួយថ្ងៃ។ កែ?')))M.applyDateFixes(p);DB=p.rows;save();await persistChain;const results=[F('柴油','Fuel','ប្រេង')+': +'+p.added+' / '+F('更新','updated','កែ')+' '+p.updated+' / '+F('略過','skipped','រំលង')+' '+p.skipped];for(const cat of ['transport','etc']){const incoming=batch.rows.filter(r=>r.cat===cat);if(!incoming.length)continue;const target=GAMobilityStore.create(cat,{status:()=>{}});await target.loaded;const q=await target.importRows(incoming);if(q){results.push(cat+': +'+q.added+' / '+q.updated+' / '+q.skipped);await target.sync();}}
 const months=fuel.map(r=>r.date.slice(0,7)).sort();if(months.length)window.fuelSummaryPeriod=months[months.length-1];importBatch=null;pendingImport=null;const pre=document.getElementById('importPreview');pre.innerHTML='<div class="al al-ok">'+results.map(esc).join('<br>')+'</div><pre style="white-space:pre-wrap">'+esc(fuelSummaryText({scope:'all',ptype:'month',period:window.fuelSummaryPeriod||GA.currentPeriod('month'),lang:'both'}))+'</pre><button class="btn btn-b" onclick="fuelTelegram()">✈️ '+F('預覽並發送摘要','Preview / send summary','មើល / ផ្ញើសង្ខេប')+'</button>';refresh();await repo.sync();};
 window.cancelImport=function(){importBatch=null;pendingImport=null;document.getElementById('importPreview').classList.add('hidden');};
-window.fuelSummaryText=function(s){const rows=DB.filter(r=>!/^Transport:/i.test(r.remarks||'')&&GA.inPeriod(r.date,s.period,s.ptype));const scope=s.scope||'all';const out=[];for(const cat of ['driver','forklift','generator']){if(scope!=='all'&&scope!==cat)continue;const a=rows.filter(r=>r.cat===cat),n=a.reduce((x,r)=>x+M.num(r.liters),0),all=DB.filter(r=>r.cat===cat);out.push({zh:{driver:'🚗 司機',forklift:'🏗️ 堆高機',generator:'⚡ 發電機'}[cat],en:cat,km:{driver:'អ្នកបើកបរ',forklift:'ឡានស្ទូច',generator:'ម៉ាស៊ីនភ្លើង'}[cat],v:a.length?n.toLocaleString()+' L / '+a.length+' records':GA.telegram.langText('本期無資料','No records in period','គ្មានទិន្នន័យក្នុងរយៈពេល',s.lang)+(all.length?' · latest '+all.map(r=>r.date).sort().pop():'')});const groups={};a.forEach(r=>{const k=cat==='driver'?[r.driver,r.plate].filter(Boolean).join(' / '):cat==='forklift'?[r.dept,r.forklift].filter(Boolean).join(' / '):r.date+' / '+r.machine;const v=groups[k]||(groups[k]={liters:0,km:0,hours:0});v.liters+=M.num(r.liters);v.km+=M.num(r.km||r.totalKM);v.hours+=typeof r.hours==='number'?r.hours:M.hours(r.hours);});for(const [k,v] of Object.entries(groups)){out.push({zh:k,en:k,km:k,v:v.liters.toLocaleString()+' L'+(cat==='driver'&&v.km?' / '+v.km.toLocaleString()+' km'+(v.liters?' / '+(v.km/v.liters).toFixed(2)+' km/L':''):'')+(cat==='forklift'&&v.km?' / '+v.km.toFixed(1)+' '+GA.telegram.langText('表載 KM','source KM','KM តាមឯកសារ',s.lang):'')+(cat==='generator'&&v.hours?' / '+v.hours.toFixed(2)+' hr / '+(v.liters/v.hours).toFixed(2)+' L/hr':'')});}}
-const selected=scope==='all'?rows:rows.filter(r=>r.cat===scope);out.push({zh:'合計',en:'Total',km:'សរុប',v:selected.reduce((n,r)=>n+M.num(r.liters),0).toLocaleString()+' L'});const people=[...new Set(selected.map(r=>r.inspector).filter(Boolean))];out.push({zh:'檢查人',en:'Inspector',km:'អ្នកត្រួតពិនិត្យ',v:people.join(', ')||GA.telegram.langText('原表未填','Not provided','មិនបានបំពេញ',s.lang)});if(selected.some(r=>r.warnings?.length))out.push({zh:'⚠️ 原始日期待核對',en:'⚠️ Source dates need review',km:'⚠️ ត្រូវពិនិត្យថ្ងៃ',v:selected.filter(r=>r.warnings?.length).length});return GA.telegram.buildSummary({icon:'🛢️',titleZh:'柴油摘要',titleEn:'Diesel Summary',titleKm:'សង្ខេបប្រេង',lang:s.lang,period:GA.telegram.periodLabel(s.period,s.ptype,s.lang),rows:out});};
-window.fuelTelegram=function(){GA.telegram.open({module:'fuel',canApprove:false,beforeSend:window.fuelFlush,ptype:'month',period:window.fuelSummaryPeriod||GA.currentPeriod('month'),scopes:[{v:'all',zh:'全部',en:'All',km:'ទាំងអស់'},{v:'driver',zh:'司機',en:'Driver',km:'អ្នកបើកបរ'},{v:'forklift',zh:'堆高機',en:'Forklift',km:'ឡានស្ទូច'},{v:'generator',zh:'發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង'}],periods:fuelPeriods,summary:fuelSummaryText,onSummarySent:()=>repo.schedule()});};
+/* 2026-11-12 柴油摘要新版（Paul：照出勤摘要的方式——整齊一致、數據一眼得知、有顏色管理）
+   · 先總量＋三類比例色條；再各類清單：等寬數字在前（公升、km/L）、名稱車牌在後，位置固定。
+   · 顏色：司機 km/L、發電機 L/hr 與「同類平均」比 — 🟢 在平均 ±10% 內或更省、🟡 差 10–20%、🔴 差超過 20%。
+   · 結尾核對：三類加總＝合計才寫已核對正確。統計與篩選規則同舊版。 */
+window.fuelSummaryData=function(s){
+  const rows=DB.filter(r=>!/^Transport:/i.test(r.remarks||'')&&GA.inPeriod(r.date,s.period,s.ptype)),scope=s.scope||'all',cats={};
+  for(const cat of ['driver','forklift','generator']){
+    if(scope!=='all'&&scope!==cat)continue;
+    const a=rows.filter(r=>r.cat===cat),groups={};
+    a.forEach(r=>{const k=cat==='driver'?[r.driver,r.plate].filter(Boolean).join(' · '):cat==='forklift'?[r.dept,r.forklift].filter(Boolean).join(' · '):String(r.machine||'—');
+      const v=groups[k]||(groups[k]={name:k||'—',liters:0,km:0,hours:0,n:0});v.liters+=M.num(r.liters);v.km+=M.num(r.km||r.totalKM);v.hours+=typeof r.hours==='number'?r.hours:M.hours(r.hours);v.n++;});
+    const list=Object.values(groups).sort((x,y)=>y.liters-x.liters),liters=a.reduce((x,r)=>x+M.num(r.liters),0);
+    const km=list.reduce((x,g)=>x+g.km,0),hours=list.reduce((x,g)=>x+g.hours,0);
+    /* 平均只用「有里程／有時數」的那幾筆算，避免沒填里程的把平均拉低 */
+    const lk=list.filter(g=>g.km>0&&g.liters>0),lh=list.filter(g=>g.hours>0&&g.liters>0);
+    const avg=cat==='driver'&&lk.length?lk.reduce((x,g)=>x+g.km,0)/lk.reduce((x,g)=>x+g.liters,0):cat==='generator'&&lh.length?lh.reduce((x,g)=>x+g.liters,0)/lh.reduce((x,g)=>x+g.hours,0):0;
+    list.forEach(g=>{g.rate=cat==='driver'&&g.km&&g.liters?g.km/g.liters:cat==='generator'&&g.hours&&g.liters?g.liters/g.hours:0;
+      /* 司機：km/L 越高越好；發電機：L/hr 越低越好 */
+      const gap=!g.rate||!avg?null:cat==='driver'?(avg-g.rate)/avg:(g.rate-avg)/avg;
+      g.tone=gap==null?'':gap<=0.10?'ok':gap<=0.20?'warn':'bad';});
+    const all=DB.filter(r=>r.cat===cat);
+    cats[cat]={rows:a,list:list,liters:liters,km:km,hours:hours,avg:avg,latest:all.length?all.map(r=>r.date).sort().pop():''};
+  }
+  const selected=scope==='all'?rows:rows.filter(r=>r.cat===scope),total=selected.reduce((n,r)=>n+M.num(r.liters),0);
+  const parts=Object.keys(cats).reduce((n,c)=>n+cats[c].liters,0);
+  return {cats:cats,selected:selected,total:total,verified:Math.abs(parts-total)<0.005,inspectors:[...new Set(selected.map(r=>r.inspector).filter(Boolean))],warnings:selected.filter(r=>r.warnings?.length).length};
+};
+window.fuelSummaryText=function(s){
+  const TG=GA.telegram,L=s.lang||'both',t=(zh,en,km)=>TG.safe(TG.label(zh,en,km,L)),D=fuelSummaryData(s),n0=v=>Math.round(v).toLocaleString('en-US');
+  const META={driver:{icon:'🚗',mark:'🟦',zh:'司機',en:'Driver',km:'អ្នកបើកបរ'},forklift:{icon:'🏗️',mark:'🟧',zh:'堆高機',en:'Forklift',km:'ឡានស្ទូច'},generator:{icon:'⚡',mark:'🟨',zh:'發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង'}};
+  const keys=Object.keys(D.cats),out=[];
+  out.push('🛢️ <b>'+t('柴油摘要','Diesel Summary','សង្ខេបប្រេង')+'</b>');
+  out.push('📅 '+TG.safe(TG.periodLabel(s.period,s.ptype,L).replace(/ \/ /g,' ')));
+  out.push(TG.RULE);
+  out.push('<b>'+t('合計','Total','សរុប')+' '+n0(D.total)+' L</b> · '+D.selected.length+' '+t('筆','records','កំណត់ត្រា'));
+  if(!D.selected.length)out.push('⚪ '+t('本期無資料','No records in this period','គ្មានទិន្នន័យក្នុងរយៈពេលនេះ'));
+  if(keys.length>1&&D.total>0){
+    out.push(TG.shareBar(keys.map(c=>({value:D.cats[c].liters,mark:META[c].mark})),10));
+    const w=Math.max(...keys.map(c=>(n0(D.cats[c].liters)+' L').length));
+    keys.forEach(c=>{const C=D.cats[c],pct=Math.round(C.liters/D.total*100);
+      out.push(TG.mono((n0(C.liters)+' L').padStart(w)+(pct+'%').padStart(5))+' '+META[c].mark+' '+t(META[c].zh,META[c].en,META[c].km)+(C.rows.length?' · '+C.rows.length:'')+(!C.rows.length&&C.latest?' · '+t('最近','latest','ចុងក្រោយ')+' '+C.latest:''));});
+  }
+  keys.forEach(c=>{const C=D.cats[c],m=META[c];if(!C.list.length)return;
+    out.push('');
+    out.push(m.icon+' <b>'+t(m.zh,m.en,m.km)+'</b> · '+n0(C.liters)+' L'+(c==='driver'&&C.avg?' · '+t('平均','avg','មធ្យម')+' '+C.avg.toFixed(2)+' km/L':'')+(c==='generator'&&C.avg?' · '+t('平均','avg','មធ្យម')+' '+C.avg.toFixed(1)+' L/hr':''));
+    const wl=Math.max(...C.list.map(g=>(n0(g.liters)+'L').length)),hasRate=C.list.some(g=>g.rate),wr=hasRate?Math.max(...C.list.map(g=>g.rate?g.rate.toFixed(c==='driver'?2:1).length:1)):0;
+    C.list.forEach(g=>{const rate=g.rate?g.rate.toFixed(c==='driver'?2:1):'—';
+      out.push(TG.mono((n0(g.liters)+'L').padStart(wl)+(hasRate?rate.padStart(wr+1):''))+' '+(hasRate?(TG.light(g.tone)||'⚪')+' ':'')+TG.safe(g.name)+(c==='driver'&&g.km?' · '+n0(g.km)+' km':'')+(c==='forklift'&&g.km?' · '+g.km.toFixed(1)+' km':'')+(c==='generator'&&g.hours?' · '+g.hours.toFixed(1)+' hr':'')+(c!=='driver'&&g.n>1?' · '+g.n+t('筆',' recs',' កំណត់ត្រា'):''));});
+  });
+  out.push(TG.RULE);
+  if(D.cats.driver&&D.cats.driver.avg||D.cats.generator&&D.cats.generator.avg)out.push('🟢🟡🔴 '+t('與平均差','vs avg','ធៀបមធ្យម')+': ≤10% / 10–20% / >20%');
+  out.push('🔎 '+t('檢查人','Inspector','អ្នកត្រួតពិនិត្យ')+': '+(D.inspectors.length?TG.safe(D.inspectors.join(', ')):t('原表未填','not provided','មិនបានបំពេញ')));
+  if(D.warnings)out.push('⚠️ '+t('原始日期待核對','Source dates need review','ត្រូវពិនិត្យថ្ងៃ')+': '+D.warnings);
+  if(D.selected.length)out.push(D.verified?'✅ '+t('各類加總＝合計，已核對正確','Categories add up to the total — verified','ផលបូកតាមប្រភេទ = សរុប — បានផ្ទៀងផ្ទាត់'):'🔴 '+t('各類加總與合計不符，請檢查','Categories do not add up to the total — please check','ផលបូកមិនស្មើសរុប សូមពិនិត្យ'));
+  return out.join('\n');
+};
+/* 附圖：大數字＋三類比例＋司機油耗表（格子上色）＋每日用量 */
+window.fuelSummaryChart=function(s){
+  const TG=GA.telegram,L=s.lang||'both',t=(zh,en,km)=>TG.label(zh,en,km,L),D=fuelSummaryData(s),n0=v=>Math.round(v).toLocaleString('en-US');
+  if(!D.selected.length)return null;
+  const COL={driver:'#2b8fbd',forklift:'#f2a93b',generator:'#e6c229'},NAME={driver:t('司機','Driver','អ្នកបើកបរ'),forklift:t('堆高機','Forklift','ឡានស្ទូច'),generator:t('發電機','Generator','ម៉ាស៊ីនភ្លើង')},BG={ok:'#d9f2e3',warn:'#fff1c2',bad:'#fbd5d3'};
+  const keys=Object.keys(D.cats),blocks=[];
+  blocks.push({type:'stats',items:[{label:t('合計','Total','សរុប'),value:n0(D.total)+' L',sub:D.selected.length+' '+t('筆','records','កំណត់ត្រា')}].concat(keys.map(c=>({label:NAME[c],value:n0(D.cats[c].liters)+' L',color:COL[c],sub:D.total?Math.round(D.cats[c].liters/D.total*100)+'%':''})))});
+  if(keys.length>1)blocks.push({type:'donut',span:2,title:t('用量比例','Share by type','សមាមាត្រ'),items:keys.filter(c=>D.cats[c].liters>0).map(c=>({label:NAME[c],value:D.cats[c].liters,color:COL[c]})),center:n0(D.total),centerSub:'L'});
+  const days={};D.selected.forEach(r=>{const d=String(r.date||'').slice(s.ptype==='year'?0:5,s.ptype==='year'?7:10);days[d]=(days[d]||0)+M.num(r.liters);});
+  const dk=Object.keys(days).sort();if(dk.length>1)blocks.push({type:'columns',title:s.ptype==='year'?t('每月用量','Litres by month','តាមខែ'):t('每日用量','Litres by day','តាមថ្ងៃ'),unit:'L',items:dk.slice(-16).map(d=>({label:d,value:days[d],color:'#2b8fbd'}))});
+  const dr=D.cats.driver;if(dr&&dr.list.length)blocks.push({type:'table',title:'🚗 '+NAME.driver+(dr.avg?' · '+t('平均','avg','មធ្យម')+' '+dr.avg.toFixed(2)+' km/L':''),head:[t('司機／車牌','Driver / plate','អ្នកបើកបរ'),'L','km','km/L'],align:['l','r','r','r'],widths:[2.6,1,1.2,1.1],rows:dr.list.map(g=>[g.name,n0(g.liters),g.km?n0(g.km):'—',{text:g.rate?g.rate.toFixed(2):'—',bg:BG[g.tone]||'',bold:true}]),total:[t('小計','Subtotal','សរុបរង'),n0(dr.liters),dr.km?n0(dr.km):'—',dr.avg?dr.avg.toFixed(2):'—'],note:t('綠＝平均 ±10% 內　黃＝差 10–20%　紅＝差超過 20%','Green = within 10% of average · Yellow = 10–20% · Red = over 20%','បៃតង = ក្នុង 10% · លឿង = 10–20% · ក្រហម = លើស 20%')});
+  const fk=D.cats.forklift;if(fk&&fk.list.length)blocks.push({type:'table',title:'🏗️ '+NAME.forklift,head:[t('部門／車號','Dept / unit','ផ្នែក'),'L','km',t('筆','recs','កំណត់ត្រា')],align:['l','r','r','r'],widths:[2.6,1,1.2,1.1],rows:fk.list.map(g=>[g.name,n0(g.liters),g.km?g.km.toFixed(1):'—',g.n]),total:[t('小計','Subtotal','សរុបរង'),n0(fk.liters),fk.km?fk.km.toFixed(1):'—',fk.rows.length]});
+  const gn=D.cats.generator;if(gn&&gn.list.length)blocks.push({type:'table',title:'⚡ '+NAME.generator+(gn.avg?' · '+t('平均','avg','មធ្យម')+' '+gn.avg.toFixed(1)+' L/hr':''),head:[t('機台','Machine','ម៉ាស៊ីន'),'L','hr','L/hr'],align:['l','r','r','r'],widths:[2.6,1,1.2,1.1],rows:gn.list.map(g=>[g.name,n0(g.liters),g.hours?g.hours.toFixed(1):'—',{text:g.rate?g.rate.toFixed(1):'—',bg:BG[g.tone]||'',bold:true}]),total:[t('小計','Subtotal','សរុបរង'),n0(gn.liters),gn.hours?gn.hours.toFixed(1):'—',gn.avg?gn.avg.toFixed(1):'—']});
+  return {title:'🛢️ '+t('柴油摘要','Diesel Summary','សង្ខេបប្រេង'),subtitle:TG.periodLabel(s.period,s.ptype,L).replace(/ \/ /g,' '),theme:'navy',blocks:blocks,footer:'AC-GA-EXP · '+GA.ymd(new Date())};
+};
+window.fuelTelegram=function(){GA.telegram.open({module:'fuel',canApprove:false,beforeSend:window.fuelFlush,ptype:'month',period:window.fuelSummaryPeriod||GA.currentPeriod('month'),scopes:[{v:'all',zh:'全部',en:'All',km:'ទាំងអស់'},{v:'driver',zh:'司機',en:'Driver',km:'អ្នកបើកបរ'},{v:'forklift',zh:'堆高機',en:'Forklift',km:'ឡានស្ទូច'},{v:'generator',zh:'發電機',en:'Generator',km:'ម៉ាស៊ីនភ្លើង'}],periods:fuelPeriods,summary:fuelSummaryText,chart:fuelSummaryChart,onSummarySent:()=>repo.schedule()});};
 window.genSummary=function(){const el=document.getElementById('sumBox');if(el)el.textContent=fuelSummaryText({scope:'all',ptype:'month',period:window.fuelSummaryPeriod||GA.currentPeriod('month'),lang:lang});};window.sendTgSummary=window.fuelTelegram;
 window.exportAllExcel=function(){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(DB.map(r=>({...r,warnings:JSON.stringify(r.warnings||[])}))),'GA_DATA');XLSX.writeFile(wb,'GA_Fuel_'+GA.ymd()+'.xlsx');};window.exportExcel=window.exportAllExcel;window.fuelMergeRecords=(a,b)=>M.plan(a,b).rows;window.fuelDataPanel=function(){GA.dataPanel({module:'fuel',count:()=>DB.length,data:()=>({DB}),restore:(obj,mode)=>{const incoming=Array.isArray(obj)?obj:obj.DB||obj.db;if(!Array.isArray(incoming)||incoming.some(r=>!M.valid(r.date)||!r.id))throw new Error('Invalid backup');const p=M.plan(DB,incoming);if(p.updated&&!confirm(F('備份含不同資料，更新？','Backup has changed records. Update?','កែទិន្នន័យខុសគ្នា?')))return;DB=mode==='replace'?incoming:p.rows;save();},clear:()=>{DB=[];save();},exportXlsx:exportAllExcel,onChange:()=>{refresh();scheduleFuelAutoSync();}});};
 const fuelReady=repo.loaded.then(async()=>{initializing=false;const byId=new Map(repo.rows().map(r=>[String(r.id),r]));for(const r of starting){const old=byId.get(String(r.id));if(!old||new Date(r.updatedAt||r.createdAt||0)>new Date(old.updatedAt||old.createdAt||0))byId.set(String(r.id),r);}DB=Array.from(byId.values());await repo.capture(DB);try{localStorage.removeItem(LS);}catch(_){}/* v3.9.25 migrated into IndexedDB */refresh();}).catch(e=>{localError=e;syncStatus('error',e.message);});

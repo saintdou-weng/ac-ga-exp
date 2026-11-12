@@ -207,8 +207,11 @@ TG.open = function (opt) {
     };
   });
 
+  /* 2026-11-12：摘要可帶 <b> <i> <code>；預覽照樣式顯示，送出的是原文字（pvRaw）。 */
+  var pvRaw = '';
+  function setPv(text) { pvRaw = String(text == null ? '' : text); el('tg-pv').innerHTML = TG.styledHtml(pvRaw); }
   function preview() {
-    var pv = el('tg-pv');
+    var pv = { set textContent(v) { setPv(v); } };
     try {
       if (st.mode === 'approval') {
         var items = opt.approvalItems ? (opt.approvalItems(st) || []) : [];
@@ -240,8 +243,8 @@ TG.open = function (opt) {
 
     if(opt.beforeSend){try{if(await opt.beforeSend()===false){done('❌ '+L3('雲端未同步，請先處理同步狀態','Cloud not synced; fix sync first','Cloud មិនទាន់សមកាលកម្ម; សូមដោះស្រាយសមកាលកម្មជាមុន'),false);return;}}catch(e){done(GA.errText?GA.errText(e,false):e.message,false);return;}}
     if (st.mode === 'summary') {
-      var latest=opt.summary?opt.summary(st):el('tg-pv').textContent;
-      if(latest!==el('tg-pv').textContent){el('tg-pv').textContent=latest;done(L3('同步後資料已更新，請核對預覽再按確認傳送','Data changed after sync. Check the preview, then press Send again.','ទិន្នន័យបានផ្លាស់ប្ដូរក្រោយសមកាលកម្ម។ សូមពិនិត្យការមើលជាមុន ហើយចុចផ្ញើម្ដងទៀត។'),false);return;}
+      var latest=opt.summary?opt.summary(st):pvRaw;
+      if(latest!==pvRaw){setPv(latest);done(L3('同步後資料已更新，請核對預覽再按確認傳送','Data changed after sync. Check the preview, then press Send again.','ទិន្នន័យបានផ្លាស់ប្ដូរក្រោយសមកាលកម្ម។ សូមពិនិត្យការមើលជាមុន ហើយចុចផ្ញើម្ដងទៀត។'),false);return;}
       if(el('tg-resend').checked&&!resendKey)resendKey=crypto.randomUUID();
       /* 摘要：後端只發訊息，不建 batch、不加按鈕、不改狀態 */
       try {
@@ -249,11 +252,14 @@ TG.open = function (opt) {
            message receipt.  Require the receipt contract before attempting
            a summary so the UI never reports a phantom delivery. */
         if (GA.backend && GA.backend.require) await GA.backend.require('tgSummaryReceipt', { action:'tgSummary' });
+        var chartUrl='';
+        if(opt.chart&&TG.STYLE_RE.test(pvRaw)){try{chartUrl=await TG.chartImage(opt.chart(st));}catch(ce){console.warn('[tg chart]',ce);}}
         var response = await GA.gasPost('tgSummary', {
+          styled: TG.STYLE_RE.test(pvRaw) ? 1 : 0, chart: chartUrl,
           module: opt.module, scope: st.scope,
           ptype: st.ptype, period: st.period,
           lang: st.lang, chatId: st.group,
-          text: el('tg-pv').textContent,resendKey:el('tg-resend').checked?resendKey:''
+          text: pvRaw,resendKey:el('tg-resend').checked?resendKey:''
         });
         var data=response.data||response,result=TG.deliveryResult(data);showReceipts(result.receipts);done(result.text+(result.errors.length?' · '+result.errors.join(' | '):''),result.ok);
         if (result.ok&&opt.onSummarySent) opt.onSummarySent(data, st);
@@ -335,27 +341,88 @@ TG.periodLabel = function (key, type, lang) {
   return key;
 };
 
-/* 欄位式摘要：保留各模組原本 rows 內容，只統一 Telegram 排版。
-   '-' 代表區段分隔，不改資料統計與既有篩選邏輯。 */
+/* ═══════════ 2026-11-12 摘要新版排版（Paul：整齊一致、數據一眼得知、有顏色管理）═══════════
+   · 不再用 ├ └ 樹狀符號。
+   · 數字放最前面、用等寬字靠右對齊（<code>），後面才是項目名稱 → 中英柬混排也對得齊。
+   · 標題粗體；分段用 '-'；row.head=true 是小標題；row.tone='ok'|'warn'|'bad' 顯示 🟢🟡🔴。
+   · 各模組原本的 rows 內容、統計與篩選邏輯都不變。 */
+TG.STYLE_RE = /<\/?(b|i|code)>/;
+TG.RULE = '━━━━━━━━━━━━';
+TG.esc = function (v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+/* 預覽用：先整段跳脫，再只放行 b / i / code（與 GAS tgStyledHtml_ 相同規則） */
+TG.styledHtml = function (text) { return TG.esc(text).replace(/&lt;(\/?)(b|i|code)&gt;/g, '<$1$2>'); };
+/* 訊息內文用：把使用者資料裡的 < > & 換成全形，避免被當成樣式標籤 */
+TG.safe = function (v) { return String(v == null ? '' : v).replace(/</g, '‹').replace(/>/g, '›'); };
+/* 標籤：雙語用空格接（出勤摘要的寫法：出勤率 Attendance），不用斜線 */
+TG.label = function (zh, en, km, lang) {
+  var L = lang || 'both'; zh = zh == null ? '' : String(zh); en = en == null ? '' : String(en); km = km == null ? '' : String(km);
+  var uniq = function (a) { return a.filter(function (v, i) { return v && a.indexOf(v) === i; }).join(' '); };
+  if (L === 'zh') return zh || en;
+  if (L === 'en') return en || zh;
+  if (L === 'km') return uniq([en || zh, km]);
+  if (L === 'all3') return uniq([zh, en, km]);
+  return uniq([zh, en]);
+};
+TG.light = function (tone) { return tone === 'ok' ? '🟢' : tone === 'warn' ? '🟡' : tone === 'bad' ? '🔴' : ''; };
+/* 等寬數字欄：cells 靠右補空白 */
+TG.mono = function (v, width) { v = String(v == null ? '' : v); while (v.length < width) v = ' ' + v; return '<code>' + TG.esc(v) + '</code>'; };
+/* 比例色條：parts=[{value,mark:'🟦'}]，共 n 格（最大餘數法，非零項至少一格） */
+TG.shareBar = function (parts, n) {
+  n = n || 10; var live = (parts || []).filter(function (p) { return p.value > 0; }), sum = live.reduce(function (a, p) { return a + p.value; }, 0);
+  if (!sum) return '';
+  var cells = live.map(function (p) { var x = p.value / sum * n; return { p:p, k:Math.max(1, Math.floor(x)), r:x - Math.floor(x) }; });
+  var used = cells.reduce(function (a, c) { return a + c.k; }, 0);
+  cells.slice().sort(function (a, b) { return b.r - a.r; }).forEach(function (c) { if (used < n) { c.k++; used++; } });
+  cells.slice().sort(function (a, b) { return b.k - a.k; }).forEach(function (c) { while (used > n && c.k > 1) { c.k--; used--; } });
+  return cells.map(function (c) { return new Array(c.k + 1).join(c.p.mark); }).join('');
+};
+/* 進度色條：ratio 0–1，綠／黃／紅格＋白格 */
+TG.bar = function (ratio, tone, n) {
+  n = n || 10; var k = Math.max(0, Math.min(n, Math.round((+ratio || 0) * n))), on = tone === 'bad' ? '🟥' : tone === 'warn' ? '🟨' : '🟩';
+  return new Array(k + 1).join(on) + new Array(n - k + 1).join('⬜');
+};
+/* 附圖：spec（ACChart.render 的設定）→ JPEG dataURL；沒有圖表元件或畫不出來回傳 '' */
+TG.chartImage = function (spec) {
+  if (!spec) return Promise.resolve('');
+  if (typeof spec === 'string') return Promise.resolve(spec);
+  var load = global.ACChart ? Promise.resolve() : new Promise(function (ok) {
+    var sc = document.createElement('script'); sc.src = 'shared/ac-tg-chart.js?v=20261112a'; sc.onload = ok; sc.onerror = ok; document.head.appendChild(sc);
+  });
+  return load.then(function () {
+    if (!global.ACChart || !global.ACChart.render) return '';
+    var png = global.ACChart.render(spec); if (!png) return '';
+    return new Promise(function (ok) {
+      var im = new Image();
+      im.onload = function () { try { var c = document.createElement('canvas'); c.width = im.width; c.height = im.height; var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0); ok(c.toDataURL('image/jpeg', 0.9)); } catch (e) { ok(png); } };
+      im.onerror = function () { ok(png); }; im.src = png;
+    });
+  });
+};
+
 TG.buildSummary = function (o) {
   var L = o.lang || 'both';
-  var line = '━━━━━━━━━━━━━━━━';
-  var sep = '────────────';
-  function t(zh, en, km) { return TG.langText(zh, en, km, L); }
+  function lab(r) { return TG.safe(TG.label(r.zh, r.en, r.km, L)); }
   var out = [];
-  out.push((o.icon || '📊') + ' ' + t(o.titleZh || '', o.titleEn || '', o.titleKm || ''));
-  if (o.period) out.push('📅 ' + t('期間', 'Period', 'រយៈពេល') + ': ' + o.period);
-  if (o.scope) out.push('🧾 ' + t('範圍', 'Scope', 'វិសាលភាព') + ': ' + o.scope);
-  out.push(line);
-  (o.rows || []).forEach(function (r) {
-    if (r === '-') { out.push(sep); return; }
-    if (!r) return;
-    var label = t(r.zh, r.en, r.km);
-    var val = r.v == null || r.v === '' ? '—' : r.v;
-    var branch = r.last ? '└' : '├';
-    out.push(branch + ' ' + label + ': ' + val);
+  out.push((o.icon || '📊') + ' <b>' + TG.safe(TG.label(o.titleZh || '', o.titleEn || '', o.titleKm || '', L)) + '</b>');
+  if (o.period) out.push('📅 ' + TG.safe(String(o.period).replace(/ \/ /g, ' ')));
+  if (o.scope) out.push('🧾 ' + TG.safe(TG.label('範圍', 'Scope', 'វិសាលភាព', L)) + ': ' + TG.safe(o.scope));
+  out.push(TG.RULE);
+  /* 依 '-' 分段；每段內短的數值排成同寬的等寬欄 */
+  var sections = [[]];
+  (o.rows || []).forEach(function (r) { if (r === '-') sections.push([]); else if (r) sections[sections.length - 1].push(r); });
+  function val(r) { return r.v == null || r.v === '' ? '—' : String(r.v); }
+  function short(v) { return v.length <= 12 && /^[\x20-\x7e—]*$/.test(v); }
+  sections.filter(function (sec) { return sec.length; }).forEach(function (sec, si) {
+    if (si) out.push('────────────');
+    var w = sec.reduce(function (a, r) { var v = val(r); return !r.head && short(v) ? Math.max(a, v.length) : a; }, 0);
+    sec.forEach(function (r) {
+      var v = val(r), dot = TG.light(r.tone);
+      if (r.head) { out.push('<b>' + lab(r) + '</b>' + (r.v == null || r.v === '' ? '' : ' · ' + TG.safe(v))); return; }
+      if (short(v)) out.push(TG.mono(v, w) + ' ' + (dot ? dot + ' ' : '') + lab(r));
+      else { var lb = lab(r); out.push((dot ? dot + ' ' : /^[A-Za-z0-9\u3400-\u9fff\u1780-\u17ff]/.test(lb) ? '▫️ ' : '') + lb + ': ' + TG.safe(v)); }
+    });
   });
-  if (o.footer) { out.push(line); out.push(o.footer); }
+  if (o.footer) { out.push(TG.RULE); out.push(TG.safe(o.footer)); }
   return out.join('\n');
 };
 
