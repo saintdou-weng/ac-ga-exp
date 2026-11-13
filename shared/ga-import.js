@@ -314,7 +314,11 @@ SI.fingerprintOf = function (type, r) {
 };
 
 /* ═══════════ 7. 讀檔 ═══════════ */
+/* Check the filename after selection so Android can select XLSB with a generic MIME type. */
 SI.readFile = function (file) {
+  if (!/\.(xlsx|xlsb|xls|xlsm|csv)$/i.test(String(file&&file.name||''))) {
+    return Promise.reject(new Error(L3('請選擇支援的檔案（.xlsx、.xlsb、.xls、.xlsm 或 .csv）','Choose a supported file (.xlsx, .xlsb, .xls, .xlsm or .csv)','សូមជ្រើសឯកសារ .xlsx, .xlsb, .xls, .xlsm ឬ .csv')));
+  }
   return new Promise(function (resolve, reject) {
     var rd = new FileReader();
     rd.onerror = function () { reject(new Error(L3('讀取失敗：', 'Could not read file: ', 'មិនអាចអានឯកសារ៖ ') + file.name)); };
@@ -437,7 +441,7 @@ SI.openModal = function (opt) {
       '</div>' +
       '<div class="ga-modal-b" id="si-body">' +
         '<div class="ga-dz" id="si-dz">' +
-          '<input type="file" id="si-file" multiple accept=".xlsx,.xlsb,.xls,.xlsm,.csv">' +
+          '<input type="file" id="si-file" multiple>' +
           '<div class="ga-dz-i">📄</div>' +
           '<div class="ga-dz-t">' +
             (GA.lang === 'zh' ? '拖放或點選：可一次選多個檔案<br><small>xlsx / xlsb / xls / xlsm / csv — 不必先分成 PO、維修、燃油、費用</small>'
