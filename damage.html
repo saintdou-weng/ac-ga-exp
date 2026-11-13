@@ -388,4 +388,86 @@ window.addEventListener('load',async function(){await localLoad();buildItems();p
 <footer id="damageVer" style="text-align:center;font-size:10px;color:#94a3b8;padding:10px 0 18px"></footer>
 <!-- VRT swipe-tabs：左右滑動（手指／滑鼠拖曳）切換分頁，只聽手勢、不改資料 -->
 <script src="https://saintdou-weng.github.io/ac-admin/shared/swipe-tabs.js" defer></script>
+<!-- 2026-11-13 Damage：取消 Phea Review 這一關（送出後直接等 Paul 核可）、待核可清單看得到是哪一筆、
+     方塊可點、所選期間沒資料時提示並可跳到有資料的期間、摘要列出待核可與各筆明細（新版格式）。 -->
+<style>
+.dq-box{background:#fff;border:1px solid #fde68a;border-left:6px solid #f59e0b;border-radius:12px;padding:10px 12px;margin:10px 0}
+.dq-box h4{margin:0 0 6px;font-size:14px}.dq-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px solid #f1f5f9;padding:8px 0}
+.dq-row b{font-size:13.5px}.dq-row small{display:block;color:#64748b;font-size:11.5px;line-height:1.45}.dq-row .a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.dq-ok{background:#ecfdf5;border-color:#a7f3d0;border-left-color:#10b981}.dq-hint{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 11px;margin:8px 0;font-size:12.5px}
+#kpis .kpi,#akpis .kpi{cursor:pointer}#kpis .kpi.t-pend b,#akpis .kpi.t-pend b{color:#d97706}#kpis .kpi.t-ok b,#akpis .kpi.t-ok b{color:#059669}
+.dq-link{display:inline-block;margin:4px 4px 0 0;padding:6px 11px;border-radius:9px;background:#2563eb;color:#fff!important;font-weight:800;font-size:12.5px;cursor:pointer;text-decoration:none}
+.dq-cap{font-size:11.5px;font-weight:800;color:#475569;margin:10px 2px 4px}
+</style>
+<script id="dmg-20261113-direct-approve">
+(function(){
+  function M(zh,en,km){return lang==='zh'?zh:lang==='km'?(km||en):en}
+  var OPEN=['pending_review','reviewed'];
+  /* 1) 流程：沒有 Phea Review 這一關。舊資料的 pending_review 一律當成「待 Paul 核可」。 */
+  function normalize(){(DB||[]).forEach(function(r){if(r&&r.status==='pending_review')r.status='reviewed'})}
+  var _T=window.T;window.T=function(k){var m={sendReview:M('送出核可','Send for approval','ផ្ញើសុំអនុម័ត'),pending:M('待核可','Pending approval','រង់ចាំអនុម័ត'),reviewed:M('待 Paul 核可','Pending Paul approval','រង់ចាំ Paul អនុម័ត'),waitingPhea:M('等待 Paul 核可','Waiting for Paul approval','រង់ចាំ Paul អនុម័ត')};return m[k]||_T(k)};
+  var _sl=window.statusLabelFor;window.statusLabelFor=function(s,l){if(s==='pending_review'||s==='reviewed')return l==='en'?'Pending Paul approval':l==='km'?'Pending Paul approval / រង់ចាំ Paul អនុម័ត':'待 Paul 核可';return _sl(s,l)};
+  function items(r){try{return formatItems(r)}catch(e){return ((r.items||[]).concat(r.other?[r.other]:[])).join(', ')||'—'}}
+  function money(v){return '$'+(Number(v)||0).toLocaleString(undefined,{maximumFractionDigits:2})}
+  function live(){return (DB||[]).filter(function(r){return r&&!r.archived&&!r.deleted&&r.status!=='cancelled'})}
+  /* 2) 方塊：可點；待核可＝還沒核可的全部 */
+  window.kpiHtml=function(arr){arr=(arr||[]).filter(function(r){return r&&!r.archived&&!r.deleted&&r.status!=='cancelled'});
+    var n=function(f){return arr.filter(f).length},amt=arr.reduce(function(s,r){return s+(Number(r.lossAmount)||0)},0);
+    var K=[['',arr.length,_T('total'),''],['type:damage',n(function(r){return r.type==='damage'}),_T('damage'),''],['type:lost',n(function(r){return r.type==='lost'}),_T('lost'),''],['status:reviewed',n(function(r){return OPEN.indexOf(r.status)>=0}),M('待 Paul 核可','Pending approval','រង់ចាំអនុម័ត'),'t-pend'],['status:approved',n(function(r){return r.status==='approved'}),M('已核可','Approved','បានអនុម័ត'),'t-ok'],['',money(amt).replace(/\.\d+$/,''),_T('amount'),'']];
+    return K.map(function(x){return '<div class="kpi '+x[3]+'" data-dk="'+x[0]+'"><b>'+x[1]+'</b><span>'+esc(x[2])+'</span></div>'}).join('')};
+  function goRecords(key,scope){var p=key.split(':'),a=(scope||live());if(p[0]==='status')a=a.filter(function(r){return p[1]==='reviewed'?OPEN.indexOf(r.status)>=0:r.status===p[1]});if(p[0]==='type')a=a.filter(function(r){return r.type===p[1]});
+    try{ftype.value=p[0]==='type'?p[1]:'';fstatus.value=p[0]==='status'?p[1]:'';q.value=''}catch(e){}
+    var dates=a.map(function(r){return r.date}).filter(Boolean).sort();
+    /* 讓記錄頁的期間一定包含這些筆：同一個月就用月，否則用年 */
+    if(dates.length){var first=dates[0],last=dates[dates.length-1];periodType=first.slice(0,7)===last.slice(0,7)?'month':first.slice(0,4)===last.slice(0,4)?'year':'year';periodAnchor.value=last;document.querySelectorAll('[data-pt]').forEach(function(b){b.classList.toggle('on',b.dataset.pt===periodType)})}
+    tab('records');try{renderPeriodNav('record');renderRecords()}catch(e){}
+    if(!a.length)GA.toast(M('沒有符合的報告','No matching reports','គ្មានរបាយការណ៍'))}
+  document.addEventListener('click',function(e){var k=e.target.closest&&e.target.closest('.kpi[data-dk]');if(!k)return;var inAna=!!k.closest('#akpis');goRecords(k.getAttribute('data-dk')||'',inAna?filterPeriod(live(),anaType,anaAnchor.value):null)});
+  /* 3) 待核可清單：直接看到是哪一筆，按鈕就在旁邊 */
+  function openBox(){var host=document.getElementById('kpis');if(!host)return;var box=document.getElementById('dq-open');if(!box){box=document.createElement('div');box.id='dq-open';host.parentNode.insertBefore(box,host.nextSibling)}
+    var cap=document.getElementById('dq-cap');if(!cap){cap=document.createElement('div');cap.id='dq-cap';cap.className='dq-cap';host.parentNode.insertBefore(cap,host)}cap.textContent='📌 '+M('全部期間合計（點方塊看明細）','All periods (tap a tile for the list)','គ្រប់រយៈពេល');
+    var open=live().filter(function(r){return OPEN.indexOf(r.status)>=0}).sort(function(a,b){return String(a.date).localeCompare(String(b.date))}),dr=live().filter(function(r){return r.status==='draft'||r.status==='returned'});
+    if(!open.length){box.className='dq-box dq-ok';box.innerHTML='<h4>🟢 '+esc(M('沒有待核可的報告','Nothing waiting for approval','គ្មានអ្វីរង់ចាំអនុម័ត'))+(dr.length?' · '+esc(M('草稿／退回 ','Draft / returned ','ព្រាង / ត្រឡប់ '))+dr.length:'')+'</h4>';return}
+    box.className='dq-box';box.innerHTML='<h4>🟡 '+esc(M('待 Paul 核可','Waiting for Paul approval','រង់ចាំ Paul អនុម័ត'))+' · '+open.length+'</h4>'+open.map(function(r){return '<div class="dq-row"><div><b>'+esc(r.id)+' · '+esc(items(r))+'</b><small>📅 '+esc(r.date||'—')+' · '+(r.type==='lost'?'🔎 '+esc(_T('lost')):'⚠️ '+esc(_T('damage')))+' · 👤 '+esc(r.name||'—')+(r.empId?' ('+esc(r.empId)+')':'')+' · 🏭 '+esc(r.dept||'—')+' · 💵 '+money(r.lossAmount)+(r.location?' · 📍 '+esc(r.location):'')+'</small></div><div class="a"><button class="btn" onclick="openDetail(\''+esc(r.id)+'\')">🔍</button><button class="btn ok" onclick="damageDecision(\''+esc(r.id)+'\',\'approve\')">✅ '+esc(M('核可','Approve','អនុម័ត'))+'</button><button class="btn warn" onclick="damageDecision(\''+esc(r.id)+'\',\'return\')">↩</button></div></div>'}).join('')}
+  /* 4) 期間沒資料：說清楚，並給一鍵跳到有資料的期間 */
+  function periodHint(){var ak=document.getElementById('akpis');if(!ak)return;var h=document.getElementById('dq-hint');if(!h){h=document.createElement('div');h.id='dq-hint';var cd=ak.closest('.card')||ak;cd.parentNode.insertBefore(h,cd)}
+    var inP=filterPeriod(live(),anaType,anaAnchor.value),all=live();
+    if(inP.length||!all.length){h.className='';h.innerHTML='';return}
+    var last=all.map(function(r){return r.date}).filter(Boolean).sort().pop();
+    h.className='dq-hint';h.innerHTML='ℹ️ '+esc(M('這個期間沒有報告（全部共 '+all.length+' 筆，最近一筆 '+last+'）。','No reports in this period ('+all.length+' in total, latest '+last+').','គ្មានរបាយការណ៍ក្នុងរយៈពេលនេះ'))+' <a class="dq-link" id="dq-jump">'+esc(M('跳到 '+String(last).slice(0,7),'Go to '+String(last).slice(0,7),'ទៅ '+String(last).slice(0,7)))+'</a> <a class="dq-link" id="dq-year">'+esc(M('看整年','Whole year','ពេញមួយឆ្នាំ'))+'</a>';
+    document.getElementById('dq-jump').onclick=function(){anaAnchor.value=last;setAna('month')};document.getElementById('dq-year').onclick=function(){anaAnchor.value=last;setAna('year')}}
+  var _rw=window.refreshWorkflow;if(_rw)window.refreshWorkflow=async function(){var x=await _rw.apply(this,arguments);normalize();return x};
+  var _ra=window.renderAll;window.renderAll=function(){normalize();var r=_ra.apply(this,arguments);try{openBox();periodHint();strip()}catch(e){}return r};
+  var _rd=window.renderDash;window.renderDash=function(){normalize();var r=_rd.apply(this,arguments);try{openBox()}catch(e){}return r};
+  var _rn=window.renderAnalysis;window.renderAnalysis=function(){normalize();var r=_rn.apply(this,arguments);try{periodHint()}catch(e){}return r};
+  function strip(){document.querySelectorAll('span').forEach(function(s){if(/^✅\s*Phea (Review|ពិនិត្យ)$/.test(s.textContent.trim())&&s.parentNode&&/線上操作|Online workflow|ប្រតិបត្តិការ/.test(s.parentNode.textContent))s.remove()})}
+  /* 5) 摘要：新版格式，列出待核可是哪幾筆與各筆明細 */
+  window.summaryText=function(st){var TG=GA.telegram,L=st.lang||'zh',T2=function(z,e,k){return TG.label(z,e,k,L)};normalize();
+    var arr=live().filter(function(r){return st.period==='ALL'||GA.inPeriod(r.date,st.period,st.ptype)}).sort(function(a,b){return String(b.date).localeCompare(String(a.date))});
+    var n=function(f){return arr.filter(f).length},amt=arr.reduce(function(s,r){return s+(Number(r.lossAmount)||0)},0),pend=arr.filter(function(r){return OPEN.indexOf(r.status)>=0}),rej=n(function(r){return r.status==='rejected'||r.status==='returned'});
+    var rows=[{zh:'報告數',en:'Reports',km:'របាយការណ៍',v:arr.length},{zh:'損壞',en:'Damage',km:'ខូចខាត',v:n(function(r){return r.type==='damage'})},{zh:'遺失',en:'Lost',km:'បាត់',v:n(function(r){return r.type==='lost'})},{zh:'已核可',en:'Approved',km:'បានអនុម័ត',v:n(function(r){return r.status==='approved'}),tone:'ok'},{zh:'待 Paul 核可',en:'Pending approval',km:'រង់ចាំអនុម័ត',v:pend.length,tone:pend.length?'warn':'ok'},{zh:'退回／拒絕',en:'Returned / rejected',km:'ត្រឡប់ / បដិសេធ',v:rej,tone:rej?'bad':''},{zh:'估計損失',en:'Estimated loss',km:'តម្លៃខូចខាត',v:money(amt)}];
+    function one(r,i){var st2=r.status==='approved'?'🟢':OPEN.indexOf(r.status)>=0?'🟡':(r.status==='rejected'||r.status==='returned')?'🔴':'⚪',it;try{it=formatItems(r,L==='all3'?'both':L)}catch(e){it=items(r)}
+      rows.push({head:true,zh:(i+1)+'. '+it,en:(i+1)+'. '+it,km:(i+1)+'. '+it,v:st2+' '+money(r.lossAmount)});
+      rows.push({text:true,zh:'報告',en:'Report',km:'របាយការណ៍',v:r.id+' · '+String(r.date||'').slice(5)+' · '+(r.type==='lost'?T2('遺失','Lost','បាត់'):T2('損壞','Damage','ខូចខាត'))+' · '+statusLabelFor(r.status,L==='all3'||L==='both'?'zh':L)});
+      rows.push({text:true,zh:'人員',en:'Person',km:'បុគ្គលិក',v:(r.name||'—')+(r.empId?' ('+r.empId+')':'')+' · '+(r.dept||'—')+(r.location?' · 📍 '+r.location:'')});
+      if(r.desc||r.description)rows.push({text:true,zh:'經過',en:'What happened',km:'ហេតុការណ៍',v:String(r.desc||r.description).slice(0,90)});}
+    if(pend.length){rows.push('-');rows.push({head:true,zh:'🟡 待 Paul 核可',en:'🟡 Waiting for Paul approval',km:'🟡 រង់ចាំ Paul អនុម័ត',v:pend.length});pend.forEach(function(r,i){one(r,i)})}
+    var rest=arr.filter(function(r){return OPEN.indexOf(r.status)<0}).slice(0,Math.max(0,12-pend.length));
+    if(rest.length){rows.push('-');rows.push({head:true,zh:'📋 本期報告',en:'📋 Reports this period',km:'📋 របាយការណ៍',v:rest.length});rest.forEach(function(r,i){one(r,i)})}
+    if(arr.length>pend.length+rest.length)rows.push('-',{zh:'其餘未列',en:'More not listed',km:'មិនបានរាយ',v:arr.length-pend.length-rest.length});
+    return TG.buildSummary({icon:'⚠️',titleZh:'損壞／遺失財物摘要',titleEn:'Damage / Lost Property Summary',titleKm:'សង្ខេបខូចខាត / បាត់បង់',lang:L,period:st.period==='ALL'?T2('全部期間','All periods','គ្រប់រយៈពេល'):TG.periodLabel(st.period,st.ptype,L),rows:rows,footer:'🕐 '+GA.ymd(new Date())+' · AC-GA-EXP'+(arr.length?'':' · '+T2('本期沒有報告','no reports in this period','គ្មានរបាយការណ៍'))})};
+  window.summaryChart=function(st){var TG=GA.telegram,L=st.lang||'zh',T2=function(z,e,k){return TG.label(z,e,k,L)};normalize();var arr=live().filter(function(r){return st.period==='ALL'||GA.inPeriod(r.date,st.period,st.ptype)});if(!arr.length)return null;
+    var n=function(f){return arr.filter(f).length},amt=arr.reduce(function(s,r){return s+(Number(r.lossAmount)||0)},0),pend=n(function(r){return OPEN.indexOf(r.status)>=0}),by={};arr.forEach(function(r){var d=r.dept||'—';by[d]=(by[d]||0)+1});
+    var blocks=[{type:'stats',items:[{label:T2('報告','Reports','របាយការណ៍'),value:arr.length},{label:T2('已核可','Approved','អនុម័ត'),value:n(function(r){return r.status==='approved'}),color:'#2e9c6a'},{label:T2('待核可','Pending','រង់ចាំ'),value:pend,color:pend?'#f2a93b':'#2e9c6a'},{label:T2('估計損失','Est. loss','ខូចខាត'),value:money(amt).replace(/\.\d+$/,'')}]},
+      {type:'donut',title:T2('損壞／遺失','Damage / lost','ខូចខាត / បាត់'),items:[{label:T2('損壞','Damage','ខូចខាត'),value:n(function(r){return r.type==='damage'}),color:'#e35d5b'},{label:T2('遺失','Lost','បាត់'),value:n(function(r){return r.type==='lost'}),color:'#f2a93b'}],center:String(arr.length),centerSub:''},
+      {type:'bars',title:T2('各部門件數','By department','តាមផ្នែក'),items:Object.keys(by).map(function(k){return{label:k,value:by[k],text:String(by[k])}}).sort(function(a,b){return b.value-a.value}).slice(0,6)},
+      {type:'table',title:T2('報告清單','Reports','បញ្ជី'),head:[T2('日期','Date','ថ្ងៃ'),T2('物品','Item','ទំនិញ'),T2('人員／部門','Person / dept','បុគ្គលិក'),T2('損失','Loss','ខូចខាត'),T2('狀態','Status','ស្ថានភាព')],align:['l','l','l','r','l'],widths:[0.8,2.2,1.8,0.9,1.1],rows:arr.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))}).slice(0,10).map(function(r){var ok=r.status==='approved',pd=OPEN.indexOf(r.status)>=0;return[String(r.date||'').slice(5),items(r),(r.name||'—')+' · '+(r.dept||'—'),{text:money(r.lossAmount).replace(/\.\d+$/,''),bold:true},{text:ok?T2('核可','OK','អនុម័ត'):pd?T2('待核可','Pending','រង់ចាំ'):statusLabelFor(r.status,'en'),color:ok?'#2e9c6a':pd?'#c97c2e':'#e35d5b',bold:true}]})}];
+    return{title:'⚠️ '+T2('損壞／遺失財物','Damage / Lost Property','ខូចខាត / បាត់បង់'),subtitle:st.period==='ALL'?T2('全部期間','All periods','គ្រប់រយៈពេល'):TG.periodLabel(st.period,st.ptype,L).replace(/ \/ /g,' '),theme:'navy',blocks:blocks,footer:'AC-GA-EXP · '+GA.ymd(new Date())}};
+  window.openSummary=function(){try{GA.setLang(lang)}catch(e){}GA.telegram.open({module:'damage',canApprove:false,scopes:[{v:'all',zh:'全部',en:'All',km:'ទាំងអស់'}],periods:function(type){return live().map(function(r){return GA.periodKey(r.date,type)}).concat([GA.currentPeriod(type)])},summary:window.summaryText,chart:window.summaryChart,onSummarySent:function(){autoCloud('summary')}})};
+  /* 啟動：資料載入後，所選期間沒資料就停在提示（不自動亂跳），待核可清單先畫出來 */
+  function boot(n){try{normalize();renderAll()}catch(e){}if(n>0)setTimeout(function(){boot(n-1)},1500)}
+  window.addEventListener('load',function(){setTimeout(function(){boot(3)},600)});
+  document.documentElement.setAttribute('data-damage-direct-approve','20261113');
+})();
+</script>
 </body></html>

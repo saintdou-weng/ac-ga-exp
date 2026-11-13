@@ -919,21 +919,21 @@ function expenseTelegramText(s){
     out.push('');
     out.push('🔥 <b>'+T('重大費用','Major expenses','ចំណាយធំៗ')+' Top '+major.length+'</b>'+(D.elec.list.length||D.water.list.length?' '+T('（不含水電）','(excl. utilities)','(មិនរាប់ទឹកភ្លើង)'):''));
     var cm=col(major,value);
-    /* 2026-11-13（Paul：重大費用要把項目數據寫清楚，不能只剩一行被截斷的品名）
-       每筆：金額＋完整品名／數量×單價·供應商·分類·日期／部門·用途·規格／佔本期比例色條 */
+    /* 2026-11-13 第三版（Paul：每筆各畫一條藍色比例條看不懂又佔空間 → 佔比合成「一條」用不同顏色分段；
+       每筆只用兩行：金額＋色塊＋佔比＋完整品名／數量×單價·供應商·分類·日期·用途。色塊就是圖例。 */
+    var MARKS=['🟦','🟩','🟨','🟧','🟪','🟥'],parts=major.slice(0,MARKS.length).map(function(r,i){return{value:value(r),mark:MARKS[i]};}),restAmt=D.total-parts.reduce(function(a,x){return a+x.value;},0);
+    if(restAmt>0.005)parts.push({value:restAmt,mark:'⬜'});
+    if(D.total>0&&parts.length>1)out.push(TG.shareBar(parts,16)+(restAmt>0.005?' ⬜ '+T('其他','others','ផ្សេងៗ'):''));
     major.forEach(function(r,i){
-      var q=num(r.qty||r.quantity),p=num(r.price||r.unitPrice),nm=expItemName(r),d=[],e=[],share=D.total?Math.round(value(r)/D.total*100):0;
-      out.push(cm(r)+' <b>'+(i+1)+'. '+TG.safe(expenseTgTrim(nm,90))+'</b>');
-      if(q||p)d.push('📦 '+(q?(Math.round(q*100)/100)+(text(r.unit)?' '+TG.safe(text(r.unit)):''):'—')+' × '+(p?money(p):'—')+(q&&p&&Math.abs(Math.round(q*p*100)/100-value(r))>0.011?' 🔴≠':''));
-      if(text(r.supplier))d.push('🏪 '+TG.safe(expenseTgTrim(r.supplier,32)));
-      d.push(cat(r.expenseCategory));d.push('📅 '+expShortDate(r.date));
+      var q=num(r.qty||r.quantity),p=num(r.price||r.unitPrice),nm=expItemName(r),d=[],share=D.total?Math.round(value(r)/D.total*100):0;
+      out.push(cm(r)+' '+(MARKS[i]||'▫️')+' '+TG.mono((share+'%').padStart(3))+' <b>'+(i+1)+'. '+TG.safe(expenseTgTrim(nm,90))+'</b>');
+      if(q||p)d.push((q?(Math.round(q*100)/100)+(text(r.unit)?' '+TG.safe(text(r.unit)):''):'—')+' × '+(p?money(p):'—')+(q&&p&&Math.abs(Math.round(q*p*100)/100-value(r))>0.011?' 🔴≠':''));
+      if(text(r.supplier))d.push('🏪 '+TG.safe(expenseTgTrim(r.supplier,28)));
+      d.push(cat(r.expenseCategory));d.push(expShortDate(r.date));
+      if(text(r.dept))d.push('🏭 '+TG.safe(expenseTgTrim(r.dept,20)));
+      var pu=text(r.purpose);if(pu&&lower(nm).indexOf(lower(pu))<0)d.push('🎯 '+TG.safe(expenseTgTrim(pu,50)));
+      if(text(r.spec)&&text(r.spec)!=='N/A')d.push('📐 '+TG.safe(expenseTgTrim(r.spec,24)));
       out.push('　'+d.join(' · '));
-      if(text(r.dept))e.push('🏭 '+TG.safe(expenseTgTrim(r.dept,24)));
-      if(text(r.purpose)&&lower(text(r.purpose))!==lower(text(r.item||'')))e.push('🎯 '+TG.safe(expenseTgTrim(r.purpose,60)));
-      if(text(r.spec)&&text(r.spec)!=='N/A')e.push('📐 '+TG.safe(expenseTgTrim(r.spec,30)));
-      if(e.length)out.push('　'+e.join(' · '));
-      var k=Math.max(share?1:0,Math.min(10,Math.round(share/10)));
-      out.push('　'+new Array(k+1).join('🟦')+new Array(10-k+1).join('⬜')+' '+share+'% '+T('佔本期','of total','នៃសរុប'));
     });
   }
   var rest=D.nonUtil.slice(major.length),listN=mode==='all'?rest.length:mode==='large'?0:15,shown=rest.slice(0,listN);
@@ -960,14 +960,16 @@ function expenseTelegramText(s){
     var hmax=M.hist.reduce(function(a,h){return Math.max(a,h.total);},0)||1,ch=col(M.hist,function(h){return h.total;});
     var h0=0;while(h0<M.hist.length-2&&!M.hist[h0].total)h0++;
     M.hist.forEach(function(h,i){if(i<h0)return;var k=Math.max(h.total?1:0,Math.min(8,Math.round(h.total/hmax*8))),cur=i===M.hist.length-1,pv=i?M.hist[i-1].total:null;
-      out.push(ch(h)+' '+new Array(k+1).join(cur?'🟧':'🟦')+new Array(8-k+1).join('⬜')+' '+(cur?'<b>':'')+TG.safe(h.key)+(cur?'</b>':'')+' · '+h.count+' '+T('筆','rows','កំណត់ត្រា')+(pv!==null&&(pv||h.total)?' '+expTrend(h.total,pv,true):''));});
+      out.push(ch(h)+' '+new Array(k+1).join(cur?'🟧':'🟦')+' '+(cur?'<b>':'')+TG.safe(h.key)+(cur?'</b>':'')+' · '+h.count+' '+T('筆','rows','កំណត់ត្រា')+(pv!==null&&(pv||h.total)?' '+expTrend(h.total,pv,true):''));});
     out.push('🟧 '+T('本期','this period','គ្រានេះ')+' 🟦 '+T('前幾期','earlier','មុន'));
   }
   if(D.cats.length){
     out.push('');
     out.push('🗂️ <b>'+T('分類小計','By category','តាមប្រភេទ')+'</b>');
     var top=D.cats.slice(0,8),cc=col(top,function(c){return c.amount;});
-    top.forEach(function(c){var pct=D.total?Math.round(c.amount/D.total*100):0,k=Math.max(pct?1:0,Math.min(5,Math.round(pct/20)));out.push(cc(c,(pct+'%').padStart(5))+' '+new Array(k+1).join('🟦')+new Array(5-k+1).join('⬜')+' '+cat(c.cat)+' · '+c.count+' '+T('筆','rows','កំណត់ត្រា')+(hasPrev?' '+expTrend(c.amount,c.prev,true):''));});
+    var CM=['🟦','🟩','🟨','🟧','🟪','🟥','🟫','⬛'];
+    if(top.length>1&&D.total>0)out.push(TG.shareBar(top.map(function(c,i){return{value:c.amount,mark:CM[i]||'⬜'};}),16));
+    top.forEach(function(c,i){var pct=D.total?Math.round(c.amount/D.total*100):0;out.push(cc(c,(pct+'%').padStart(5))+' '+(top.length>1?(CM[i]||'⬜')+' ':'')+cat(c.cat)+' · '+c.count+' '+T('筆','rows','កំណត់ត្រា')+(hasPrev?' '+expTrend(c.amount,c.prev,true):''));});
     if(D.cats.length>8)out.push('… +'+(D.cats.length-8));
   }
   var q=expQuality(rows,prev),catSum=D.cats.reduce(function(a,c){return a+c.amount;},0),okSum=Math.abs(catSum-D.total)<0.005;
