@@ -414,11 +414,11 @@ TG.buildSummary = function (o) {
   function short(v) { return v.length <= 12 && /^[\x20-\x7e—]*$/.test(v); }
   sections.filter(function (sec) { return sec.length; }).forEach(function (sec, si) {
     if (si) out.push('────────────');
-    var w = sec.reduce(function (a, r) { var v = val(r); return !r.head && short(v) ? Math.max(a, v.length) : a; }, 0);
+    var w = sec.reduce(function (a, r) { var v = val(r); return !r.head && !r.text && short(v) ? Math.max(a, v.length) : a; }, 0);   /* r.text:true = 一律「標籤: 內容」（文字欄位，不當數字排） */
     sec.forEach(function (r) {
       var v = val(r), dot = TG.light(r.tone);
       if (r.head) { out.push('<b>' + lab(r) + '</b>' + (r.v == null || r.v === '' ? '' : ' · ' + TG.safe(v))); return; }
-      if (short(v)) out.push(TG.mono(v, w) + ' ' + (dot ? dot + ' ' : '') + lab(r));
+      if (!r.text && short(v)) out.push(TG.mono(v, w) + ' ' + (dot ? dot + ' ' : '') + lab(r));
       else { var lb = lab(r); out.push((dot ? dot + ' ' : /^[A-Za-z0-9\u3400-\u9fff\u1780-\u17ff]/.test(lb) ? '▫️ ' : '') + lb + ': ' + TG.safe(v)); }
     });
   });
