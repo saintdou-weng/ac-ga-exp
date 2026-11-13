@@ -13,7 +13,7 @@
 <script src="shared/ga-core.js?v=20261107b"></script>
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
-<script src="shared/ga-import.js?v=3.9.26"></script>
+<script src="shared/ga-import.js?v=20261113-xlsb"></script>
 <script src="shared/ga-telegram.js?v=20261112a"></script>
 <script src="shared/ga-compact.js?v=20261112a" defer></script>
 <script src="shared/ga-smart-sync.js?v=3.9.31"></script>
@@ -207,7 +207,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
 })(window);
 </script>
 <script src="shared/exp-seed.js?v=3.6-20260824"></script>
-<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=20261107b"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=20261112a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
+<script>if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=20261107b"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=20261113-xlsb"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=20261112a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-smart-sync.js?v=3.9.31"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-vrt-parsers.js?v=3.9.25"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/exp-seed.js?v=3.8-20260824"></scr'+'ipt>');}</script>
 <style>
   .exp-wrap{max-width:1280px;margin:0 auto;padding:12px}
   .exp-nav{display:flex;gap:4px;background:#fff;border:1px solid var(--ga-line);border-radius:11px;padding:5px;margin:11px 0;box-shadow:var(--ga-sh);overflow-x:auto}
@@ -281,7 +281,7 @@ global.__GA_EXP_UTILITY_DIRECT__=directUtility;
   </div>
   <div id="exp-view"><div class="exp-sec">⏳ 正在讀取本機資料 / Loading saved data…</div></div>
 </div>
-<input id="exp-file" class="exp-file" type="file" multiple accept=".xlsx,.xlsb,.xls">
+<input id="exp-file" class="exp-file" type="file" multiple>
 
 <script>
 /* AC-GA-EXP Expense Center v3.9.9
@@ -444,7 +444,10 @@ function parseWorkbook(wb,src,fileName){
   });return out.filter(function(r){return r.date&&r.item&&value(r)>=0;});
 }
 function classifyFile(name){for(var k in SRC_META)if(SRC_META[k].file.test(name))return k;var v=window.prompt(GA.T('expFileAsk'),'general');return /repair|維修/i.test(v||'')?'repair':/purchase|採購/i.test(v||'')?'purchase':'general';}
+/* Leave the phone's picker unfiltered: Android may label XLSB as a generic file.
+   Validate the extension here before reading, for both import and reconciliation. */
 function readWorkbook(file){
+  if(!/\.(xlsx|xlsb|xls)$/i.test(String(file&&file.name||'')))return Promise.reject(new Error(expMsgText('請選擇 Excel 檔案（.xlsx、.xlsb 或 .xls）','Select an Excel file (.xlsx, .xlsb or .xls)','សូមជ្រើសឯកសារ Excel (.xlsx, .xlsb ឬ .xls)',GA.lang)));
   function decode(buffer){
     if(typeof XLSX==='undefined'||!XLSX.read)throw new Error('SheetJS Excel reader not loaded');
     return XLSX.read(new Uint8Array(buffer),{type:'array',cellDates:false,raw:true,cellNF:false,cellText:false}); /* v3.9.25: serials → GA.excelDate (no timezone shift) */
@@ -1329,7 +1332,7 @@ if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownloa
     var ap=d.querySelector('#exp-rec-apply');if(ap)ap.onclick=async function(){ap.disabled=true;try{var r=await window.expReconcile(files,{apply:true});GA.toast('✅ '+L('已補入 '+r.added+' 筆，將自動上雲','Added '+r.added+' rows; syncing to cloud','បានបន្ថែម '+r.added),'success');d.close();}catch(e){GA.toast('❌ '+e.message,'err');ap.disabled=false;}};
     if(d.showModal)d.showModal();else d.setAttribute('open','');
   }
-  var inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.accept='.xlsx,.xlsb,.xls';inp.id='exp-reconcile-file';inp.style.display='none';document.body.appendChild(inp);
+  var inp=document.createElement('input');inp.type='file';inp.multiple=true;inp.id='exp-reconcile-file';inp.style.display='none';document.body.appendChild(inp);
   inp.addEventListener('change',async function(){var fs=Array.prototype.slice.call(this.files||[]);if(!fs.length)return;try{GA.toast('⏳ '+L('對帳中…','Checking…','កំពុងពិនិត្យ…'));var r=await window.expReconcile(fs,{});show(r,fs);}catch(e){GA.toast('❌ '+e.message,'err');}});
   window.expReconcileOpen=function(){inp.value='';inp.click();};
   var tools=document.querySelector('.ga-hd-tools');if(tools){var b=document.createElement('button');b.className='ga-ico';b.id='exp-reconcile-btn';b.title=L('原檔對帳','Reconcile','ផ្ទៀងផ្ទាត់');b.innerHTML='🔍<span>'+L('原檔對帳','Reconcile','ផ្ទៀងផ្ទាត់')+'</span>';b.onclick=window.expReconcileOpen;var lang=tools.querySelector('.ga-lang');if(lang)tools.insertBefore(b,lang);else tools.appendChild(b);}
