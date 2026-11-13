@@ -29,6 +29,8 @@
   .topbar-title{font-size:14px;font-weight:700}
   .topbar-sub{font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
   .lang-toggle{display:flex;gap:4px;flex-shrink:0}
+  /* 2026-11-13 手機：頂列自動換行，整頁不再比螢幕寬（原本 390 的螢幕頁面寬 640，語言鍵被擠到畫面外） */
+  @media(max-width:720px){.topbar{flex-wrap:wrap;gap:6px;padding:8px 10px}.topbar>div[style*="flex:1"]{flex:1 1 150px!important;min-width:0}.topbar-title{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topbar-sub{display:none}.topbar-icon{font-size:17px}.topbar #ga-cloud{margin:0!important;max-width:150px;overflow:hidden}.topbar .lang-toggle{margin-left:auto}.tabs{padding:0 6px}.tab{padding:10px 11px}}
   .lang-btn{background:transparent;border:1px solid #475569;border-radius:4px;color:#94a3b8;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;transition:all .15s}
   .lang-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
   .mt-edit-btn{border:1px solid var(--accent);background:var(--accent-bg);color:var(--accent-dark);border-radius:6px;padding:4px 8px;cursor:pointer;font-weight:700;white-space:nowrap}
@@ -183,12 +185,12 @@
 <script src="shared/ga-cloud-diagnostic.js?v=3.9.23"></script>
 <script src="shared/ga-data.js?v=3.9.26"></script>
 <script src="shared/ga-import.js?v=20261113-xlsb"></script>
-<script src="shared/ga-telegram.js?v=20261112a"></script>
+<script src="shared/ga-telegram.js?v=20261113a"></script>
 <script src="shared/ga-compact.js?v=20261112a" defer></script>
 <script src="shared/ga-auto-sync.js?v=3.9.25"></script>
 <script src="shared/ga-vrt-parsers.js?v=3.9.25"></script>
 <script>/* GA is not defined fallback：單獨開檔時自動從 GitHub 補載 shared/ */
-if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=20261107b"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=20261113-xlsb"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=20261112a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');}
+if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-core.js?v=20261107b"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-data.js?v=3.9.26"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-import.js?v=20261113-xlsb"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-telegram.js?v=20261113a"></scr'+'ipt>');document.write('<scr'+'ipt src="https://saintdou-weng.github.io/ac-ga-exp/shared/ga-auto-sync.js?v=3.9.25"></scr'+'ipt>');}
 </script>
 
 </head>
@@ -215,9 +217,10 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <div class="tabs">
   <div class="tab active" id="tab-rep" onclick="switchTab('rep')">🔧 <span id="tab-rep-lbl">維修申請</span></div>
-  <div class="tab" id="tab-po" onclick="switchTab('po')">🛒 <span id="tab-po-lbl">臨時採購</span></div>
+  <div class="tab" id="tab-po" onclick="switchTab('po')">🛒 <span id="tab-po-lbl">PO 申請</span></div>
   <div class="tab" id="tab-reprec" onclick="switchTab('reprec')">📊 <span id="tab-reprec-lbl">維修記錄</span></div>
-  <div class="tab" id="tab-porec" onclick="switchTab('porec')">📊 <span id="tab-porec-lbl">採購記錄</span></div>
+  <div class="tab" id="tab-porec" onclick="switchTab('porec')">📊 <span id="tab-porec-lbl">PO 記錄</span></div>
+  <div class="tab" id="tab-works" onclick="switchTab('works')">🏗 <span id="tab-works-lbl">工程進度</span></div>
 </div>
 
 <div class="main">
@@ -329,6 +332,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- ══════════ TAB: TEMP PO FORM ══════════ -->
 <div id="content-po" class="tab-content">
+  <div id="po-type-box"></div>
   <div class="strip">
     <div class="ts-live"><div class="ts-dot"></div><span class="ts-now">--</span></div>
     <span style="font-size:11px;color:var(--dim)" id="po-hint">帶 * 為必填　最多4項　提交後即發到審批群組</span>
@@ -350,9 +354,14 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
           <option value="">-- 請選擇 Select --</option>
           <option value="管理部 Admin">管理部 Admin</option>
           <option value="生產部 Production">生產部 Production</option>
+          <option value="工務部 ME">工務部 ME</option>
           <option value="宿舍 Staff house">宿舍 Staff house</option>
           <option value="其它 Others">其它 Others</option>
         </select>
+      </div>
+      <div class="info-cell" id="po-requester-cell" style="display:none">
+        <div class="cell-label"><span id="po-l-requester">需求人 Requester</span><span class="req">*</span></div>
+        <input class="cell-input" id="po-requester" type="text" maxlength="60">
       </div>
       <div class="info-cell">
         <div class="cell-label"><span id="po-l-po">PO No.</span><span style="font-size:9px;color:#9ca3af" id="po-l-po-opt">如有 if any</span></div>
@@ -466,6 +475,7 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
 
 <!-- ══════════ TAB: PO RECORDS ══════════ -->
 <div id="content-porec" class="tab-content">
+  <div id="porec-type-seg"></div>
   <div class="filter-bar">
     <div class="fg"><div class="fl" id="porec-fl-year">年份</div><select class="fi rq-year" data-sys="po"><option value="">全部</option></select></div>
     <div class="fg"><div class="fl" id="porec-fl-month">月份</div>
@@ -505,6 +515,9 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
   </div>
 </div>
 
+<!-- ══════════ TAB: WORKS PROGRESS LOG（shared/ga-works.js）══════════ -->
+<div id="content-works" class="tab-content"><div id="works-root"></div></div>
+
 </div>
 <div id="mt-edit-modal" class="mt-modal" style="display:none" onclick="if(event.target===this)mtCloseEdit()">
   <div class="mt-modal-card">
@@ -516,6 +529,8 @@ if(typeof GA==="undefined"){document.write('<scr'+'ipt src="https://saintdou-wen
       <label class="mt-edit-field"><span data-mt="ed_app">申請人 Applicant</span><input id="mt-edit-applicant"></label>
       <label class="mt-edit-field"><span data-mt="ed_dept">部門 Department</span><input id="mt-edit-dept"></label>
       <label class="mt-edit-field"><span data-mt="ed_ref">編號 Reference</span><input id="mt-edit-ref"></label>
+      <label class="mt-edit-field" id="mt-edit-potype-wrap" style="display:none"><span>PO 類別 Type</span><select id="mt-edit-potype"><option value="GA">🛒 GA Temp PO</option><option value="ME">⚙️ ME PO</option><option value="PROD">🏭 PROD PO</option></select></label>
+      <label class="mt-edit-field" id="mt-edit-requester-wrap" style="display:none"><span>需求人 Requester</span><input id="mt-edit-requester" maxlength="60"></label>
       <label class="mt-edit-field"><span data-mt="ed_item">品項／設備 Item / Equipment</span><input id="mt-edit-item"></label>
       <label class="mt-edit-field"><span data-mt="ed_spec">規格 Spec</span><input id="mt-edit-spec"></label>
       <label class="mt-edit-field"><span data-mt="ed_loc">地點／尺寸 Location / Size</span><input id="mt-edit-location"></label>
@@ -552,7 +567,7 @@ const params=new URLSearchParams(location.search);
 const TXT={
 zh:{
   tt:'維修中心 · Maintenance Center',
-  'tab-rep-lbl':'維修申請','tab-po-lbl':'臨時採購','tab-reprec-lbl':'維修記錄','tab-porec-lbl':'採購記錄',
+  'tab-rep-lbl':'維修申請','tab-po-lbl':'PO 申請','tab-reprec-lbl':'維修記錄','tab-porec-lbl':'PO 記錄','tab-works-lbl':'工程進度',
   'rep-hint':'帶 * 為必填　最多4項　提交後即發到審批群組（含照片）',
   'po-hint':'帶 * 為必填　最多4項　提交後即發到審批群組',
   'rep-h1':'申請人資訊 Applicant Info','po-h1':'申請人資訊 Applicant Info',
@@ -588,7 +603,7 @@ zh:{
 },
 en:{
   tt:'Maintenance Center',
-  'tab-rep-lbl':'Repair Request','tab-po-lbl':'Temp PO','tab-reprec-lbl':'Repair Records','tab-porec-lbl':'PO Records',
+  'tab-rep-lbl':'Repair Request','tab-po-lbl':'PO Request','tab-reprec-lbl':'Repair Records','tab-porec-lbl':'PO Records','tab-works-lbl':'Works Log',
   'rep-hint':'* = Required · Max 4 items · Submit to send for approval (with photos)',
   'po-hint':'* = Required · Max 4 items · Submit to send for approval',
   'rep-h1':'Applicant Info','po-h1':'Applicant Info',
@@ -624,7 +639,7 @@ en:{
 },
 km:{
   tt:'មជ្ឈមណ្ឌលជួសជុល',
-  'tab-rep-lbl':'ស្នើសុំជួសជុល','tab-po-lbl':'ការទិញបន្ទាន់','tab-reprec-lbl':'កំណត់ត្រាជួសជុល','tab-porec-lbl':'កំណត់ត្រាទិញ',
+  'tab-rep-lbl':'ស្នើសុំជួសជុល','tab-po-lbl':'ស្នើ PO','tab-reprec-lbl':'កំណត់ត្រាជួសជុល','tab-porec-lbl':'កំណត់ត្រា PO','tab-works-lbl':'វឌ្ឍនភាពការងារ',
   'rep-hint':'* ចាំបាច់ · អតិបរមា 4 ធាតុ · ដាក់ស្នើទៅក្រុមអនុម័ត (មានរូបថត)',
   'po-hint':'* ចាំបាច់ · អតិបរមា 4 ធាតុ · ដាក់ស្នើទៅក្រុមអនុម័ត',
   'rep-h1':'ព័ត៌មានអ្នកស្នើសុំ','po-h1':'ព័ត៌មានអ្នកស្នើសុំ',
@@ -717,7 +732,7 @@ function mtDeptLabel(v){const e=MT_DEPT_LBL[String(v==null?'':v).trim()];return 
 const MT_URG_LBL={normal:{zh:'一般',en:'Normal',km:'ធម្មតា'},urgent:{zh:'緊急',en:'Urgent',km:'បន្ទាន់'},critical:{zh:'重大',en:'Critical',km:'បន្ទាន់ខ្លាំង'}};
 function mtUrgLabel(v){const e=MT_URG_LBL[String(v==null?'':v).trim().toLowerCase()];return lang==='zh'||!e?v:e[lang]}
 function mtStatusLabel(s){const e=MT_STATUS_LBL[s];return lang==='zh'||!e?s:e[lang]||s}
-const MT_DEPT_LBL={'管理部 Admin':{en:'Admin',km:'ផ្នែករដ្ឋបាល'},'生產部 Production':{en:'Production',km:'ផ្នែកផលិតកម្ម'},'宿舍 Staff house':{en:'Staff house',km:'អន្តេវាសិកដ្ឋានបុគ្គលិក'},'其它 Others':{en:'Others',km:'ផ្សេងៗ'}};
+const MT_DEPT_LBL={'管理部 Admin':{en:'Admin',km:'ផ្នែករដ្ឋបាល'},'生產部 Production':{en:'Production',km:'ផ្នែកផលិតកម្ម'},'工務部 ME':{en:'ME (Maintenance)',km:'ផ្នែកជួសជុល ME'},'宿舍 Staff house':{en:'Staff house',km:'អន្តេវាសិកដ្ឋានបុគ្គលិក'},'其它 Others':{en:'Others',km:'ផ្សេងៗ'}};
 const MT_MONTHS={en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],km:['មករា','កុម្ភៈ','មីនា','មេសា','ឧសភា','មិថុនា','កក្កដា','សីហា','កញ្ញា','តុលា','វិច្ឆិកា','ធ្នូ']};
 function mtApplyStatic(){
   document.title=mtX('page_title');
@@ -791,7 +806,7 @@ function switchTab(t){
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   document.getElementById('content-'+t).classList.add('active');
-  const poMode=(t==='po'||t==='porec');
+  const poMode=(t==='po'||t==='porec');/* 2026-11-13: 工程進度分頁由 shared/ga-po-types.js 接手顯示 */
   document.body.classList.toggle('mode-po',poMode);
   document.getElementById('tb-icon').textContent=poMode?'🛒':'🔧';
 }
@@ -916,7 +931,7 @@ async function fetchHistory(sys,q){
   let records=null;
   const action=sys==='rep'?'repairHistory':'tempHistory';
   try{
-    const d=await GA.gasGet(action,{item:q,approvedOnly:1});
+    const d=await GA.gasGet(action,sys==='po'?{item:q,approvedOnly:1,poType:window.mtPoType||'GA'}:{item:q,approvedOnly:1});
     if(d.records&&d.records.length>0)records=d.records;
   }catch(e){}
   const panel=document.getElementById(sys+'-history-panel');
@@ -997,6 +1012,9 @@ async function submitTempPo(){
   const name=getV('po-name'),dept=getV('po-dept');
   if(!name){showToast(T('e-name'));return}
   if(!dept){showToast(T('e-dept'));return}
+  /* 2026-11-13: GA / ME / PROD PO — ME 與 PROD 必須寫需求人 */
+  const poType=window.mtPoType||'GA',requester=getV('po-requester');
+  if(poType!=='GA'&&!requester){showToast(mtL('請填需求人（'+poType+' 誰要的）','Enter the requester (who in '+poType+' asked)','សូមបញ្ចូលអ្នកត្រូវការ'));const rq=document.getElementById('po-requester');if(rq)rq.focus();return}
   const items=[];
   for(let i=0;i<4;i++){
     const n=getV(`po-item${i}`);
@@ -1006,7 +1024,7 @@ async function submitTempPo(){
 
   const btn=document.getElementById('po-submit-btn');
   btn.disabled=true;btn.innerHTML=`<span class="spinner"></span>${T('submitting')}`;
-  const payload={action:'tempSubmit',timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),inspector:getV('po-inspector'),remarks:getV('po-remark'),items,lang:lang,tgUid:params.get('uid')||''};
+  const payload={action:'tempSubmit',poType:poType,requester:poType==='GA'?'':requester,timestamp:currentTs,applicantName:name,department:dept,poNumber:getV('po-no'),inspector:getV('po-inspector'),remarks:getV('po-remark'),items,lang:lang,tgUid:params.get('uid')||''};
   try{
     const d=await postGAS(payload);
     if(d.ok){
@@ -1208,7 +1226,7 @@ function mtOpenEdit(sys,rowNumber){
   mtEditSet('mt-edit-urgency',rep?(row[9]||'normal'):'normal');
   mtEditSet('mt-edit-qty',rep?row[17]:row[7]);mtEditSet('mt-edit-unit',rep?row[18]:row[17]);mtEditSet('mt-edit-total',rep?(row[19]||row[11]):(row[18]||row[11]));
   mtEditSet('mt-edit-supplier',row[10]);mtEditSet('mt-edit-inspector',row[16]);mtEditSet('mt-edit-remarks',row[12]);
-  const rw=document.getElementById('mt-edit-report-wrap'),a=document.getElementById('mt-edit-report'),url=row[20]||'';
+  const rw=document.getElementById('mt-edit-report-wrap'),a=document.getElementById('mt-edit-report'),url=(rep?row[20]:row[19])||'';
   if(url){rw.style.display='flex';a.href=url;a.textContent=url;}else{rw.style.display='none';a.removeAttribute('href');a.textContent='';}
   document.getElementById('mt-edit-modal').style.display='flex';
 }
@@ -1220,7 +1238,7 @@ async function mtSaveEdit(){
   const sys=document.getElementById('mt-edit-sys').value,rowNumber=Number(document.getElementById('mt-edit-row').value),btn=document.getElementById('mt-edit-save');
   if(!sys||!rowNumber)return;
   mtEditRecalc();
-  const fields={timestamp:document.getElementById('mt-edit-timestamp').value,applicantName:document.getElementById('mt-edit-applicant').value,department:document.getElementById('mt-edit-dept').value,ref:document.getElementById('mt-edit-ref').value,itemName:document.getElementById('mt-edit-item').value,spec:document.getElementById('mt-edit-spec').value,location:document.getElementById('mt-edit-location').value,detail:document.getElementById('mt-edit-detail').value,action:document.getElementById('mt-edit-action').value,urgency:document.getElementById('mt-edit-urgency').value,supplier:document.getElementById('mt-edit-supplier').value,qty:document.getElementById('mt-edit-qty').value,unitPrice:document.getElementById('mt-edit-unit').value,amount:document.getElementById('mt-edit-total').value,inspector:document.getElementById('mt-edit-inspector').value,remarks:document.getElementById('mt-edit-remarks').value,status:document.getElementById('mt-edit-status').value};
+  const fields={poType:window.mtEditPoField?mtEditPoField('mt-edit-potype'):undefined,requester:window.mtEditPoField?mtEditPoField('mt-edit-requester'):undefined,timestamp:document.getElementById('mt-edit-timestamp').value,applicantName:document.getElementById('mt-edit-applicant').value,department:document.getElementById('mt-edit-dept').value,ref:document.getElementById('mt-edit-ref').value,itemName:document.getElementById('mt-edit-item').value,spec:document.getElementById('mt-edit-spec').value,location:document.getElementById('mt-edit-location').value,detail:document.getElementById('mt-edit-detail').value,action:document.getElementById('mt-edit-action').value,urgency:document.getElementById('mt-edit-urgency').value,supplier:document.getElementById('mt-edit-supplier').value,qty:document.getElementById('mt-edit-qty').value,unitPrice:document.getElementById('mt-edit-unit').value,amount:document.getElementById('mt-edit-total').value,inspector:document.getElementById('mt-edit-inspector').value,remarks:document.getElementById('mt-edit-remarks').value,status:document.getElementById('mt-edit-status').value};
   btn.disabled=true;btn.textContent=mtL('⏳ 儲存中…','⏳ Saving…','⏳ កំពុងរក្សាទុក…');
   try{
     const _orig=(currentData[sys]||[]).find(r=>Number(r[21])===rowNumber);/* v3.9.25: identity check so a stale rowNumber can never edit another record */
@@ -1524,6 +1542,9 @@ function scheduleMaintenanceAutoSync(reason){if(window.GAAutoSync){GAAutoSync.sc
   document.documentElement.setAttribute('data-maintenance-approval-guard','v3.9.14c');
 })();
 </script>
+<!-- 2026-11-13: GA / ME / PROD PO 類別 + 工程進度作業 -->
+<script src="shared/ga-works.js?v=20261113a"></script>
+<script src="shared/ga-po-types.js?v=20261113a"></script>
 <!-- VRT swipe-tabs：左右滑動（手指／滑鼠拖曳）切換分頁，只聽手勢、不改資料 -->
 <script src="https://saintdou-weng.github.io/ac-admin/shared/swipe-tabs.js" defer></script>
 </body>
