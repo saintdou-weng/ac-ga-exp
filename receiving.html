@@ -2312,5 +2312,9 @@ html[data-receiving-mode="receive"] .recv-v3912-actions .nav-btn.success{backgro
 <script src="shared/ga-receiving-catalog.js?v=3.9.25"></script>
 <!-- VRT swipe-tabs：左右滑動（手指／滑鼠拖曳）切換分頁，只聽手勢、不改資料 -->
 <script src="https://saintdou-weng.github.io/ac-admin/shared/swipe-tabs.js" defer></script>
+<!-- 2026-11-13 手機：頂列自動換行，整頁不再比螢幕寬（原本 390 的螢幕頁面寬 664，右邊的鍵要橫向捲才看得到） -->
+<style>@media(max-width:720px){.topbar{flex-wrap:wrap!important;height:auto!important;min-height:48px;padding:6px 10px!important;row-gap:6px}.topbar .topbar-spacer{flex:1 1 0;min-width:0}.topbar .tb-sep{display:none}.topbar #ga-cloud{margin:0!important;max-width:150px;overflow:hidden}.topbar-logo{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}</style>
+<!-- 2026-11-13: 物品資訊卡（點清單列 → 資訊卡，可上一個／下一個、篩選進出記錄） -->
+<script src="shared/ga-item-card.js?v=20261113a"></script>
 </body>
 </html>
