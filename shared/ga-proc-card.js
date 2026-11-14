@@ -43,8 +43,9 @@
     return out.sort(function (a, b) { return (n(b.po.year) * 100 + n(b.po.month)) - (n(a.po.year) * 100 + n(a.po.month)); });
   }
   function logs(id) { try { return (recvLog || []).filter(function (r) { return String(r.itemId) === String(id); }).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }); } catch (e) { return []; } }
-  function std(id) { var s = set(id); return s.photo && phUrl(s.photo) ? s.photo : null; }
-  function allPhotos(id) { var s = set(id), seen = {}, out = []; function add(e, ym, kind) { var k = phKey(e); if (!e || !phUrl(e) || !k || seen[k]) return; seen[k] = 1; out.push({ e: e, ym: String(ym || '').slice(0, 7), kind: kind }); } if (std(id)) add(s.photo, s.photo.ym, 'std'); (s.monthPhotos || []).forEach(function (m) { add(m, m.ym, m.kind === 'bad' ? 'bad' : 'diff'); }); return out; }
+  /* 2026-11-14：與收貨頁共用標準照（同名品項，英文或中文對得上），取較新的那張 */
+  function std(id) { var s = set(id), own = s.photo && phUrl(s.photo) ? s.photo : null, it = item(id); return GA.SharedPhoto && it ? GA.SharedPhoto.pick(own, [it.name, it.cn]) : own; }
+  function allPhotos(id) { var s = set(id), seen = {}, out = []; function add(e, ym, kind) { var k = phKey(e); if (!e || !phUrl(e) || !k || seen[k]) return; seen[k] = 1; out.push({ e: e, ym: String(ym || '').slice(0, 7), kind: kind }); } var sd = std(id); if (sd) add(sd, sd.ym, 'std'); (s.monthPhotos || []).forEach(function (m) { add(m, m.ym, m.kind === 'bad' ? 'bad' : 'diff'); }); return out; }
   var KIND = { std: ['#059669', '標準', 'Standard', 'ស្តង់ដារ'], diff: ['#d97706', '不同', 'Different', 'ខុសគ្នា'], bad: ['#dc2626', '異常', 'Abnormal', 'មិនប្រក្រតី'] };
   function kl(k) { var d = KIND[k] || KIND.diff; return L(d[1], d[2], d[3]); }
   function F(label, v, wide) { if (v === '' || v == null) return ''; return '<div class="pc-f' + (wide ? ' w' : '') + '"><small>' + esc(label) + '</small><b>' + esc(v) + '</b></div>'; }
@@ -133,7 +134,7 @@
         var r = await GA.gasPost('recvItemAttachment', { itemId: 'proc_' + id, effectiveFrom: kind === 'std' ? '0000-01' : ym, fileName: f.name || 'photo.jpg', mimeType: c.mime, data: c.data.replace(/^data:[^;]+;base64,/, ''), hash: hash }), d = (r && r.data) || r || {};
         if (!d.url) throw new Error('no file URL');
         var e = Object.assign({ hash: hash, ym: ym, createdAt: new Date().toISOString() }, d), s = set(id);
-        if (kind === 'std') s.photo = e; else { e.kind = kind; e.note = note || ''; s.monthPhotos = (s.monthPhotos || []).concat([e]); }
+        if (kind === 'std') { s.photo = e; var it2 = item(id); if (GA.SharedPhoto && it2) GA.SharedPhoto.set([it2.name, it2.cn], e); } else { e.kind = kind; e.note = note || ''; s.monthPhotos = (s.monthPhotos || []).concat([e]); }
         try { saveState(); } catch (er) {}
         GA.toast('✅ ' + L('照片已存，會自動上雲', 'Photo saved; syncing to cloud', 'បានរក្សាទុក'));
         open(id, true); show('photo');

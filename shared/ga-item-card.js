@@ -29,7 +29,7 @@
   function item(id) { try { return items.filter(function (x) { return String(x.id) === String(id); })[0]; } catch (e) { return null; } }
   function recs(x) { try { return records.filter(function (r) { return String(r.itemId) === String(x.id); }); } catch (e) { return []; } }
   function ver(x) { try { return recvItemVersionFor(x, localYMD().slice(0, 7)) || x; } catch (e) { return x; } }
-  function photo(x) { if (x && x.photo && (x.photo.previewUrl || x.photo.url)) return x.photo.previewUrl || x.photo.url; try { var ev = recvItemEvidenceFor(x, localYMD().slice(0, 7)); return ev && (ev.previewUrl || ev.url || ev.dataUrl) || ''; } catch (e) { return ''; } }
+  function photo(x) { var sp0 = x && GA.SharedPhoto ? GA.SharedPhoto.pick(x.photo && (x.photo.previewUrl || x.photo.url) ? x.photo : null, [x.name]) : (x && x.photo); if (sp0 && (sp0.previewUrl || sp0.url)) return sp0.previewUrl || sp0.url; try { var ev = recvItemEvidenceFor(x, localYMD().slice(0, 7)); return ev && (ev.previewUrl || ev.url || ev.dataUrl) || ''; } catch (e) { return ''; } }
   function cat(c) { try { return recvCatLabel(c); } catch (e) { return c || '—'; } }
   function low(x) { var th = 5; try { th = GA.num(x.minStock) || settings.lowThreshold || 5; } catch (e) {} return GA.num(x.stock) < th; }
   function sum(a, type, pred) { return a.reduce(function (s, r) { return r.type === type && (!pred || pred(r)) ? s + GA.num(r.qty) : s; }, 0); }
@@ -133,7 +133,8 @@
   function phUrl(e) { return e && (e.previewUrl || e.url || e.dataUrl) || ''; }
   function phKey(e) { return String(e && (e.hash || e.fileId || e.url || e.fileName) || ''); }
   /* 標準照：x.photo（手動設定）＞ 最早版本的第一張證據照 */
-  function stdPhoto(x) { if (x.photo && phUrl(x.photo)) return x.photo; var vs = (x.versions || []).slice().sort(function (a, b) { return String(a.effectiveFrom).localeCompare(String(b.effectiveFrom)); }); for (var i = 0; i < vs.length; i++) { var e = (vs[i].evidence || []).filter(phUrl)[0]; if (e) return e; } var e2 = (x.evidence || []).filter(phUrl)[0]; return e2 || null; }
+  /* 2026-11-14：與採購頁共用標準照（同名品項），取較新的那張 */
+  function stdPhoto(x) { var sp = GA.SharedPhoto && GA.SharedPhoto.pick(x.photo && phUrl(x.photo) ? x.photo : null, [x.name]); if (sp) return sp; var vs = (x.versions || []).slice().sort(function (a, b) { return String(a.effectiveFrom).localeCompare(String(b.effectiveFrom)); }); for (var i = 0; i < vs.length; i++) { var e = (vs[i].evidence || []).filter(phUrl)[0]; if (e) return e; } var e2 = (x.evidence || []).filter(phUrl)[0]; return e2 || null; }
   /* 全部照片（不重複）：每張帶 ym（月份）與 kind（std 標準／ver 規格版本／diff 當月不同／bad 異常） */
   function allPhotos(x) {
     var seen = {}, out = [], st = stdPhoto(x), sk = phKey(st);
@@ -171,7 +172,7 @@
         var r = await GA.gasPost('recvItemAttachment', { itemId: x.id, effectiveFrom: kind === 'std' ? '0000-01' : ym, fileName: c.name, mimeType: c.mime, data: c.data.replace(/^data:[^;]+;base64,/, ''), hash: hash }), d = (r && r.data) || r || {};
         if (!d.url) throw new Error('no file URL');
         var e = Object.assign({ fileName: c.name, mimeType: c.mime, hash: hash, createdAt: new Date().toISOString(), ym: ym }, d);
-        if (kind === 'std') x.photo = e; else { e.kind = kind; e.note = note || ''; x.monthPhotos = (x.monthPhotos || []).concat([e]); }
+        if (kind === 'std') { x.photo = e; if (GA.SharedPhoto) GA.SharedPhoto.set([x.name], e); } else { e.kind = kind; e.note = note || ''; x.monthPhotos = (x.monthPhotos || []).concat([e]); }
         x.updatedAt = new Date().toISOString();
         try { saveLocal(); } catch (er) {} try { scheduleReceivingAutoUpload('item-photo'); } catch (er) {} try { renderItemsTable(); } catch (er) {}
         GA.toast('✅ ' + L('照片已存，會自動上雲', 'Photo saved; syncing to cloud', 'បានរក្សាទុក'));
@@ -196,6 +197,7 @@
     el.addEventListener('touchend', function (e) { var t = e.changedTouches[0]; if (!t) return; var dx = t.clientX - x0, dy = t.clientY - y0; if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6) { if (e.target.closest && e.target.closest('.ic-sib,.ic-chips,table')) return; cb(dx < 0 ? 1 : -1); } }, { passive: true });
   }
   /* 清單上的小圖也優先用標準照 */
-  if (typeof root.recvItemEvidenceFor === 'function') { var _ev = root.recvItemEvidenceFor; root.recvItemEvidenceFor = function (x, ym) { if (x && x.photo && (x.photo.previewUrl || x.photo.url)) return x.photo; return _ev.apply(this, arguments); }; }
+  if (typeof root.recvItemEvidenceFor === 'function') { var _ev = root.recvItemEvidenceFor; root.recvItemEvidenceFor = function (x, ym) { var sp = x && GA.SharedPhoto ? GA.SharedPhoto.pick(x.photo && (x.photo.previewUrl || x.photo.url) ? x.photo : null, [x.name]) : (x && x.photo); if (sp && (sp.previewUrl || sp.url)) return sp; return _ev.apply(this, arguments); };
+    if (GA.SharedPhoto) GA.SharedPhoto.onLoad(function () { try { renderItemsTable(); } catch (e) {} }); }
   root.GAItemCard = { open: open, close: close };
 })(window);
