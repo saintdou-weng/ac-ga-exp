@@ -467,6 +467,22 @@ window.addEventListener('load',async function(){await localLoad();buildItems();p
   /* 啟動：資料載入後，所選期間沒資料就停在提示（不自動亂跳），待核可清單先畫出來 */
   function boot(n){try{normalize();renderAll()}catch(e){}if(n>0)setTimeout(function(){boot(n-1)},1500)}
   window.addEventListener('load',function(){setTimeout(function(){boot(3)},600)});
+  /* 2026-11-14 核可身份：手機上存著別人（或過期）的登入，按核可會出現「Paul approval only」。
+     從 Telegram /exp 開（網址帶 uid）時，一律用這個 uid 重新取得身份並存起來，不再沿用舊的。
+     核可被拒時，直接說目前登入的是誰。 */
+  var _fresh=null;
+  window.ensureDamageSession=async function(){
+    var qs=new URLSearchParams(location.search),uid=qs.get('uid')||'';
+    if(uid){if(_fresh&&_fresh.uid===uid)return _fresh.s;try{var r=await GA.gasPost('issueSession',{tgId:uid}),d=(r&&r.data)||{};if(d.session){_fresh={uid:uid,s:d.session,name:d.name,role:d.role};try{if(GA.setSession)GA.setSession(d.session);else if(GA.saveCfg)GA.saveCfg({session:d.session})}catch(e){}return d.session}}catch(e){}}
+    return damageSession();
+  };
+  async function whoText(){try{var s=damageSession();if(!s)return M('沒有登入','not signed in','មិនបានចូល');var w=await GA.gasGet('whoami',{session:s}),d=(w&&w.data)||{};return d.authenticated?((d.name||'?')+' ('+(d.role||'')+')'):M('登入已過期','sign-in expired','ផុតកំណត់')}catch(e){return '?'}}
+  var _dd=window.damageDecision;window.damageDecision=async function(id,act){
+    var r0=(DB||[]).find(function(x){return x.id===id});var before=r0&&r0.status;
+    await _dd(id,act);
+    var r1=(DB||[]).find(function(x){return x.id===id});
+    if(act==='approve'&&r1&&r1.status===before){var who=await whoText();GA.toast('⚠️ '+M('核可沒有成功：這支手機目前登入的是 '+who+'。請從 Telegram 輸入 /exp → 開啟 Damage 再按核可（會自動用您的身份），或直接在群組卡片按「Paul Approve」。','Approval did not go through: this device is signed in as '+who+'. Open Damage from Telegram /exp (it signs you in as yourself), or press "Paul Approve" on the group card.','មិនបានអនុម័ត៖ ឧបករណ៍នេះចូលជា '+who+'។ សូមបើកពី /exp ឬចុច Paul Approve ក្នុងក្រុម។'),'err')}
+  };
   document.documentElement.setAttribute('data-damage-direct-approve','20261113');
 })();
 </script>
