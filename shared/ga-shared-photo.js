@@ -26,6 +26,12 @@
     try { if (GA.backend && GA.backend.require) await GA.backend.require('profiles', { action: 'profilesLoad' }); var r = await GA.gasGet('profilesLoad'), d = r && r.data; if (d && d.profiles) { Object.keys(d.profiles).forEach(function (k) { var a = P[k], b = d.profiles[k]; if (!a || Date.parse(b.updatedAt || 0) >= Date.parse(a.updatedAt || 0)) P[k] = b; }); save(); } } catch (e) {}
     loaded = true; waiters.splice(0).forEach(function (f) { try { f(); } catch (e) {} });
   }
-  GA.SharedPhoto = { get: get, pick: pick, set: set, load: load, keys: keys, onLoad: function (f) { if (loaded) f(); else waiters.push(f); } };
+  /* 其他共用資料（例如採購⇄收貨物品配對 itemlink:<id>）也存在同一份 PROFILES_DB */
+  function raw() { return P; }
+  async function put(o) {
+    if (!o) return false; Object.keys(o).forEach(function (k) { P[k] = o[k]; }); save();
+    try { if (GA.backend && GA.backend.require) await GA.backend.require('profiles', { action: 'profilesSave' }); var r = await GA.gasPost('profilesSave', { profiles: o }), d = r && r.data; if (d && d.profiles) { Object.keys(d.profiles).forEach(function (k) { P[k] = d.profiles[k]; }); save(); } return true; } catch (e) { return false; }
+  }
+  GA.SharedPhoto = { get: get, pick: pick, set: set, load: load, keys: keys, raw: raw, put: put, onLoad: function (f) { if (loaded) f(); else waiters.push(f); } };
   setTimeout(load, 1200);
 })(window);

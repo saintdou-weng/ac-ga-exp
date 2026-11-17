@@ -151,4 +151,5 @@
   }, true);
   document.addEventListener('keydown', function (e) { if (!S.id) return; if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') { var p = document.querySelector('#pc-ov [data-a="prev"]'); if (p && !p.disabled) p.click(); } else if (e.key === 'ArrowRight') { var n2 = document.querySelector('#pc-ov [data-a="next"]'); if (n2 && !n2.disabled) n2.click(); } });
   root.GAProcCard = { open: open, close: close };
+  root.GAProcCardCurrent = function () { return document.getElementById('pc-ov') ? { id: S.id, tab: S.tab } : null; };
 })(window);

@@ -200,4 +200,5 @@
   if (typeof root.recvItemEvidenceFor === 'function') { var _ev = root.recvItemEvidenceFor; root.recvItemEvidenceFor = function (x, ym) { var sp = x && GA.SharedPhoto ? GA.SharedPhoto.pick(x.photo && (x.photo.previewUrl || x.photo.url) ? x.photo : null, [x.name]) : (x && x.photo); if (sp && (sp.previewUrl || sp.url)) return sp; return _ev.apply(this, arguments); };
     if (GA.SharedPhoto) GA.SharedPhoto.onLoad(function () { try { renderItemsTable(); } catch (e) {} }); }
   root.GAItemCard = { open: open, close: close };
+  root.GAItemCardCurrent = function () { return document.getElementById('ic-ov') ? { id: S.id, tab: S.tab } : null; };
 })(window);
