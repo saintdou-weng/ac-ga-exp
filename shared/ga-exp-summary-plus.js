@@ -14,6 +14,10 @@
   function M(v) { return money(v); }
   function pct(a, b) { if (!b) return null; return (a - b) / Math.abs(b) * 100; }
   function pctTxt(p) { if (p == null) return ''; return (p > 0 ? '+' : '') + p.toFixed(1) + '%'; }
+  /* 2026-11-18 Paul：+／− 看不懂 → 寫成「比上期（6 月）多／少 $x（x%）」 */
+  function vsP(p, base) { return p == null ? '' : (typeof expVsWord === 'function' ? expVsWord(p, GA.lang, base) : pctTxt(p)); }
+  function moreLess(d, pl) { var a = M(Math.abs(d)); return d > 0 ? L3('比' + pl + '多 ' + a, a + ' more than ' + pl, 'ច្រើនជាង ' + pl + ' ' + a) : d < 0 ? L3('比' + pl + '少 ' + a, a + ' less than ' + pl, 'តិចជាង ' + pl + ' ' + a) : L3('和' + pl + '一樣', 'same as ' + pl, 'ដូច ' + pl); }
+  function prevLbl(st) { try { if (st && st.key && st.key !== 'ALL') return L3('上期', 'prev. period', 'មុន') + '（' + GA.periodLabel(GA.shiftPeriod(st.key, st.type, -1), st.type) + '）'; } catch (_) {} return L3('上期', 'prev. period', 'មុន'); }
   function dot(p) { return p == null ? '⚪' : p > 15 ? '🔴' : p > 5 ? '🟡' : '🟢'; }
   function catOf(r) { ensureExpenseCategory(r, r._source); return r.expenseCategory || 'other'; }
   function group(r) { var c = catOf(r); return c === 'electricity' || c === 'water' ? c : (r._source || 'general'); }
@@ -62,18 +66,20 @@
   function explainHtml(D, st) {
     var out = [], L = GA.lang, p = pct(D.total, D.prevTotal);
     if (!D.rows.length) return '<div class="exp-sec xp-exp"><div class="exp-sec-t">💡 ' + esc(L3('一眼看懂', 'At a glance', 'មើលភ្លាម')) + '</div><div class="xp-li">⚪ ' + esc(L3('這個期間沒有記錄。', 'No records in this period.', 'គ្មានកំណត់ត្រាក្នុងរយៈពេលនេះ។')) + '</div></div>';
-    out.push([dot(p), L3('本期合計 ', 'Total ', 'សរុប ') + M(D.total) + '（' + D.rows.length + ' ' + L3('筆', 'records', 'កំណត់ត្រា') + '）' + (D.hasPrev && D.prevTotal ? L3('，上期 ', ', previous ', ', មុន ') + M(D.prevTotal) + ' · ' + pctTxt(p) : '')]);
+    var PL = prevLbl(st);
+    out.push([dot(p), L3('本期合計 ', 'Total ', 'សរុប ') + M(D.total) + '（' + D.rows.length + ' ' + L3('筆', 'records', 'កំណត់ត្រា') + '）' + (D.hasPrev && D.prevTotal ? L3('；', '; ', '; ') + PL + ' ' + M(D.prevTotal) + ' → ' + moreLess(D.total - D.prevTotal, L3('上期', 'prev.', 'មុន')) + '（' + vsP(p) + '）' : '')]);
+    try { var nd = typeof expDupCount === 'function' ? expDupCount() : 0; if (nd) out.push(['🧹', L3('同一本帳匯入好幾個版本（09.／15 sep／New…）、電費分表、舊 seed 重複的 ' + nd + ' 筆已不重複計算（原資料保留）', nd + ' duplicate rows (same workbook imported in several versions, meter sub-sheets, old seed) are not counted twice — originals kept', 'ជួរស្ទួន ' + nd + ' មិនរាប់ពីរដង')]); } catch (_) {}
     /* 誰帶動變化 */
     if (D.hasPrev && D.prevTotal) {
       var g = {}, gp = {}; D.rows.forEach(function (r) { var k = group(r); g[k] = (g[k] || 0) + value(r); }); D.prev.forEach(function (r) { var k = group(r); gp[k] = (gp[k] || 0) + value(r); });
       var ks = Object.keys(Object.assign({}, g, gp)).map(function (k) { return { k: k, d: (g[k] || 0) - (gp[k] || 0) }; }).sort(function (a, b) { return Math.abs(b.d) - Math.abs(a.d); });
-      if (ks[0] && Math.abs(ks[0].d) > 0) out.push([ks[0].d > 0 ? '📈' : '📉', L3('變化最大的是 ', 'Biggest change: ', 'ប្រែប្រួលធំបំផុត៖ ') + gname(ks[0].k) + ' ' + (ks[0].d > 0 ? '+' : '−') + M(Math.abs(ks[0].d)) + (ks[1] && Math.abs(ks[1].d) > 0 ? L3('；其次 ', '; then ', '; បន្ទាប់ ') + gname(ks[1].k) + ' ' + (ks[1].d > 0 ? '+' : '−') + M(Math.abs(ks[1].d)) : '')]);
+      if (ks[0] && Math.abs(ks[0].d) > 0) out.push([ks[0].d > 0 ? '📈' : '📉', L3('跟' + PL + '比，變化最大的是 ', 'Vs ' + PL + ', biggest change: ', 'ធៀប ' + PL + ' ប្រែប្រួលធំបំផុត៖ ') + gname(ks[0].k) + ' ' + moreLess(ks[0].d, L3('上期', 'prev.', 'មុន')) + (ks[1] && Math.abs(ks[1].d) > 0 ? L3('；其次 ', '; then ', '; បន្ទាប់ ') + gname(ks[1].k) + ' ' + moreLess(ks[1].d, L3('上期', 'prev.', 'មុន')) : '')]);
     }
     /* 水電 */
     var ut = [];
     D.elec.list.concat(D.water.list).forEach(function (a) { var q = pct(a.amount, a.prev); if (q != null && Math.abs(q) >= 15) ut.push({ a: a, q: q, w: D.water.list.indexOf(a) >= 0 }); });
     ut.sort(function (x, y) { return Math.abs(y.q) - Math.abs(x.q); });
-    if (ut.length) out.push(['⚡', ut.slice(0, 3).map(function (u) { return (u.w ? '🚰' : '⚡') + expAreaLabel(u.a.area, L) + ' ' + M(u.a.amount) + ' ' + dot(u.q) + pctTxt(u.q); }).join('；') + (ut.some(function (u) { return u.q <= -60; }) ? L3('（大幅下降，可能帳單還沒全部進來）', ' (big drop — bills may not all be in yet)', ' (ធ្លាក់ខ្លាំង អាចមិនទាន់បញ្ចូលវិក្កយបត្រគ្រប់)') : '')]);
+    if (ut.length) out.push(['⚡', ut.slice(0, 3).map(function (u) { return (u.w ? '🚰' : '⚡') + expAreaLabel(u.a.area, L) + ' ' + M(u.a.amount) + ' ' + dot(u.q) + vsP(u.q); }).join('；') + (ut.some(function (u) { return u.q <= -60; }) ? L3('（大幅下降，可能帳單還沒全部進來）', ' (big drop — bills may not all be in yet)', ' (ធ្លាក់ខ្លាំង អាចមិនទាន់បញ្ចូលវិក្កយបត្រគ្រប់)') : '')]);
     /* 最大幾筆 */
     var top = D.nonUtil.slice(0, 3); if (top.length) out.push(['🔥', L3('最大的支出：', 'Largest: ', 'ធំបំផុត៖ ') + top.map(function (r) { return expItemName(r).slice(0, 40) + ' ' + M(value(r)); }).join('、') + (D.nonUtilTotal ? L3('（前 3 筆佔非水電 ', ' (top 3 = ', ' (៣ ដំបូង = ') + Math.round(top.reduce(function (s, r) { return s + value(r); }, 0) / D.nonUtilTotal * 100) + L3('%）', '% of non-utility)', '%)') : '')]);
     /* 資料齊不齊 */
@@ -104,7 +110,7 @@
     if (c1) charts.push(new Chart(c1, { type: 'bar', data: { labels: ks.map(function (k) { return GA.periodLabel(k, type).replace(/^20(\d\d)/, '$1'); }), datasets: G.map(function (g) { return { label: gname(g), data: data[g], backgroundColor: C[g], stack: 's', borderWidth: 0 }; }) },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: function (c) { return c.dataset.label + ' ' + M(c.raw); } } } }, scales: { x: { stacked: true, ticks: { font: { size: 9 } } }, y: { stacked: true, ticks: { callback: function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'k' : v); } } } } } }));
     var nz = tot.filter(function (v) { return v > 0; }), avg = nz.length ? nz.reduce(function (a, b) { return a + b; }, 0) / nz.length : 0, cur = tot[tot.length - 1], mx = Math.max.apply(null, tot), mi = tot.indexOf(mx);
-    note('xp-trend', nz.length ? L3('本期 ', 'This period ', 'រយៈពេលនេះ ') + M(cur) + L3('，有資料期間平均 ', ', average of periods with data ', ', មធ្យម ') + M(avg) + ' ' + dot(pct(cur, avg)) + pctTxt(pct(cur, avg)) + L3('；最高是 ', '; highest ', '; ខ្ពស់បំផុត ') + GA.periodLabel(ks[mi], type) + ' ' + M(mx) : L3('沒有資料', 'No data', 'គ្មានទិន្នន័យ'));
+    note('xp-trend', nz.length ? L3('本期 ', 'This period ', 'រយៈពេលនេះ ') + M(cur) + L3('，有資料期間平均 ', ', average of periods with data ', ', មធ្យម ') + M(avg) + ' ' + dot(pct(cur, avg)) + vsP(pct(cur, avg), 'avg') + L3('；最高是 ', '; highest ', '; ខ្ពស់បំផុត ') + GA.periodLabel(ks[mi], type) + ' ' + M(mx) : L3('沒有資料', 'No data', 'គ្មានទិន្នន័យ'));
     /* 組成 */
     var cats = D.cats.slice(0, 7), other = D.cats.slice(7).reduce(function (s, c) { return s + c.amount; }, 0), lab = cats.map(function (c) { return expenseCatLabel(c.cat, L); }), val = cats.map(function (c) { return c.amount; });
     if (other > 0) { lab.push(L3('其他', 'Other', 'ផ្សេងៗ')); val.push(other); }
@@ -117,7 +123,7 @@
     if (c3 && ar.length) charts.push(new Chart(c3, { type: 'bar', data: { labels: ar.map(function (x) { return x.n; }), datasets: [{ label: L3('本期', 'This period', 'រយៈពេលនេះ'), data: ar.map(function (x) { return x.a; }), backgroundColor: ar.map(function (x) { var q = pct(x.a, x.p); return q == null ? '#3b82f6' : q > 15 ? '#ef4444' : q > 5 ? '#f59e0b' : '#22c55e'; }) }, { label: L3('上期', 'Previous', 'មុន'), data: ar.map(function (x) { return x.p; }), backgroundColor: '#cbd5e1' }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: function (c) { return c.dataset.label + ' ' + M(c.raw); } } } }, scales: { x: { ticks: { callback: function (v) { return '$' + (v >= 1000 ? Math.round(v / 1000) + 'k' : v); } } }, y: { ticks: { font: { size: 10 } } } } } }));
     else if (c3) c3.parentNode.innerHTML = '<div class="xp-empty">' + esc(L3('本期沒有水電資料', 'No utility data this period', 'គ្មានទិន្នន័យទឹកភ្លើង')) + '</div>';
     var big = ar.filter(function (x) { return x.p; }).sort(function (a, b) { return Math.abs(pct(b.a, b.p)) - Math.abs(pct(a.a, a.p)); })[0];
-    note('xp-area', big ? L3('顏色＝跟上期比：🟢 持平或下降 🟡 +5–15% 🔴 >+15%。變化最大：', 'Colour vs previous: 🟢 flat/down 🟡 +5–15% 🔴 >+15%. Biggest change: ', 'ពណ៌ធៀបមុន។ ប្រែប្រួលធំបំផុត៖ ') + big.n + ' ' + pctTxt(pct(big.a, big.p)) : L3('沒有上期可比', 'No previous period to compare', 'គ្មានរយៈពេលមុន'));
+    note('xp-area', big ? L3('顏色＝跟上期比：🟢 持平或下降 🟡 +5–15% 🔴 >+15%。變化最大：', 'Colour vs previous: 🟢 flat/down 🟡 +5–15% 🔴 >+15%. Biggest change: ', 'ពណ៌ធៀបមុន។ ប្រែប្រួលធំបំផុត៖ ') + big.n + ' ' + vsP(pct(big.a, big.p)) : L3('沒有上期可比', 'No previous period to compare', 'គ្មានរយៈពេលមុន'));
   }
 
   function bind() {

@@ -342,8 +342,33 @@ function collapseSourceDuplicates(src){var out=[],pos={},removed=0;(EXP3[src]||[
 function dateOf(v){var s=text(v),m=s.match(/^(\d{1,2})-(\d{1,2})--(20\d{2})$/),out=m?GA.excelDate(m[3]+'-'+m[2]+'-'+m[1]):GA.excelDate(v);/* v3.9.25 validated; invalid date-looking cells are reported by the import */if(!out&&GA._invalidDates&&(m||/^\d{1,4}[-\/.]\d{1,2}[-\/.]\d{2,4}$/.test(s)))GA._invalidDates.push(s);return out;}
 function _legacy_sourceLabel_1(k){return GA.T(SRC_META[k]?SRC_META[k].label:k);}
 function amt(r){return num(r.amount||r.estAmount||0);}
-function allSourceRows(){return ['repair','purchase','general'].reduce(function(a,k){return a.concat(EXP3[k]||[]);},[]);}
-function allRows(){return allSourceRows().concat(txns.map(function(r){var x=Object.assign({},r);x._source='legacy';x.sourceModule=x.sourceModule||'manual';return x;}));}
+/* 2026-11-17 Paul：「今年電費絕對解讀錯誤，每個月 3 千到 4 千多」。
+   原因：同一本「VRT General Expense 2026」匯入了好幾個版本（09.／15 sep／New／(2)…），同一張帳單被算 2～6 次；
+   電費另有「Electric (3)」分表（每個電錶拆開），和總表重複；舊資料（seed）1～2 月也和新匯入重複。
+   做法（只在計算／顯示時不重複算，雲端原資料不刪，匯入防重照舊）：
+   ① 某月已有 General Expense 匯入 → 那個月的舊 seed 不算；
+   ② 同一天＋同分類＋同品項＋同金額＋同用量，出現在不同版本的檔案 → 只算筆數最多的那一個檔；
+   ③ 電／水同月同區域：分表 (n) 加起來＝總表（差 ≤2%）→ 分表不算。 */
+var EXP_UNIQ_CACHE={sig:'',at:0,dup:null};
+function expDupSet(){
+  var sig=['repair','purchase','general'].map(function(k){return(EXP3[k]||[]).length;}).join(',')+'|'+txns.length,now=Date.now();
+  if(EXP_UNIQ_CACHE.dup&&EXP_UNIQ_CACHE.sig===sig&&now-EXP_UNIQ_CACHE.at<1500)return EXP_UNIQ_CACHE.dup;
+  var items=[];['repair','purchase','general'].forEach(function(k){(EXP3[k]||[]).forEach(function(r){items.push({r:r,s:k});});});txns.forEach(function(r){items.push({r:r,s:'legacy'});});
+  var ym=function(r){return String(r.date||'').slice(0,7);},det=function(r){return/\(\s*\d+\s*\)/.test(String(r.sourceSheet||''));},cat=function(x){ensureExpenseCategory(x.r,x.s);return x.r.expenseCategory||'other';};
+  var dup=new Set(),imp={};items.forEach(function(x){if(x.s==='general'&&x.r.sourceFile)imp[ym(x.r)]=1;});
+  items.forEach(function(x){if(x.s==='legacy'&&String(x.r.sourceModule||'')==='seed'&&imp[ym(x.r)])dup.add(x.r);});
+  var g={},order=[];items.forEach(function(x){if(dup.has(x.r))return;var r=x.r,k=[x.s,String(r.date||'').slice(0,10),cat(x),lower(r.item||'').replace(/\s+/g,' ').trim(),Math.round(value(r)*100),String(r.consumption==null?'':r.consumption)].join('|');if(!g[k]){g[k]=[];order.push(k);}g[k].push(x);});
+  order.forEach(function(k){var a=g[k];if(a.length<2)return;var by={},fs=[];a.forEach(function(x){var f=lower(x.r.sourceFile||'')+'#'+lower(x.r.sourceSheet||'');if(!by[f]){by[f]=[];fs.push(f);}by[f].push(x);});if(fs.length<2)return;var b=fs[0];fs.forEach(function(f){if(by[f].length>by[b].length)b=f;});fs.forEach(function(f){if(f!==b)by[f].forEach(function(x){dup.add(x.r);});});});
+  var grp={};items.forEach(function(x){if(dup.has(x.r))return;var c=cat(x);if(c!=='electricity'&&c!=='water')return;var k=ym(x.r)+'|'+c+'|'+expAreaOf(x.r).k;(grp[k]=grp[k]||[]).push(x.r);});
+  Object.keys(grp).forEach(function(k){var a=grp[k],d=a.filter(det),m=a.filter(function(r){return!det(r);});if(!d.length||!m.length)return;var sd=d.reduce(function(s,r){return s+value(r);},0),sm=m.reduce(function(s,r){return s+value(r);},0);if(Math.abs(sd-sm)<=Math.max(1,sm*0.02))d.forEach(function(r){dup.add(r);});});
+  EXP_UNIQ_CACHE={sig:sig,at:now,dup:dup};return dup;
+}
+function expSrc(k){var d=expDupSet();return(EXP3[k]||[]).filter(function(r){return!d.has(r);});}
+function expLegacy(){var d=expDupSet();return txns.filter(function(r){return!d.has(r);});}
+function expDupCount(){return expDupSet().size;}
+function allSourceRowsRaw(){return ['repair','purchase','general'].reduce(function(a,k){return a.concat(EXP3[k]||[]);},[]);}
+function allSourceRows(){return ['repair','purchase','general'].reduce(function(a,k){return a.concat(expSrc(k));},[]);}
+function allRows(){return allSourceRowsRaw().concat(txns.map(function(r){var x=Object.assign({},r);x._source='legacy';x.sourceModule=x.sourceModule||'manual';return x;}));}
 function currentState(){return pc?pc.state():{type:'month',key:GA.currentPeriod('month')};}
 function inCurrent(r){var s=currentState();return GA.inPeriod(r.date,s.key,s.type);}
 function _legacy_rowsFor_1(k){return (k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[])).filter(inCurrent);}
@@ -457,9 +482,9 @@ function readWorkbook(file){
 }
 function expImport(){document.getElementById('exp-file').value='';document.getElementById('exp-file').click();}
 
-function formatDiff(v){return(v>0?'+':'')+money(v);}function rowsFor(k){return(k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[])).filter(inCurrent);}function sumRows(rows){return rows.reduce(function(a,r){return a+value(r);},0);}function card(label,val,sub){return'<div class="exp-card"><div class="lbl">'+esc(label)+'</div><div class="val">'+esc(val)+'</div><div class="sub">'+esc(sub||'')+'</div></div>';}
+function formatDiff(v){return(v>0?'+':'')+money(v);}function rowsFor(k){return(k==='summary'?allSourceRows():k==='legacy'?expLegacy():expSrc(k)).filter(inCurrent);}function sumRows(rows){return rows.reduce(function(a,r){return a+value(r);},0);}function card(label,val,sub){return'<div class="exp-card"><div class="lbl">'+esc(label)+'</div><div class="val">'+esc(val)+'</div><div class="sub">'+esc(sub||'')+'</div></div>';}
 function compareHtml(rows,prev){var cur=sumRows(rows),old=sumRows(prev),d=cur-old;return'<div class="exp-compare"><div class="box"><b>'+esc(GA.T('expCurrent'))+'</b><span>'+money(cur)+'</span><small> · '+rows.length+' '+esc(GA.T('expRows'))+'</small></div><div class="box"><b>'+esc(GA.T('expPrevious'))+'</b><span>'+money(old)+'</span><small> · '+prev.length+' '+esc(GA.T('expRows'))+'</small></div><div class="box"><b>'+esc(GA.T('expChange'))+'</b><span class="'+(d>0?'diff-pos':d<0?'diff-neg':'')+'">'+formatDiff(d)+'</span></div></div>';}
-function previousRows(k){var s=currentState(),p=GA.shiftPeriod(s.key,s.type,-1),arr=k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[]);return arr.filter(function(r){return GA.inPeriod(r.date,p,s.type);});}
+function previousRows(k){var s=currentState(),p=GA.shiftPeriod(s.key,s.type,-1),arr=k==='summary'?allSourceRows():k==='legacy'?expLegacy():expSrc(k);return arr.filter(function(r){return GA.inPeriod(r.date,p,s.type);});}
 function sourceLabel(k){return GA.T(SRC_META[k]?SRC_META[k].label:k);}function sourceCards(){return['repair','purchase','general'].map(function(k){var r=rowsFor(k);return card(sourceLabel(k),money(sumRows(r)),r.length+' '+GA.T('expRows'));}).join('');}
 function totalsTable(){return'<div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('expSource'))+'</th><th>'+esc(GA.T('expRecords'))+'</th><th>'+esc(GA.T('expTotal'))+'</th></tr></thead><tbody>'+['repair','purchase','general'].map(function(k){var n=rowsFor(k);return'<tr><td>'+SRC_META[k].icon+' '+esc(sourceLabel(k))+'</td><td class="n">'+n.length+'</td><td class="n">'+money(sumRows(n))+'</td></tr>';}).join('')+'<tr><th>'+esc(GA.T('expTotalAll'))+'</th><th class="n">'+rowsFor('summary').length+'</th><th class="n">'+money(sumRows(rowsFor('summary')))+'</th></tr><tr><td>'+esc(GA.T('expLegacyTotal'))+'</td><td class="n">'+rowsFor('legacy').length+'</td><td class="n">'+money(sumRows(rowsFor('legacy')))+'</td></tr></tbody></table></div>';}
 function categoryBars(rows){var by={};rows.forEach(function(r){var k=text(r.categoryLabel||r.category||'Other');by[k]=(by[k]||0)+value(r);});var keys=Object.keys(by).sort(function(a,b){return by[b]-by[a];}).slice(0,12),max=keys.length?by[keys[0]]:1;if(!keys.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';return'<div class="exp-bars">'+keys.map(function(k){return'<div class="exp-bar-row"><span>'+esc(k)+'</span><div class="exp-bar"><i style="width:'+Math.round(by[k]/max*100)+'%"></i></div><em>'+money(by[k])+'</em></div>';}).join('')+'</div>';}
@@ -467,7 +492,7 @@ function trendHtml(rows){var s=currentState(),seen={};rows.forEach(function(r){v
 function detailTable(rows){if(!rows.length)return'<div class="exp-empty">'+esc(GA.T('expNoData'))+'</div>';var slice=rows.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date));});return'<div class="exp-table-wrap"><table class="exp-table"><thead><tr><th>'+esc(GA.T('date'))+'</th><th>'+esc(GA.T('expSheet'))+'</th><th>'+esc(GA.T('expItem'))+'</th><th>'+esc(GA.T('expSpec'))+'</th><th>'+esc(GA.T('expQty'))+'</th><th>'+esc(GA.T('expUnit'))+'</th><th>'+esc(GA.T('expPrice'))+'</th><th>'+esc(GA.T('expTotal'))+'</th><th>'+esc(GA.T('expSupplier'))+'</th><th>'+esc(GA.T('expPurpose'))+'</th></tr></thead><tbody>'+slice.map(function(r){return'<tr data-ec-src="'+esc(r._source||'')+'" data-ec-id="'+encodeURIComponent(r.recordId||'')+'"><td>'+esc(r.date||'—')+'</td><td>'+esc(r.sourceSheet||r.categoryLabel||'—')+'</td><td><b>'+esc(r.item)+'</b></td><td>'+esc(r.spec||'—')+'</td><td class="n">'+(r.qty||'—')+'</td><td>'+esc(r.unit||'—')+'</td><td class="n">'+money(r.price)+'</td><td class="n"><b>'+money(value(r))+'</b></td><td>'+esc(r.supplier||'—')+'</td><td>'+esc(r.purpose||'—')+'</td></tr>';}).join('')+'</tbody></table></div>';}
 function setExpenseImportStatus(kind,message){EXP_IMPORT_STATUS={kind:kind||'',message:message||''};}
 function expenseImportStatusHtml(){return EXP_IMPORT_STATUS.message?'<div class="exp-import-status '+esc(EXP_IMPORT_STATUS.kind)+'">'+esc(EXP_IMPORT_STATUS.message)+'</div>':'';}
-function expenseLatestPeriod(scope){var rows=scope==='legacy'?txns:scope&&EXP3[scope]?EXP3[scope]:allSourceRows(),a=rows.map(function(r){return String(r.date||'');}).filter(Boolean).sort();return a.length?a[a.length-1].slice(0,7):'';}
+function expenseLatestPeriod(scope){var rows=scope==='legacy'?expLegacy():scope&&EXP3[scope]?expSrc(scope):allSourceRows(),a=rows.map(function(r){return String(r.date||'');}).filter(Boolean).sort();return a.length?a[a.length-1].slice(0,7):'';}
 function jumpExpenseLatest(){var p=expenseLatestPeriod(activeTab);if(!p)return;if(pc)pc.set('month',p);render();}
 function openExpensePeriod(scope,period){activeTab=scope;window.expQuery='';EXP_CATEGORY_FILTER[scope]='';if(pc)pc.set('month',period);saveExpenseUI();render();}
 function expenseImportReportHtml(){
@@ -614,7 +639,7 @@ function render(){var note=document.getElementById('exp-source-note');if(note)no
 function expTab(k){activeTab=k;window.expQuery='';saveExpenseUI();render();}
 async function addManual(){var cat=document.getElementById('a-cat').value,a=num(document.getElementById('a-amt').value),e=num(document.getElementById('a-est').value),q=num(document.getElementById('a-qty').value);if(!a&&!e){GA.toast(expMsgText('請輸入金額','Please enter amount','សូមបញ្ចូលចំនួនទឹកប្រាក់',GA.lang),'err');return;}var r={date:document.getElementById('a-date').value,item:document.getElementById('a-item').value,category:cat,dept:document.getElementById('a-dept').value,supplier:document.getElementById('a-sup').value,inspector:document.getElementById('a-inspector').value,qty:q,estAmount:e||a,amount:a||e,purpose:document.getElementById('a-note').value,sourceModule:'manual',status:'approved'};GA.stamp(r,{source:'online',prefix:'exp'});r._fp=GA.fingerprint(['legacy',r.date,r.item,r.amount,r.supplier]);txns.push(r);if(!(await saveTxns()))return;scheduleExpenseAutoCloudSync('manual');GA.toast('➕ OK');render();}
 async function saveBudgetInputs(){document.querySelectorAll('[data-budget]').forEach(function(e){var v=num(e.value);if(v)budgets[e.getAttribute('data-budget')]=v;else delete budgets[e.getAttribute('data-budget')];});if(!(await saveBudgets()))return;scheduleExpenseAutoCloudSync('budget');GA.toast('💾 '+GA.T('save')+' OK');}
-function expExport(){var k=activeTab==='summary'?'summary':activeTab==='legacy'?'legacy':activeTab,rows=k==='summary'?allSourceRows():k==='legacy'?txns:(EXP3[k]||[]),s=currentState();rows=rows.filter(function(r){return GA.inPeriod(r.date,s.key,s.type);});writeXlsx(rows,'AC_GA_EXP_'+k+'_'+GA.ymd(new Date())+'.xlsx');}
+function expExport(){var k=activeTab==='summary'?'summary':activeTab==='legacy'?'legacy':activeTab,rows=k==='summary'?allSourceRows():k==='legacy'?expLegacy():expSrc(k),s=currentState();rows=rows.filter(function(r){return GA.inPeriod(r.date,s.key,s.type);});writeXlsx(rows,'AC_GA_EXP_'+k+'_'+GA.ymd(new Date())+'.xlsx');}
 function expExportAll(){writeXlsx(allRows(),'AC_GA_EXP_integrated_'+GA.ymd(new Date())+'.xlsx');}
 function writeXlsx(rows,name){if(!rows.length){GA.toast(GA.T('expNoData'),'err');return;}var aoa=[['Source','Date','Sheet','Item','Spec','Qty','Unit','Unit Price','Amount','Supplier','Purpose','Category','Source File']].concat(rows.map(function(r){return[r._source||'legacy',r.date||'',r.sourceSheet||'',r.item||'',r.spec||'',r.qty||'',r.unit||'',r.price||r.unitPrice||'',value(r),r.supplier||'',r.purpose||'',r.categoryLabel||r.category||'',r.sourceFile||''];}));var ws=XLSX.utils.aoa_to_sheet(aoa),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Expense');XLSX.writeFile(wb,name);}
 function _legacy_expUpload_1(){var payload={schema:3,txns:txns,cats:CATMETA,budgets:budgets,exp3:EXP3};GA.cloud.upload('expense',payload).then(function(){GA.toast('☁️ '+GA.T('cloudUp'));}).catch(function(e){GA.toast(e.message,'err');});}
@@ -700,7 +725,7 @@ function expenseTgTrim(v,n){v=text(v);return v.length>n?v.slice(0,n-1)+'…':v;}
 function expenseTgCatLabel(v,lang){var d=expenseCatDef(v);return (d.icon?d.icon+' ':'')+expenseTgLang(d.zh,d.en,d.km,lang);}
 function expenseTelegramRows(rows,mode){var sorted=(rows||[]).slice().sort(function(a,b){return value(b)-value(a);});sorted.forEach(function(r){ensureExpenseCategory(r,r._source);});if(mode==='all')return sorted;if(mode==='large')return sorted.slice(0,12);var util=sorted.filter(function(r){return r.expenseCategory==='electricity'||r.expenseCategory==='water';}),other=sorted.filter(function(r){return r.expenseCategory!=='electricity'&&r.expenseCategory!=='water';}).slice(0,10),seen={},out=[];util.concat(other).forEach(function(r){var k=r.recordId||r._fp||expenseLogicalDuplicateKey(r);if(!seen[k]){seen[k]=1;out.push(r);}});return out.slice(0,18);}
 function expenseTelegramText(s){
-  var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]);
+  var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?expLegacy():expSrc(s.scope);
   var rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
   var prevKey=s.period==='ALL'?'ALL':GA.shiftPeriod(s.period,s.ptype,-1);
   var prev=arr.filter(function(r){return GA.inPeriod(r.date,prevKey,s.ptype);});
@@ -856,7 +881,11 @@ function expUtilBreak(rows,prev,cat){
   return{list:list,total:tot};
 }
 function expPct(a,b){if(!b)return a?null:0;return(a-b)/Math.abs(b)*100;}
-function expTrend(a,b,hasPrev){if(!hasPrev)return'';var p=expPct(a,b);if(p===null)return'🆕';var s=(p>0?'+':p<0?'−':'')+Math.abs(p).toFixed(1)+'%';return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+s;}
+/* 2026-11-18 Paul：「寫負的不對，跟上期比還是怎樣要寫清楚」→ 一律寫成「比上期多／少 x%」，不再只寫 +／− */
+function expVsWord(p,lang,base){lang=lang||GA.lang||'zh';var a=Math.abs(p).toFixed(1)+'%',b=base||'prev';var zb=b==='avg'?'比平均':'比上期',eb=b==='avg'?'than average':'than prev. period',kb=b==='avg'?'ជាងមធ្យម':'ជាងមុន';
+  if(Math.abs(p)<0.05)return expenseTgLang(b==='avg'?'和平均差不多':'和上期持平',b==='avg'?'about average':'same as prev. period',b==='avg'?'ប្រហែលមធ្យម':'ដូចមុន',lang);
+  return p>0?expenseTgLang(zb+'多 '+a,a+' more '+eb,'ច្រើន'+kb+' '+a,lang):expenseTgLang(zb+'少 '+a,a+' less '+eb,'តិច'+kb+' '+a,lang);}
+function expTrend(a,b,hasPrev,lang){if(!hasPrev)return'';var p=expPct(a,b);if(p===null)return expenseTgLang('🆕 上期沒有','🆕 none last period','🆕 មុនគ្មាន',lang||GA.lang);return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+expVsWord(p,lang);}
 function expReportData(rows,prev,hasPrev){
   rows=(rows||[]).slice();prev=prev||[];rows.forEach(function(r){ensureExpenseCategory(r,r._source);});prev.forEach(function(r){ensureExpenseCategory(r,r._source);});
   var isU=function(r){return r.expenseCategory==='electricity'||r.expenseCategory==='water';};
@@ -875,7 +904,7 @@ function expQtyText(r){var q=num(r.qty||r.quantity);return q&&q!==1?' ×'+(Math.
    金額一律放最前面、等寬靠右對齊；標題粗體；與上期比用 🟢🟡🔴（+5% 內綠、5–15% 黃、超過 15% 紅，同舊規則）；
    結尾核對「分類加總＝本期總額」。統計內容與選項（重點／大額／全部）不變。 */
 function expenseSummaryModel(s){
-  var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?txns:(EXP3[s.scope]||[]);
+  var arr=s.scope==='all'?allSourceRows():s.scope==='legacy'?expLegacy():expSrc(s.scope);
   var rows=arr.filter(function(r){return GA.inPeriod(r.date,s.period,s.ptype);});
   var hasPrev=s.period!=='ALL',prevKey=hasPrev?GA.shiftPeriod(s.period,s.ptype,-1):'';
   var prev=hasPrev?arr.filter(function(r){return GA.inPeriod(r.date,prevKey,s.ptype);}):[];
@@ -899,16 +928,16 @@ function expenseTelegramText(s){
   out.push('📅 '+(s.period==='ALL'?T('全部期間','All periods','គ្រប់រយៈពេល'):TG.safe(TG.periodLabel(s.period,s.ptype,L).replace(/ \/ /g,' ')))+' · 🧾 '+scopeText);
   out.push(line);
   out.push('<b>'+T('本期總額','Total','សរុប')+' '+money(D.total)+'</b> · '+rows.length+' '+T('筆','rows','កំណត់ត្រា'));
-  if(hasPrev)out.push('↔️ '+T('上期','Previous','មុន')+' '+money(D.prevTotal)+(D.prevTotal||D.total?' → '+expTrend(D.total,D.prevTotal,true):''));
+  if(hasPrev)out.push('↔️ '+T('上期','Previous','មុន')+' '+money(D.prevTotal)+(D.prevTotal||D.total?' → '+expTrend(D.total,D.prevTotal,true,L):''));
   if(!rows.length)out.push('⚪ '+T('本期無資料','No data for this period','គ្មានទិន្នន័យ'));
   function utilBlock(u,icon,name){
     if(!u.list.length)return;
     out.push('');
-    out.push(icon+' <b>'+name+'</b> · '+money(u.total.amount)+(hasPrev?' '+expTrend(u.total.amount,u.total.prev,true):''));
+    out.push(icon+' <b>'+name+'</b> · '+money(u.total.amount)+(hasPrev?' '+expTrend(u.total.amount,u.total.prev,true,L):''));
     var c=col(u.list,function(g){return g.amount;});
     u.list.forEach(function(g){
       var cons=g.hasCons&&g.cons?' · '+Math.round(g.cons).toLocaleString('en-US')+(g.unit?' '+g.unit:''):'';
-      out.push(c(g)+' '+g.area.icon+' '+TG.safe(String(expAreaLabel(g.area,L)).replace(/ \/ /g,' '))+cons+(hasPrev?' '+expTrend(g.amount,g.prev,true):''));
+      out.push(c(g)+' '+g.area.icon+' '+TG.safe(String(expAreaLabel(g.area,L)).replace(/ \/ /g,' '))+cons+(hasPrev?' '+expTrend(g.amount,g.prev,true,L):''));
     });
   }
   utilBlock(D.elec,'⚡',T('電費','Electricity','អគ្គិសនី'));
@@ -960,7 +989,7 @@ function expenseTelegramText(s){
     var hmax=M.hist.reduce(function(a,h){return Math.max(a,h.total);},0)||1,ch=col(M.hist,function(h){return h.total;});
     var h0=0;while(h0<M.hist.length-2&&!M.hist[h0].total)h0++;
     M.hist.forEach(function(h,i){if(i<h0)return;var k=Math.max(h.total?1:0,Math.min(8,Math.round(h.total/hmax*8))),cur=i===M.hist.length-1,pv=i?M.hist[i-1].total:null;
-      out.push(ch(h)+' '+new Array(k+1).join(cur?'🟧':'🟦')+' '+(cur?'<b>':'')+TG.safe(h.key)+(cur?'</b>':'')+' · '+h.count+' '+T('筆','rows','កំណត់ត្រា')+(pv!==null&&(pv||h.total)?' '+expTrend(h.total,pv,true):''));});
+      out.push(ch(h)+' '+new Array(k+1).join(cur?'🟧':'🟦')+' '+(cur?'<b>':'')+TG.safe(h.key)+(cur?'</b>':'')+' · '+h.count+' '+T('筆','rows','កំណត់ត្រា')+(pv!==null&&(pv||h.total)?' '+expTrend(h.total,pv,true,L):''));});
     out.push('🟧 '+T('本期','this period','គ្រានេះ')+' 🟦 '+T('前幾期','earlier','មុន'));
   }
   if(D.cats.length){
@@ -969,7 +998,7 @@ function expenseTelegramText(s){
     var top=D.cats.slice(0,8),cc=col(top,function(c){return c.amount;});
     var CM=['🟦','🟩','🟨','🟧','🟪','🟥','🟫','⬛'];
     if(top.length>1&&D.total>0)out.push(TG.shareBar(top.map(function(c,i){return{value:c.amount,mark:CM[i]||'⬜'};}),16));
-    top.forEach(function(c,i){var pct=D.total?Math.round(c.amount/D.total*100):0;out.push(cc(c,(pct+'%').padStart(5))+' '+(top.length>1?(CM[i]||'⬜')+' ':'')+cat(c.cat)+' · '+c.count+' '+T('筆','rows','កំណត់ត្រា')+(hasPrev?' '+expTrend(c.amount,c.prev,true):''));});
+    top.forEach(function(c,i){var pct=D.total?Math.round(c.amount/D.total*100):0;out.push(cc(c,(pct+'%').padStart(5))+' '+(top.length>1?(CM[i]||'⬜')+' ':'')+cat(c.cat)+' · '+c.count+' '+T('筆','rows','កំណត់ត្រា')+(hasPrev?' '+expTrend(c.amount,c.prev,true,L):''));});
     if(D.cats.length>8)out.push('… +'+(D.cats.length-8));
   }
   var q=expQuality(rows,prev),catSum=D.cats.reduce(function(a,c){return a+c.amount;},0),okSum=Math.abs(catSum-D.total)<0.005;
@@ -1044,7 +1073,7 @@ function openExpenseReport(){
   ov.querySelector('#rp-print').onclick=function(){expenseReportOpen(get());};
   ov.querySelector('#rp-xlsx').onclick=function(){expenseReportXlsx(get());};
 }
-function expReportRowsFor(o){var arr=o.scope==='all'?allSourceRows():(EXP3[o.scope]||[]),hasPrev=o.period!=='ALL',pk=hasPrev?GA.shiftPeriod(o.period,o.ptype,-1):'';return{rows:arr.filter(function(r){return GA.inPeriod(r.date,o.period,o.ptype);}),prev:hasPrev?arr.filter(function(r){return GA.inPeriod(r.date,pk,o.ptype);}):[],hasPrev:hasPrev,prevKey:pk};}
+function expReportRowsFor(o){var arr=o.scope==='all'?allSourceRows():expSrc(o.scope),hasPrev=o.period!=='ALL',pk=hasPrev?GA.shiftPeriod(o.period,o.ptype,-1):'';return{rows:arr.filter(function(r){return GA.inPeriod(r.date,o.period,o.ptype);}),prev:hasPrev?arr.filter(function(r){return GA.inPeriod(r.date,pk,o.ptype);}):[],hasPrev:hasPrev,prevKey:pk};}
 function expRT(L){return function(zh,en,km){if(L==='all3')return zh+' · '+en+' · '+km;return expenseTgLang(zh,en,km,L);};}
 function expenseReportHtml(o){
   var R=expReportRowsFor(o),D=expReportData(R.rows,R.prev,R.hasPrev),L=o.lang,T=expRT(L),e=esc,CL=L==='all3'?'both':L;
@@ -1100,9 +1129,9 @@ function expenseReportXlsx(o){
 function expenseTgLang(zh,en,km,lang){if(lang==='en')return en;if(lang==='km')return (km&&en&&km!==en)?en+' / '+km:(km||en);if(lang==='all3')return zh+' / '+en+' / '+km;if(lang==='both'||lang==='zh-en')return zh+' / '+en;if(lang==='en-km')return en+' / '+km;return zh;}
 function expL(zh,en,km){return expMsgText(zh,en,km,GA.lang);}
 function expBuckets(rows){var b={count:0,total:0,elec:0,fac:0,staff:0,kwh:0,water:0,repair:0,purchase:0,general:0};(rows||[]).forEach(function(r){ensureExpenseCategory(r,r._source);var v=value(r);b.count++;b.total+=v;if(r.expenseCategory==='electricity'){b.elec+=v;var a=expAreaOf(r);if(a.k==='factory'){b.fac+=v;b.kwh+=num(r.consumption);}else if(a.k==='expat'||a.k==='local')b.staff+=v;}else if(r.expenseCategory==='water')b.water+=v;else if(r._source==='repair')b.repair+=v;else if(r._source==='purchase')b.purchase+=v;else b.general+=v;});return b;}
-function expScopeRows(scope){return scope==='legacy'?txns.map(function(r){var x=Object.assign({},r);x._source='legacy';return x;}):scope&&scope!=='all'?(EXP3[scope]||[]):allSourceRows();}
+function expScopeRows(scope){return scope==='legacy'?expLegacy().map(function(r){var x=Object.assign({},r);x._source='legacy';return x;}):scope&&scope!=='all'?expSrc(scope):allSourceRows();}
 function expGroupBy(rows,type){var g={};(rows||[]).forEach(function(r){var k=GA.periodKey(r.date,type);if(!k)return;(g[k]=g[k]||[]).push(r);});return g;}
-function expPctTxt(a,b){if(!b)return a?'🆕':'—';var p=(a-b)/Math.abs(b)*100;return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+(p>0?'+':p<0?'−':'')+Math.abs(p).toFixed(1)+'%';}
+function expPctTxt(a,b,lang){if(!b)return a?expenseTgLang('🆕 上期沒有','🆕 none last period','🆕 មុនគ្មាន',lang||GA.lang):'—';var p=(a-b)/Math.abs(b)*100;return(p>15?'🔴 ':p>5?'🟡 ':'🟢 ')+expVsWord(p,lang);}
 function expMoney0(v){return v?money(v):'—';}
 
 /* ── 📆 月年趨勢 ── */
@@ -1391,6 +1420,6 @@ if(ok&&window.GAAutoSync){GAAutoSync.install({key:'expense',pull:expCloudDownloa
 <!-- 2026-11-13: 費用明細卡（點明細列 → 卡片，可上一筆／下一筆、看同項目／同供應商／同分類） -->
 <script src="shared/ga-expense-card.js?v=20261113a"></script>
 <!-- 2026-11-17: 整合摘要加 💡 說明、篩選、圖表 -->
-<script src="shared/ga-exp-summary-plus.js?v=20261117a"></script>
+<script src="shared/ga-exp-summary-plus.js?v=20261118a"></script>
 </body>
 </html>
