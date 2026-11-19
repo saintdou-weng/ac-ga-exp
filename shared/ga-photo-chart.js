@@ -55,7 +55,9 @@
       if (!imgs.length) continue;
       /* 表頭：第一張照片上面、最近一列有 2 格以上字的 */
       var first = Math.min.apply(null, imgs.map(function (x) { return x.row; })), head = {};
-      for (var r = first - 1; r >= 0 && r >= first - 15; r--) { var cc = rows[r] || {}; if (Object.keys(cc).length >= 2) { head = cc; break; } }
+      var HRE = /(編號|编号|code|品名|名稱|name|item|照片|photo|picture|車牌|plate|\bID\b|分類|category|類型|type|位置|location|規格|size|備註|remark|កូដ|ឈ្មោះ|រូប)/i, near = null;
+      for (var r = first - 1; r >= 0 && r >= first - 400; r--) { var cc = rows[r] || {}, ks = Object.keys(cc); if (ks.length < 2) continue; if (!near) near = cc; if (ks.filter(function (k) { return HRE.test(cc[k]); }).length >= 2) { head = cc; break; } }
+      if (!Object.keys(head).length && near) head = near;
       for (var j = 0; j < imgs.length; j++) { var im = imgs[j], bytes = await z.get(im.media), mt = mime(im.media); if (!bytes || !mt) continue; out.push({ sheet: sh.getAttribute('name'), row: im.row, cells: rows[im.row] || {}, head: head, blob: new Blob([bytes], { type: mt }), media: im.media }); }
     }
     return out;
@@ -63,14 +65,18 @@
   /* 依表頭找欄：ID、編號、品名 */
   function col(head, re) { for (var k in head) if (re.test(head[k])) return +k; return -1; }
   function fields(r) { var h = r.head, c = r.cells, get = function (re) { var k = col(h, re); return k >= 0 ? c[k] || '' : ''; };
-    return { id: get(/\bID\b/), code: get(/編號|code|key\s*no|^no\.?$|編碼|កូដ|លេខ/i), name: get(/品名|item|名稱|name|ឈ្មោះ/i), cn: get(/中文|chinese/i) }; }
+    return { plate: get(/車牌|plate|ផ្លាក/i), id: get(/\bID\b/), code: get(/編號|code|key\s*no|^no\.?$|編碼|កូដ|លេខ/i), name: get(/品名|item|名稱|name|ឈ្មោះ/i), cn: get(/中文|chinese/i) }; }
   async function sha(blob) { var b = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer()); return Array.prototype.map.call(new Uint8Array(b).slice(0, 12), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
   function compress(blob, max, q) { max = max || 1280; q = q || 0.75; return new Promise(function (res) { var u = URL.createObjectURL(blob), im = new Image(); im.onload = function () { var s = Math.min(1, max / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * s); cv.height = Math.round(im.height * s); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); URL.revokeObjectURL(u); res(cv.toDataURL('image/jpeg', q)); }; im.onerror = function () { URL.revokeObjectURL(u); res(null); }; im.src = u; }); }
 
   /* ── 總務物品（收貨＋採購）── */
   function recvList() { try { return items || []; } catch (e) { try { var d = JSON.parse(localStorage.getItem('vrt_receive_data') || 'null'); return d && d.items || []; } catch (er) { return []; } } }
   function procList() { try { if (typeof allItems === 'function') return allItems(); } catch (e) {} try { var c = JSON.parse(localStorage.getItem('ga_proc_items_v1') || 'null'); return c && c.items || []; } catch (e) { return []; } }
+  /* 公司車／叉車／發電機／機車：ID＝veh:car|GA-CAR-01|2R-4306（照片存 PROFILES_DB：asset:<編碼>，車牌另存 plate:<車牌> 讓交通／ETC 的車輛卡片也看得到） */
+  function vehOf(f) { var id = String(f.id || ''), code = String(f.code || ''); if (/^veh:/i.test(id)) { var a = id.slice(4).split('|'); return { type: a[0], code: a[1] || code, plate: a[2] || '' }; } if (/^GA-(CAR|FLT|GEN|MOT)-/i.test(code)) return { type: code.split('-')[1].toLowerCase(), code: code.toUpperCase(), plate: f.plate || '' }; return null; }
+  function okm(m) { return !!(m && (m.r || m.p || m.v)); }
   function match(f) {
+    var v = vehOf(f); if (v) return { r: null, p: null, v: v };
     var R = recvList(), P = procList(), m = { r: null, p: null };
     String(f.id || '').split('|').forEach(function (t) { var a = t.split(':'); if (a[0] === 'recv') m.r = R.filter(function (x) { return String(x.id) === a[1]; })[0] || null; if (a[0] === 'proc') m.p = P.filter(function (x) { return String(x.id) === a[1]; })[0] || (f.name ? { id: /^\d+$/.test(a[1]) ? +a[1] : a[1], name: f.name, cn: f.cn } : null); });
     if (!m.r && !m.p && f.code) { var no = String(f.code).replace(/-PO$/i, ''); m.r = R.filter(function (x) { return String(x.no) === no && (/-PO$/i.test(f.code) ? x.category === 'PO' : x.category !== 'PO'); })[0] || null; if (!m.r) m.r = R.filter(function (x) { return String(x.no) === no; })[0] || null; }
@@ -78,7 +84,7 @@
     if (m.r && m.p && f.name && norm(m.r.name) !== norm(f.name) && norm(m.p.name) === norm(f.name)) {} /* 兩邊都對到就兩邊都放 */
     return m;
   }
-  function has(m, h) { var p = m.r && m.r.photo; if (p && p.hash === h) return true; try { var s = m.p && itemSettings[m.p.id]; if (s && s.photo && s.photo.hash === h) return true; } catch (e) {} return false; }
+  function has(m, h) { if (m.v) { try { var pr = GA.SharedPhoto && GA.SharedPhoto.raw()['asset:' + m.v.code]; return !!(pr && pr.photo && pr.photo.hash === h); } catch (e) { return false; } } var p = m.r && m.r.photo; if (p && p.hash === h) return true; try { var s = m.p && itemSettings[m.p.id]; if (s && s.photo && s.photo.hash === h) return true; } catch (e) {} return false; }
 
   function css() { if (document.getElementById('pcx-css')) return; var s = document.createElement('style'); s.id = 'pcx-css';
     s.textContent = '#pcx-ov{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9600;display:flex;align-items:center;justify-content:center}.pcx{background:#fff;width:min(900px,96vw);max-height:92vh;border-radius:14px;display:flex;flex-direction:column}.pcx-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #e2e8f0}.pcx-b{overflow:auto;padding:12px 14px}.pcx-f{padding:10px 14px;border-top:1px solid #e2e8f0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pcx table{width:100%;border-collapse:collapse;font-size:13px}.pcx td,.pcx th{border-bottom:1px solid #f1f5f9;padding:4px 6px;text-align:left;vertical-align:middle}.pcx img{width:56px;height:56px;object-fit:cover;border-radius:8px}.pcx tr.ok td{background:#f0fdf4}.pcx tr.no td{background:#fef2f2}.pcx tr.dup td{background:#f8fafc;color:#94a3b8}.pcx .btn{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}.pcx .btn.pri{background:#1d4ed8;color:#fff;border-color:#1d4ed8}.pcx-note{font-size:12.5px;color:#475569;line-height:1.5}';
@@ -97,18 +103,18 @@
     var b = document.getElementById('pcx-b'); b.innerHTML = '⏳ ' + esc(L('讀取中…', 'Reading…', 'កំពុងអាន…'));
     try {
       var rs = await read(file); ROWS = [];
-      for (var i = 0; i < rs.length; i++) { var r = rs[i], f = fields(r), m = match(f), h = await sha(r.blob); ROWS.push({ f: f, m: m, h: h, blob: r.blob, url: URL.createObjectURL(r.blob), row: r.row + 1, sheet: r.sheet, on: !!(m.r || m.p) && !has(m, h), dup: has(m, h) }); }
+      for (var i = 0; i < rs.length; i++) { var r = rs[i], f = fields(r), m = match(f), h = await sha(r.blob); ROWS.push({ f: f, m: m, h: h, blob: r.blob, url: URL.createObjectURL(r.blob), row: r.row + 1, sheet: r.sheet, on: okm(m) && !has(m, h), dup: has(m, h) }); }
       /* 同一個物品出現兩張照片：只留最後一張 */
-      var seen = {}; ROWS.slice().reverse().forEach(function (x) { var k = (x.m.r ? 'r' + x.m.r.id : '') + (x.m.p ? 'p' + x.m.p.id : ''); if (!k) return; if (seen[k]) x.on = false; seen[k] = 1; });
+      var seen = {}; ROWS.slice().reverse().forEach(function (x) { var k = (x.m.r ? 'r' + x.m.r.id : '') + (x.m.p ? 'p' + x.m.p.id : '') + (x.m.v ? 'v' + x.m.v.code : ''); if (!k) return; if (seen[k]) x.on = false; seen[k] = 1; });
       paint();
     } catch (e) { b.innerHTML = '❌ ' + esc(e.message || e); }
   }
   function paint() {
-    var b = document.getElementById('pcx-b'), ok = ROWS.filter(function (x) { return x.on; }).length, no = ROWS.filter(function (x) { return !x.m.r && !x.m.p; }).length, dup = ROWS.filter(function (x) { return x.dup; }).length;
+    var b = document.getElementById('pcx-b'), ok = ROWS.filter(function (x) { return x.on; }).length, no = ROWS.filter(function (x) { return !okm(x.m); }).length, dup = ROWS.filter(function (x) { return x.dup; }).length;
     b.innerHTML = '<p class="pcx-note">🖼️ ' + ROWS.length + L(' 張照片 · 🟢 會匯入 ', ' photos · 🟢 to import ', ' រូប · 🟢 ') + ok + ' · ⚪ ' + L('已經有了 ', 'already set ', 'មានរួច ') + dup + ' · 🔴 ' + L('對不到物品 ', 'no match ', 'រកមិនឃើញ ') + no + '</p>' +
       '<table><tr><th></th><th>' + esc(L('照片', 'Photo', 'រូប')) + '</th><th>' + esc(L('列', 'Row', 'ជួរ')) + '</th><th>' + esc(L('編號／品名（Excel）', 'Code / item (Excel)', 'កូដ / ទំនិញ')) + '</th><th>' + esc(L('對到', 'Matched to', 'ផ្គូផ្គង')) + '</th></tr>' +
-      ROWS.map(function (x, i) { var m = x.m, t = m.r || m.p ? [m.r ? '📦 ' + esc((m.r.no ? m.r.no + ' · ' : '') + m.r.name) : '', m.p ? '🛒 ' + esc(m.p.name + (m.p.cn ? ' · ' + m.p.cn : '')) : ''].filter(Boolean).join('<br>') : '🔴 ' + esc(L('對不到（請檢查編號）', 'No match (check the code)', 'រកមិនឃើញ'));
-        return '<tr class="' + (x.dup ? 'dup' : m.r || m.p ? 'ok' : 'no') + '"><td><input type="checkbox" data-i="' + i + '"' + (x.on ? ' checked' : '') + (m.r || m.p ? '' : ' disabled') + '></td><td><img src="' + x.url + '"></td><td>' + x.row + '</td><td>' + esc(x.f.code) + ' ' + esc(x.f.name) + (x.f.cn ? ' · ' + esc(x.f.cn) : '') + '</td><td>' + t + (x.dup ? ' <small>（' + esc(L('同一張已經是標準照', 'same photo already set', 'មានរួច')) + '）</small>' : '') + '</td></tr>'; }).join('') + '</table>';
+      ROWS.map(function (x, i) { var m = x.m, VT = { car: '🚗', flt: '🏗️', gen: '⚡', mot: '🏍️' }, t = m.v ? (VT[m.v.type] || '🚘') + ' ' + esc(m.v.code + (m.v.plate ? ' · ' + m.v.plate : '')) : m.r || m.p ? [m.r ? '📦 ' + esc((m.r.no ? m.r.no + ' · ' : '') + m.r.name) : '', m.p ? '🛒 ' + esc(m.p.name + (m.p.cn ? ' · ' + m.p.cn : '')) : ''].filter(Boolean).join('<br>') : '🔴 ' + esc(L('對不到（請檢查編號）', 'No match (check the code)', 'រកមិនឃើញ'));
+        return '<tr class="' + (x.dup ? 'dup' : okm(m) ? 'ok' : 'no') + '"><td><input type="checkbox" data-i="' + i + '"' + (x.on ? ' checked' : '') + (okm(m) ? '' : ' disabled') + '></td><td><img src="' + x.url + '"></td><td>' + x.row + '</td><td>' + esc(x.f.code) + ' ' + esc(x.f.name) + (x.f.cn ? ' · ' + esc(x.f.cn) : '') + '</td><td>' + t + (x.dup ? ' <small>（' + esc(L('同一張已經是標準照', 'same photo already set', 'មានរួច')) + '）</small>' : '') + '</td></tr>'; }).join('') + '</table>';
     b.querySelectorAll('input[data-i]').forEach(function (c) { c.onchange = function () { ROWS[+c.getAttribute('data-i')].on = c.checked; foot(); }; });
     foot();
   }
@@ -119,9 +125,10 @@
       var x = list[i], m = x.m; st.textContent = '⏳ ' + (i + 1) + ' / ' + list.length;
       try {
         var data = await compress(x.blob); if (!data) throw new Error('image');
-        var r = await GA.gasPost('recvItemAttachment', { itemId: m.r ? m.r.id : 'proc_' + m.p.id, effectiveFrom: '0000-01', fileName: (x.f.code || 'item') + '.jpg', mimeType: 'image/jpeg', data: data.replace(/^data:[^;]+;base64,/, ''), hash: x.h }), d = (r && r.data) || r || {};
+        var r = await GA.gasPost('recvItemAttachment', { itemId: m.v ? 'asset_' + m.v.code : m.r ? m.r.id : 'proc_' + m.p.id, effectiveFrom: '0000-01', fileName: (x.f.code || 'item') + '.jpg', mimeType: 'image/jpeg', data: data.replace(/^data:[^;]+;base64,/, ''), hash: x.h }), d = (r && r.data) || r || {};
         if (!d.url) throw new Error('no file URL');
         var e = Object.assign({ fileName: (x.f.code || 'item') + '.jpg', mimeType: 'image/jpeg', hash: x.h, createdAt: new Date().toISOString(), source: 'photo-chart' }, d);
+        if (m.v) { var raw = GA.SharedPhoto ? GA.SharedPhoto.raw() : {}, o = {}, ak = 'asset:' + m.v.code; o[ak] = Object.assign({}, raw[ak] || {}, { code: m.v.code, type: m.v.type, plate: m.v.plate, name: x.f.name || '', photo: e, updatedAt: e.createdAt }); if (m.v.plate) { var pk2 = 'plate:' + m.v.plate; o[pk2] = Object.assign({}, raw[pk2] || {}, { photo: e, code: m.v.code, updatedAt: e.createdAt }); } if (GA.SharedPhoto) await GA.SharedPhoto.put(o); try { localStorage.setItem('ga_profiles_v1', JSON.stringify(GA.SharedPhoto.raw())); } catch (er) {} x.on = false; x.dup = true; done++; continue; }
         var names = []; if (m.r) { names.push(m.r.name); try { var live = items.filter(function (y) { return String(y.id) === String(m.r.id); })[0]; if (live) { live.photo = e; live.updatedAt = e.createdAt; recvChanged = true; } } catch (er) {} }
         if (m.p) { names.push(m.p.name, m.p.cn); try { itemSettings[m.p.id] = Object.assign({}, itemSettings[m.p.id] || {}, { photo: e }); procChanged = true; } catch (er) {} }
         if (GA.SharedPhoto) await GA.SharedPhoto.set(names.filter(Boolean), e);
@@ -141,5 +148,5 @@
     b.onclick = open; document.body.appendChild(b);
   }
   root.GAPhotoChart = { read: read, open: open, fields: fields };
-  if (/receiving|procurement/i.test(location.pathname)) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(btn, 900); }); else setTimeout(btn, 900); }
+  if (/receiving|procurement|fuel|transportation|etc\.html/i.test(location.pathname)) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(btn, 900); }); else setTimeout(btn, 900); }
 })(window);
