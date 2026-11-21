@@ -190,6 +190,30 @@ html,body{max-width:100%;overflow-x:hidden}
 .inv-foot2>span{white-space:nowrap}.inv-foot2 .noteinput{flex:1;min-width:0;margin:0}
 .inv-foot2 .unit-edit{padding:2px 7px;font-size:11px}
 #inv-cards-mobile{max-width:100%;overflow-x:hidden}
+/* 2026-11-22 一個物品一行（照片｜名稱｜期初｜採購｜使用｜期末），欄位對齊表頭 */
+.inv-r1-head,.inv-r1{display:grid;grid-template-columns:minmax(0,1fr) 46px 46px 46px 44px;gap:5px;align-items:center}
+.inv-r1-head{position:sticky;top:0;z-index:3;background:#f8fafc;border:1px solid var(--border);border-radius:9px;padding:6px 8px;margin-bottom:6px;font-size:10.5px;font-weight:800;color:var(--text2);text-align:center}
+.inv-r1-head span:first-child{text-align:left}
+.inv-row1{margin-bottom:5px;border-radius:9px}
+.inv-r1{padding:6px 8px}
+.inv-row1 .inv-card-head{display:flex;align-items:center;gap:7px;padding:0;border:0;min-width:0;cursor:pointer}
+.inv-row1 .inv-face{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:none;background:#f1f5f9;border:1px solid var(--border)}
+.inv-row1 .inv-face-e{display:flex;align-items:center;justify-content:center;font-size:20px}
+.inv-row1 .inv-who{flex:1;min-width:0}
+.inv-row1 .inv-nm{font-size:13px;font-weight:800;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-sub{display:flex;align-items:center;gap:4px;margin-top:2px;font-size:10.5px;color:var(--text2);white-space:nowrap;overflow:hidden}
+.inv-sub .inv-ic{font-size:11px}.inv-sub .inv-ic.miss{color:var(--red);font-weight:800}
+.inv-sub .unit-edit{padding:0 5px;font-size:10.5px;min-height:20px;line-height:18px}
+.inv-nt{border:1px solid var(--border);background:#fff;border-radius:6px;font-size:11px;padding:0 4px;min-height:20px;line-height:18px;opacity:.55}
+.inv-nt.on{opacity:1;border-color:var(--amber-border);background:var(--amber-bg,#fffbeb)}
+.inv-row1 .itd-input{width:100%;min-width:0;height:36px;padding:2px;text-align:center;font-size:14px}
+.inv-row1 .itd-input.buy{border-color:var(--green-border)}.inv-row1 .itd-input.use{border-color:var(--amber-border)}
+.inv-row1 .inv-cl{text-align:center;min-width:0}.inv-row1 .inv-cl b{display:block;font-size:17px;line-height:1.1}.inv-row1 .inv-cl small{font-size:10px}
+.inv-note{display:none;padding:0 8px 7px}.inv-note.show,.inv-row1.note-open .inv-note{display:block}
+.inv-row1.note-open .inv-note.show{display:block}
+.inv-note .noteinput{width:100%;margin:0}
+.inv-sub .unit-edit,.inv-sub .inv-nt{min-height:22px!important;height:22px;min-width:0!important;line-height:20px;padding:0 6px;flex:none}
+.inv-row1 .itd-input{min-height:40px!important;height:40px}
 .inv-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;
   margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow)}
 .inv-card.low-stock{border-color:var(--red-border);background:var(--red-bg)}
@@ -1509,7 +1533,7 @@ function renderInv(){
 
   // Mobile card view
   if(isMobile && mobile){
-    let mhtml="";
+    let mhtml=`<div class="inv-r1-head"><span>${L3("物品","Item","មុខទំនិញ")}</span><span>${L3("期初","Open","ដើម")}</span><span style="color:var(--green)">🟢${L3("採購","Buy","ទិញ")}</span><span style="color:var(--amber)">🟡${L3("使用","Use","ប្រើ")}</span><span>${L3("期末","Close","ចុង")}</span></div>`;
     Object.entries(CATS).forEach(([catKey,d])=>{
       const catItems=[...d.items,...customItems.filter(c=>c.catKey===catKey)]
         .filter(i=>!hiddenItems[i.id]).filter(i=>passFreq(i.id));
@@ -1529,24 +1553,25 @@ function renderInv(){
         const statusCol=autoClose<=0?"var(--text3)":autoClose<=safety?"var(--red)":autoClose<=safety*2?"var(--amber)":"var(--green)";
         const st0=itemSettings&&itemSettings[item.id]&&itemSettings[item.id].photo,phU=st0&&(st0.previewUrl||st0.url)||"";
         const stTxt=autoClose<=0?"—":autoClose<=safety?"⚠️ "+L3("不足","Low","មិនគ្រប់"):autoClose<=safety*2?"⚡ "+L3("偏低","Fair","ទាប"):"✓ "+L3("正常","OK","ធម្មតា");
-        mhtml+=`<div class="inv-card inv-card2${isLow?" low-stock":""}">
-          <div class="inv-card-head">
-            ${phU?`<img class="inv-face" src="${GA.esc(phU)}" alt="">`:`<span class="inv-face inv-face-e">${item.e}</span>`}
-            <div class="inv-who">
-              <div class="inv-nm">${IN(item)}</div>
-              <div class="inv-bd">${mBadge}${missPill}</div>
+        /* 2026-11-22 Paul：物品要「收成一列」→ 一個物品一行：照片｜名稱（第二行：標籤、安全庫存、單位）｜期初｜採購｜使用｜期末。
+           點照片／名稱開資訊卡（原本的 GAProcCard）；備註按 📝 才展開（有寫備註就直接顯示）。輸入格與 updateInv 照舊。 */
+        const noteOpen=!!String(r.note||"").trim();
+        const phS=phU&&window.vrtDriveThumb?vrtDriveThumb(phU,400):phU;
+        mhtml+=`<div class="inv-card inv-row1${isLow?" low-stock":""}">
+          <div class="inv-r1">
+            <div class="inv-card-head">
+              ${phU?`<img class="inv-face" src="${GA.esc(phS)}" alt="">`:`<span class="inv-face inv-face-e">${item.e}</span>`}
+              <div class="inv-who">
+                <div class="inv-nm">${IN(item)}</div>
+                <div class="inv-sub">${isM?`<span class="inv-ic" title="${L3("每月","Monthly","ប្រចាំខែ")}">🔁</span>`:""}${missPill?`<span class="inv-ic miss" title="${L3("本月未採購","not bought","មិនទាន់ទិញខែនេះ")}">⚠</span>`:""}<span>⚠️${safety}</span><button class="unit-edit" onclick="openUnitEdit('${item.id}')">${unit}</button><button class="inv-nt${noteOpen?" on":""}" type="button" onclick="this.closest('.inv-card').classList.toggle('note-open')" aria-label="${L3("備註","Note","កំណត់សម្គាល់")}">📝</button></div>
+              </div>
             </div>
-            <div class="inv-cl" style="color:${statusCol}"><small class="lb">${L3("期末","Closing","ចុងគ្រា")}</small><b>${autoClose}</b><small>${stTxt}</small></div>
+            <input class="itd-input" type="number" min="0" inputmode="numeric" aria-label="${L3("期初","Opening","ដើមគ្រា")}" value="${r.open}" onchange="updateInv(invDisplayMonth,'${item.id}','open',this.value)"/>
+            <input class="itd-input buy" type="number" min="0" inputmode="numeric" aria-label="${L3("採購","Bought","ទិញ")}" value="${r.purchase}" onchange="updateInv(invDisplayMonth,'${item.id}','purchase',this.value)"/>
+            <input class="itd-input use" type="number" min="0" inputmode="numeric" aria-label="${L3("使用","Used","ប្រើ")}" value="${r.used}" onchange="updateInv(invDisplayMonth,'${item.id}','used',this.value)"/>
+            <div class="inv-cl" style="color:${statusCol}" title="${GA.esc(stTxt)}"><b>${autoClose}</b><small>${autoClose<=0?"—":autoClose<=safety?"⚠️":autoClose<=safety*2?"⚡":"✓"}</small></div>
           </div>
-          <div class="inv-row3">
-            <label><span>${L3("期初","Opening","ដើមគ្រា")}</span><input class="itd-input" type="number" min="0" value="${r.open}" onchange="updateInv(invDisplayMonth,'${item.id}','open',this.value)"/></label>
-            <label><span style="color:var(--green)">🟢 ${L3("採購","Bought","ទិញ")}</span><input class="itd-input" style="border-color:var(--green-border)" type="number" min="0" value="${r.purchase}" onchange="updateInv(invDisplayMonth,'${item.id}','purchase',this.value)"/></label>
-            <label><span style="color:var(--amber)">🟡 ${L3("使用","Used","ប្រើ")}</span><input class="itd-input" style="border-color:var(--amber-border)" type="number" min="0" value="${r.used}" onchange="updateInv(invDisplayMonth,'${item.id}','used',this.value)"/></label>
-          </div>
-          <div class="inv-foot2">
-            <span>⚠️ ${L3("安全","Safety","សុវត្ថិភាព")} <b>${safety}</b> · <button class="unit-edit" onclick="openUnitEdit('${item.id}')">${unit} ✏️</button></span>
-            <input class="noteinput" placeholder="📝 ${L3("備註","Note","កំណត់សម្គាល់")}" value="${GA.esc(r.note||'')}" onchange="updateInv(invDisplayMonth,'${item.id}','note',this.value)"/>
-          </div>
+          <div class="inv-note${noteOpen?" show":""}"><input class="noteinput" placeholder="📝 ${L3("備註","Note","កំណត់សម្គាល់")}" value="${GA.esc(r.note||'')}" onchange="updateInv(invDisplayMonth,'${item.id}','note',this.value)"/></div>
         </div>`;
       });
     });
