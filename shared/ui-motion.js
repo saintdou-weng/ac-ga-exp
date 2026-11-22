@@ -40,8 +40,8 @@
     /* 4 吸頂 */
     '.ui-sticky{transition:padding 200ms ease-out,min-height 200ms ease-out,height 200ms ease-out,background-color 200ms ease-out,box-shadow 200ms ease-out,backdrop-filter 200ms ease-out}' +
     '.ui-sticky.ui-scrolled{backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);box-shadow:0 2px 12px rgba(15,23,42,.12) !important}' +
-    '.ui-sticky.ui-scrolled.ui-light{background:rgba(255,255,255,.82) !important}' +
-    '.ui-sticky.ui-scrolled.ui-dark{background:var(--ui-dark-bg,rgba(15,23,42,.82)) !important}' +
+    '.ui-sticky.ui-scrolled.ui-light{background:rgba(255,255,255,.94) !important}' +
+    '.ui-sticky.ui-scrolled.ui-dark{background:var(--ui-dark-bg,rgba(15,23,42,.94)) !important}' +
     /* 5 回頂 */
     '#ui-top{position:fixed;right:24px;bottom:24px;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;z-index:8990;background:var(--gc-hdr,#1e293b);color:#fff;font-size:20px;line-height:48px;text-align:center;box-shadow:0 6px 18px rgba(15,23,42,.28);opacity:0;pointer-events:none;translate:0 8px;transition:opacity 200ms ease-out,translate 200ms ease-out,box-shadow 150ms ease-out}' +
     '#ui-top.on{opacity:.92;pointer-events:auto;translate:0 0}' +
@@ -132,7 +132,7 @@
         var dark = darkBehindSelf(h);
         h.classList.add('ui-sticky', dark ? 'ui-dark' : 'ui-light');
         var hdr = getComputedStyle(document.documentElement).getPropertyValue('--gc-hdr').trim();
-        if (dark) h.style.setProperty('--ui-dark-bg', hdr ? 'color-mix(in srgb,' + hdr + ' 84%,transparent)' : 'rgba(15,23,42,.82)');
+        if (dark) h.style.setProperty('--ui-dark-bg', hdr ? 'color-mix(in srgb,' + hdr + ' 94%,transparent)' : 'rgba(15,23,42,.94)');
         stickies.push({ el: h, pt: parseFloat(cs.paddingTop) || 0, pb: parseFloat(cs.paddingBottom) || 0, h: h.offsetHeight });
       });
     });
