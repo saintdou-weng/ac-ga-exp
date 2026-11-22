@@ -22,6 +22,7 @@
     '.ic-m{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}.ic-m th,.ic-m td{border-bottom:1px solid #e2e8f0;padding:6px 8px;text-align:right}.ic-m th:first-child,.ic-m td:first-child{text-align:left}.ic-m th{background:#f1f5f9;font-size:11px}.ic-bar{height:7px;border-radius:4px;display:block;min-width:1px}' +
     '.ic-foot{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:10px 12px;background:#fff;border-top:1px solid #e2e8f0}.ic-btn{border:1px solid #cbd5e1;background:#fff;border-radius:9px;padding:8px 13px;font:inherit;font-weight:700;font-size:12.5px;cursor:pointer}.ic-btn.pri{background:#2563eb;border-color:#2563eb;color:#fff}.ic-sib{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}' +
     '#items-view-container tr[id^="row-"]{cursor:pointer}' +
+    '.ic-ov{overflow:hidden}.ic-sheet{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);display:flex;flex-direction:column}.ic-h,.ic-k,.ic-tabs,.ic-foot{flex:none}.ic-b{flex:1 1 auto;min-height:0;max-height:none}' +   /* 2026-11-23 Paul：上方（品名）要固定，往下捲只捲內容 */
     '@media(max-width:720px){.ic-ov{padding:0;overflow:hidden}.ic-sheet{border-radius:0;height:100vh;height:100dvh;display:flex;flex-direction:column}.ic-b{max-height:none;flex:1}.ic-k{grid-template-columns:repeat(2,1fr)}.ic-k b{font-size:17px}}';
   document.head.appendChild(css);
 
