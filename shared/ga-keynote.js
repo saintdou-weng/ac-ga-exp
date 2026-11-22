@@ -69,8 +69,8 @@
   function rowHtml(r, i, opt) {
     var p = r.photos && r.photos[0];
     var th = '<div class="gk-th">' + (p ? '<img loading="lazy" src="' + esc(thumb(p.u, 200)) + '" alt="">' + (r.photos.length > 1 ? '<i>' + r.photos.length + '</i>' : '') : esc(r.icon || '📄')) + '</div>';
-    return '<div class="gk-row" data-gk="' + i + '" role="button" tabindex="0">' + (opt.select ? '<input type="checkbox" class="gk-sel ' + esc(opt.select) + '" value="' + esc(r.key) + '">' : '') + th +
-      '<div class="gk-mid"><div class="gk-t"><small>' + esc(r.ref || '') + '</small>' + esc(r.title || '—') + '</div><div class="gk-s">' + esc(day(r.date)) + (r.sub ? ' · ' + esc(r.sub) : '') + '</div></div>' +
+    return '<div class="gk-row ui-nomo" data-gk="' + i + '" role="button" tabindex="0">' + (opt.select ? '<input type="checkbox" class="gk-sel ' + esc(opt.select) + '" value="' + esc(r.key) + '">' : '') + th +
+      '<div class="gk-mid"><div class="gk-t">' + esc(r.title || '—') + '</div><div class="gk-s">' + esc([r.ref, day(r.date), r.sub].filter(Boolean).join(' · ')) + '</div></div>' +
       '<div class="gk-r">' + (r.amount != null && r.amount !== '' ? '<b>' + money(r.amount) + '</b>' : '') + badge(r.status) + '</div></div>';
   }
   function list(host, recs, opt) {
