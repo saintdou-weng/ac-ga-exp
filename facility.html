@@ -55,7 +55,7 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 <div class="header">
   <div class="logo">⚡</div>
   <div><div class="h-title">工務設備紀錄 · 發電機與 ATS</div>
-  <div class="h-sub">Facility Log · Generator / ATS / Spare parts · <a href="index.html">GA-EXP 首頁</a> · <a href="maintenance.html">維修中心</a> · <a href="fuel.html?v=3.9.19">燃油中心</a></div></div>
+  <div class="h-sub">Facility Log · Generator / ATS / Spare parts · <a href="maintenance.html">維修中心</a> · <a href="fuel.html?v=3.9.19">燃油中心</a></div></div>
 </div>
 
 <div class="wrap">
@@ -143,7 +143,7 @@ const ST={ok:['✅ 已完成','p-ok'],watch:['🟠 觀察中','p-watch'],eq:['�
 const cost=s=>{const m=s.match(/([\d,]+(?:\.\d+)?)\s*USD/g);if(!m)return 0;const last=m[m.length-1];return parseFloat(last.replace(/[^\d.]/g,''))};
 let F='all';
 function kpis(){const tot=EV.reduce((a,e)=>a+cost(e.cost),0);
- document.getElementById('kpis').innerHTML=[[EV.length,'次異常／採購紀錄'],[EV.filter(e=>e.st==='watch').length,'件觀察中'],['$'+tot.toLocaleString('en-US',{maximumFractionDigits:2}),'2021–2026 累計費用'],['4','台發電機']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');}
+ document.getElementById('kpis').innerHTML=[[EV.length,'次異常／採購紀錄'],[EV.filter(e=>e.st==='watch').length,'件觀察中'],['$'+tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),'2021–2026 累計費用'],['4','台發電機']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');}
 function chips(){document.getElementById('chips').innerHTML=[['all','全部'],['A','A廠康明斯'],['B','B廠三菱'],['eq','備品採購']].map(([k,l])=>`<button class="chip ${F===k?'on':''}" onclick="F='${k}';draw()">${l}</button>`).join('');}
 function draw(){chips();const list=EV.filter(e=>F==='all'||(F==='eq'?e.st==='eq':e.eq.includes(F)));
  document.getElementById('tl').innerHTML=list.map(e=>{const s=ST[e.st];const c=e.st==='watch'?'#f97316':e.eq==='A'?'#0d9488':e.eq==='B'?'#7c3aed':'#2563eb';
