@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AC-GA-EXP · 工務設備紀錄 Facility Log</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Noto+Sans+Khmer:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif;background:#f0f2f7;color:#1a2332;font-size:14px}
+.header{background:linear-gradient(135deg,#0f2b46 0%,#134e4a 60%,#0d9488 100%);padding:14px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:42px;height:42px;background:rgba(255,255,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.h-title{font-size:16px;font-weight:800;color:#fff}.h-sub{font-size:11px;color:#a7e6dc;margin-top:2px}.h-sub a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 20px 60px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e2e6f0;border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:22px;font-weight:800;font-family:ui-monospace,monospace}.kpi span{font-size:11px;color:#6b7a9e}
+.sect{font-size:12px;font-weight:800;color:#5a6a7e;letter-spacing:.06em;margin:22px 0 10px;display:flex;align-items:center;gap:8px}
+.sect::before{content:'';width:3px;height:12px;background:#0d9488;border-radius:2px}
+.now{background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:12px}
+.now h3{font-size:15px;margin-bottom:6px}.now p{font-size:13px;line-height:1.6;color:#3b4658}
+.now .acts{display:flex;flex-direction:column;gap:6px;min-width:220px}
+.chk{background:#fff;border:1px dashed #fb923c;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.chk small{display:block;color:#8a5a2b;font-family:'Noto Sans Khmer',sans-serif}
+.eq{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.eqc{background:#fff;border:1px solid #e2e6f0;border-radius:12px;padding:14px;border-top:4px solid var(--c)}
+.eqc .t{font-weight:800;font-size:14px}.eqc .s{font-size:12px;color:#6b7a9e;margin-top:3px;line-height:1.5}
+.eqc .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--l);color:var(--c)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1px solid #d0d5e8;background:#fff;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;color:#5a6a7e;font-family:inherit}
+.chip.on{background:#0d9488;border-color:#0d9488;color:#fff}
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:#cfd8e3}
+.ev{position:relative;background:#fff;border:1px solid #e2e6f0;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.ev::before{content:'';position:absolute;left:-20px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--c);border:2px solid #fff;box-shadow:0 0 0 2px var(--c)}
+.ev .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ev .d{font-family:ui-monospace,monospace;font-size:12px;color:#5a6a7e;font-weight:700}
+.ev h4{font-size:15px;margin:6px 0 8px}
+.pill{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px}
+.p-ok{background:#dcfce7;color:#166534}.p-watch{background:#ffedd5;color:#9a3412}.p-eq{background:#e0f2fe;color:#075985}.p-b{background:#ede9fe;color:#5b21b6}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.box{background:#f7f9fc;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.55}
+.box b{display:block;font-size:11px;color:#6b7a9e;margin-bottom:2px}
+.cost{font-family:ui-monospace,monospace;font-weight:800;color:#0f766e}
+.ph{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ph img{width:112px;height:84px;object-fit:cover;border-radius:8px;border:1px solid #e2e6f0;cursor:zoom-in;background:#eef1f6}
+.note{font-size:12px;color:#6b7a9e;margin-top:6px;line-height:1.5}
+.src{font-size:11px;color:#94a3b8;margin-top:6px}
+#lb{position:fixed;inset:0;background:rgba(8,15,25,.86);display:none;align-items:center;justify-content:center;z-index:99;flex-direction:column;gap:10px;padding:20px}
+#lb img{max-width:96vw;max-height:82vh;border-radius:10px;background:#fff}#lb div{color:#fff;font-size:13px;text-align:center}
+@media(max-width:720px){.row3{grid-template-columns:1fr}.now{grid-template-columns:1fr}.wrap{padding:12px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">⚡</div>
+  <div><div class="h-title">工務設備紀錄 · 發電機與 ATS</div>
+  <div class="h-sub">Facility Log · Generator / ATS / Spare parts · <a href="index.html">GA-EXP 首頁</a> · <a href="maintenance.html">維修中心</a> · <a href="fuel.html?v=3.9.19">燃油中心</a></div></div>
+</div>
+
+<div class="wrap">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sect">現在要盯的事 · Open item</div>
+  <div class="now">
+    <div>
+      <h3>🟠 A廠康明斯 ATS 切換後停機 —— 已找到原因，持續觀察</h3>
+      <p>2026 亡人節前出現 ATS 異常；10/16 致立第一次到廠查不出原因。10/24 再查判定是<b>水箱溫度過高</b>，ATS 切換後引擎停下。已換新電瓶（燈已不亮），備品已送到。費用 682 → <b>957 USD</b>（加車費＋之前漏算的人工）。</p>
+      <p style="margin-top:6px">下一步：電工定期清洗水箱；備品需要時再換上；下次停電時確認自動切換正常。</p>
+    </div>
+    <div class="acts">
+      <div class="chk">① 電瓶開關：待命及運轉時保持「接通」<small>បើកកុងតាក់អាគុយជានិច្ច ពេលរង់ចាំ និងពេលដំណើរការ</small></div>
+      <div class="chk">② 發電機運轉時看充電是否正常<small>ពិនិត្យការសាកថ្មពេលម៉ាស៊ីនដំណើរការ</small></div>
+      <div class="chk">③ 水箱定期清洗、看水溫<small>លាងធុងទឹកត្រជាក់ជាប្រចាំ និងមើលសីតុណ្ហភាព</small></div>
+    </div>
+  </div>
+
+  <div class="sect">設備一覽 · Equipment</div>
+  <div class="eq">
+    <div class="eqc" style="--c:#0d9488;--l:#ccfbf1"><div class="t">A廠 康明斯 Cummins</div><div class="s">S375CC · 300 kW · 2019 年購入（搬新廠時買）<br>供 A廠（約 600 人車間）停電時自動切換</div><span class="tag">ATS 自動</span></div>
+    <div class="eqc" style="--c:#7c3aed;--l:#ede9fe"><div class="t">B廠 三菱 1號機</div><div class="s">MGT0200 · 168 kW · 2015<br>舊機種，已停產；控制盒 2024 年整組更換</div><span class="tag">ATS 自動（2021 起）</span></div>
+    <div class="eqc" style="--c:#7c3aed;--l:#ede9fe"><div class="t">B廠 三菱 2號機</div><div class="s">MGT0200 · 168 kW · 2015<br>ATS 故障多集中在這台；2026 換面板、電瓶、ATS 開關</div><span class="tag">ATS 自動</span></div>
+    <div class="eqc" style="--c:#64748b;--l:#f1f5f9"><div class="t">宿舍 三菱</div><div class="s">MGT0040 · 32 kW · 2016</div><span class="tag">宿舍用</span></div>
+  </div>
+  <div class="ph"><img src="assets/generator/g045.jpg" alt="發電機清單" data-cap="發電機清單（廠內原表）"></div>
+
+  <div class="sect">歷年異常與處理 · Timeline</div>
+  <div class="chips" id="chips"></div>
+  <div class="tl" id="tl"></div>
+
+  <div class="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片取自當次 email。</div>
+</div>
+<div id="lb" onclick="this.style.display='none'"><img alt=""><div></div></div>
+
+<script>
+const P='assets/generator/';
+const EV=[
+{d:'2026-10-24',eq:'A',st:'watch',t:'A廠康明斯 ATS 異常 → 判定水箱溫度過高；電瓶換新、保養備品到貨',
+ why:'亡人節長假前 ATS 異常；10/16 致立查半天找不到故障點。期間又停電 2 次。',
+ fix:'10/24 師傅送備品再查：水箱溫度過高引起 ATS 切換後停機。先換電瓶；其他備品需要時再換。',
+ cost:'報價 682 → 實付 957 USD（加車費＋人工）',
+ note:'師傅多在金邊，西港不一定有人；所以先備好一套常用零件，ATS 本體查明再換。',
+ ph:[['g003','致立師傅到 A廠檢查康明斯'],['g004','康明斯引擎與機艙'],['g005','電瓶與接線區'],['g006','擬備感應器（碳頭）A'],['g007','擬備感應器（碳頭）B'],['g008','控制面板'],['g002','10/17 報價 682 USD'],['g001','10/24 最終報價 957 USD']]},
+{d:'2026-07-04',eq:'B',st:'ok',t:'B廠 2號機 ATS 開關被雷擊燒壞 → 更換',
+ why:'6 月底一次大雷，阿毛報發電機有燒焦味，2號機 ATS 失去功能。',
+ fix:'致立檢查為 ATS 開關損壞；副總 6/29 核可。換開關要關市電 2 小時，排在週六停工時段安裝，電工在旁驗收。',
+ cost:'1,100 USD',
+ note:'1、2號機是停產舊機種，ATS 問題多在 2號機；改回手動或對調 ATS 都比換零件麻煩。7/13 回報已完成驗收。',
+ ph:[['g050','新 ATS 開關'],['g051','ATS 開關側面']]},
+{d:'2026-05-11',eq:'B',st:'ok',t:'B廠 ATS 控制面板故障＋2號機電瓶更換',
+ why:'那幾天頻繁停電、復電，ATS 控制面板故障（2021 年裝 ATS 後第一次）。A廠康明斯未受影響。',
+ fix:'致立當天派人，順便發現 2號機電瓶壽命到了（看電瓶小燈顏色），一次換掉，省一次車馬費。5/11 換完，電工測試 OK，拍照驗收。',
+ cost:'770 USD（面板 240＋電瓶 2×115＋人工車費 300）',
+ note:'電瓶壽命約 2 年。因影響生產，先簽回報價並同步報台北。',
+ ph:[['g010','ATS 控制箱'],['g011','ATS 控制器'],['g012','電瓶更換']]},
+{d:'2025-03-29',eq:'A',st:'eq',t:'發電機濾心備品補購',
+ why:'2022 年買的濾心備品阿毛反應已用完。',
+ fix:'3/27 聯絡致立，3/29 送到；電工當場檢查無誤並結清。',
+ cost:'286 USD（LF9009×2、FS1212×4、AF928×2）',
+ note:'當時預估可用約 2 年 —— 2026 年 10 月庫存又接近用完，已一併補。',
+ ph:[['g016','報價'],['g017','空氣濾心'],['g018','燃油濾心 FS1212']]},
+{d:'2024-12-04',eq:'B',st:'ok',t:'B廠 2 台舊發電機控制盒整組更換＋加裝電池開關',
+ why:'10 月跳電頻繁，一天切換 4–5 次，2 台舊發電機控制面板畫面燒壞。面板已無法單獨換（機型 3 年前淘汰）。',
+ fix:'整組控制盒更換（新盒有自動充電器）；比照康明斯加裝電池開關，電工下班前一鍵關 ATS。開關電流過大影響控制盒，屬廠商疏失，請致立回廠加導流線路，12 月初完成。',
+ cost:'1,870＋開關 60 ＝ 1,930 USD',
+ note:'一台可直接用開關關機；另一台需手動關，電工可自行處理。',
+ ph:[['g024','新數位控制器'],['g025','1號機新控制盒'],['g027','數位控制器面板'],['g028','加裝開關位置'],['g023','控制盒內部']]},
+{d:'2022-01-28',eq:'A',st:'eq',t:'康明斯燃油濾改型號＋工廠大排風扇皮帶',
+ why:'2021/9 買的燃油濾 FS1000 品質不穩，致立建議改 FS1212；大排風扇皮帶壞了，沒人知道去哪買。',
+ fix:'肖師傅一起找到皮帶並報價；FS1000 4 個換成 FS1212，皮帶 10 條，Mao 安裝後運轉正常。',
+ cost:'216.70 USD',
+ note:'台北要求說服致立接受用 FS1000 交換 FS1212。',
+ ph:[['g029','燃油濾心'],['g031','報價明細'],['g036','工廠大排風扇'],['belt','風扇皮帶']]},
+{d:'2021-11-03',eq:'AB',st:'ok',t:'A廠康明斯換控制板＋B廠三菱加裝 ATS',
+ why:'康明斯啟動時柴油氣壓不穩一個多月沒人處理；B廠 ATS 從 2020 拖了一年多，一直手動切換（每次 10 多分鐘，常整天開著）。',
+ fix:'找致立肖師傅，當天到廠：康明斯換控制板（頻率 49.9–50 Hz 正常）；B廠裝 400A ATS，分 2 天下班後安裝。當時一台 ATS 自動、一台開關壞先手動。',
+ cost:'報價 2,161.50 → 議價 2,100 USD（含稅）',
+ note:'10/25–11/3 約 10 天完成。好處：B廠停電自動發動、省柴油；也和可靠廠商建立關係，不受個別人員牽制。原控制板保留備用。',
+ ph:[['g044','致立報價單'],['g042','ATS 安裝'],['g043','ATS 箱'],['g040','安裝完成']]}
+];
+const EQN={A:'A廠康明斯',B:'B廠三菱',AB:'A＋B廠'};
+const ST={ok:['✅ 已完成','p-ok'],watch:['🟠 觀察中','p-watch'],eq:['📦 備品','p-eq']};
+const cost=s=>{const m=s.match(/([\d,]+(?:\.\d+)?)\s*USD/g);if(!m)return 0;const last=m[m.length-1];return parseFloat(last.replace(/[^\d.]/g,''))};
+let F='all';
+function kpis(){const tot=EV.reduce((a,e)=>a+cost(e.cost),0);
+ document.getElementById('kpis').innerHTML=[[EV.length,'次異常／採購紀錄'],[EV.filter(e=>e.st==='watch').length,'件觀察中'],['$'+tot.toLocaleString('en-US',{maximumFractionDigits:2}),'2021–2026 累計費用'],['4','台發電機']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');}
+function chips(){document.getElementById('chips').innerHTML=[['all','全部'],['A','A廠康明斯'],['B','B廠三菱'],['eq','備品採購']].map(([k,l])=>`<button class="chip ${F===k?'on':''}" onclick="F='${k}';draw()">${l}</button>`).join('');}
+function draw(){chips();const list=EV.filter(e=>F==='all'||(F==='eq'?e.st==='eq':e.eq.includes(F)));
+ document.getElementById('tl').innerHTML=list.map(e=>{const s=ST[e.st];const c=e.st==='watch'?'#f97316':e.eq==='A'?'#0d9488':e.eq==='B'?'#7c3aed':'#2563eb';
+ return `<div class="ev" style="--c:${c}"><div class="top"><span class="d">${e.d}</span><span class="pill ${s[1]}">${s[0]}</span><span class="pill p-b">${EQN[e.eq]}</span></div><h4>${e.t}</h4>
+ <div class="row3"><div class="box"><b>❓ 發生什麼</b>${e.why}</div><div class="box"><b>🔧 怎麼處理</b>${e.fix}</div><div class="box"><b>💵 費用</b><span class="cost">${e.cost}</span></div></div>
+ <div class="note">📝 ${e.note}</div><div class="ph">${e.ph.map(([f,cap])=>`<img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="${e.d} · ${cap}">`).join('')}</div></div>`}).join('');}
+document.addEventListener('click',ev=>{const im=ev.target.closest('.ph img');if(!im)return;const lb=document.getElementById('lb');lb.querySelector('img').src=im.src;lb.querySelector('div').textContent=im.dataset.cap||'';lb.style.display='flex';});
+kpis();draw();
+</script>
+<script src="shared/ui-motion.js?v=20261124c" defer></script>
+</body>
+</html>
