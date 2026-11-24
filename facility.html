@@ -43,7 +43,7 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 .box b{display:block;font-size:11px;color:#6b7a9e;margin-bottom:2px}
 .cost{font-family:ui-monospace,monospace;font-weight:800;color:#0f766e}
 .ph{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.ph img{width:112px;height:84px;object-fit:cover;border-radius:8px;border:1px solid #e2e6f0;cursor:zoom-in;background:#eef1f6}
+.ph figure{margin:0;text-align:center}.ph figcaption{font-size:10.5px;color:#64748b;font-family:ui-monospace,monospace;margin-top:2px}.ph img{width:112px;height:84px;object-fit:cover;border-radius:8px;border:1px solid #e2e6f0;cursor:zoom-in;background:#eef1f6}
 .note{font-size:12px;color:#6b7a9e;margin-top:6px;line-height:1.5}
 .src{font-size:11px;color:#94a3b8;margin-top:6px}
 #lb{position:fixed;inset:0;background:rgba(8,15,25,.86);display:none;align-items:center;justify-content:center;z-index:99;flex-direction:column;gap:10px;padding:20px}
@@ -82,13 +82,13 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
     <div class="eqc" style="--c:#7c3aed;--l:#ede9fe"><div class="t">B廠 三菱 2號機</div><div class="s">MGT0200 · 168 kW · 2015<br>ATS 故障多集中在這台；2026 換面板、電瓶、ATS 開關</div><span class="tag">ATS 自動</span></div>
     <div class="eqc" style="--c:#64748b;--l:#f1f5f9"><div class="t">宿舍 三菱</div><div class="s">MGT0040 · 32 kW · 2016</div><span class="tag">宿舍用</span></div>
   </div>
-  <div class="ph"><img src="assets/generator/g045.jpg" alt="發電機清單" data-cap="發電機清單（廠內原表）"></div>
+  <div class="ph"><figure><img src="assets/generator/g045.jpg" alt="發電機清單" data-cap="email 2021.10.26 · 發電機清單"><figcaption>2021.10.26</figcaption></figure></div>
 
   <div class="sect">歷年異常與處理 · Timeline</div>
   <div class="chips" id="chips"></div>
   <div class="tl" id="tl"></div>
 
-  <div class="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片取自當次 email。</div>
+  <div class="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片下方日期＝照片所在 email 的日期。</div>
 </div>
 <div id="lb" onclick="this.style.display='none'"><img alt=""><div></div></div>
 
@@ -100,43 +100,43 @@ const EV=[
  fix:'10/24 師傅送備品再查：水箱溫度過高引起 ATS 切換後停機。先換電瓶；其他備品需要時再換。',
  cost:'報價 682 → 實付 957 USD（加車費＋人工）',
  note:'師傅多在金邊，西港不一定有人；所以先備好一套常用零件，ATS 本體查明再換。',
- ph:[['g003','致立師傅到 A廠檢查康明斯'],['g004','康明斯引擎與機艙'],['g005','電瓶與接線區'],['g006','擬備感應器（碳頭）A'],['g007','擬備感應器（碳頭）B'],['g008','控制面板'],['g002','10/17 報價 682 USD'],['g001','10/24 最終報價 957 USD']]},
+ ph:[['g003','圖1 致立師傅到廠檢查康明斯控制區','2026.10.16'],['g004','圖2 康明斯引擎與機艙','2026.10.16'],['g005','圖3 電瓶與發電機側面／接線區','2026.10.16'],['g006','圖4 擬備感應器（碳頭）A','2026.10.16'],['g007','圖5 擬備感應器（碳頭）B','2026.10.16'],['g008','圖6 師傅檢視控制面板','2026.10.16'],['g002','報價 682 USD','2026.10.17'],['g001','最終報價 957 USD','2026.10.24']]},
 {d:'2026-07-04',eq:'B',st:'ok',t:'B廠 2號機 ATS 開關被雷擊燒壞 → 更換',
  why:'6 月底一次大雷，阿毛報發電機有燒焦味，2號機 ATS 失去功能。',
  fix:'致立檢查為 ATS 開關損壞；副總 6/29 核可。換開關要關市電 2 小時，排在週六停工時段安裝，電工在旁驗收。',
  cost:'1,100 USD',
  note:'1、2號機是停產舊機種，ATS 問題多在 2號機；改回手動或對調 ATS 都比換零件麻煩。7/13 回報已完成驗收。',
- ph:[['g050','新 ATS 開關'],['g051','ATS 開關側面']]},
+ ph:[['g010','ATS 開關故障（報價時）','2026.06.29'],['g011','ATS 開關','2026.06.29'],['g009','更換完成、電工驗收','2026.07.13']]},
 {d:'2026-05-11',eq:'B',st:'ok',t:'B廠 ATS 控制面板故障＋2號機電瓶更換',
  why:'那幾天頻繁停電、復電，ATS 控制面板故障（2021 年裝 ATS 後第一次）。A廠康明斯未受影響。',
  fix:'致立當天派人，順便發現 2號機電瓶壽命到了（看電瓶小燈顏色），一次換掉，省一次車馬費。5/11 換完，電工測試 OK，拍照驗收。',
  cost:'770 USD（面板 240＋電瓶 2×115＋人工車費 300）',
  note:'電瓶壽命約 2 年。因影響生產，先簽回報價並同步報台北。',
- ph:[['g010','ATS 控制箱'],['g011','ATS 控制器'],['g012','電瓶更換']]},
+ ph:[['g013','ATS 控制面板','2026.05.09'],['g014','ATS 控制箱內部','2026.05.09'],['g015','2號機電瓶','2026.05.09'],['g012','更換完成驗收','2026.05.14']]},
 {d:'2025-03-29',eq:'A',st:'eq',t:'發電機濾心備品補購',
  why:'2022 年買的濾心備品阿毛反應已用完。',
  fix:'3/27 聯絡致立，3/29 送到；電工當場檢查無誤並結清。',
  cost:'286 USD（LF9009×2、FS1212×4、AF928×2）',
  note:'當時預估可用約 2 年 —— 2026 年 10 月庫存又接近用完，已一併補。',
- ph:[['g016','報價'],['g017','空氣濾心'],['g018','燃油濾心 FS1212']]},
+ ph:[['g016','報價 286 USD','2025.03.31'],['g017','空氣濾心','2025.03.31'],['g018','燃油濾心','2025.03.31'],['g019','燃油濾心','2025.03.31']]},
 {d:'2024-12-04',eq:'B',st:'ok',t:'B廠 2 台舊發電機控制盒整組更換＋加裝電池開關',
  why:'10 月跳電頻繁，一天切換 4–5 次，2 台舊發電機控制面板畫面燒壞。面板已無法單獨換（機型 3 年前淘汰）。',
  fix:'整組控制盒更換（新盒有自動充電器）；比照康明斯加裝電池開關，電工下班前一鍵關 ATS。開關電流過大影響控制盒，屬廠商疏失，請致立回廠加導流線路，12 月初完成。',
  cost:'1,870＋開關 60 ＝ 1,930 USD',
  note:'一台可直接用開關關機；另一台需手動關，電工可自行處理。',
- ph:[['g024','新數位控制器'],['g025','1號機新控制盒'],['g027','數位控制器面板'],['g028','加裝開關位置'],['g023','控制盒內部']]},
+ ph:[['g027','控制面板畫面燒壞','2024.10.29'],['g028','需整組更換的控制盒','2024.10.29'],['g024','新數位控制器','2024.11.09'],['g025','1號機新控制盒','2024.11.09'],['g026','加裝電池開關示意','2024.11.09'],['g020','開關位置','2024.12.04'],['g021','追加開關完成','2024.12.04'],['g022','導流線路','2024.12.04'],['g023','控制盒內加接線路','2024.12.04']]},
 {d:'2022-01-28',eq:'A',st:'eq',t:'康明斯燃油濾改型號＋工廠大排風扇皮帶',
  why:'2021/9 買的燃油濾 FS1000 品質不穩，致立建議改 FS1212；大排風扇皮帶壞了，沒人知道去哪買。',
  fix:'肖師傅一起找到皮帶並報價；FS1000 4 個換成 FS1212，皮帶 10 條，Mao 安裝後運轉正常。',
  cost:'216.70 USD',
  note:'台北要求說服致立接受用 FS1000 交換 FS1212。',
- ph:[['g029','燃油濾心'],['g031','報價明細'],['g036','工廠大排風扇'],['belt','風扇皮帶']]},
+ ph:[['g029','FS1212 換貨／皮帶到貨','2022.01.28'],['g030','2021/9 採購 FS1000','2022.01.10'],['g034','原 FS1000','2022.01.10'],['g035','改用 FS1212','2022.01.10'],['g031','報價 216.70 USD','2022.01.10'],['g036','工廠大排風扇','2022.01.10'],['g037','風扇皮帶','2022.01.10'],['g038','風扇皮帶型號','2022.01.10']]},
 {d:'2021-11-03',eq:'AB',st:'ok',t:'A廠康明斯換控制板＋B廠三菱加裝 ATS',
  why:'康明斯啟動時柴油氣壓不穩一個多月沒人處理；B廠 ATS 從 2020 拖了一年多，一直手動切換（每次 10 多分鐘，常整天開著）。',
  fix:'找致立肖師傅，當天到廠：康明斯換控制板（頻率 49.9–50 Hz 正常）；B廠裝 400A ATS，分 2 天下班後安裝。當時一台 ATS 自動、一台開關壞先手動。',
  cost:'報價 2,161.50 → 議價 2,100 USD（含稅）',
  note:'10/25–11/3 約 10 天完成。好處：B廠停電自動發動、省柴油；也和可靠廠商建立關係，不受個別人員牽制。原控制板保留備用。',
- ph:[['g044','致立報價單'],['g042','ATS 安裝'],['g043','ATS 箱'],['g040','安裝完成']]}
+ ph:[['g046','致立到廠查看','2021.10.26'],['g050','致立提供的 ATS 機盒','2021.10.26'],['g051','ATS 機盒','2021.10.26'],['g052','康明斯控制盒','2021.10.26'],['g053','康明斯控制板','2021.10.26'],['g054','原報價 2,161.50 USD','2021.10.26'],['g044','議價後 2,100 USD','2021.10.26'],['g040','安裝完成','2021.11.01'],['g042','B廠 ATS 安裝','2021.11.01'],['g043','ATS 箱','2021.11.01']]}
 ];
 const EQN={A:'A廠康明斯',B:'B廠三菱',AB:'A＋B廠'};
 const ST={ok:['✅ 已完成','p-ok'],watch:['🟠 觀察中','p-watch'],eq:['📦 備品','p-eq']};
@@ -149,7 +149,7 @@ function draw(){chips();const list=EV.filter(e=>F==='all'||(F==='eq'?e.st==='eq'
  document.getElementById('tl').innerHTML=list.map(e=>{const s=ST[e.st];const c=e.st==='watch'?'#f97316':e.eq==='A'?'#0d9488':e.eq==='B'?'#7c3aed':'#2563eb';
  return `<div class="ev" style="--c:${c}"><div class="top"><span class="d">${e.d}</span><span class="pill ${s[1]}">${s[0]}</span><span class="pill p-b">${EQN[e.eq]}</span></div><h4>${e.t}</h4>
  <div class="row3"><div class="box"><b>❓ 發生什麼</b>${e.why}</div><div class="box"><b>🔧 怎麼處理</b>${e.fix}</div><div class="box"><b>💵 費用</b><span class="cost">${e.cost}</span></div></div>
- <div class="note">📝 ${e.note}</div><div class="ph">${e.ph.map(([f,cap])=>`<img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="${e.d} · ${cap}">`).join('')}</div></div>`}).join('');}
+ <div class="note">📝 ${e.note}</div><div class="ph">${e.ph.map(([f,cap,ed])=>`<figure><img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="email ${ed} · ${cap}"><figcaption>${ed}</figcaption></figure>`).join('')}</div></div>`}).join('');}
 document.addEventListener('click',ev=>{const im=ev.target.closest('.ph img');if(!im)return;const lb=document.getElementById('lb');lb.querySelector('img').src=im.src;lb.querySelector('div').textContent=im.dataset.cap||'';lb.style.display='flex';});
 kpis();draw();
 </script>
