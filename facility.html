@@ -163,12 +163,14 @@ kpis();draw();
 </script>
 <script src="shared/ga-core.js?v=20261107b"></script>
 <script src="shared/ga-smart-sync.js?v=3.9.31"></script>
-<script src="shared/ga-register.js?v=20261126a"></script>
+<script src="shared/ga-register.js?v=20261126b"></script>
 <script>
 (function(){
 var BASE='https://saintdou-weng.github.io/ac-ga-exp/facility.html';
+/* 登記簿存在 AC 共用雲端（SEC/GASCheck 後端接受新 tool；GA-EXP 後端只收 expense/receiving） */
+var REG_URL='https://script.google.com/macros/s/AKfycbyxBN_t2AfxTPQ3AYdt7Jxl3pNiJV17H1T0pub4SR8GBgDH47WnDn9JF556KSxUiIU-/exec';
 var REG={
- eq:{tool:'ga_facility_equipment',short:'工務/總務',file:'工務設備工具',qrBase:BASE,
+ eq:{url:REG_URL,tool:'ga_facility_equipment',short:'工務/總務',file:'工務設備工具',qrBase:BASE,
   intro:'工務／總務的<b>設備</b>與<b>工具</b>登記簿：每項有自己的編號和 QR，可新增、編輯、刪除、匯入、匯出，會自動上傳雲端（同編號不會重複）。機台（縫紉機、燙斗如屬機修）放生產平台的機修。',
   locs:['A廠','B廠','宿舍','工務室','倉庫','發電機房','辦公室','廚房','大門'],
   cats:[
@@ -183,7 +185,7 @@ var REG={
    {id:'seed-gen-d',code:'GEQ004',cat:'GEQ',sub:'發電機',name:'宿舍 三菱 發電機',brand:'Mitsubishi',model:'MGT0040',spec:'32 kW',loc:'宿舍',qty:1,unit:'台',buyDate:'2016-01-01'},
    {id:'seed-ats-b',code:'GEQ005',cat:'GEQ',sub:'ATS 自動切換',name:'B廠 ATS 400A',spec:'400A',loc:'B廠',qty:1,unit:'組',buyDate:'2021-11-01',note:'2021/11 致立安裝；2026/5 控制面板、2026/7 開關更換'}
   ]},
- mep:{tool:'ga_facility_mep',short:'水電',file:'水電設施',qrBase:BASE,
+ mep:{url:REG_URL,tool:'ga_facility_mep',short:'水電',file:'水電設施',qrBase:BASE,
   intro:'<b>水電設施</b>：飲水機、燈、電箱、插座、風扇等，記錄「幾個、在哪裡」。同一地點同一種東西可以一筆填數量（例：A廠 1F LED 燈管 120 支）。燙斗若不歸機修就放這裡。',
   locs:['A廠 1F','A廠 2F','B廠','宿舍','辦公室','廚房','餐廳','廁所','大門','停車場','倉庫'],
   cats:[

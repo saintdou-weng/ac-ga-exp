@@ -70,7 +70,7 @@ function mount(el,cfg){
  function genCode(cat){var p=(CAT[cat]&&CAT[cat].k)||cat,n=maxNum(p)+1,c;do{c=p+String(n).padStart(3,'0');n++}while(S.rows.some(function(r){return r.code===c}));return c}
  function byCode(c,exceptId){c=norm(c);if(!c)return null;for(var i=0;i<S.rows.length;i++){var r=S.rows[i];if(!r._del&&norm(r.code)===c&&r.id!==exceptId)return r}return null}
  function setSt(t,k){var e=el.querySelector('.gr-st');if(e){e.textContent=t;e.className='gr-st '+(k||'')}}
- function url(){return g.GA&&GA.gasUrl?GA.gasUrl():''}
+ function url(){return cfg.url||(g.GA&&GA.gasUrl?GA.gasUrl():'')}
  function mergeIn(rs){var m={};S.rows.forEach(function(r){m[r.id]=r});(rs||[]).forEach(function(r){if(!r||!r.id)return;var o=m[r.id];if(!o||String(r.updatedAt||'')>String(o.updatedAt||''))m[r.id]=wrap(r)});S.rows=Object.keys(m).map(function(k){return m[k]});}
  function pull(silent){var u=url();if(!u||!g.GASmartSync)return Promise.resolve();setSt('⬇ 讀取雲端…');
   return GASmartSync.pull({url:u,tool:cfg.tool,localRecords:S.rows.slice(),allowDeletes:false,apply:function(rs){mergeIn(rs);idbSet(KEY,{rows:S.rows,at:now()});render();}}).then(function(r){setSt(r&&r.noCloud?'☁️ 雲端尚無資料（新增後會自動上傳）':'☁️ 已與雲端同步 · '+new Date().toLocaleTimeString(),'ok');return r}).catch(function(e){setSt('雲端讀取失敗：'+(e&&e.message||e),'err');if(!silent)alert('下載失敗：'+(e&&e.message||e))})}
