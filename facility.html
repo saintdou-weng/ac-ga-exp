@@ -52,6 +52,7 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 .ftabs{display:flex;gap:6px;max-width:1180px;margin:0 auto;padding:12px 20px 0;overflow-x:auto}
 .ftabs button{flex:1;min-width:110px;border:1px solid #d0d5e8;background:#fff;border-radius:12px;padding:9px 10px;font:inherit;font-weight:800;font-size:13px;color:#334155;cursor:pointer;white-space:nowrap}
 .ftabs button.on{background:#0f2b46;border-color:#0f2b46;color:#fff}
+.lg{margin-left:auto;display:flex;gap:4px}.lg button{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#d1fae5;border-radius:8px;padding:5px 9px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}.lg button.on{background:#fff;color:#0f2b46}
 .fpane{display:none}.fpane.on{display:block}
 @media(max-width:720px){.ftabs{padding:10px 12px 0}}
 </style>
@@ -59,29 +60,30 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 <body>
 <div class="header">
   <div class="logo">⚡</div>
-  <div><div class="h-title">工務設備 · 發電機／設備工具／水電</div>
+  <div><div class="h-title" data-i="title">工務設備 · 發電機／設備工具／水電</div>
   <div class="h-sub">Facility Log · Generator / ATS / Spare parts · <a href="maintenance.html">維修中心</a> · <a href="fuel.html?v=3.9.19">燃油中心</a></div></div>
+  <div class="lg" id="lg"><button data-lg="zh">繁中</button><button data-lg="en">EN</button><button data-lg="km">ខ្មែរ</button></div>
 </div>
 
-<div class="ftabs" id="ftabs"><button class="on" data-f="gen">⚡ 發電機紀錄</button><button data-f="eq">🧰 設備／工具</button><button data-f="mep">💡 水電設施</button></div>
+<div class="ftabs" id="ftabs"><button class="on" data-f="gen" data-i="tab_gen">⚡ 發電機紀錄</button><button data-f="eq" data-i="tab_eq">🧰 設備／工具</button><button data-f="mep" data-i="tab_mep">💡 水電設施</button></div>
 <div class="wrap fpane on" id="fp-gen">
   <div class="kpis" id="kpis"></div>
 
-  <div class="sect">現在要盯的事 · Open item</div>
+  <div class="sect" data-i="open">現在要盯的事 · Open item</div>
   <div class="now">
     <div>
-      <h3>🟠 A廠康明斯 ATS 切換後停機 —— 已找到原因，持續觀察</h3>
-      <p>2026 亡人節前出現 ATS 異常；10/16 致立第一次到廠查不出原因。10/24 再查判定是<b>水箱溫度過高</b>，ATS 切換後引擎停下。已換新電瓶（燈已不亮），備品已送到。費用 682 → <b>957 USD</b>（加車費＋之前漏算的人工）。</p>
-      <p style="margin-top:6px">下一步：電工定期清洗水箱；備品需要時再換上；下次停電時確認自動切換正常。</p>
+      <h3 data-i="now_h">🟠 A廠康明斯 ATS 切換後停機 —— 已找到原因，持續觀察</h3>
+      <p data-i="now_p1">2026 亡人節前出現 ATS 異常；10/16 致立第一次到廠查不出原因。10/24 再查判定是<b>水箱溫度過高</b>，ATS 切換後引擎停下。已換新電瓶（燈已不亮），備品已送到。費用 682 → <b>957 USD</b>（加車費＋之前漏算的人工）。</p>
+      <p style="margin-top:6px" data-i="now_p2">下一步：電工定期清洗水箱；備品需要時再換上；下次停電時確認自動切換正常。</p>
     </div>
     <div class="acts">
-      <div class="chk">① 電瓶開關：待命及運轉時保持「接通」<small>បើកកុងតាក់អាគុយជានិច្ច ពេលរង់ចាំ និងពេលដំណើរការ</small></div>
-      <div class="chk">② 發電機運轉時看充電是否正常<small>ពិនិត្យការសាកថ្មពេលម៉ាស៊ីនដំណើរការ</small></div>
-      <div class="chk">③ 水箱定期清洗、看水溫<small>លាងធុងទឹកត្រជាក់ជាប្រចាំ និងមើលសីតុណ្ហភាព</small></div>
+      <div class="chk"><span data-i="c1">① 電瓶開關：待命及運轉時保持「接通」</span><small>បើកកុងតាក់អាគុយជានិច្ច ពេលរង់ចាំ និងពេលដំណើរការ</small></div>
+      <div class="chk"><span data-i="c2">② 發電機運轉時看充電是否正常</span><small>ពិនិត្យការសាកថ្មពេលម៉ាស៊ីនដំណើរការ</small></div>
+      <div class="chk"><span data-i="c3">③ 水箱定期清洗、看水溫</span><small>លាងធុងទឹកត្រជាក់ជាប្រចាំ និងមើលសីតុណ្ហភាព</small></div>
     </div>
   </div>
 
-  <div class="sect">設備一覽 · Equipment</div>
+  <div class="sect" data-i="eqsec">設備一覽 · Equipment</div>
   <div class="eq">
     <div class="eqc" style="--c:#0d9488;--l:#ccfbf1"><div class="t">A廠 康明斯 Cummins</div><div class="s">S375CC · 300 kW · 2019 年購入（搬新廠時買）<br>供 A廠（約 600 人車間）停電時自動切換</div><span class="tag">ATS 自動</span></div>
     <div class="eqc" style="--c:#7c3aed;--l:#ede9fe"><div class="t">B廠 三菱 1號機</div><div class="s">MGT0200 · 168 kW · 2015<br>舊機種，已停產；控制盒 2024 年整組更換</div><span class="tag">ATS 自動（2021 起）</span></div>
@@ -90,16 +92,17 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
   </div>
   <div class="ph"><figure><img src="assets/generator/g045.jpg" alt="發電機清單" data-cap="email 2021.10.26 · 發電機清單"><figcaption>2021.10.26</figcaption></figure></div>
 
-  <div class="sect">歷年異常與處理 · Timeline</div>
+  <div class="sect" data-i="tlsec">歷年異常與處理 · Timeline</div>
   <div class="chips" id="chips"></div>
   <div class="tl" id="tl"></div>
 
-  <div class="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片下方日期＝照片所在 email 的日期。</div>
+  <div class="src" data-i="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片下方日期＝照片所在 email 的日期。</div>
 </div>
 <div class="wrap fpane" id="fp-eq"><div id="reg-eq"></div></div>
 <div class="wrap fpane" id="fp-mep"><div id="reg-mep"></div></div>
 <div id="lb" onclick="this.style.display='none'"><img alt=""><div></div></div>
 
+<script src="shared/facility-i18n.js?v=20261126a"></script>
 <script>
 const P='assets/generator/';
 const EV=[
@@ -146,24 +149,27 @@ const EV=[
  note:'10/25–11/3 約 10 天完成。好處：B廠停電自動發動、省柴油；也和可靠廠商建立關係，不受個別人員牽制。原控制板保留備用。',
  ph:[['g046','致立到廠查看','2021.10.26'],['g050','致立提供的 ATS 機盒','2021.10.26'],['g051','ATS 機盒','2021.10.26'],['g052','康明斯控制盒','2021.10.26'],['g053','康明斯控制板','2021.10.26'],['g054','原報價 2,161.50 USD','2021.10.26'],['g044','議價後 2,100 USD','2021.10.26'],['g040','安裝完成','2021.11.01'],['g042','B廠 ATS 安裝','2021.11.01'],['g043','ATS 箱','2021.11.01']]}
 ];
-const EQN={A:'A廠康明斯',B:'B廠三菱',AB:'A＋B廠'};
-const ST={ok:['✅ 已完成','p-ok'],watch:['🟠 觀察中','p-watch'],eq:['📦 備品','p-eq']};
+const LG=()=>(window.GA&&GA.lang)||'zh',UI=k=>{const u=window.FAC_I18N&&FAC_I18N.ui[k];if(!u)return k;const l=LG();return l==='en'?u[1]:l==='km'?u[2]:u[0]};
+const EVT=(e,f)=>{const l=LG();const x=window.FAC_I18N&&FAC_I18N.ev[e.d];return (l!=='zh'&&x&&x[l]&&x[l][f])||e[f]};
+const EQN={A:'A',B:'B',AB:'AB'};
+const ST={ok:['ok','p-ok'],watch:['watch','p-watch'],eq:['eqp','p-eq']};
 const cost=s=>{const m=s.match(/([\d,]+(?:\.\d+)?)\s*USD/g);if(!m)return 0;const last=m[m.length-1];return parseFloat(last.replace(/[^\d.]/g,''))};
 let F='all';
 function kpis(){const tot=EV.reduce((a,e)=>a+cost(e.cost),0);
- document.getElementById('kpis').innerHTML=[[EV.length,'次異常／採購紀錄'],[EV.filter(e=>e.st==='watch').length,'件觀察中'],['$'+tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),'2021–2026 累計費用'],['4','台發電機']].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');}
-function chips(){document.getElementById('chips').innerHTML=[['all','全部'],['A','A廠康明斯'],['B','B廠三菱'],['eq','備品採購']].map(([k,l])=>`<button class="chip ${F===k?'on':''}" onclick="F='${k}';draw()">${l}</button>`).join('');}
+ document.getElementById('kpis').innerHTML=[[EV.length,UI('k1')],[EV.filter(e=>e.st==='watch').length,UI('k2')],['$'+tot.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),UI('k3')],['4',UI('k4')]].map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');}
+function chips(){document.getElementById('chips').innerHTML=[['all',UI('all')],['A',UI('A')],['B',UI('B')],['eq',UI('eq')]].map(([k,l])=>`<button class="chip ${F===k?'on':''}" onclick="F='${k}';draw()">${l}</button>`).join('');}
 function draw(){chips();const list=EV.filter(e=>F==='all'||(F==='eq'?e.st==='eq':e.eq.includes(F)));
  document.getElementById('tl').innerHTML=list.map(e=>{const s=ST[e.st];const c=e.st==='watch'?'#f97316':e.eq==='A'?'#0d9488':e.eq==='B'?'#7c3aed':'#2563eb';
- return `<div class="ev" style="--c:${c}"><div class="top"><span class="d">${e.d}</span><span class="pill ${s[1]}">${s[0]}</span><span class="pill p-b">${EQN[e.eq]}</span></div><h4>${e.t}</h4>
- <div class="row3"><div class="box"><b>❓ 發生什麼</b>${e.why}</div><div class="box"><b>🔧 怎麼處理</b>${e.fix}</div><div class="box"><b>💵 費用</b><span class="cost">${e.cost}</span></div></div>
- <div class="note">📝 ${e.note}</div><div class="ph">${e.ph.map(([f,cap,ed])=>`<figure><img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="email ${ed} · ${cap}"><figcaption>${ed}</figcaption></figure>`).join('')}</div></div>`}).join('');}
+ return `<div class="ev" style="--c:${c}"><div class="top"><span class="d">${e.d}</span><span class="pill ${s[1]}">${UI(s[0])}</span><span class="pill p-b">${UI(EQN[e.eq])}</span></div><h4>${EVT(e,'t')}</h4>
+ <div class="row3"><div class="box"><b>${UI('why')}</b>${EVT(e,'why')}</div><div class="box"><b>${UI('fix')}</b>${EVT(e,'fix')}</div><div class="box"><b>${UI('cost')}</b><span class="cost">${EVT(e,'cost')}</span></div></div>
+ <div class="note">📝 ${EVT(e,'note')}</div><div class="ph">${e.ph.map(([f,cap,ed])=>`<figure><img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="email ${ed} · ${cap}"><figcaption>${ed}</figcaption></figure>`).join('')}</div></div>`}).join('');}
 document.addEventListener('click',ev=>{const im=ev.target.closest('.ph img');if(!im)return;const lb=document.getElementById('lb');lb.querySelector('img').src=im.src;lb.querySelector('div').textContent=im.dataset.cap||'';lb.style.display='flex';});
 kpis();draw();
+window.facRedraw=function(){kpis();draw();};
 </script>
 <script src="shared/ga-core.js?v=20261107b"></script>
 <script src="shared/ga-smart-sync.js?v=3.9.31"></script>
-<script src="shared/ga-register.js?v=20261126b"></script>
+<script src="shared/ga-register.js?v=20261126c"></script>
 <script>
 (function(){
 var BASE='https://saintdou-weng.github.io/ac-ga-exp/facility.html';
@@ -197,7 +203,14 @@ var REG={
    {k:'IRN',n:'燙斗／其他電器',ic:'♨️',color:'#9333ea',subs:['燙斗','鍋爐','微波爐','電鍋','冰箱','其他電器']}
   ]}
 };
+var I=window.FAC_I18N||{cats:{},intro:{}};
+Object.keys(REG).forEach(function(k){var c=REG[k];c.intro_en=(I.intro[k]||[])[0];c.intro_km=(I.intro[k]||[])[1];c.cats.forEach(function(x){var t=I.cats[x.k];if(t){x.en=t[0];x.km=t[1];}});});
 var M={};
+function applyLang(){var l=(window.GA&&GA.lang)||'zh';document.querySelectorAll('[data-i]').forEach(function(el){var u=I.ui&&I.ui[el.dataset.i];if(u)el.innerHTML=l==='en'?u[1]:l==='km'?u[2]:u[0];});
+ document.querySelectorAll('#lg button').forEach(function(b){b.classList.toggle('on',b.dataset.lg===l)});document.documentElement.lang=l==='zh'?'zh-TW':l;if(window.facRedraw)facRedraw();}
+document.getElementById('lg').addEventListener('click',function(e){var b=e.target.closest('[data-lg]');if(b&&window.GA)GA.setLang(b.dataset.lg);});
+if(window.GA&&GA.on)GA.on('lang',applyLang);
+applyLang();
 function show(k){document.querySelectorAll('#ftabs button').forEach(function(b){b.classList.toggle('on',b.dataset.f===k)});document.querySelectorAll('.fpane').forEach(function(p){p.classList.toggle('on',p.id==='fp-'+k)});
  if(REG[k]&&!M[k])M[k]=GAReg.mount(document.getElementById('reg-'+k),REG[k]);
  try{history.replaceState(null,'',location.pathname+(k==='gen'?'':'?tab='+k))}catch(e){}return M[k]}
