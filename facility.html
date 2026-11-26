@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AC-GA-EXP · 工務設備紀錄 Facility Log</title>
+<title>AC-GA-EXP · 工務設備 Facility</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700;9..40,800&family=Noto+Sans+Khmer:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -49,16 +49,22 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 #lb{position:fixed;inset:0;background:rgba(8,15,25,.86);display:none;align-items:center;justify-content:center;z-index:99;flex-direction:column;gap:10px;padding:20px}
 #lb img{max-width:96vw;max-height:82vh;border-radius:10px;background:#fff}#lb div{color:#fff;font-size:13px;text-align:center}
 @media(max-width:720px){.row3{grid-template-columns:1fr}.now{grid-template-columns:1fr}.wrap{padding:12px}}
+.ftabs{display:flex;gap:6px;max-width:1180px;margin:0 auto;padding:12px 20px 0;overflow-x:auto}
+.ftabs button{flex:1;min-width:110px;border:1px solid #d0d5e8;background:#fff;border-radius:12px;padding:9px 10px;font:inherit;font-weight:800;font-size:13px;color:#334155;cursor:pointer;white-space:nowrap}
+.ftabs button.on{background:#0f2b46;border-color:#0f2b46;color:#fff}
+.fpane{display:none}.fpane.on{display:block}
+@media(max-width:720px){.ftabs{padding:10px 12px 0}}
 </style>
 </head>
 <body>
 <div class="header">
   <div class="logo">⚡</div>
-  <div><div class="h-title">工務設備紀錄 · 發電機與 ATS</div>
+  <div><div class="h-title">工務設備 · 發電機／設備工具／水電</div>
   <div class="h-sub">Facility Log · Generator / ATS / Spare parts · <a href="maintenance.html">維修中心</a> · <a href="fuel.html?v=3.9.19">燃油中心</a></div></div>
 </div>
 
-<div class="wrap">
+<div class="ftabs" id="ftabs"><button class="on" data-f="gen">⚡ 發電機紀錄</button><button data-f="eq">🧰 設備／工具</button><button data-f="mep">💡 水電設施</button></div>
+<div class="wrap fpane on" id="fp-gen">
   <div class="kpis" id="kpis"></div>
 
   <div class="sect">現在要盯的事 · Open item</div>
@@ -90,6 +96,8 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 
   <div class="src">資料來源：Paul 寄台北（Tina／副總／Nancy）的發電機系列 email，2020–2026。廠商：致立機電（柬埔寨）。照片下方日期＝照片所在 email 的日期。</div>
 </div>
+<div class="wrap fpane" id="fp-eq"><div id="reg-eq"></div></div>
+<div class="wrap fpane" id="fp-mep"><div id="reg-mep"></div></div>
 <div id="lb" onclick="this.style.display='none'"><img alt=""><div></div></div>
 
 <script>
@@ -152,6 +160,50 @@ function draw(){chips();const list=EV.filter(e=>F==='all'||(F==='eq'?e.st==='eq'
  <div class="note">📝 ${e.note}</div><div class="ph">${e.ph.map(([f,cap,ed])=>`<figure><img loading="lazy" src="${P+f}.jpg" alt="${cap}" data-cap="email ${ed} · ${cap}"><figcaption>${ed}</figcaption></figure>`).join('')}</div></div>`}).join('');}
 document.addEventListener('click',ev=>{const im=ev.target.closest('.ph img');if(!im)return;const lb=document.getElementById('lb');lb.querySelector('img').src=im.src;lb.querySelector('div').textContent=im.dataset.cap||'';lb.style.display='flex';});
 kpis();draw();
+</script>
+<script src="shared/ga-core.js?v=20261107b"></script>
+<script src="shared/ga-smart-sync.js?v=3.9.31"></script>
+<script src="shared/ga-register.js?v=20261126a"></script>
+<script>
+(function(){
+var BASE='https://saintdou-weng.github.io/ac-ga-exp/facility.html';
+var REG={
+ eq:{tool:'ga_facility_equipment',short:'工務/總務',file:'工務設備工具',qrBase:BASE,
+  intro:'工務／總務的<b>設備</b>與<b>工具</b>登記簿：每項有自己的編號和 QR，可新增、編輯、刪除、匯入、匯出，會自動上傳雲端（同編號不會重複）。機台（縫紉機、燙斗如屬機修）放生產平台的機修。',
+  locs:['A廠','B廠','宿舍','工務室','倉庫','發電機房','辦公室','廚房','大門'],
+  cats:[
+   {k:'GEQ',n:'設備類',ic:'⚙️',color:'#0d9488',subs:['發電機','ATS 自動切換','空壓機','抽水馬達','水塔','大排風扇','冷氣','變壓器','電梯/升降機','消防泵','監視器主機','其他設備']},
+   {k:'GTL',n:'工具類',ic:'🔧',color:'#7c3aed',subs:['電銲機','切割機','砂輪機','電鑽','衝擊起子','高壓清洗機','割草機','梯子','三用電錶','鉗型電流表','手工具組','延長線/捲線器','其他工具']},
+   {k:'GGA',n:'總務設備',ic:'🗂️',color:'#2563eb',subs:['推車/拖板車','桌椅','櫃子','廣播/音響','打卡機','飲料冰箱','洗衣機','其他總務']}
+  ],
+  seed:[
+   {id:'seed-gen-a',code:'GEQ001',cat:'GEQ',sub:'發電機',name:'A廠 康明斯 Cummins 發電機',brand:'Cummins',model:'S375CC',spec:'300 kW',loc:'A廠',qty:1,unit:'台',buyDate:'2019-01-01',note:'2019 搬新廠時購入；ATS 自動切換。詳細維修見「⚡ 發電機紀錄」'},
+   {id:'seed-gen-b1',code:'GEQ002',cat:'GEQ',sub:'發電機',name:'B廠 三菱 1號機',brand:'Mitsubishi',model:'MGT0200',spec:'168 kW',loc:'B廠',qty:1,unit:'台',buyDate:'2015-01-01',note:'舊機種已停產；控制盒 2024 年整組更換'},
+   {id:'seed-gen-b2',code:'GEQ003',cat:'GEQ',sub:'發電機',name:'B廠 三菱 2號機',brand:'Mitsubishi',model:'MGT0200',spec:'168 kW',loc:'B廠',qty:1,unit:'台',buyDate:'2015-01-01',note:'2026 換面板、電瓶、ATS 開關'},
+   {id:'seed-gen-d',code:'GEQ004',cat:'GEQ',sub:'發電機',name:'宿舍 三菱 發電機',brand:'Mitsubishi',model:'MGT0040',spec:'32 kW',loc:'宿舍',qty:1,unit:'台',buyDate:'2016-01-01'},
+   {id:'seed-ats-b',code:'GEQ005',cat:'GEQ',sub:'ATS 自動切換',name:'B廠 ATS 400A',spec:'400A',loc:'B廠',qty:1,unit:'組',buyDate:'2021-11-01',note:'2021/11 致立安裝；2026/5 控制面板、2026/7 開關更換'}
+  ]},
+ mep:{tool:'ga_facility_mep',short:'水電',file:'水電設施',qrBase:BASE,
+  intro:'<b>水電設施</b>：飲水機、燈、電箱、插座、風扇等，記錄「幾個、在哪裡」。同一地點同一種東西可以一筆填數量（例：A廠 1F LED 燈管 120 支）。燙斗若不歸機修就放這裡。',
+  locs:['A廠 1F','A廠 2F','B廠','宿舍','辦公室','廚房','餐廳','廁所','大門','停車場','倉庫'],
+  cats:[
+   {k:'WDS',n:'飲水機',ic:'🚰',color:'#0284c7',subs:['冰溫熱飲水機','溫熱飲水機','過濾器/濾心','水桶架']},
+   {k:'LGT',n:'燈具',ic:'💡',color:'#ca8a04',subs:['LED 燈管','日光燈','投光燈','路燈','緊急照明','出口指示燈','崁燈']},
+   {k:'EBX',n:'電箱／配電',ic:'🔌',color:'#dc2626',subs:['總配電盤','分電箱','開關箱','電錶','插座','漏電斷路器']},
+   {k:'FAN',n:'風扇／冷氣',ic:'🌀',color:'#059669',subs:['吊扇','壁扇','工業風扇','水冷扇','冷氣','抽風扇']},
+   {k:'PLB',n:'給排水',ic:'🚿',color:'#4f46e5',subs:['水龍頭','馬桶','洗手台','熱水器','水塔','抽水馬達','水錶']},
+   {k:'IRN',n:'燙斗／其他電器',ic:'♨️',color:'#9333ea',subs:['燙斗','鍋爐','微波爐','電鍋','冰箱','其他電器']}
+  ]}
+};
+var M={};
+function show(k){document.querySelectorAll('#ftabs button').forEach(function(b){b.classList.toggle('on',b.dataset.f===k)});document.querySelectorAll('.fpane').forEach(function(p){p.classList.toggle('on',p.id==='fp-'+k)});
+ if(REG[k]&&!M[k])M[k]=GAReg.mount(document.getElementById('reg-'+k),REG[k]);
+ try{history.replaceState(null,'',location.pathname+(k==='gen'?'':'?tab='+k))}catch(e){}return M[k]}
+document.getElementById('ftabs').addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(b)show(b.dataset.f)});
+var q=new URLSearchParams(location.search),code=(q.get('reg')||'').toUpperCase(),tab=q.get('tab');
+if(code){var mep=/^(WDS|LGT|EBX|FAN|PLB|IRN)/.test(code);var m=show(mep?'mep':'eq');m.ready.then(function(){if(!m.openCode(code))alert('找不到編號 '+code)})}
+else if(tab&&REG[tab])show(tab);
+})();
 </script>
 <script src="shared/ui-motion.js?v=20261124c" defer></script>
 </body>
