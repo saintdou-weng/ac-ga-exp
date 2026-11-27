@@ -65,7 +65,7 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
   <div class="lg" id="lg"><button data-lg="zh">繁中</button><button data-lg="en">EN</button><button data-lg="km">ខ្មែរ</button></div>
 </div>
 
-<div class="ftabs" id="ftabs"><button class="on" data-f="gen" data-i="tab_gen">⚡ 發電機紀錄</button><button data-f="eq" data-i="tab_eq">🧰 設備／工具</button><button data-f="mep" data-i="tab_mep">💡 水電設施</button></div>
+<div class="ftabs" id="ftabs"><button class="on" data-f="gen" data-i="tab_gen">⚡ 發電機紀錄</button><button data-f="eq" data-i="tab_eq">🧰 設備／工具</button><button data-f="mep" data-i="tab_mep">💡 水電設施</button><button data-f="use" data-i="tab_use">⏱ 使用時數／柴油核對</button></div>
 <div class="wrap fpane on" id="fp-gen">
   <div class="kpis" id="kpis"></div>
 
@@ -100,9 +100,11 @@ body{font-family:'DM Sans','Noto Sans TC','Noto Sans Khmer',system-ui,sans-serif
 </div>
 <div class="wrap fpane" id="fp-eq"><div id="reg-eq"></div></div>
 <div class="wrap fpane" id="fp-mep"><div id="reg-mep"></div></div>
+<!-- 2026-11-28：叉車／發電機每日使用＋保養＋柴油核對（shared/ga-usage.js，SEC「證件・設備使用」頁是同一份資料） -->
+<div class="wrap fpane" id="fp-use"><div id="use-root"></div></div>
 <div id="lb" onclick="this.style.display='none'"><img alt=""><div></div></div>
 
-<script src="shared/facility-i18n.js?v=20261127a"></script>
+<script src="shared/facility-i18n.js?v=20261128a"></script>
 <script>
 const P='assets/generator/';
 const EV=[
@@ -171,6 +173,7 @@ window.facRedraw=function(){kpis();draw();};
 <script src="shared/ga-smart-sync.js?v=3.9.31"></script>
 <script src="shared/item-links.js?v=20261127a"></script>
 <script src="shared/ga-register.js?v=20261127f"></script>
+<script src="shared/ga-usage.js?v=20261128a"></script>
 <script>
 (function(){
 var BASE='https://saintdou-weng.github.io/ac-ga-exp/facility.html';
@@ -212,13 +215,15 @@ function applyLang(){var l=(window.GA&&GA.lang)||'zh';document.querySelectorAll(
 document.getElementById('lg').addEventListener('click',function(e){var b=e.target.closest('[data-lg]');if(b&&window.GA)GA.setLang(b.dataset.lg);});
 if(window.GA&&GA.on)GA.on('lang',applyLang);
 applyLang();
+var q0=new URLSearchParams(location.search);
 function show(k){document.querySelectorAll('#ftabs button').forEach(function(b){b.classList.toggle('on',b.dataset.f===k)});document.querySelectorAll('.fpane').forEach(function(p){p.classList.toggle('on',p.id==='fp-'+k)});
  if(REG[k]&&!M[k])M[k]=GAReg.mount(document.getElementById('reg-'+k),REG[k]);
+ if(k==='use'&&!M.use&&window.GAUsage)M.use=GAUsage.mount(document.getElementById('use-root'),{tabs:['gen','fk','chk','set'],tab:q0.get('use')||'',facilityLink:'facility.html'});
  try{history.replaceState(null,'',location.pathname+(k==='gen'?'':'?tab='+k))}catch(e){}return M[k]}
 document.getElementById('ftabs').addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(b)show(b.dataset.f)});
 var q=new URLSearchParams(location.search),code=(q.get('reg')||'').toUpperCase(),tab=q.get('tab');
 if(code){var mep=/^(WDS|LGT|EBX|FAN|PLB|IRN)/.test(code);var m=show(mep?'mep':'eq');m.ready.then(function(){if(!m.openCode(code))alert('找不到編號 '+code)})}
-else if(tab&&REG[tab])show(tab);
+else if(tab&&(REG[tab]||tab==='use'))show(tab);
 })();
 </script>
 <script src="shared/ui-motion.js?v=20261124c" defer></script>
