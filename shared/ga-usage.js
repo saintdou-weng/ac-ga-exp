@@ -7,10 +7,10 @@
 (function(g){
 'use strict';
 if(g.GAUsage)return;
-var VER='1.0';
+var VER='1.1';
 var CLOUD='https://script.google.com/macros/s/AKfycbyxBN_t2AfxTPQ3AYdt7Jxl3pNiJV17H1T0pub4SR8GBgDH47WnDn9JF556KSxUiIU-/exec';
 var BASE=(function(){var s=document.currentScript||document.querySelector('script[src*="ga-usage.js"]');var u=s&&s.src||'';return u?u.replace(/[^\/]*$/,''):'shared/'})();
-var SEED_AT='2026-01-01T00:00:00.000Z';
+var SEED_AT='2026-01-01T00:00:00.000Z',SEED_AT2='2026-01-02T00:00:00.000Z';
 
 /* ───────── 小工具 ───────── */
 function LANG(){try{if(g.GA&&GA.lang)return GA.lang;if(g.SEC&&SEC.lang)return SEC.lang();return localStorage.getItem('ac_lang')||'zh'}catch(e){return 'zh'}}
@@ -98,15 +98,20 @@ function unitOf(kind,code){var k=kind==='car'?plateKey(code):unitKey(code),us=US
 function cfg(){var c=USE.get('cfg');if(!c||c._del){c={id:'cfg',t:'cfg',priceDefault:0.95,price:{},ledger:{},thrY:10,thrR:25,createdAt:SEED_AT,updatedAt:SEED_AT}}c.price=c.price||{};c.ledger=c.ledger||{};if(!(c.thrY>0))c.thrY=10;if(!(c.thrR>0))c.thrR=25;return c}
 function priceOf(m){var c=cfg();var p=num(c.price[m]);return p>0?p:(num(c.priceDefault)||0)}
 /* 依燃油中心近 12 個月實績算建議耗油率：叉車 L／錶(小時)、發電機 L／小時、車輛 km／L */
-function suggestRate(kind,code,ref){var to=ref||ymd().slice(0,7),from=monthAdd(to,-11),L=0,U=0,n=0,k=kind==='car'?plateKey(code):unitKey(code);
- EXT.fuel.forEach(function(r){var m=String(r.date||'').slice(0,7);if(m<from||m>to)return;
-  if(kind==='fk'&&r.cat==='forklift'&&unitKey(r.forklift)===k){var u=num(r.totalKM),l=num(r.liters);if(u>0&&l>0){L+=l;U+=u;n++}}
-  if(kind==='gen'&&r.cat==='generator'&&genKey(r.machine)===k){var h=hoursOf(r.hours),l2=num(r.liters);if(h>0&&l2>0){L+=l2;U+=h;n++}}
-  if(kind==='car'&&r.cat==='driver'&&plateKey(r.plate)===k){var km=num(r.km),l3=num(r.liters);if(km>0&&l3>0){L+=l3;U+=km;n++}}});
- if(n<2||L<=0||U<=0)return null;return {rate:kind==='car'?r2(U/L):r2(L/U),n:n,liters:L,use:U}}
+function fuelUse(kind,r){return kind==='fk'?num(r.totalKM):kind==='gen'?hoursOf(r.hours):num(r.km)}
+function fuelIs(kind,r,k){return kind==='fk'?(r.cat==='forklift'&&unitKey(r.forklift)===k):kind==='gen'?(r.cat==='generator'&&genKey(r.machine)===k):(r.cat==='driver'&&plateKey(r.plate)===k)}
+function median(a){a=a.slice().sort(function(x,y){return x-y});var n=a.length;return n?(n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2):0}
+/* v1.1：先丟掉離譜的那幾筆（例如錶數少打小數點 132622→132837），再用「總公升÷總用量」算，才不會被一筆打錯拉歪 */
+function suggestRate(kind,code,ref){var to=ref||ymd().slice(0,7),from=monthAdd(to,-11),k=kind==='car'?plateKey(code):unitKey(code),recs=[];
+ EXT.fuel.forEach(function(r){var m=String(r.date||'').slice(0,7);if(m<from||m>to||!fuelIs(kind,r,k))return;var u=fuelUse(kind,r),l=num(r.liters);if(u>0&&l>0)recs.push({l:l,u:u,q:kind==='car'?u/l:l/u})});
+ if(recs.length<2)return null;var med=median(recs.map(function(x){return x.q})),keep=recs.filter(function(x){return x.q>=med/2.5&&x.q<=med*2.5});if(keep.length<2)keep=recs;
+ var L=0,U=0;keep.forEach(function(x){L+=x.l;U+=x.u});if(L<=0||U<=0)return null;return {rate:kind==='car'?r2(U/L):r2(L/U),n:keep.length,dropped:recs.length-keep.length,liters:L,use:U}}
+/* 這個月的加油登記裡，哪幾筆的耗油率離標準太遠（多半是錶數／公升打錯） */
+function oddFuel(kind,key,month,rate){if(!(rate>0))return [];var out=[];EXT.fuel.forEach(function(r){if(String(r.date||'').slice(0,7)!==month||!fuelIs(kind,r,key))return;var u=fuelUse(kind,r),l=num(r.liters);if(!(u>0&&l>0))return;if(kind==='gen'&&u<0.5)return;var q=kind==='car'?u/l:l/u;if(q<rate/2.5||q>rate*2.5)out.push({date:String(r.date),l:l,u:u,q:q,a:r.startKM,b:r.arriveKM})});return out}
 /* 第一次使用：用燃油中心的歷史機號建立機台；沒有歷史就建預設 2 台叉車、3 台發電機。編號固定 → 兩台裝置各自建立也會合併成同一筆 */
 function seedUnits(){var have={};USE.rows.forEach(function(r){if(r.t==='unit')have[r.id]=1});var add=[],since=monthAdd(ymd().slice(0,7),-23);
  function mk(kind,code,name,extra){var id='unit-'+kind+'-'+(kind==='car'?plateKey(code):unitKey(code));if(have[id])return;have[id]=1;var s=suggestRate(kind,code);var u={id:id,t:'unit',kind:kind,code:code,name:name||'',status:'active',rate:s?s.rate:'',rateSrc:s?'history':'',createdAt:SEED_AT,updatedAt:SEED_AT};if(extra)for(var k in extra)u[k]=extra[k];add.push(u)}
+ var fixed=0;USE.rows.forEach(function(u){if(u.t!=='unit'||u._del||u.rateSrc!=='history'||u.updatedAt!==SEED_AT)return;var s=suggestRate(u.kind,u.code);if(s&&s.rate!==num(u.rate)){u.rate=s.rate;u.updatedAt=SEED_AT2;fixed++}});
  var fk={},gen={},car={};
  EXT.fuel.forEach(function(r){var m=String(r.date||'').slice(0,7);if(m<since)return;
   if(r.cat==='forklift'&&unitKey(r.forklift))fk[unitKey(r.forklift)]=String(r.forklift).trim();
@@ -118,7 +123,7 @@ function seedUnits(){var have={};USE.rows.forEach(function(r){if(r.t==='unit')ha
  Object.keys(gen).sort().forEach(function(k){mk('gen',gen[k],'')});
  Object.keys(car).sort().forEach(function(k){mk('car',k,car[k].n)});
  if(!USE.get('cfg')){var c=cfg();add.push(c)}
- if(add.length){add.forEach(function(u){USE.put(u,true)});USE.dirty=true;USE.persist();return true}return false}
+ if(add.length||fixed){add.forEach(function(u){USE.put(u,true)});USE.dirty=true;USE.persist();return true}return false}
 
 /* ───────── 使用量彙總與柴油核對 ───────── */
 function fkUse(r){var a=num(r.m0),b=num(r.m1);if(r.m0!==''&&r.m1!==''&&r.m0!=null&&r.m1!=null&&b>a)return b-a;var h=num(r.hours);if(h>0)return h;return spanHours(r.start,r.end)}
@@ -147,6 +152,8 @@ function gather(months){var set={};months.forEach(function(m){set[m]=1});var G={
 function logRange(kind){var mn='',mx='';function see(d){d=String(d||'');if(!/^\d{4}-\d{2}-\d{2}/.test(d))return;d=d.slice(0,10);if(!mn||d<mn)mn=d;if(d>mx)mx=d}
  if(kind==='car')EXT.transport.forEach(function(r){if(num(r.km)>0)see(r.date)});else USE.live(kind).forEach(function(r){see(r.date)});return {min:mn,max:mx}}
 function covered(kind,m,rg){if(!rg.min||rg.min>m+'-03')return false;if(kind==='car'){var end=monthEnd(m),td=ymd(),need=end<td?end:td;return rg.max>=dayAdd(need,-3)}return true}
+/* 自報用量推算：離譜的那幾筆（多半打錯）先當成正常耗油，另外在備註標出來，不讓一筆打錯把整個月、連續三個月都拉成紅燈 */
+function selfExpect(kind,key,m,c,rate){if(!(rate>0)||!c)return null;var odd=key==='?'?[]:oddFuel(kind,key,m,rate),ou=0,ol=0;odd.forEach(function(x){ou+=x.u;ol+=x.l});var use=c.gaUse-ou;if(!(use>0)&&!ol)return null;return (use>0?(kind==='car'?use/rate:use*rate):0)+ol}
 function lightOf(pct){var c=cfg(),a=Math.abs(pct);return a<=c.thrY?'g':a<=c.thrR?'y':'r'}
 function expect(kind,use,rate){if(!(rate>0)||!(use>0))return null;return kind==='car'?use/rate:use*rate}
 function buildCheck(month){var win=monthsBack(month,3),G=gather(win),rows=[],seen={},RG={fk:logRange('fk'),gen:logRange('gen'),car:logRange('car')};
@@ -159,13 +166,13 @@ function buildCheck(month){var win=monthsBack(month,3),G=gather(win),rows=[],see
   R.logOK=R.log>0&&covered(kind,month,RG[kind]);R.sec=cur.sec||0;
   if(R.log>0&&!R.logOK)R.notes.push(kind==='car'?t('交通車日報只有 ','Shuttle daily log only covers ','')+RG.car.min.slice(5)+'～'+RG.car.max+t('，這個月不完整，先不拿來判定','; this month is incomplete so it is not used for the verdict',''):t('使用紀錄從 ','Usage log starts ','')+RG[kind].min+t(' 才開始，這個月不滿一個月，先不拿來判定',', so this month is incomplete and not used for the verdict',''));
   if(R.sec>0)R.notes.push(t('保安派車登記 ','Security dispatch log ','')+f0(R.sec)+' km');
-  R.estLog=R.logOK?expect(kind,R.log,rate):null;R.estSelf=expect(kind,R.gaUse,rate);
+  R.estLog=R.logOK?expect(kind,R.log,rate):null;R.estSelf=selfExpect(kind,key,month,cur,rate);
   R.est=R.estLog!=null?R.estLog:R.estSelf;R.estFrom=R.estLog!=null?'log':(R.estSelf!=null?'self':'');
   R.selfRate=(R.gaL>0&&R.gaUse>0)?(kind==='car'?R.gaUse/R.gaL:R.gaL/R.gaUse):null;
   R.diff=(R.est!=null)?R.gaL-R.est:null;R.pct=(R.est>0)?(R.gaL-R.est)/R.est*100:null;
   /* 燈號看近 3 個月累計（加油日常常剛好跨月，單月會忽高忽低） */
   var e3=0,g3=0,n3=0,from=R.estFrom;
-  win.forEach(function(m){var c=o.m[m];if(!c)return;if(from==='log'&&!covered(kind,m,RG[kind]))return;var use=from==='log'?c.log:c.gaUse,e=expect(kind,use,rate);if(e!=null){e3+=e;g3+=c.gaL;n3++}});
+  win.forEach(function(m){var c=o.m[m];if(!c)return;if(from==='log'&&!covered(kind,m,RG[kind]))return;var e=from==='log'?expect(kind,c.log,rate):selfExpect(kind,key,m,c,rate);if(e!=null){e3+=e;g3+=c.gaL;n3++}});
   R.est3=n3?e3:null;R.ga3=n3?g3:null;R.pct3=(n3&&e3>0)?(g3-e3)/e3*100:null;R.n3=n3;
   var basis=R.pct3!=null?R.pct3:R.pct;
   if(key==='?'){R.light=(R.gaL>0||R.log>0)?'y':'';if(R.gaL>0||R.log>0)R.notes.push(kind==='car'?t('對不到車牌（司機名字在「機台・耗油」的別名補上就會歸到那台車）','No matching plate (add the driver’s name as an alias under Units & rates)','រកមិនឃើញស្លាកលេខ'):t('加油登記的機號沒寫清楚（例如兩台寫在一起），無法分到哪一台','Unit number in the fuel record is unclear (e.g. two units in one line)','លេខគ្រឿងមិនច្បាស់'))}
@@ -175,6 +182,7 @@ function buildCheck(month){var win=monthsBack(month,3),G=gather(win),rows=[],see
   else if(R.gaL>0){R.light='y';R.notes.push(t('有加油登記，但沒有使用量（時數／里程）','Fuel issued but no usage (hours / km) recorded','មានចាក់ប្រេង តែគ្មានកំណត់ត្រាប្រើប្រាស់'))}
   else R.light='';
   if(R.logOK&&!(R.gaL>0)&&!(R.ga3>0)){R.light='y';R.notes.push(t('有使用紀錄，近 3 個月沒有加油登記','Usage logged but no fuel issue in the last 3 months','មានការប្រើ តែគ្មានចាក់ប្រេង ៣ ខែ'))}
+  R.odd=key==='?'?[]:oddFuel(kind,key,month,rate);R.odd.slice(0,3).forEach(function(x){R.notes.push(x.date.slice(5)+t(' 這筆加油登記不合理：',' fuel record looks wrong: ','')+f0(x.l)+' L ÷ '+(kind==='car'?f0(x.u)+' km':f1(x.u)+' hr')+(kind==='fk'&&x.a!=null&&x.b!=null?'（'+t('錶數 ','meter ','')+x.a+'→'+x.b+'）':'')+' = '+f2(x.q)+(kind==='car'?' km/L':' L/hr')+t('，標準 ',', standard ','')+f2(rate)+t('，錶數／里程或公升可能打錯','; the meter / km or litres may be mistyped',''))});if(R.odd.length&&(R.light==='g'||!R.light))R.light='y';
   if(R.logOK&&R.gaUse>0){var d=(R.gaUse-R.log)/R.log*100;R.usePct=d;if(Math.abs(d)>cfg().thrR)R.notes.push(t('總務自報用量與使用紀錄差 ','GA-reported usage differs from the log by ','ការប្រើប្រាស់ខុសគ្នា ')+(d>0?'+':'')+Math.round(d)+'%')}
   rows.push(R)}
  ['fk','gen','car'].forEach(function(kind){units(kind,true).forEach(function(u){make(kind,kind==='car'?plateKey(u.code):unitKey(u.code))});Object.keys(G).forEach(function(id){if(G[id].kind===kind)make(kind,G[id].key)})});
@@ -450,7 +458,7 @@ function mount(el,opt){opt=opt||{};
   ['fk','gen','car'].forEach(function(kind){var K=KINDS[kind],us=units(kind,true);
    h+='<div class="gu-h">'+K.ic+' '+kindName(kind)+' · '+us.filter(function(u){return u.status!=='scrap'}).length+'<span class="sp"><button class="gu-b" data-act="uadd" data-kind="'+kind+'">➕ '+t('新增機台','Add unit','បន្ថែមគ្រឿង')+'</button></span></div>';
    h+=us.length?'<div class="gu-l">'+us.map(function(u){var s=suggestRate(kind,u.code,S.month),rl=num(u.rate)>0?f2(num(u.rate))+(kind==='car'?' km/L':' L/hr'):t('未設定','not set','មិនទាន់កំណត់');
-     return '<div class="gu-r" data-act="uedit" data-id="'+esc(u.id)+'"><div>'+chip(u.code,kind)+'</div><div style="min-width:0"><div class="gu-n">'+esc(u.name||(kindName(kind)+' '+u.code))+' <span class="gu-s">'+esc(stName(u.status||'active'))+'</span></div><div class="gu-s">'+esc([u.asset&&('🏷 '+u.asset),u.spec,u.from&&(t('啟用 ','from ','')+u.from),u.to&&(t('報廢 ','until ','')+u.to),s?t('實績 ','actual ','')+f2(s.rate)+(kind==='car'?' km/L':' L/hr')+' ('+s.n+t(' 次加油',' fills','')+')':t('近 12 個月沒有足夠的加油紀錄','not enough fuel records in the last 12 months','')].filter(Boolean).join(' · '))+'</div></div><div class="gu-q" style="color:'+(num(u.rate)>0?'#0f766e':'#b91c1c')+'">'+rl+'<small>'+t('標準','standard','ស្តង់ដារ')+'</small></div></div>'}).join('')+'</div>':'<div class="gu-e">'+t('還沒有機台','No units yet','មិនទាន់មានគ្រឿង')+'</div>'});
+     return '<div class="gu-r" data-act="uedit" data-id="'+esc(u.id)+'"><div>'+chip(u.code,kind)+'</div><div style="min-width:0"><div class="gu-n">'+esc(u.name||(kindName(kind)+' '+u.code))+' <span class="gu-s">'+esc(stName(u.status||'active'))+'</span></div><div class="gu-s">'+esc([u.asset&&('🏷 '+u.asset),u.spec,u.from&&(t('啟用 ','from ','')+u.from),u.to&&(t('報廢 ','until ','')+u.to),s?t('實績 ','actual ','')+f2(s.rate)+(kind==='car'?' km/L':' L/hr')+' ('+s.n+t(' 次加油',' fills','')+(s.dropped?t('，另 '+s.dropped+' 筆離譜的不算',', '+s.dropped+' outlier(s) ignored',''):'')+')':t('近 12 個月沒有足夠的加油紀錄','not enough fuel records in the last 12 months','')].filter(Boolean).join(' · '))+'</div></div><div class="gu-q" style="color:'+(num(u.rate)>0?'#0f766e':'#b91c1c')+'">'+rl+'<small>'+t('標準','standard','ស្តង់ដារ')+'</small></div></div>'}).join('')+'</div>':'<div class="gu-e">'+t('還沒有機台','No units yet','មិនទាន់មានគ្រឿង')+'</div>'});
   h+='<div class="gu-ac"><button class="gu-b" data-act="sugg">📐 '+t('全部帶入建議值（只填還沒設定的）','Fill suggested rates (only where empty)','បំពេញអត្រាដែលស្នើ')+'</button></div>';
   h+='<div class="gu-h">⚙️ '+t('單價與門檻','Price & limits','តម្លៃ និងកម្រិត')+'</div><div class="gu-card gu-f"><div class="three"><div><label>'+t('預設柴油單價 USD／L','Default diesel price USD/L','តម្លៃប្រេងលំនាំដើម')+'</label><input type="number" step="any" data-cs="priceDefault" value="'+esc(c.priceDefault)+'"></div><div><label>🟢 '+t('正常：差異在 ±% 以內','OK within ±%','ធម្មតា ±%')+'</label><input type="number" step="any" data-cs="thrY" value="'+esc(c.thrY)+'"></div><div><label>🔴 '+t('異常：差異超過 ±%','Abnormal above ±%','ខុសប្រក្រតី ±%')+'</label><input type="number" step="any" data-cs="thrR" value="'+esc(c.thrR)+'"></div></div><div class="gu-hint">'+t('各月實際單價在「柴油核對」那頁填；沒填的月份用這個預設值。','Enter each month’s actual price on the Diesel check tab; months without one use this default.','')+'</div></div>';
   h+='<div class="gu-h">☁ '+t('雲端','Cloud','ពពក')+'</div><div class="gu-ac" style="margin-top:0"><button class="gu-b" data-act="up">⬆️☁ '+t('上傳','Upload','ផ្ទុកឡើង')+'</button><button class="gu-b" data-act="down">⬇️☁ '+t('下載','Download','ទាញយក')+'</button><button class="gu-b" data-act="bak">💾 '+t('備份 JSON','Backup JSON','បម្រុងទុក JSON')+'</button></div><div class="gu-note" style="margin-top:8px">'+t('資料：叉車 ','Records: forklift ','')+USE.live('fk').length+' · '+t('發電機 ','generator ','')+USE.live('gen').length+' · '+t('保養維修 ','maintenance ','')+USE.live('mt').length+' · v'+VER+'</div>';
