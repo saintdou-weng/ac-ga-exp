@@ -28,6 +28,7 @@ ui:{
  tab_gen:['⚡ 發電機紀錄','⚡ Generator log','⚡ កំណត់ត្រាម៉ាស៊ីនភ្លើង'],
  tab_eq:['🧰 設備／工具','🧰 Equipment / Tools','🧰 បរិក្ខារ / ឧបករណ៍'],
  tab_mep:['💡 水電設施','💡 Water & electrical','💡 ទឹក និងភ្លើង'],
+ tab_use:['⏱ 使用時數／柴油核對','⏱ Running hours / Diesel check','⏱ ម៉ោងប្រើ / ផ្ទៀងផ្ទាត់ប្រេង'],
  open:['現在要盯的事 · Open item','Open item','បញ្ហាកំពុងតាមដាន'],
  eqsec:['設備一覽 · Equipment','Equipment','បរិក្ខារ'],
  tlsec:['歷年異常與處理 · Timeline','Timeline','ប្រវត្តិបញ្ហា'],
